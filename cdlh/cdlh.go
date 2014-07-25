@@ -2,9 +2,7 @@ package main
 
 import (
 	"fmt"
-	"bio"
 	"os"
-	"tree"
 	"errors"
 	"bytes"
 	"bufio"
@@ -14,6 +12,9 @@ import (
 	"runtime"
 
 	"github.com/skelterjohn/go.matrix"
+
+	"bitbucket.com/Davydov/golh/bio"
+	"bitbucket.com/Davydov/golh/tree"
 )
 
 var (
