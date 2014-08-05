@@ -10,26 +10,21 @@ import (
 	"bitbucket.com/Davydov/golh/tree"
 )
 
-func L(ali CodonSequences, t *tree.Tree, Q *matrix.DenseMatrix, cf CodonFrequency) (lnL float64) {
-	V, D, err := Q.Eigen()
-	fmt.Println("Sum=", Sum(Q))
-	if err != nil {
-		panic("error finding eigen")
+func L(ali CodonSequences, t *tree.Tree, Qs []*EMatrix, cf CodonFrequency) (lnL float64) {
+	for _, Q := range Qs {
+		err := Q.Eigen()
+		if err != nil {
+			panic(fmt.Sprintf("error finding eigen: %v", err))
+		}
 	}
 
 	cD := matrix.Zeros(nCodon, nCodon)
 	eQts := make([]*matrix.DenseMatrix, t.NNodes())
-	iV, err := V.Inverse()
-	if err != nil {
-		panic("error inverting V")
-	}
 
 	for node := range t.Nodes() {
-		for i := 0; i < nCodon; i++ {
-			cD.Set(i, i, math.Exp(D.Get(i, i)*node.BranchLength))
-		}
-		eQts[node.Id] = matrix.Product(V, cD, iV)
+		eQts[node.Id], _ = Qs[node.Id].Exp(cD, node.BranchLength)
 	}
+
 	mxprc := runtime.GOMAXPROCS(0)
 	plhch := make(chan [][]float64, mxprc)
 	fmt.Println("Using processors:", mxprc)

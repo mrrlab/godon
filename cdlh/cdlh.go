@@ -266,6 +266,11 @@ func main() {
 
 	Q := createTransitionMatrix(cf, 2, 0.5)
 	fmt.Println(Q.Symmetric())
-	fmt.Println(L(cali, t, Q, cf))
+	Qs := make([]*EMatrix, t.NNodes())
+	em := NewEMatrix(Q)
+	for i := 0; i < len(Qs); i++ {
+		Qs[i] = em
+	}
+	fmt.Println(L(cali, t, Qs, cf))
 
 }
