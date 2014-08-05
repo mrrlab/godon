@@ -90,19 +90,6 @@ func getCodons() <-chan string {
 		}
 	}
 	go cn("")
-
-	/*
-		go run func() {
-			for _, l1 := range alphabet {
-				for _, l2 := range alphabet {
-					for _, l3 := range alphabet {
-						ch <- string(l1) + string(l2) + string(l3)
-					}
-				}
-			}
-			close(ch)
-		}()
-	*/
 	return ch
 }
 
@@ -184,11 +171,6 @@ func createTransitionMatrix(cf CodonFrequency, kappa, omega float64) (m *matrix.
 
 func subL(ali CodonSequences, t *tree.Tree, eQts []*matrix.DenseMatrix, cf CodonFrequency, i int, plhch chan [][]float64) float64 {
 	res := 0.0
-	/*plh := make([][]float64, t.NNodes())
-	for node := range t.Nodes() {
-		plh[node.Id] = make([]float64, nCodon)
-		plh[node.Id][0] = math.NaN()
-	}*/
 	plh := <-plhch
 	nNodes := t.NNodes()
 	if plh == nil {
@@ -229,9 +211,6 @@ NodeLoop:
 			l := 1.0
 			for child := range node.ChildNodes() {
 				s := 0.0
-				//fmt.Println("Q=", Q)
-				//fmt.Println("Qt=", Qt)
-				//fmt.Println("eQt=", eQt)
 				for l2 := 0; l2 < nCodon; l2++ {
 					s += eQts[child.Id].Get(l1, l2) * plh[child.Id][l2]
 				}
@@ -309,28 +288,8 @@ func L(ali CodonSequences, t *tree.Tree, Q *matrix.DenseMatrix, cf CodonFrequenc
 		for i := 0; i < nCodon; i++ {
 			cD.Set(i, i, math.Exp(D.Get(i, i)*node.BranchLength))
 		}
-		//fmt.Println(node.BranchLength, matrix.Product(V, cD, iV))
 		eQts[node.Id] = matrix.Product(V, cD, iV)
 	}
-
-	// === print e^Q ===
-	/*
-		for i := 0; i < nCodon; i ++ {
-			cD.Set(i, i, math.Exp(D.Get(i, i)))
-		}
-		//PrintQ(matrix.Product(V, D, iV))
-
-		PrintUnQ(matrix.Product(V, cD, iV))
-
-		for i1 := 0; i1 < nCodon; i1 ++ {
-			for i2 := 0; i2 < nCodon; i2 ++ {
-				fmt.Print(Q.Get(i1, i2), ",")
-			}
-		}
-		fmt.Println()
-	*/
-	// === print e^Q ===
-
 	mxprc := runtime.GOMAXPROCS(0)
 	plhch := make(chan [][]float64, mxprc)
 	fmt.Println("Using processors:", mxprc)
@@ -342,33 +301,19 @@ func L(ali CodonSequences, t *tree.Tree, Q *matrix.DenseMatrix, cf CodonFrequenc
 	fmt.Println(len(ali[0].Sequence))
 	for i, _ := range ali[0].Sequence {
 		go func(i int) {
-			//fmt.Println(i);
 			ch <- subL(ali, t, eQts, cf, i, plhch)
 		}(i)
 	}
 
 	for _, _ = range ali[0].Sequence {
 		dlnL := <-ch
-		//fmt.Println(dlnL)
 		lnL += dlnL
-
-		//lnL += <-ch
 	}
 	close(ch)
 	return
 }
 
 func main() {
-
-	/*	f, err := os.Create("cpuprof")
-		        if err != nil {
-				fmt.Println(err)
-				return
-		        }
-	*/
-	//        pprof.StartCPUProfile(f)
-	//        defer pprof.StopCPUProfile()
-
 	if len(os.Args) < 4 {
 		fmt.Println("specify files")
 		return
@@ -384,7 +329,6 @@ func main() {
 		fmt.Println(err)
 		return
 	}
-	//fmt.Println(ali)
 
 	nCodon = initCodon()
 	fmt.Println("nCodon=", nCodon)
