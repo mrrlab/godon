@@ -3,9 +3,11 @@ package main
 import (
 	"bufio"
 	"errors"
+	"flag"
 	"fmt"
 	"math"
 	"os"
+	"runtime"
 	"sort"
 	"strconv"
 
@@ -66,11 +68,16 @@ func readFrequency(fileName string) (CodonFrequency, error) {
 	if i < nCodon {
 		return nil, errors.New("not enough frequencies in file")
 	}
+	return cf, nil
+
+}
+
+func equalFrequency() CodonFrequency {
+	cf := make(CodonFrequency, nCodon)
 	for i := 0; i < nCodon; i++ {
 		cf[i] = 1 / float64(nCodon)
 	}
-	return cf, nil
-
+	return cf
 }
 
 func getCodons() <-chan string {
@@ -207,17 +214,25 @@ func PrintUnQ(Q *matrix.DenseMatrix) {
 }
 
 func main() {
-	if len(os.Args) < 4 {
-		fmt.Println("specify files")
+	cFreqFile := flag.String("cfreq", "", "codon frequencies file")
+	nCPU := flag.Int("cpu", 0, "number of cpu to use")
+
+	flag.Parse()
+
+	mxprc := runtime.GOMAXPROCS(*nCPU)
+	fmt.Printf("Using CPUS: %d.\n", mxprc)
+
+	if len(flag.Args()) < 2 {
+		fmt.Println("you should specify tree and alignment")
 		return
 	}
-	t, err := tree.ParseNewick(os.Args[1])
+	t, err := tree.ParseNewick(flag.Args()[0])
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 	fmt.Println(t.FullString())
-	ali, err := bio.ParseFasta(os.Args[2])
+	ali, err := bio.ParseFasta(flag.Args()[1])
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -231,10 +246,17 @@ func main() {
 		fmt.Println(err)
 		return
 	}
-	cf, err := readFrequency(os.Args[3])
-	if err != nil {
-		fmt.Println(err)
-		return
+
+	var cf CodonFrequency
+
+	if *cFreqFile != "" {
+		cf, err = readFrequency(*cFreqFile)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+	} else {
+		cf = equalFrequency()
 	}
 	fmt.Println(cf)
 
@@ -242,7 +264,7 @@ func main() {
 		nm2id[s.Name] = i
 	}
 
-	Q := createTransitionMatrix(cf, 3, 0.5)
+	Q := createTransitionMatrix(cf, 2, 0.5)
 	fmt.Println(Q.Symmetric())
 	fmt.Println(L(cali, t, Q, cf))
 
