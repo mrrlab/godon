@@ -128,7 +128,7 @@ func codonDistance(c1, c2 string) (dist, transitions int) {
 }
 
 func createTransitionMatrix(cf CodonFrequency, kappa, omega float64) (m *matrix.DenseMatrix) {
-	fmt.Println("kappa=", kappa, ", omega=", omega)
+	//fmt.Println("kappa=", kappa, ", omega=", omega)
 	m = matrix.Zeros(nCodon, nCodon)
 	for i1 := 0; i1 < nCodon; i1++ {
 		for i2 := 0; i2 < nCodon; i2++ {
@@ -162,7 +162,7 @@ func createTransitionMatrix(cf CodonFrequency, kappa, omega float64) (m *matrix.
 	for i := 0; i < nCodon; i++ {
 		scale += -m.Get(i, i)
 	}
-	fmt.Println("scale=", scale)
+	//fmt.Println("scale=", scale)
 	m.Scale(float64(nCodon) / scale)
 	scale = 0
 	for i1 := 0; i1 < nCodon; i1++ {
@@ -170,7 +170,7 @@ func createTransitionMatrix(cf CodonFrequency, kappa, omega float64) (m *matrix.
 			scale += math.Abs(m.Get(i1, i2))
 		}
 	}
-	fmt.Println("sum=", scale)
+	//fmt.Println("sum=", scale)
 	return
 
 }
@@ -211,6 +211,54 @@ func PrintUnQ(Q *matrix.DenseMatrix) {
 		}
 		fmt.Println()
 	}
+}
+
+func M0(cali CodonSequences, t *tree.Tree, cf CodonFrequency, kappa, omega float64) float64 {
+	Q := createTransitionMatrix(cf, kappa, omega)
+	Qs := make([][]*EMatrix, t.NNodes())
+	em := NewEMatrix(Q)
+	err := em.Eigen()
+	if err != nil {
+		panic(fmt.Sprintf("error finding eigen: %v", err))
+	}
+	for i := 0; i < len(Qs); i++ {
+		Qs[i] = make([]*EMatrix, 1)
+		Qs[i][0] = em
+	}
+	prop := []float64{1}
+	return L(cali, t, prop, Qs, cf)
+}
+
+func H1(cali CodonSequences, t *tree.Tree, cf CodonFrequency, fg int, kappa float64, omega0, omega2 float64, p0, p1, p2a, p2b float64) float64 {
+	Q0 := createTransitionMatrix(cf, kappa, omega0)
+	Q1 := createTransitionMatrix(cf, kappa, 1)
+	Q2 := createTransitionMatrix(cf, kappa, omega2)
+	em0 := NewEMatrix(Q0)
+	em1 := NewEMatrix(Q1)
+	em2 := NewEMatrix(Q2)
+	err1 := em0.Eigen()
+	err2 := em1.Eigen()
+	err3 := em2.Eigen()
+	if err1 != nil || err2 != nil || err3 != nil {
+		panic(fmt.Sprintf("error finding eigen: %v, %v, %v", err1, err2, err3))
+	}
+	Qs := make([][]*EMatrix, t.NNodes())
+	for i := 0; i < len(Qs); i++ {
+		Qs[i] = make([]*EMatrix, 4)
+		if i != fg {
+			Qs[i][0] = em0
+			Qs[i][1] = em1
+			Qs[i][2] = em0
+			Qs[i][3] = em1
+		} else {
+			Qs[i][0] = em0
+			Qs[i][1] = em1
+			Qs[i][2] = em2
+			Qs[i][3] = em2
+		}
+	}
+	fmt.Println(p0 + p1 + p2a + p2b)
+	return L(cali, t, []float64{p0, p1, p2a, p2b}, Qs, cf)
 }
 
 func main() {
@@ -264,13 +312,8 @@ func main() {
 		nm2id[s.Name] = i
 	}
 
-	Q := createTransitionMatrix(cf, 2, 0.5)
-	fmt.Println(Q.Symmetric())
-	Qs := make([]*EMatrix, t.NNodes())
-	em := NewEMatrix(Q)
-	for i := 0; i < len(Qs); i++ {
-		Qs[i] = em
-	}
-	fmt.Println(L(cali, t, Qs, cf))
+	fmt.Println(M0(cali, t, cf, 2, 0.5))
 
+	fmt.Println(H1(cali, t, cf, 3, 2, 0.5, 0.5, 0.94702, 0.00000, 0.05298, 0.00000))
+	fmt.Println(H1(cali, t, cf, 3, 1.92555, 0.02005, 1, 0.94702, 0.00000, 0.05298, 0.00000))
 }

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"math"
 	"runtime"
 
@@ -10,33 +9,27 @@ import (
 	"bitbucket.com/Davydov/golh/tree"
 )
 
-func L(ali CodonSequences, t *tree.Tree, Qs []*EMatrix, cf CodonFrequency) (lnL float64) {
-	for _, Q := range Qs {
-		err := Q.Eigen()
-		if err != nil {
-			panic(fmt.Sprintf("error finding eigen: %v", err))
-		}
-	}
-
+func L(ali CodonSequences, t *tree.Tree, prop []float64, Qs [][]*EMatrix, cf CodonFrequency) (lnL float64) {
 	cD := matrix.Zeros(nCodon, nCodon)
-	eQts := make([]*matrix.DenseMatrix, t.NNodes())
+	eQts := make([][]*matrix.DenseMatrix, t.NNodes())
 
 	for node := range t.Nodes() {
-		eQts[node.Id], _ = Qs[node.Id].Exp(cD, node.BranchLength)
+		eQts[node.Id] = make([]*matrix.DenseMatrix, len(prop))
+		for i := 0; i < len(prop); i++ {
+			eQts[node.Id][i], _ = Qs[node.Id][i].Exp(cD, node.BranchLength)
+		}
 	}
 
 	mxprc := runtime.GOMAXPROCS(0)
 	plhch := make(chan [][]float64, mxprc)
-	fmt.Println("Using processors:", mxprc)
 	for i := 0; i < mxprc; i++ {
 		plhch <- nil
 	}
 
 	ch := make(chan float64, len(ali[0].Sequence))
-	fmt.Println(len(ali[0].Sequence))
 	for i, _ := range ali[0].Sequence {
 		go func(i int) {
-			ch <- subL(ali, t, eQts, cf, i, plhch)
+			ch <- subL(ali, t, prop, eQts, cf, i, plhch)
 		}(i)
 	}
 
@@ -48,7 +41,7 @@ func L(ali CodonSequences, t *tree.Tree, Qs []*EMatrix, cf CodonFrequency) (lnL 
 	return
 }
 
-func subL(ali CodonSequences, t *tree.Tree, eQts []*matrix.DenseMatrix, cf CodonFrequency, i int, plhch chan [][]float64) float64 {
+func subL(ali CodonSequences, t *tree.Tree, prop []float64, eQts [][]*matrix.DenseMatrix, cf CodonFrequency, i int, plhch chan [][]float64) float64 {
 	res := 0.0
 	plh := <-plhch
 	nNodes := t.NNodes()
@@ -91,7 +84,9 @@ NodeLoop:
 			for child := range node.ChildNodes() {
 				s := 0.0
 				for l2 := 0; l2 < nCodon; l2++ {
-					s += eQts[child.Id].Get(l1, l2) * plh[child.Id][l2]
+					for i := 0; i < len(prop); i++ {
+						s += eQts[child.Id][i].Get(l1, l2) * plh[child.Id][l2] * prop[i]
+					}
 				}
 				l *= s
 			}
