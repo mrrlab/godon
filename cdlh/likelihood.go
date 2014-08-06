@@ -80,17 +80,18 @@ NodeLoop:
 			continue NodeLoop
 		}
 		for l1 := 0; l1 < nCodon; l1++ {
-			l := 1.0
-			for child := range node.ChildNodes() {
-				s := 0.0
-				for l2 := 0; l2 < nCodon; l2++ {
-					for i := 0; i < len(prop); i++ {
-						s += eQts[child.Id][i].Get(l1, l2) * plh[child.Id][l2] * prop[i]
+			plh[node.Id][l1] = 0
+			for i := 0; i < len(prop); i++ {
+				l := 1.0
+				for child := range node.ChildNodes() {
+					s := 0.0
+					for l2 := 0; l2 < nCodon; l2++ {
+						s += eQts[child.Id][i].Get(l1, l2) * plh[child.Id][l2]
 					}
+					l *= s
 				}
-				l *= s
+				plh[node.Id][l1] += l * prop[i]
 			}
-			plh[node.Id][l1] = l
 		}
 		nodes <- node.Parent
 		if node.IsRoot() {
