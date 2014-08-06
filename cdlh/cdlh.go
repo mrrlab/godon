@@ -230,6 +230,7 @@ func M0(cali CodonSequences, t *tree.Tree, cf CodonFrequency, kappa, omega float
 }
 
 func H1(cali CodonSequences, t *tree.Tree, cf CodonFrequency, fg int, kappa float64, omega0, omega2 float64, p0, p1, p2a, p2b float64) float64 {
+	fmt.Printf("fg=%d, kappa=%f, omega0=%f, omega2=%f, p=[%f, %f, %f, %f]\n", fg, kappa, omega0, omega2, p0, p1, p2a, p2b)
 	Q0 := createTransitionMatrix(cf, kappa, omega0)
 	Q1 := createTransitionMatrix(cf, kappa, 1)
 	Q2 := createTransitionMatrix(cf, kappa, omega2)
@@ -257,7 +258,6 @@ func H1(cali CodonSequences, t *tree.Tree, cf CodonFrequency, fg int, kappa floa
 			Qs[i][3] = em2
 		}
 	}
-	fmt.Println(p0 + p1 + p2a + p2b)
 	return L(cali, t, []float64{p0, p1, p2a, p2b}, Qs, cf)
 }
 
