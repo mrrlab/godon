@@ -9,14 +9,15 @@ import (
 	"bitbucket.com/Davydov/golh/tree"
 )
 
-func L(ali CodonSequences, t *tree.Tree, prop []float64, Qs [][]*EMatrix, cf CodonFrequency) (lnL float64) {
+func L(ali CodonSequences, t *tree.Tree, Qs []*EMatrix, cf CodonFrequency) (lnL float64) {
 	cD := matrix.Zeros(nCodon, nCodon)
-	eQts := make([][]*matrix.DenseMatrix, t.NNodes())
+	eQts := make([]*matrix.DenseMatrix, t.NNodes())
 
 	for node := range t.Nodes() {
-		eQts[node.Id] = make([]*matrix.DenseMatrix, len(prop))
-		for i := 0; i < len(prop); i++ {
-			eQts[node.Id][i], _ = Qs[node.Id][i].Exp(cD, node.BranchLength)
+		var err error
+		eQts[node.Id], err = Qs[node.Id].Exp(cD, node.BranchLength)
+		if err != nil {
+			panic("Error exponentiating matrix")
 		}
 	}
 
@@ -29,7 +30,7 @@ func L(ali CodonSequences, t *tree.Tree, prop []float64, Qs [][]*EMatrix, cf Cod
 	ch := make(chan float64, len(ali[0].Sequence))
 	for i, _ := range ali[0].Sequence {
 		go func(i int) {
-			ch <- subL(ali, t, prop, eQts, cf, i, plhch)
+			ch <- math.Log(subL(ali, t, eQts, cf, i, plhch))
 		}(i)
 	}
 
@@ -41,7 +42,7 @@ func L(ali CodonSequences, t *tree.Tree, prop []float64, Qs [][]*EMatrix, cf Cod
 	return
 }
 
-func subL(ali CodonSequences, t *tree.Tree, prop []float64, eQts [][]*matrix.DenseMatrix, cf CodonFrequency, i int, plhch chan [][]float64) float64 {
+func subL(ali CodonSequences, t *tree.Tree, eQts []*matrix.DenseMatrix, cf CodonFrequency, i int, plhch chan [][]float64) float64 {
 	res := 0.0
 	plh := <-plhch
 	nNodes := t.NNodes()
@@ -80,18 +81,15 @@ NodeLoop:
 			continue NodeLoop
 		}
 		for l1 := 0; l1 < nCodon; l1++ {
-			plh[node.Id][l1] = 0
-			for i := 0; i < len(prop); i++ {
-				l := 1.0
-				for child := range node.ChildNodes() {
-					s := 0.0
-					for l2 := 0; l2 < nCodon; l2++ {
-						s += eQts[child.Id][i].Get(l1, l2) * plh[child.Id][l2]
-					}
-					l *= s
+			l := 1.0
+			for child := range node.ChildNodes() {
+				s := 0.0
+				for l2 := 0; l2 < nCodon; l2++ {
+					s += eQts[child.Id].Get(l1, l2) * plh[child.Id][l2]
 				}
-				plh[node.Id][l1] += l * prop[i]
+				l *= s
 			}
+			plh[node.Id][l1] = l
 		}
 		nodes <- node.Parent
 		if node.IsRoot() {
@@ -104,5 +102,5 @@ NodeLoop:
 	}
 	close(nodes)
 	plhch <- plh
-	return math.Log(res)
+	return res
 }

@@ -215,20 +215,18 @@ func PrintUnQ(Q *matrix.DenseMatrix) {
 
 func M0(cali CodonSequences, t *tree.Tree, cf CodonFrequency, kappa, omega float64) float64 {
 	Q := createTransitionMatrix(cf, kappa, omega)
-	Qs := make([][]*EMatrix, t.NNodes())
+	Qs := make([]*EMatrix, t.NNodes())
 	em := NewEMatrix(Q)
 	err := em.Eigen()
 	if err != nil {
 		panic(fmt.Sprintf("error finding eigen: %v", err))
 	}
 	for i := 0; i < len(Qs); i++ {
-		Qs[i] = make([]*EMatrix, 1)
-		Qs[i][0] = em
+		Qs[i]= em
 	}
-	prop := []float64{1}
-	return L(cali, t, prop, Qs, cf)
+	return L(cali, t, Qs, cf)
 }
-
+/*
 func H1(cali CodonSequences, t *tree.Tree, cf CodonFrequency, fg int, kappa float64, omega0, omega2 float64, p0, p1, p2a, p2b float64) float64 {
 	fmt.Printf("fg=%d, kappa=%f, omega0=%f, omega2=%f, p=[%f, %f, %f, %f]\n", fg, kappa, omega0, omega2, p0, p1, p2a, p2b)
 	Q0 := createTransitionMatrix(cf, kappa, omega0)
@@ -260,7 +258,7 @@ func H1(cali CodonSequences, t *tree.Tree, cf CodonFrequency, fg int, kappa floa
 	}
 	return L(cali, t, []float64{p0, p1, p2a, p2b}, Qs, cf)
 }
-
+*/
 func main() {
 	cFreqFile := flag.String("cfreq", "", "codon frequencies file")
 	nCPU := flag.Int("cpu", 0, "number of cpu to use")
@@ -315,6 +313,6 @@ func main() {
 
 	fmt.Println(M0(cali, t, cf, 2, 0.5))
 
-	fmt.Println(H1(cali, t, cf, 3, 2, 0.5, 0.5, 0.94702, 0.00000, 0.05298, 0.00000))
-	fmt.Println(H1(cali, t, cf, 3, 1.92555, 0.02005, 1, 0.94702, 0.00000, 0.05298, 0.00000))
+	//fmt.Println(H1(cali, t, cf, 3, 2, 0.5, 0.5, 0.94702, 0.00000, 0.05298, 0.00000))
+	//fmt.Println(H1(cali, t, cf, 3, 1.92555, 0.02005, 1, 0.94702, 0.00000, 0.05298, 0.00000))
 }
