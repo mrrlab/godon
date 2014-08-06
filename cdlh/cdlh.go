@@ -267,8 +267,9 @@ func main() {
 
 	flag.Parse()
 
-	mxprc := runtime.GOMAXPROCS(*nCPU)
-	fmt.Printf("Using CPUS: %d.\n", mxprc)
+	runtime.GOMAXPROCS(*nCPU)
+	mxprc := runtime.GOMAXPROCS(0)
+	fmt.Printf("Using CPUs: %d.\n", mxprc)
 
 	if len(flag.Args()) < 2 {
 		fmt.Println("you should specify tree and alignment")
