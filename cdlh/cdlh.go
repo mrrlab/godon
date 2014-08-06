@@ -215,16 +215,17 @@ func PrintUnQ(Q *matrix.DenseMatrix) {
 
 func M0(cali CodonSequences, t *tree.Tree, cf CodonFrequency, kappa, omega float64) float64 {
 	Q := createTransitionMatrix(cf, kappa, omega)
-	Qs := make([]*EMatrix, t.NNodes())
+	Qs := make([][]*EMatrix, 1)
+	Qs[0] = make([]*EMatrix, t.NNodes())
 	em := NewEMatrix(Q)
 	err := em.Eigen()
 	if err != nil {
 		panic(fmt.Sprintf("error finding eigen: %v", err))
 	}
-	for i := 0; i < len(Qs); i++ {
-		Qs[i]= em
+	for i := 0; i < len(Qs[0]); i++ {
+		Qs[0][i]= em
 	}
-	return L(cali, t, Qs, cf)
+	return L(cali, t, []float64{1}, Qs, cf)
 }
 /*
 func H1(cali CodonSequences, t *tree.Tree, cf CodonFrequency, fg int, kappa float64, omega0, omega2 float64, p0, p1, p2a, p2b float64) float64 {

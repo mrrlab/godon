@@ -9,15 +9,22 @@ import (
 	"bitbucket.com/Davydov/golh/tree"
 )
 
-func L(ali CodonSequences, t *tree.Tree, Qs []*EMatrix, cf CodonFrequency) (lnL float64) {
-	cD := matrix.Zeros(nCodon, nCodon)
-	eQts := make([]*matrix.DenseMatrix, t.NNodes())
+func L(ali CodonSequences, t *tree.Tree, prop []float64, Qs [][]*EMatrix, cf CodonFrequency) (lnL float64) {
+	if len(prop) != len(Qs) {
+		panic("incorrect proportion length")
+	}
 
-	for node := range t.Nodes() {
-		var err error
-		eQts[node.Id], err = Qs[node.Id].Exp(cD, node.BranchLength)
-		if err != nil {
-			panic("Error exponentiating matrix")
+	cD := matrix.Zeros(nCodon, nCodon)
+	eQts := make([][]*matrix.DenseMatrix, len(prop))
+
+	for i, _ := range prop {
+		eQts[i] = make([]*matrix.DenseMatrix, t.NNodes())
+		for node := range t.Nodes() {
+			var err error
+			eQts[i][node.Id], err = Qs[i][node.Id].Exp(cD, node.BranchLength)
+			if err != nil {
+				panic("Error exponentiating matrix")
+			}
 		}
 	}
 
@@ -28,10 +35,14 @@ func L(ali CodonSequences, t *tree.Tree, Qs []*EMatrix, cf CodonFrequency) (lnL 
 	}
 
 	ch := make(chan float64, len(ali[0].Sequence))
-	for i, _ := range ali[0].Sequence {
-		go func(i int) {
-			ch <- math.Log(subL(ali, t, eQts, cf, i, plhch))
-		}(i)
+	for pos, _ := range ali[0].Sequence {
+		go func(pos int) {
+			res := float64(0)
+			for i, p := range prop {
+				res += subL(ali, t, eQts[i], cf, pos, plhch) * p
+			}
+			ch <- math.Log(res)
+		}(pos)
 	}
 
 	for _, _ = range ali[0].Sequence {
@@ -42,7 +53,7 @@ func L(ali CodonSequences, t *tree.Tree, Qs []*EMatrix, cf CodonFrequency) (lnL 
 	return
 }
 
-func subL(ali CodonSequences, t *tree.Tree, eQts []*matrix.DenseMatrix, cf CodonFrequency, i int, plhch chan [][]float64) float64 {
+func subL(ali CodonSequences, t *tree.Tree, eQts []*matrix.DenseMatrix, cf CodonFrequency, pos int, plhch chan [][]float64) float64 {
 	res := 0.0
 	plh := <-plhch
 	nNodes := t.NNodes()
@@ -60,7 +71,7 @@ func subL(ali CodonSequences, t *tree.Tree, eQts []*matrix.DenseMatrix, cf Codon
 	nodes := make(chan *tree.Tree, len(ali))
 	for node := range t.Terminals() {
 		for l := byte(0); l < byte(nCodon); l++ {
-			if l == ali[nm2id[node.Name]].Sequence[i] {
+			if l == ali[nm2id[node.Name]].Sequence[pos] {
 				plh[node.Id][l] = 1
 			} else {
 				plh[node.Id][l] = 0
