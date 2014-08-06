@@ -227,7 +227,7 @@ func M0(cali CodonSequences, t *tree.Tree, cf CodonFrequency, kappa, omega float
 	}
 	return L(cali, t, []float64{1}, Qs, cf)
 }
-/*
+
 func H1(cali CodonSequences, t *tree.Tree, cf CodonFrequency, fg int, kappa float64, omega0, omega2 float64, p0, p1, p2a, p2b float64) float64 {
 	fmt.Printf("fg=%d, kappa=%f, omega0=%f, omega2=%f, p=[%f, %f, %f, %f]\n", fg, kappa, omega0, omega2, p0, p1, p2a, p2b)
 	Q0 := createTransitionMatrix(cf, kappa, omega0)
@@ -242,24 +242,33 @@ func H1(cali CodonSequences, t *tree.Tree, cf CodonFrequency, fg int, kappa floa
 	if err1 != nil || err2 != nil || err3 != nil {
 		panic(fmt.Sprintf("error finding eigen: %v, %v, %v", err1, err2, err3))
 	}
-	Qs := make([][]*EMatrix, t.NNodes())
+	Qs := make([][]*EMatrix, 4)
 	for i := 0; i < len(Qs); i++ {
-		Qs[i] = make([]*EMatrix, 4)
-		if i != fg {
-			Qs[i][0] = em0
-			Qs[i][1] = em1
-			Qs[i][2] = em0
-			Qs[i][3] = em1
-		} else {
-			Qs[i][0] = em0
-			Qs[i][1] = em1
-			Qs[i][2] = em2
-			Qs[i][3] = em2
+		Qs[i] = make([]*EMatrix, t.NNodes())
+		for b, _ := range Qs[i] {
+			switch i {
+			case 0:
+				Qs[i][b] = em0
+			case 1:
+				Qs[i][b] = em1
+			case 2:
+				if b != fg {
+					Qs[i][b] = em0
+				} else {
+					Qs[i][b] = em2
+				}
+			case 3:
+				if b != fg {
+					Qs[i][b] = em1
+				} else {
+					Qs[i][b] = em2
+				}
+			}
 		}
 	}
 	return L(cali, t, []float64{p0, p1, p2a, p2b}, Qs, cf)
 }
-*/
+
 func main() {
 	cFreqFile := flag.String("cfreq", "", "codon frequencies file")
 	nCPU := flag.Int("cpu", 0, "number of cpu to use")
@@ -314,6 +323,6 @@ func main() {
 
 	fmt.Println(M0(cali, t, cf, 2, 0.5))
 
-	//fmt.Println(H1(cali, t, cf, 3, 2, 0.5, 0.5, 0.94702, 0.00000, 0.05298, 0.00000))
-	//fmt.Println(H1(cali, t, cf, 3, 1.92555, 0.02005, 1, 0.94702, 0.00000, 0.05298, 0.00000))
+	fmt.Println(H1(cali, t, cf, 3, 2, 0.5, 0.5, 0.94702, 0.00000, 0.05298, 0.00000))
+	fmt.Println(H1(cali, t, cf, 3, 1.92555, 0.02005, 1, 0.94702, 0.00000, 0.05298, 0.00000))
 }
