@@ -9,7 +9,7 @@ import (
 	"bitbucket.com/Davydov/golh/tree"
 )
 
-func L(ali CodonSequences, t *tree.Tree, prop []float64, Qs [][]*EMatrix, cf CodonFrequency) (lnL float64) {
+func L(ali CodonSequences, t *tree.Tree, prop []float64, scale []float64, Qs [][]*EMatrix, cf CodonFrequency) (lnL float64) {
 	if len(prop) != len(Qs) {
 		panic("incorrect proportion length")
 	}
@@ -21,7 +21,7 @@ func L(ali CodonSequences, t *tree.Tree, prop []float64, Qs [][]*EMatrix, cf Cod
 		eQts[i] = make([]*matrix.DenseMatrix, t.NNodes())
 		for node := range t.Nodes() {
 			var err error
-			eQts[i][node.Id], err = Qs[i][node.Id].Exp(cD, node.BranchLength)
+			eQts[i][node.Id], err = Qs[i][node.Id].Exp(cD, node.BranchLength / scale[node.Id])
 			if err != nil {
 				panic("Error exponentiating matrix")
 			}

@@ -127,7 +127,7 @@ func codonDistance(c1, c2 string) (dist, transitions int) {
 	return
 }
 
-func createTransitionMatrix(cf CodonFrequency, kappa, omega float64) (m *matrix.DenseMatrix) {
+func createTransitionMatrix(cf CodonFrequency, kappa, omega float64) (m *matrix.DenseMatrix, scale float64) {
 	//fmt.Println("kappa=", kappa, ", omega=", omega)
 	m = matrix.Zeros(nCodon, nCodon)
 	for i1 := 0; i1 < nCodon; i1++ {
@@ -158,19 +158,10 @@ func createTransitionMatrix(cf CodonFrequency, kappa, omega float64) (m *matrix.
 		}
 		m.Set(i1, i1, -rowSum)
 	}
-	scale := float64(0)
 	for i := 0; i < nCodon; i++ {
 		scale += -m.Get(i, i)
 	}
-	//fmt.Println("scale=", scale)
-	m.Scale(float64(nCodon) / scale)
-	scale = 0
-	for i1 := 0; i1 < nCodon; i1++ {
-		for i2 := 0; i2 < nCodon; i2++ {
-			scale += math.Abs(m.Get(i1, i2))
-		}
-	}
-	//fmt.Println("sum=", scale)
+	scale /= float64(nCodon)
 	return
 
 }
@@ -268,6 +259,7 @@ func main() {
 	fmt.Println(M0(cali, t, cf, 2, 0.5))
 
 	fmt.Println(H1(cali, t, cf, 3, 2, 0.5, 0.5, 0.94702, 0.00000, 0.05298, 0.00000))
-	fmt.Println(H1(cali, t, cf, 3, 1.92555, 0.02005, 1, 0.94702, 0.00000, 0.05298, 0.00000))
+	fmt.Println(H1(cali, t, cf, 3, 1.90991, 0.02000, 1, 0.94680, 0.00010, 0.05310, 0.00001))
+	fmt.Println(H1(cali, t, cf, 4, 1.87689, 0.01454, 1.68249, 0.89978, 0.04150, 0.05613, 0.00259))
 	//fmt.Println(M3(cali, t, cf, 1.98115, 0.00424, 0.08123, 0.32679, 0.62517, 0.31211, 0.06272))
 }
