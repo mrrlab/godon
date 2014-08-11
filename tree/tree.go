@@ -1,24 +1,24 @@
 package tree
 
 import (
+	"bufio"
+	"errors"
 	"fmt"
 	"os"
-	"bufio"
-	"unicode"
-	"unicode/utf8"
 	"strconv"
 	"strings"
-	"errors"
+	"unicode"
+	"unicode/utf8"
 )
 
 var nodeId int
 
 type Tree struct {
-	Name string
+	Name         string
 	BranchLength float64
-	Parent *Tree
-	childNodes []*Tree
-	Id int
+	Parent       *Tree
+	childNodes   []*Tree
+	Id           int
 }
 
 func NewTree(parent *Tree) (tree *Tree) {
@@ -93,7 +93,6 @@ func (tree *Tree) Nodes() <-chan *Tree {
 	return tree.Walker(nil)
 }
 
-
 func (tree *Tree) NNodes() (size int) {
 	for _, node := range tree.childNodes {
 		size += node.NNodes()
@@ -125,9 +124,9 @@ func (tree *Tree) IsRoot() bool {
 func IsSpecial(c rune) bool {
 	switch c {
 	case '(', ')', ':', ';', ',':
-		return true;
+		return true
 	}
-	return false;
+	return false
 
 }
 func NewickSplit(data []byte, atEOF bool) (advance int, token []byte, err error) {
@@ -137,9 +136,9 @@ func NewickSplit(data []byte, atEOF bool) (advance int, token []byte, err error)
 		var r rune
 		r, width = utf8.DecodeRune(data[start:])
 		if IsSpecial(r) {
-			return start + width, data[start:start + width], nil
+			return start + width, data[start : start+width], nil
 		}
-		if ! unicode.IsSpace(r) {
+		if !unicode.IsSpace(r) {
 			break
 		}
 	}
@@ -155,12 +154,12 @@ func NewickSplit(data []byte, atEOF bool) (advance int, token []byte, err error)
 			return i, data[start:i], nil
 		}
 	}
-   	// If we're at EOF, we have a final, non-empty, non-terminated word. Return it.
+	// If we're at EOF, we have a final, non-empty, non-terminated word. Return it.
 	if atEOF && len(data) > start {
 		return len(data), data[start:], nil
 	}
-   	// Request more data.
-   	return 0, nil, nil
+	// Request more data.
+	return 0, nil, nil
 }
 
 func ParseNewick(fileName string) (tree *Tree, err error) {
@@ -172,7 +171,7 @@ func ParseNewick(fileName string) (tree *Tree, err error) {
 	defer file.Close()
 
 	scanner := bufio.NewScanner(file)
-	
+
 	scanner.Split(NewickSplit)
 
 	tree = NewTree(nil)
@@ -186,7 +185,7 @@ func ParseNewick(fileName string) (tree *Tree, err error) {
 				tree.AddChild(subTree)
 			}
 			tree = subTree
-				
+
 		case ",":
 			if tree.Parent == nil {
 				return nil, errors.New("top level comma mismatch")
@@ -195,7 +194,7 @@ func ParseNewick(fileName string) (tree *Tree, err error) {
 			tree.Parent.AddChild(subTree)
 			tree = subTree
 
-		case  ")":
+		case ")":
 			if tree.Parent == nil {
 				return nil, errors.New("brackets mismatch")
 			}
@@ -207,7 +206,7 @@ func ParseNewick(fileName string) (tree *Tree, err error) {
 		default:
 			if length {
 				l, err := strconv.ParseFloat(text, 64)
-				if err != nil{
+				if err != nil {
 					return nil, err
 				}
 				tree.BranchLength = l
@@ -220,6 +219,5 @@ func ParseNewick(fileName string) (tree *Tree, err error) {
 	}
 
 	return
-	
-}
 
+}
