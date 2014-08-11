@@ -287,7 +287,7 @@ func main() {
 			class1++
 		}
 		if class1 == 0 {
-			fmt.Printf("Warning: no class=1 nodes")
+			fmt.Println("Warning: no class=1 nodes")
 		}
 	}
 
