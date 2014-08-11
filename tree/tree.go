@@ -175,7 +175,6 @@ func NewickSplit(data []byte, atEOF bool) (advance int, token []byte, err error)
 }
 
 func ParseNewick(fileName string) (tree *Tree, err error) {
-	fmt.Println("open", fileName)
 	file, err := os.Open(fileName)
 	if err != nil {
 		return nil, err
@@ -235,7 +234,6 @@ func ParseNewick(fileName string) (tree *Tree, err error) {
 				tree.Class = int(cl)
 			}
 		}
-		fmt.Print()
 	}
 
 	return
