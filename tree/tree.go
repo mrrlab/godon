@@ -129,6 +129,15 @@ func (tree *Tree) NonTerminals() <-chan *Tree {
 	})
 }
 
+func (tree *Tree) ClassNodes(class int) <-chan *Tree {
+	return tree.Walker(func(t *Tree) bool {
+		if t.Class == class {
+			return true
+		}
+		return false
+	})
+}
+
 func (tree *Tree) IsRoot() bool {
 	return tree.Parent == nil
 }

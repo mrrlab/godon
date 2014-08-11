@@ -201,6 +201,7 @@ func PrintUnQ(Q *matrix.DenseMatrix) {
 func main() {
 	cFreqFileName := flag.String("cfreq", "", "codon frequencies file")
 	nCPU := flag.Int("cpu", 0, "number of cpu to use")
+	fgBranch := flag.Int("fg", -1, "fg branch number")
 
 	flag.Parse()
 
@@ -270,10 +271,29 @@ func main() {
 		nm2id[s.Name] = i
 	}
 
+	if *fgBranch >= 0 {
+		for node := range t.Nodes() {
+			if node.Id == *fgBranch {
+				node.Class = 1
+			} else {
+				node.Class = 0
+			}
+		}
+	} else {
+		class1 := 0
+		for _ = range t.ClassNodes(1) {
+			class1 ++
+		}
+		if class1 == 0 {
+			fmt.Printf("Warning: no class=1 nodes")
+		}
+	}
+
+
 	fmt.Println(M0(cali, t, cf, 2, 0.5))
 
-	fmt.Println(H1(cali, t, cf, 3, 2, 0.5, 0.5, 0.94702, 0.00000, 0.05298, 0.00000))
-	fmt.Println(H1(cali, t, cf, 3, 1.90991, 0.02000, 1, 0.94680, 0.00010, 0.05310, 0.00001))
-	fmt.Println(H1(cali, t, cf, 4, 1.87689, 0.01454, 1.68249, 0.89978, 0.04150, 0.05613, 0.00259))
+	fmt.Println(H1(cali, t, cf, 2, 0.5, 0.5, 0.94702, 0.00000, 0.05298, 0.00000))
+	fmt.Println(H1(cali, t, cf, 1.90991, 0.02000, 1, 0.94680, 0.00010, 0.05310, 0.00001))
+	fmt.Println(H1(cali, t, cf, 1.87689, 0.01454, 1.68249, 0.89978, 0.04150, 0.05613, 0.00259))
 	//fmt.Println(M3(cali, t, cf, 1.98115, 0.00424, 0.08123, 0.32679, 0.62517, 0.31211, 0.06272))
 }

@@ -23,8 +23,8 @@ func M0(cali CodonSequences, t *tree.Tree, cf CodonFrequency, kappa, omega float
 	return L(cali, t, []float64{1}, scale, Qs, cf)
 }
 
-func H1(cali CodonSequences, t *tree.Tree, cf CodonFrequency, fg int, kappa float64, omega0, omega2 float64, p0, p1, p2a, p2b float64) float64 {
-	fmt.Printf("fg=%d, kappa=%f, omega0=%f, omega2=%f, p=[%f, %f, %f, %f]\n", fg, kappa, omega0, omega2, p0, p1, p2a, p2b)
+func H1(cali CodonSequences, t *tree.Tree, cf CodonFrequency, kappa float64, omega0, omega2 float64, p0, p1, p2a, p2b float64) float64 {
+	fmt.Printf("kappa=%f, omega0=%f, omega2=%f, p=[%f, %f, %f, %f]\n", kappa, omega0, omega2, p0, p1, p2a, p2b)
 	Q0, s0 := createTransitionMatrix(cf, kappa, omega0)
 	Q1, s1 := createTransitionMatrix(cf, kappa, 1)
 	Q2, s2 := createTransitionMatrix(cf, kappa, omega2)
@@ -39,32 +39,32 @@ func H1(cali CodonSequences, t *tree.Tree, cf CodonFrequency, fg int, kappa floa
 	}
 	Qs := make([][]*EMatrix, 4)
 	scale := make([]float64, t.NNodes())
-	for i := 0; i < t.NNodes(); i++ {
-		if i != fg {
-			scale[i] = (p0+p2a)*s0 + (p1+p2b)*s1
+	for node := range t.Nodes() {
+		if node.Class == 0 {
+			scale[node.Id] = (p0+p2a)*s0 + (p1+p2b)*s1
 		} else {
-			scale[i] = p0*s0 + p1*s1 + (p2a+p2b)*s2
+			scale[node.Id] = p0*s0 + p1*s1 + (p2a+p2b)*s2
 		}
 	}
 	for i := 0; i < len(Qs); i++ {
 		Qs[i] = make([]*EMatrix, t.NNodes())
-		for b, _ := range Qs[i] {
+		for node := range t.Nodes() {
 			switch i {
 			case 0:
-				Qs[i][b] = em0
+				Qs[i][node.Id] = em0
 			case 1:
-				Qs[i][b] = em1
+				Qs[i][node.Id] = em1
 			case 2:
-				if b != fg {
-					Qs[i][b] = em0
+				if node.Class == 0 {
+					Qs[i][node.Id] = em0
 				} else {
-					Qs[i][b] = em2
+					Qs[i][node.Id] = em2
 				}
 			case 3:
-				if b != fg {
-					Qs[i][b] = em1
+				if node.Class == 0 {
+					Qs[i][node.Id] = em1
 				} else {
-					Qs[i][b] = em2
+					Qs[i][node.Id] = em2
 				}
 			}
 		}
