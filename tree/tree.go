@@ -188,6 +188,8 @@ func ParseNewick(rd io.Reader) (tree *Tree, err error) {
 
 	scanner.Split(NewickSplit)
 
+	nodeId = 0
+
 	tree = NewTree(nil)
 	mode := NORMAL
 
