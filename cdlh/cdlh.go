@@ -18,6 +18,8 @@ import (
 	"bitbucket.com/Davydov/golh/tree"
 )
 
+type CodonFrequency []float64
+
 var (
 	alphabet = [...]byte{'T', 'C', 'A', 'G'}
 	codonNum = map[string]byte{}

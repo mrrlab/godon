@@ -15,8 +15,6 @@ type CodonSequence struct {
 
 type CodonSequences []CodonSequence
 
-type CodonFrequency []float64
-
 func (cf CodonFrequency) String() (s string) {
 	s = "<CodonFrequency: "
 	for i, f := range cf {
