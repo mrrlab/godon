@@ -8,6 +8,7 @@ import (
 	"io"
 	"math"
 	"os"
+	"log"
 	"runtime"
 	"runtime/pprof"
 	"sort"
@@ -211,7 +212,7 @@ func main() {
 
 	runtime.GOMAXPROCS(*nCPU)
 	mxprc := runtime.GOMAXPROCS(0)
-	fmt.Printf("Using CPUs: %d.\n", mxprc)
+	log.Printf("Using CPUs: %d.\n", mxprc)
 
 	if len(flag.Args()) < 2 {
 		fmt.Println("you should specify tree and alignment")
@@ -219,38 +220,33 @@ func main() {
 	}
 	treeFile, err := os.Open(flag.Args()[0])
 	if err != nil {
-		fmt.Println(err)
-		return
+		log.Fatal(err)
 	}
 	defer treeFile.Close()
 
 	t, err := tree.ParseNewick(treeFile)
 	if err != nil {
-		fmt.Println(err)
-		return
+		log.Fatal(err)
 	}
 
-	fmt.Println(t.FullString())
+	log.Print(t.FullString())
 
 	fastaFile, err := os.Open(flag.Args()[1])
 	if err != nil {
-		fmt.Println(err)
-		return
+		log.Fatal(err)
 	}
 
 	ali, err := bio.ParseFasta(fastaFile)
 	if err != nil {
-		fmt.Println(err)
-		return
+		log.Fatal(err)
 	}
 
 	nCodon = initCodon()
-	fmt.Println("nCodon=", nCodon)
+	log.Print("nCodon=", nCodon)
 
 	cali, err := ToCodonSequences(ali)
 	if err != nil {
-		fmt.Println(err)
-		return
+		log.Fatal(err)
 	}
 
 	var cf CodonFrequency
@@ -258,18 +254,16 @@ func main() {
 	if *cFreqFileName != "" {
 		cFreqFile, err := os.Open(*cFreqFileName)
 		if err != nil {
-			fmt.Println(err)
-			return
+			log.Fatal(err)
 		}
 		cf, err = readFrequency(cFreqFile)
 		if err != nil {
-			fmt.Println(err)
-			return
+			log.Fatal(err)
 		}
 	} else {
 		cf = equalFrequency()
 	}
-	fmt.Println(cf)
+	log.Print(cf)
 
 	for i, s := range cali {
 		nm2id[s.Name] = i
@@ -289,15 +283,14 @@ func main() {
 			class1++
 		}
 		if class1 == 0 {
-			fmt.Println("Warning: no class=1 nodes")
+			log.Print("Warning: no class=1 nodes")
 		}
 	}
 
 	if *cpuProfile != "" {
 		f, err := os.Create(*cpuProfile)
 		if err != nil {
-			fmt.Println(err)
-			return
+			log.Fatal(err)
 		}
 		pprof.StartCPUProfile(f)
 		defer pprof.StopCPUProfile()
