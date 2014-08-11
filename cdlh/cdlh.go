@@ -17,11 +17,12 @@ import (
 )
 
 var (
-	alphabet = [...]byte{'T', 'C', 'A', 'G'}
-	codonNum = map[string]byte{}
-	numCodon = map[byte]string{}
-	nm2id    = make(map[string]int)
-	nCodon   int
+	alphabet  = [...]byte{'T', 'C', 'A', 'G'}
+	rAlphabet = map[byte]byte{'T': 0, 'C': 1, 'A': 2, 'G': 3}
+	codonNum  = map[string]byte{}
+	numCodon  = map[byte]string{}
+	nm2id     = make(map[string]int)
+	nCodon    int
 )
 
 func Sum(m *matrix.DenseMatrix) (s float64) {
@@ -216,7 +217,8 @@ func main() {
 			log.Fatal(err)
 		}
 	} else {
-		cf = equalFrequency()
+		cf = F3X4(cali)
+		//cf = equalFrequency()
 	}
 	log.Print(cf)
 

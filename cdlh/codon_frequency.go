@@ -1,10 +1,10 @@
 package main
 
 import (
-	"io"
 	"bufio"
-	"strconv"
 	"errors"
+	"io"
+	"strconv"
 
 	"bitbucket.com/Davydov/golh/bio"
 )
@@ -47,4 +47,34 @@ func equalFrequency() CodonFrequency {
 		cf[i] = 1 / float64(nCodon)
 	}
 	return cf
+}
+
+func F3X4(cali CodonSequences) (cf CodonFrequency) {
+	poscf := make([][]float64, 3)
+	for i := 0; i < 3; i++ {
+		poscf[i] = make([]float64, 4)
+	}
+
+	for _, cs := range cali {
+		for _, codon := range cs.Sequence {
+			cs := numCodon[byte(codon)]
+			poscf[0][rAlphabet[cs[0]]]++
+			poscf[1][rAlphabet[cs[1]]]++
+			poscf[2][rAlphabet[cs[2]]]++
+		}
+	}
+
+	cf = make(CodonFrequency, nCodon)
+
+	sum := float64(0)
+	for ci, cs := range numCodon {
+		cf[ci] = poscf[0][rAlphabet[cs[0]]] * poscf[1][rAlphabet[cs[1]]] * poscf[2][rAlphabet[cs[2]]]
+		sum += cf[ci]
+	}
+
+	for ci, _ := range cf {
+		cf[ci] /= sum
+	}
+
+	return
 }
