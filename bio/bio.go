@@ -1,10 +1,10 @@
 package bio
 
 import (
-	"io"
 	"bufio"
 	"bytes"
 	"errors"
+	"io"
 	"strings"
 )
 

@@ -1,10 +1,10 @@
 package tree
 
 import (
-	"io"
 	"bufio"
 	"errors"
 	"fmt"
+	"io"
 	"strconv"
 	"strings"
 	"unicode"

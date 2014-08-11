@@ -1,11 +1,11 @@
 package main
 
 import (
-	"io"
 	"bufio"
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"math"
 	"os"
 	"runtime"
@@ -282,13 +282,12 @@ func main() {
 	} else {
 		class1 := 0
 		for _ = range t.ClassNodes(1) {
-			class1 ++
+			class1++
 		}
 		if class1 == 0 {
 			fmt.Printf("Warning: no class=1 nodes")
 		}
 	}
-
 
 	fmt.Println(M0(cali, t, cf, 2, 0.5))
 
