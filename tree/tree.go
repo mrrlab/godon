@@ -1,10 +1,10 @@
 package tree
 
 import (
+	"io"
 	"bufio"
 	"errors"
 	"fmt"
-	"os"
 	"strconv"
 	"strings"
 	"unicode"
@@ -174,14 +174,8 @@ func NewickSplit(data []byte, atEOF bool) (advance int, token []byte, err error)
 	return 0, nil, nil
 }
 
-func ParseNewick(fileName string) (tree *Tree, err error) {
-	file, err := os.Open(fileName)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
+func ParseNewick(rd io.Reader) (tree *Tree, err error) {
+	scanner := bufio.NewScanner(rd)
 
 	scanner.Split(NewickSplit)
 

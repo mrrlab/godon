@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io"
 	"bufio"
 	"errors"
 	"flag"
@@ -34,17 +35,10 @@ func Sum(m *matrix.DenseMatrix) (s float64) {
 	return
 }
 
-func readFrequency(fileName string) (CodonFrequency, error) {
+func readFrequency(rd io.Reader) (CodonFrequency, error) {
 	cf := make(CodonFrequency, nCodon)
-	fmt.Println("open", fileName)
-	file, err := os.Open(fileName)
-	if err != nil {
-		return nil, err
-	}
 
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
+	scanner := bufio.NewScanner(rd)
 	scanner.Split(bufio.ScanWords)
 
 	codons := getCodons()
@@ -205,7 +199,7 @@ func PrintUnQ(Q *matrix.DenseMatrix) {
 }
 
 func main() {
-	cFreqFile := flag.String("cfreq", "", "codon frequencies file")
+	cFreqFileName := flag.String("cfreq", "", "codon frequencies file")
 	nCPU := flag.Int("cpu", 0, "number of cpu to use")
 
 	flag.Parse()
@@ -218,13 +212,28 @@ func main() {
 		fmt.Println("you should specify tree and alignment")
 		return
 	}
-	t, err := tree.ParseNewick(flag.Args()[0])
+	treeFile, err := os.Open(flag.Args()[0])
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
+	defer treeFile.Close()
+
+	t, err := tree.ParseNewick(treeFile)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
 	fmt.Println(t.FullString())
-	ali, err := bio.ParseFasta(flag.Args()[1])
+
+	fastaFile, err := os.Open(flag.Args()[1])
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	ali, err := bio.ParseFasta(fastaFile)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -241,8 +250,13 @@ func main() {
 
 	var cf CodonFrequency
 
-	if *cFreqFile != "" {
-		cf, err = readFrequency(*cFreqFile)
+	if *cFreqFileName != "" {
+		cFreqFile, err := os.Open(*cFreqFileName)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		cf, err = readFrequency(cFreqFile)
 		if err != nil {
 			fmt.Println(err)
 			return

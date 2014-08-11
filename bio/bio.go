@@ -1,43 +1,41 @@
 package bio
 
 import (
-	"fmt"
-	"os"
-	"strings"
+	"io"
 	"bufio"
-	"errors"
 	"bytes"
+	"errors"
+	"strings"
 )
-
 
 var (
 	GeneticCode = map[string]byte{
-		"ATA":'I', "ATC":'I', "ATT":'I', "ATG":'M',
-		"ACA":'T', "ACC":'T', "ACG":'T', "ACT":'T',
-		"AAC":'N', "AAT":'N', "AAA":'K', "AAG":'K',
-		"AGC":'S', "AGT":'S', "AGA":'R', "AGG":'R',
-		"CTA":'L', "CTC":'L', "CTG":'L', "CTT":'L',
-		"CCA":'P', "CCC":'P', "CCG":'P', "CCT":'P',
-		"CAC":'H', "CAT":'H', "CAA":'Q', "CAG":'Q',
-		"CGA":'R', "CGC":'R', "CGG":'R', "CGT":'R',
-		"GTA":'V', "GTC":'V', "GTG":'V', "GTT":'V',
-		"GCA":'A', "GCC":'A', "GCG":'A', "GCT":'A',
-		"GAC":'D', "GAT":'D', "GAA":'E', "GAG":'E',
-		"GGA":'G', "GGC":'G', "GGG":'G', "GGT":'G',
-		"TCA":'S', "TCC":'S', "TCG":'S', "TCT":'S',
-		"TTC":'F', "TTT":'F', "TTA":'L', "TTG":'L',
-		"TAC":'Y', "TAT":'Y', "TAA":'_', "TAG":'_',
-		"TGC":'C', "TGT":'C', "TGA":'_', "TGG":'W'}
+		"ATA": 'I', "ATC": 'I', "ATT": 'I', "ATG": 'M',
+		"ACA": 'T', "ACC": 'T', "ACG": 'T', "ACT": 'T',
+		"AAC": 'N', "AAT": 'N', "AAA": 'K', "AAG": 'K',
+		"AGC": 'S', "AGT": 'S', "AGA": 'R', "AGG": 'R',
+		"CTA": 'L', "CTC": 'L', "CTG": 'L', "CTT": 'L',
+		"CCA": 'P', "CCC": 'P', "CCG": 'P', "CCT": 'P',
+		"CAC": 'H', "CAT": 'H', "CAA": 'Q', "CAG": 'Q',
+		"CGA": 'R', "CGC": 'R', "CGG": 'R', "CGT": 'R',
+		"GTA": 'V', "GTC": 'V', "GTG": 'V', "GTT": 'V',
+		"GCA": 'A', "GCC": 'A', "GCG": 'A', "GCT": 'A',
+		"GAC": 'D', "GAT": 'D', "GAA": 'E', "GAG": 'E',
+		"GGA": 'G', "GGC": 'G', "GGG": 'G', "GGT": 'G',
+		"TCA": 'S', "TCC": 'S', "TCG": 'S', "TCT": 'S',
+		"TTC": 'F', "TTT": 'F', "TTA": 'L', "TTG": 'L',
+		"TAC": 'Y', "TAT": 'Y', "TAA": '_', "TAG": '_',
+		"TGC": 'C', "TGT": 'C', "TGA": '_', "TGG": 'W'}
 )
 
 func Translate(nseq string) (string, error) {
 	var buffer bytes.Buffer
 
-	if len(nseq) % 3 != 0 {
+	if len(nseq)%3 != 0 {
 		return "", errors.New("sequence length doesn't divide by 3")
 	}
 
-	for i := 0; i < len(nseq); i+=3 {
+	for i := 0; i < len(nseq); i += 3 {
 		aa := GeneticCode[nseq[i:i+3]]
 		if aa == '_' {
 			if i+3 >= len(nseq) {
@@ -59,23 +57,15 @@ func IsStopCodon(codon string) bool {
 }
 
 type Sequence struct {
-	Name string
+	Name     string
 	Sequence string
 }
 
 type Sequences []Sequence
 
-func ParseFasta(fileName string) (seqs Sequences, err error) {
-	fmt.Println("open", fileName)
-	file, err := os.Open(fileName)
-	if err != nil {
-		return nil, err
-	}
-
-	defer file.Close()
-
+func ParseFasta(rd io.Reader) (seqs Sequences, err error) {
 	seqs = make(Sequences, 0, 10)
-	scanner := bufio.NewScanner(file)
+	scanner := bufio.NewScanner(rd)
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
 		if line == "" {
@@ -98,7 +88,7 @@ func ParseFasta(fileName string) (seqs Sequences, err error) {
 
 func Wrap(seq string, n int) (s string) {
 	for i := 0; i < len(seq); i += n {
-		end := i+n
+		end := i + n
 		if end > len(seq) {
 			end = len(seq)
 		}
@@ -111,7 +101,6 @@ func (seq Sequence) String() (s string) {
 	s = ">" + seq.Name + "\n" + Wrap(seq.Sequence, 80)
 	return
 }
-
 
 func (seqs Sequences) String() (s string) {
 	for _, seq := range seqs {
