@@ -1931,5 +1931,3 @@ func BenchmarkH1_2(b *testing.B) {
 		H1(cali, t, cf, 1.876889, 0.014541, 1.682486, p0, p1, p2a, p2b)
 	}
 }
-
-
