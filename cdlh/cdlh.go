@@ -9,6 +9,7 @@ import (
 	"math"
 	"os"
 	"runtime"
+	"runtime/pprof"
 	"sort"
 	"strconv"
 
@@ -204,6 +205,7 @@ func main() {
 	cFreqFileName := flag.String("cfreq", "", "codon frequencies file")
 	nCPU := flag.Int("cpu", 0, "number of cpu to use")
 	fgBranch := flag.Int("fg", -1, "fg branch number")
+	cpuProfile := flag.String("cpuprofile", "", "write cpu profile to file")
 
 	flag.Parse()
 
@@ -289,6 +291,16 @@ func main() {
 		if class1 == 0 {
 			fmt.Println("Warning: no class=1 nodes")
 		}
+	}
+
+	if *cpuProfile != "" {
+		f, err := os.Create(*cpuProfile)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		pprof.StartCPUProfile(f)
+		defer pprof.StopCPUProfile()
 	}
 
 	fmt.Println(M0(cali, t, cf, 2, 0.5))
