@@ -235,6 +235,9 @@ func ParseNewick(rd io.Reader) (tree *Tree, err error) {
 					return nil, err
 				}
 				tree.Class = int(cl)
+				mode = NORMAL
+			default:
+				tree.Name = text
 			}
 		}
 	}
