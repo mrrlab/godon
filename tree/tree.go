@@ -13,12 +13,21 @@ import (
 
 var nodeId int
 
+type Mode int
+
+const (
+	NORMAL Mode = iota
+	LENGTH
+	CLASS
+)
+
 type Tree struct {
 	Name         string
 	BranchLength float64
 	Parent       *Tree
 	childNodes   []*Tree
 	Id           int
+	Class        int
 }
 
 func NewTree(parent *Tree) (tree *Tree) {
@@ -44,6 +53,9 @@ func (tree *Tree) String() (s string) {
 		s += "name=" + tree.Name + ", "
 	}
 	s += fmt.Sprintf("Id=%v, BranchLength=%v", tree.Id, tree.BranchLength)
+	if tree.Class != 0 {
+		s += fmt.Sprintf(", Class=%v", tree.Class)
+	}
 	s += ">"
 	return
 }
@@ -123,7 +135,7 @@ func (tree *Tree) IsRoot() bool {
 
 func IsSpecial(c rune) bool {
 	switch c {
-	case '(', ')', ':', ';', ',':
+	case '(', ')', ':', '#', ';', ',':
 		return true
 	}
 	return false
@@ -175,7 +187,8 @@ func ParseNewick(fileName string) (tree *Tree, err error) {
 	scanner.Split(NewickSplit)
 
 	tree = NewTree(nil)
-	length := false
+	mode := NORMAL
+
 	for scanner.Scan() {
 		text := scanner.Text()
 		switch text {
@@ -199,20 +212,27 @@ func ParseNewick(fileName string) (tree *Tree, err error) {
 				return nil, errors.New("brackets mismatch")
 			}
 			tree = tree.Parent
+		case "#":
+			mode = CLASS
 		case ":":
-			length = true
+			mode = LENGTH
 		case ";":
 			return
 		default:
-			if length {
+			switch mode {
+			case LENGTH:
 				l, err := strconv.ParseFloat(text, 64)
 				if err != nil {
 					return nil, err
 				}
 				tree.BranchLength = l
-				length = false
-			} else {
-				tree.Name = text
+				mode = NORMAL
+			case CLASS:
+				cl, err := strconv.ParseInt(text, 0, 0)
+				if err != nil {
+					return nil, err
+				}
+				tree.Class = int(cl)
 			}
 		}
 		fmt.Print()
