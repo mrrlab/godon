@@ -113,9 +113,9 @@ func createTransitionMatrix(cf CodonFrequency, kappa, omega float64) (m *matrix.
 		m.Set(i1, i1, -rowSum)
 	}
 	for i := 0; i < nCodon; i++ {
-		scale += -m.Get(i, i)
+		scale += -cf[i] * m.Get(i, i)
 	}
-	scale /= float64(nCodon)
+
 	return
 
 }
