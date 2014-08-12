@@ -18,9 +18,6 @@ const (
 	smallDiff = 1e-4
 )
 
-func init() {
-}
-
 func GetTreeAlignment(data string) (t *tree.Tree, cali CodonSequences, err error) {
 	tf, err := os.Open(path.Join("testdata", data +".nwk"))
 	if err != nil {
@@ -58,6 +55,7 @@ func GetTreeAlignment(data string) (t *tree.Tree, cali CodonSequences, err error
 	return
 }
 
+/*** Test M0 ***/
 func TestM0F0D1(tst *testing.T) {
 	t, cali, err := GetTreeAlignment(data1)
 	if err != nil {
@@ -73,6 +71,21 @@ func TestM0F0D1(tst *testing.T) {
 	}
 }
 
+func TestM0F3X4D1(tst *testing.T) {
+	t, cali, err := GetTreeAlignment(data1)
+	if err != nil {
+		tst.Error("Error: ", err)
+	}
+
+	cf := F3X4(cali)
+	L := M0(cali, t, cf, 2, 0.5)
+	refL := -2892.446106
+	tst.Log("L=", L, ", Ref=", refL, ", diff=", math.Abs(L-refL))
+	if math.Abs(L-refL) > smallDiff {
+		tst.Error("Expected ", refL, ", got", L)
+	}
+}
+
 func TestM0F0D2(tst *testing.T) {
 	t, cali, err := GetTreeAlignment(data2)
 	if err != nil {
@@ -82,6 +95,21 @@ func TestM0F0D2(tst *testing.T) {
 	cf := F0()
 	L := M0(cali, t, cf, 1.79668, 0.09879)
 	refL := -1463.253413
+	tst.Log("L=", L, ", Ref=", refL, ", diff=", math.Abs(L-refL))
+	if math.Abs(L-refL) > smallDiff {
+		tst.Error("Expected ", refL, ", got", L)
+	}
+}
+
+func TestM0F3X4D2(tst *testing.T) {
+	t, cali, err := GetTreeAlignment(data2)
+	if err != nil {
+		tst.Error("Error: ", err)
+	}
+
+	cf := F3X4(cali)
+	L := M0(cali, t, cf, 3.12566, 0.03430)
+	refL := -1473.371833
 	tst.Log("L=", L, ", Ref=", refL, ", diff=", math.Abs(L-refL))
 	if math.Abs(L-refL) > smallDiff {
 		tst.Error("Expected ", refL, ", got", L)
@@ -106,6 +134,7 @@ func TestM0F0D3(tst *testing.T) {
 	}
 }
 
+/*** Test H1 ***/
 func TestH1F0D1(tst *testing.T) {
 	t, cali, err := GetTreeAlignment(data1)
 	if err != nil {
@@ -124,6 +153,24 @@ func TestH1F0D1(tst *testing.T) {
 	}
 }
 
+func TestH1F3X4D1(tst *testing.T) {
+	t, cali, err := GetTreeAlignment(data1)
+	if err != nil {
+		tst.Error("Error: ", err)
+	}
+
+	cf := F3X4(cali)
+	p0, p1 := 0.934681, 0.000000
+	p2a := (1 - p0 - p1) * p0 / (p0 + p1)
+	p2b := (1 - p0 - p1) * p1 / (p0 + p1)
+	L := H1(cali, t, cf, 1.572572, 0.015173, 1.000000, p0, p1, p2a, p2b)
+	refL := -2474.003708
+	tst.Log("L=", L, ", Ref=", refL, ", diff=", math.Abs(L-refL))
+	if math.Abs(L-refL) > smallDiff {
+		tst.Error("Expected ", refL, ", got", L)
+	}
+}
+
 func TestH1F0D2(tst *testing.T) {
 	t, cali, err := GetTreeAlignment(data2)
 	if err != nil {
@@ -136,6 +183,24 @@ func TestH1F0D2(tst *testing.T) {
 	p2b := (1 - p0 - p1) * p1 / (p0 + p1)
 	L := H1(cali, t, cf, 1.876889, 0.014541, 1.682486, p0, p1, p2a, p2b)
 	refL := -1405.850679
+	tst.Log("L=", L, ", Ref=", refL, ", diff=", math.Abs(L-refL))
+	if math.Abs(L-refL) > smallDiff {
+		tst.Error("Expected ", refL, ", got", L)
+	}
+}
+
+func TestH1F3X4D2(tst *testing.T) {
+	t, cali, err := GetTreeAlignment(data2)
+	if err != nil {
+		tst.Error("Error: ", err)
+	}
+
+	cf := F3X4(cali)
+	p0, p1 := 0.932349, 0.005383
+	p2a := (1 - p0 - p1) * p0 / (p0 + p1)
+	p2b := (1 - p0 - p1) * p1 / (p0 + p1)
+	L := H1(cali, t, cf, 3.462166, 0.017381, 1.000000, p0, p1, p2a, p2b)
+	refL := -1428.862660
 	tst.Log("L=", L, ", Ref=", refL, ", diff=", math.Abs(L-refL))
 	if math.Abs(L-refL) > smallDiff {
 		tst.Error("Expected ", refL, ", got", L)
@@ -163,6 +228,28 @@ func TestH1F0D3(tst *testing.T) {
 	}
 }
 
+func TestH1F3X4D3(tst *testing.T) {
+	if testing.Short() {
+		tst.Skip("skipping test in short mode.")
+	}
+	t, cali, err := GetTreeAlignment(data3)
+	if err != nil {
+		tst.Error("Error: ", err)
+	}
+
+	cf := F3X4(cali)
+	p0, p1 := 0.902686, 0.079667
+	p2a := (1 - p0 - p1) * p0 / (p0 + p1)
+	p2b := (1 - p0 - p1) * p1 / (p0 + p1)
+	L := H1(cali, t, cf, 1.868810, 0.064487, 6.972271, p0, p1, p2a, p2b)
+	refL := -47904.801502
+	tst.Log("L=", L, ", Ref=", refL, ", diff=", math.Abs(L-refL))
+	if math.Abs(L-refL) > smallDiff {
+		tst.Error("Expected ", refL, ", got", L)
+	}
+}
+
+/*** Benchmark M0 ***/
 func BenchmarkM0F0D1(b *testing.B) {
 	t, cali, err := GetTreeAlignment(data1)
 	if err != nil {
@@ -193,6 +280,7 @@ func BenchmarkM0F0D2(b *testing.B) {
 	}
 }
 
+/*** Benchmark H1 ***/
 func BenchmarkH1F0D1(b *testing.B) {
 	t, cali, err := GetTreeAlignment(data1)
 	if err != nil {
