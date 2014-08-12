@@ -41,7 +41,7 @@ func readFrequency(rd io.Reader) (CodonFrequency, error) {
 
 }
 
-func equalFrequency() CodonFrequency {
+func F0() CodonFrequency {
 	cf := make(CodonFrequency, nCodon)
 	for i := 0; i < nCodon; i++ {
 		cf[i] = 1 / float64(nCodon)

@@ -218,7 +218,7 @@ func main() {
 		}
 	} else {
 		cf = F3X4(cali)
-		//cf = equalFrequency()
+		//cf = F0()
 	}
 	log.Print(cf)
 

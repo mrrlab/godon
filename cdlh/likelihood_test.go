@@ -1773,7 +1773,7 @@ func TestM0_1(tst *testing.T) {
 		tst.Error("Error: ", err)
 	}
 
-	cf := equalFrequency()
+	cf := F0()
 	L := M0(cali, t, cf, 2, 0.5)
 	refL := -2836.196647
 	tst.Log("L=", L, ", Ref=", refL, ", diff=", math.Abs(L-refL))
@@ -1788,7 +1788,7 @@ func TestM0_2(tst *testing.T) {
 		tst.Error("Error: ", err)
 	}
 
-	cf := equalFrequency()
+	cf := F0()
 	L := M0(cali, t, cf, 1.79668, 0.09879)
 	refL := -1463.253413
 	tst.Log("L=", L, ", Ref=", refL, ", diff=", math.Abs(L-refL))
@@ -1806,7 +1806,7 @@ func TestM0_3(tst *testing.T) {
 		tst.Error("Error: ", err)
 	}
 
-	cf := equalFrequency()
+	cf := F0()
 	L := M0(cali, t, cf, 1.77621, 0.10313)
 	refL := -48631.160712
 	tst.Log("L=", L, ", Ref=", refL, ", diff=", math.Abs(L-refL))
@@ -1821,7 +1821,7 @@ func TestH1_1(tst *testing.T) {
 		tst.Error("Error: ", err)
 	}
 
-	cf := equalFrequency()
+	cf := F0()
 	p0, p1 := 0.946800, 0.000098
 	p2a := (1 - p0 - p1) * p0 / (p0 + p1)
 	p2b := (1 - p0 - p1) * p1 / (p0 + p1)
@@ -1839,7 +1839,7 @@ func TestH1_2(tst *testing.T) {
 		tst.Error("Error: ", err)
 	}
 
-	cf := equalFrequency()
+	cf := F0()
 	p0, p1 := 0.899776, 0.041502
 	p2a := (1 - p0 - p1) * p0 / (p0 + p1)
 	p2b := (1 - p0 - p1) * p1 / (p0 + p1)
@@ -1860,7 +1860,7 @@ func TestH1_3(tst *testing.T) {
 		tst.Error("Error: ", err)
 	}
 
-	cf := equalFrequency()
+	cf := F0()
 	p0, p1 := 0.883725, 0.099870
 	p2a := (1 - p0 - p1) * p0 / (p0 + p1)
 	p2b := (1 - p0 - p1) * p1 / (p0 + p1)
@@ -1878,7 +1878,7 @@ func BenchmarkM0_1(b *testing.B) {
 		b.Error("Error: ", err)
 	}
 
-	cf := equalFrequency()
+	cf := F0()
 
 	b.ResetTimer()
 
@@ -1893,7 +1893,7 @@ func BenchmarkM0_2(b *testing.B) {
 		b.Error("Error: ", err)
 	}
 
-	cf := equalFrequency()
+	cf := F0()
 
 	b.ResetTimer()
 
@@ -1908,7 +1908,7 @@ func BenchmarkH1_1(b *testing.B) {
 		b.Error("Error: ", err)
 	}
 
-	cf := equalFrequency()
+	cf := F0()
 	p0, p1 := 0.946800, 0.000098
 	p2a := (1 - p0 - p1) * p0 / (p0 + p1)
 	p2b := (1 - p0 - p1) * p1 / (p0 + p1)
@@ -1926,7 +1926,7 @@ func BenchmarkH1_2(b *testing.B) {
 		b.Error("Error: ", err)
 	}
 
-	cf := equalFrequency()
+	cf := F0()
 	p0, p1 := 0.899776, 0.041502
 	p2a := (1 - p0 - p1) * p0 / (p0 + p1)
 	p2b := (1 - p0 - p1) * p1 / (p0 + p1)
