@@ -58,7 +58,7 @@ func GetTreeAlignment(data string) (t *tree.Tree, cali CodonSequences, err error
 	return
 }
 
-func TestM0_1(tst *testing.T) {
+func TestM0F0D1(tst *testing.T) {
 	t, cali, err := GetTreeAlignment(data1)
 	if err != nil {
 		tst.Error("Error: ", err)
@@ -73,7 +73,7 @@ func TestM0_1(tst *testing.T) {
 	}
 }
 
-func TestM0_2(tst *testing.T) {
+func TestM0F0D2(tst *testing.T) {
 	t, cali, err := GetTreeAlignment(data2)
 	if err != nil {
 		tst.Error("Error: ", err)
@@ -88,7 +88,7 @@ func TestM0_2(tst *testing.T) {
 	}
 }
 
-func TestM0_3(tst *testing.T) {
+func TestM0F0D3(tst *testing.T) {
 	if testing.Short() {
 		tst.Skip("skipping test in short mode.")
 	}
@@ -106,7 +106,7 @@ func TestM0_3(tst *testing.T) {
 	}
 }
 
-func TestH1_1(tst *testing.T) {
+func TestH1F0D1(tst *testing.T) {
 	t, cali, err := GetTreeAlignment(data1)
 	if err != nil {
 		tst.Error("Error: ", err)
@@ -124,7 +124,7 @@ func TestH1_1(tst *testing.T) {
 	}
 }
 
-func TestH1_2(tst *testing.T) {
+func TestH1F0D2(tst *testing.T) {
 	t, cali, err := GetTreeAlignment(data2)
 	if err != nil {
 		tst.Error("Error: ", err)
@@ -142,7 +142,7 @@ func TestH1_2(tst *testing.T) {
 	}
 }
 
-func TestH1_3(tst *testing.T) {
+func TestH1F0D3(tst *testing.T) {
 	if testing.Short() {
 		tst.Skip("skipping test in short mode.")
 	}
@@ -163,7 +163,7 @@ func TestH1_3(tst *testing.T) {
 	}
 }
 
-func BenchmarkM0_1(b *testing.B) {
+func BenchmarkM0F0D1(b *testing.B) {
 	t, cali, err := GetTreeAlignment(data1)
 	if err != nil {
 		b.Error("Error: ", err)
@@ -178,7 +178,7 @@ func BenchmarkM0_1(b *testing.B) {
 	}
 }
 
-func BenchmarkM0_2(b *testing.B) {
+func BenchmarkM0F0D2(b *testing.B) {
 	t, cali, err := GetTreeAlignment(data2)
 	if err != nil {
 		b.Error("Error: ", err)
@@ -193,7 +193,7 @@ func BenchmarkM0_2(b *testing.B) {
 	}
 }
 
-func BenchmarkH1_1(b *testing.B) {
+func BenchmarkH1F0D1(b *testing.B) {
 	t, cali, err := GetTreeAlignment(data1)
 	if err != nil {
 		b.Error("Error: ", err)
@@ -211,7 +211,7 @@ func BenchmarkH1_1(b *testing.B) {
 	}
 }
 
-func BenchmarkH1_2(b *testing.B) {
+func BenchmarkH1F0D2(b *testing.B) {
 	t, cali, err := GetTreeAlignment(data1)
 	if err != nil {
 		b.Error("Error: ", err)
