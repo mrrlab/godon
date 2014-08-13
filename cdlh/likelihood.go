@@ -3,6 +3,7 @@ package main
 import (
 	"math"
 	"runtime"
+	"sync"
 
 	"github.com/skelterjohn/go.matrix"
 
@@ -14,21 +15,35 @@ func L(ali CodonSequences, t *tree.Tree, prop []float64, scale []float64, Qs [][
 		panic("incorrect proportion length")
 	}
 
-	cD := matrix.Zeros(nCodon, nCodon)
+	mxprc := runtime.GOMAXPROCS(0)
+
 	eQts := make([][]*matrix.DenseMatrix, len(prop))
+
+	cdch := make(chan *matrix.DenseMatrix, mxprc)
+	for i := 0; i < mxprc; i++ {
+		cdch <- matrix.Zeros(nCodon, nCodon)
+	}
+	var wg sync.WaitGroup
 
 	for i, _ := range prop {
 		eQts[i] = make([]*matrix.DenseMatrix, t.NNodes())
 		for node := range t.Nodes() {
-			var err error
-			eQts[i][node.Id], err = Qs[i][node.Id].Exp(cD, node.BranchLength / scale[node.Id])
-			if err != nil {
-				panic("Error exponentiating matrix")
-			}
+			wg.Add(1)
+			go func(i int, node *tree.Tree) {
+
+				var err error
+				cD := <-cdch
+				eQts[i][node.Id], err = Qs[i][node.Id].Exp(cD, node.BranchLength/scale[node.Id])
+				if err != nil {
+					panic("Error exponentiating matrix")
+				}
+				cdch <- cD
+				wg.Done()
+			}(i, node)
 		}
 	}
+	wg.Wait()
 
-	mxprc := runtime.GOMAXPROCS(0)
 	plhch := make(chan [][]float64, mxprc)
 	for i := 0; i < mxprc; i++ {
 		plhch <- nil
