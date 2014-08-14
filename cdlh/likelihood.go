@@ -2,7 +2,6 @@ package main
 
 import (
 	"math"
-	"runtime"
 	"sync"
 
 	"github.com/skelterjohn/go.matrix"
@@ -10,39 +9,43 @@ import (
 	"bitbucket.com/Davydov/golh/tree"
 )
 
-func L(ali CodonSequences, t *tree.Tree, prop []float64, scale []float64, Qs [][]*EMatrix, cf CodonFrequency) (lnL float64) {
-	if len(prop) != len(Qs) {
-		panic("incorrect proportion length")
-	}
+func ExpBranch(t *tree.Tree, Qs [][]*EMatrix, scale []float64) (eQts [][]*matrix.DenseMatrix) {
+	eQts = make([][]*matrix.DenseMatrix, len(Qs))
 
-	mxprc := runtime.GOMAXPROCS(0)
-
-	eQts := make([][]*matrix.DenseMatrix, len(prop))
-
-	cdch := make(chan *matrix.DenseMatrix, mxprc)
+	cDch := make(chan *matrix.DenseMatrix, mxprc)
 	for i := 0; i < mxprc; i++ {
-		cdch <- matrix.Zeros(nCodon, nCodon)
+		cDch <- matrix.Zeros(nCodon, nCodon)
 	}
+
 	var wg sync.WaitGroup
 
-	for i, _ := range prop {
+	for i, _ := range Qs {
 		eQts[i] = make([]*matrix.DenseMatrix, t.NNodes())
 		for node := range t.Nodes() {
 			wg.Add(1)
 			go func(i int, node *tree.Tree) {
 
 				var err error
-				cD := <-cdch
+				cD := <-cDch
 				eQts[i][node.Id], err = Qs[i][node.Id].Exp(cD, node.BranchLength/scale[node.Id])
 				if err != nil {
 					panic("Error exponentiating matrix")
 				}
-				cdch <- cD
+				cDch <- cD
 				wg.Done()
 			}(i, node)
 		}
 	}
 	wg.Wait()
+	return
+}
+
+func L(ali CodonSequences, t *tree.Tree, prop []float64, scale []float64, Qs [][]*EMatrix, cf CodonFrequency) (lnL float64) {
+	if len(prop) != len(Qs) {
+		panic("incorrect proportion length")
+	}
+
+	eQts := ExpBranch(t, Qs, scale)
 
 	plhch := make(chan [][]float64, mxprc)
 	for i := 0; i < mxprc; i++ {

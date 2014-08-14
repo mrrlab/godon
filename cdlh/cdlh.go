@@ -23,6 +23,7 @@ var (
 	numCodon  = map[byte]string{}
 	nm2id     = make(map[string]int)
 	nCodon    int
+	mxprc     int
 )
 
 func Sum(m *matrix.DenseMatrix) (s float64) {
@@ -158,6 +159,11 @@ func PrintUnQ(Q *matrix.DenseMatrix) {
 	}
 }
 
+func initCC() {
+	mxprc = runtime.GOMAXPROCS(0)
+	nCodon = initCodon()
+}
+
 func main() {
 	cFreqFileName := flag.String("cfreq", "", "codon frequencies file")
 	nCPU := flag.Int("cpu", 0, "number of cpu to use")
@@ -167,8 +173,10 @@ func main() {
 	flag.Parse()
 
 	runtime.GOMAXPROCS(*nCPU)
-	mxprc := runtime.GOMAXPROCS(0)
+
+	initCC()
 	log.Printf("Using CPUs: %d.\n", mxprc)
+	log.Print("nCodon=", nCodon)
 
 	if len(flag.Args()) < 2 {
 		fmt.Println("you should specify tree and alignment")
@@ -196,9 +204,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	nCodon = initCodon()
-	log.Print("nCodon=", nCodon)
 
 	cali, err := ToCodonSequences(ali)
 	if err != nil {

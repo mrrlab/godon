@@ -1,10 +1,10 @@
 package main
 
 import (
-	"os"
 	"math"
-	"testing"
+	"os"
 	"path"
+	"testing"
 
 	"bitbucket.com/Davydov/golh/bio"
 	"bitbucket.com/Davydov/golh/tree"
@@ -19,7 +19,9 @@ const (
 )
 
 func GetTreeAlignment(data string) (t *tree.Tree, cali CodonSequences, err error) {
-	tf, err := os.Open(path.Join("testdata", data +".nwk"))
+	initCC()
+
+	tf, err := os.Open(path.Join("testdata", data+".nwk"))
 	if err != nil {
 		return
 	}
@@ -30,7 +32,7 @@ func GetTreeAlignment(data string) (t *tree.Tree, cali CodonSequences, err error
 		return
 	}
 
-	af, err := os.Open(path.Join("testdata", data +".fst"))
+	af, err := os.Open(path.Join("testdata", data+".fst"))
 	if err != nil {
 		return
 	}
@@ -40,8 +42,6 @@ func GetTreeAlignment(data string) (t *tree.Tree, cali CodonSequences, err error
 	if err != nil {
 		return
 	}
-
-	nCodon = initCodon()
 
 	cali, err = ToCodonSequences(ali)
 	if err != nil {
