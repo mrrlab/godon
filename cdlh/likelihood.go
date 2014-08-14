@@ -16,7 +16,7 @@ type expTask struct {
 func ExpBranch(t *tree.Tree, Qs [][]*EMatrix, scale []float64) (eQts [][]*matrix.DenseMatrix) {
 	eQts = make([][]*matrix.DenseMatrix, len(Qs))
 
-	nTasks := len(Qs) * t.NSubNodes()
+	nTasks := len(Qs) * t.NNodes()
 	tasks := make(chan expTask, nTasks)
 	status := make(chan struct{}, nTasks)
 
@@ -35,7 +35,7 @@ func ExpBranch(t *tree.Tree, Qs [][]*EMatrix, scale []float64) (eQts [][]*matrix
 	}
 
 	for class, _ := range Qs {
-		eQts[class] = make([]*matrix.DenseMatrix, t.NSubNodes())
+		eQts[class] = make([]*matrix.DenseMatrix, t.NNodes())
 		for node := range t.Nodes() {
 			var oclass int
 			for oclass = class - 1; oclass >= 0; oclass-- {
@@ -95,15 +95,14 @@ func L(ali CodonSequences, t *tree.Tree, prop []float64, scale []float64, Qs [][
 func subL(ali CodonSequences, t *tree.Tree, eQts []*matrix.DenseMatrix, cf CodonFrequency, pos int, plhch chan [][]float64) float64 {
 	res := 0.0
 	plh := <-plhch
-	nNodes := t.NSubNodes()
 	if plh == nil {
-		plh = make([][]float64, nNodes)
-		for i := 0; i < nNodes; i++ {
+		plh = make([][]float64, t.NNodes())
+		for i := 0; i < t.NNodes(); i++ {
 			plh[i] = make([]float64, nCodon)
 		}
 	}
 
-	for i := 0; i < nNodes; i++ {
+	for i := 0; i < t.NNodes(); i++ {
 		plh[i][0] = math.NaN()
 	}
 

@@ -21,6 +21,15 @@ const (
 
 type Tree struct {
 	*Node
+	nNodes int
+	nodes  []*Node
+}
+
+func (tree *Tree) NNodes() int {
+	if tree.nNodes == 0 {
+		tree.nNodes = tree.NSubNodes()
+	}
+	return tree.nNodes
 }
 
 type Node struct {
@@ -189,7 +198,7 @@ func ParseNewick(rd io.Reader) (tree *Tree, err error) {
 	nodeId := 0
 
 	node := NewNode(nil, nodeId)
-	tree = &Tree{node}
+	tree = &Tree{Node:node}
 	nodeId++
 
 	mode := NORMAL

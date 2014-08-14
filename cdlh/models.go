@@ -9,8 +9,8 @@ import (
 func M0(cali CodonSequences, t *tree.Tree, cf CodonFrequency, kappa, omega float64) float64 {
 	Q, s := createTransitionMatrix(cf, kappa, omega)
 	Qs := make([][]*EMatrix, 1)
-	Qs[0] = make([]*EMatrix, t.NSubNodes())
-	scale := make([]float64, t.NSubNodes())
+	Qs[0] = make([]*EMatrix, t.NNodes())
+	scale := make([]float64, t.NNodes())
 	em := NewEMatrix(Q)
 	err := em.Eigen()
 	if err != nil {
@@ -38,7 +38,7 @@ func H1(cali CodonSequences, t *tree.Tree, cf CodonFrequency, kappa float64, ome
 		panic(fmt.Sprintf("error finding eigen: %v, %v, %v", err1, err2, err3))
 	}
 	Qs := make([][]*EMatrix, 4)
-	scale := make([]float64, t.NSubNodes())
+	scale := make([]float64, t.NNodes())
 	for node := range t.Nodes() {
 		if node.Class == 0 {
 			scale[node.Id] = (p0+p2a)*s0 + (p1+p2b)*s1
@@ -47,7 +47,7 @@ func H1(cali CodonSequences, t *tree.Tree, cf CodonFrequency, kappa float64, ome
 		}
 	}
 	for i := 0; i < len(Qs); i++ {
-		Qs[i] = make([]*EMatrix, t.NSubNodes())
+		Qs[i] = make([]*EMatrix, t.NNodes())
 		for node := range t.Nodes() {
 			switch i {
 			case 0:
