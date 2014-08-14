@@ -13,17 +13,11 @@ type expTask struct {
 	node  *tree.Tree
 }
 
-type setTask struct {
-	class, oclass int
-	node          *tree.Tree
-}
-
 func ExpBranch(t *tree.Tree, Qs [][]*EMatrix, scale []float64) (eQts [][]*matrix.DenseMatrix) {
 	eQts = make([][]*matrix.DenseMatrix, len(Qs))
 
 	nTasks := len(Qs) * t.NNodes()
 	tasks := make(chan expTask, nTasks)
-	setTasks := make(chan setTask, nTasks)
 	status := make(chan struct{}, nTasks)
 
 	for i := 0; i < mxprc; i++ {
@@ -46,7 +40,9 @@ func ExpBranch(t *tree.Tree, Qs [][]*EMatrix, scale []float64) (eQts [][]*matrix
 			var oclass int
 			for oclass = class - 1; oclass >= 0; oclass-- {
 				if Qs[class][node.Id] == Qs[oclass][node.Id] {
-					setTasks <- setTask{class, oclass, node}
+					defer func(class, oclass, nid int) {
+						eQts[class][nid] = eQts[oclass][nid]
+					}(class, oclass, node.Id)
 					nTasks--
 					break
 				}
@@ -57,14 +53,9 @@ func ExpBranch(t *tree.Tree, Qs [][]*EMatrix, scale []float64) (eQts [][]*matrix
 		}
 	}
 	close(tasks)
-	close(setTasks)
 
 	for i := 0; i < nTasks; i++ {
 		<-status
-	}
-
-	for st := range setTasks {
-		eQts[st.class][st.node.Id] = eQts[st.oclass][st.node.Id]
 	}
 
 	return
