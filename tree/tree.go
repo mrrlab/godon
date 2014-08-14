@@ -32,6 +32,18 @@ func (tree *Tree) NNodes() int {
 	return tree.nNodes
 }
 
+func (tree *Tree) Nodes() []*Node {
+	if tree.nodes == nil {
+		tree.nodes = make([]*Node, tree.NNodes())
+		i := 0
+		for node := range tree.Node.Nodes() {
+			tree.nodes[i] = node
+			i ++
+		}
+	}
+	return tree.nodes
+}
+
 type Node struct {
 	Name         string
 	BranchLength float64

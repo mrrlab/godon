@@ -39,7 +39,7 @@ func H1(cali CodonSequences, t *tree.Tree, cf CodonFrequency, kappa float64, ome
 	}
 	Qs := make([][]*EMatrix, 4)
 	scale := make([]float64, t.NNodes())
-	for node := range t.Nodes() {
+	for _, node := range t.Nodes() {
 		if node.Class == 0 {
 			scale[node.Id] = (p0+p2a)*s0 + (p1+p2b)*s1
 		} else {
@@ -48,7 +48,7 @@ func H1(cali CodonSequences, t *tree.Tree, cf CodonFrequency, kappa float64, ome
 	}
 	for i := 0; i < len(Qs); i++ {
 		Qs[i] = make([]*EMatrix, t.NNodes())
-		for node := range t.Nodes() {
+		for _, node := range t.Nodes() {
 			switch i {
 			case 0:
 				Qs[i][node.Id] = em0

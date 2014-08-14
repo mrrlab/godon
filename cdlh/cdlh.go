@@ -232,7 +232,7 @@ func main() {
 	}
 
 	if *fgBranch >= 0 {
-		for node := range t.Nodes() {
+		for _, node := range t.Nodes() {
 			if node.Id == *fgBranch {
 				node.Class = 1
 			} else {

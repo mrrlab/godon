@@ -36,7 +36,7 @@ func ExpBranch(t *tree.Tree, Qs [][]*EMatrix, scale []float64) (eQts [][]*matrix
 
 	for class, _ := range Qs {
 		eQts[class] = make([]*matrix.DenseMatrix, t.NNodes())
-		for node := range t.Nodes() {
+		for _, node := range t.Nodes() {
 			var oclass int
 			for oclass = class - 1; oclass >= 0; oclass-- {
 				if Qs[class][node.Id] == Qs[oclass][node.Id] {
