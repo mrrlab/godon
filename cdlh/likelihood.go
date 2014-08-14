@@ -59,12 +59,48 @@ func ExpBranch(t *tree.Tree, Qs [][]*EMatrix, scale []float64) (eQts [][]*matrix
 	return
 }
 
+func nodeOrder(t *tree.Tree) (nodes []*tree.Node) {
+	nodes = make([]*tree.Node, 0, t.NNodes())
+	computed := make(map[*tree.Node]bool, t.NNodes())
+	awaiting := make(chan *tree.Node, t.NNodes() * 2)
+	for node := range t.Terminals() {
+		computed[node] = true
+		awaiting <- node.Parent
+	}
+
+	for node := range awaiting {
+		if node == nil {
+			break
+		}
+		if computed[node] {
+			continue
+		}
+		allComputed := true
+		for childNode := range node.ChildNodes() {
+			if !computed[childNode] {
+				allComputed = false
+				break
+			}
+		}
+		if !allComputed {
+			awaiting <- node
+		} else {
+			nodes = append(nodes, node)
+			computed[node] = true
+			awaiting <- node.Parent
+		}
+	}
+	return
+}
+
 func L(ali CodonSequences, t *tree.Tree, prop []float64, scale []float64, Qs [][]*EMatrix, cf CodonFrequency) (lnL float64) {
 	if len(prop) != len(Qs) {
 		panic("incorrect proportion length")
 	}
 
 	eQts := ExpBranch(t, Qs, scale)
+
+	no := nodeOrder(t)
 
 	nTasks := len(ali[0].Sequence)
 	results := make(chan float64, nTasks)
@@ -79,7 +115,7 @@ func L(ali CodonSequences, t *tree.Tree, prop []float64, scale []float64, Qs [][
 			for pos := range tasks {
 				res := float64(0)
 				for i, p := range prop {
-					res += subL(ali, t, eQts[i], cf, pos, plh) * p
+					res += subL(ali, t, no, eQts[i], cf, pos, plh) * p
 				}
 				results <- math.Log(res)
 			}
@@ -98,14 +134,12 @@ func L(ali CodonSequences, t *tree.Tree, prop []float64, scale []float64, Qs [][
 	return
 }
 
-func subL(ali CodonSequences, t *tree.Tree, eQts []*matrix.DenseMatrix, cf CodonFrequency, pos int, plh [][]float64) float64 {
-	res := 0.0
+func subL(ali CodonSequences, t *tree.Tree, no []*tree.Node, eQts []*matrix.DenseMatrix, cf CodonFrequency, pos int, plh [][]float64) (res float64) {
 
 	for i := 0; i < t.NNodes(); i++ {
 		plh[i][0] = math.NaN()
 	}
 
-	nodes := make(chan *tree.Node, len(ali))
 	for node := range t.Terminals() {
 		for l := byte(0); l < byte(nCodon); l++ {
 			if l == ali[nm2id[node.Name]].Sequence[pos] {
@@ -114,20 +148,9 @@ func subL(ali CodonSequences, t *tree.Tree, eQts []*matrix.DenseMatrix, cf Codon
 				plh[node.Id][l] = 0
 			}
 		}
-		nodes <- node.Parent
 	}
 
-NodeLoop:
-	for node := range nodes {
-		for child := range node.ChildNodes() {
-			if math.IsNaN(plh[child.Id][0]) {
-				nodes <- node
-				continue NodeLoop
-			}
-		}
-		if !math.IsNaN(plh[node.Id][0]) {
-			continue NodeLoop
-		}
+	for _, node := range no {
 		for l1 := 0; l1 < nCodon; l1++ {
 			l := 1.0
 			for child := range node.ChildNodes() {
@@ -139,15 +162,14 @@ NodeLoop:
 			}
 			plh[node.Id][l1] = l
 		}
-		nodes <- node.Parent
+
 		if node.IsRoot() {
 			for l := 0; l < nCodon; l++ {
 				res += cf[l] * plh[node.Id][l]
 			}
-			break NodeLoop
+			break
 		}
 
 	}
-	close(nodes)
-	return res
+	return
 }
