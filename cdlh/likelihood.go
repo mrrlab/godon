@@ -68,39 +68,40 @@ func L(ali CodonSequences, t *tree.Tree, prop []float64, scale []float64, Qs [][
 
 	eQts := ExpBranch(t, Qs, scale)
 
-	plhch := make(chan [][]float64, mxprc)
+	nTasks := len(ali[0].Sequence)
+	results := make(chan float64, nTasks)
+	tasks := make(chan int, nTasks)
+
 	for i := 0; i < mxprc; i++ {
-		plhch <- nil
-	}
-
-	ch := make(chan float64, len(ali[0].Sequence))
-	for pos, _ := range ali[0].Sequence {
-		go func(pos int) {
-			res := float64(0)
-			for i, p := range prop {
-				res += subL(ali, t, eQts[i], cf, pos, plhch) * p
+		go func() {
+			plh := make([][]float64, t.NNodes())
+			for i := 0; i < t.NNodes(); i++ {
+				plh[i] = make([]float64, nCodon)
 			}
-			ch <- math.Log(res)
-		}(pos)
+			for pos := range tasks {
+				res := float64(0)
+				for i, p := range prop {
+					res += subL(ali, t, eQts[i], cf, pos, plh) * p
+				}
+				results <- math.Log(res)
+			}
+		}()
 	}
 
-	for _, _ = range ali[0].Sequence {
-		dlnL := <-ch
+	for pos := 0; pos < nTasks; pos++ {
+		tasks <- pos
+	}
+	close(tasks)
+
+	for i := 0; i < nTasks; i++ {
+		dlnL := <-results
 		lnL += dlnL
 	}
-	close(ch)
 	return
 }
 
-func subL(ali CodonSequences, t *tree.Tree, eQts []*matrix.DenseMatrix, cf CodonFrequency, pos int, plhch chan [][]float64) float64 {
+func subL(ali CodonSequences, t *tree.Tree, eQts []*matrix.DenseMatrix, cf CodonFrequency, pos int, plh [][]float64) float64 {
 	res := 0.0
-	plh := <-plhch
-	if plh == nil {
-		plh = make([][]float64, t.NNodes())
-		for i := 0; i < t.NNodes(); i++ {
-			plh[i] = make([]float64, nCodon)
-		}
-	}
 
 	for i := 0; i < t.NNodes(); i++ {
 		plh[i][0] = math.NaN()
@@ -150,6 +151,5 @@ NodeLoop:
 
 	}
 	close(nodes)
-	plhch <- plh
 	return res
 }
