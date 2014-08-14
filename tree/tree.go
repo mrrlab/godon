@@ -11,8 +11,6 @@ import (
 	"unicode/utf8"
 )
 
-var nodeId int
-
 type Mode int
 
 const (
@@ -22,60 +20,60 @@ const (
 )
 
 type Tree struct {
+	*Node
+}
+
+type Node struct {
 	Name         string
 	BranchLength float64
-	Parent       *Tree
-	childNodes   []*Tree
+	Parent       *Node
+	childNodes   []*Node
 	Id           int
 	Class        int
 }
 
-func NewTree(parent *Tree) (tree *Tree) {
-	tree = &Tree{Parent: parent, Id: nodeId}
-	nodeId++
+func NewNode(parent *Node, nodeId int) (node *Node) {
+	node = &Node{Parent: parent, Id: nodeId}
 	return
 }
 
-func (tree *Tree) AddChild(subTree *Tree) {
-	/*if tree.childNodes == nil{
-		tree.childNodes = make([]*Tree, 0, 2)
-	}*/
-	subTree.Parent = tree
-	tree.childNodes = append(tree.childNodes, subTree)
+func (node *Node) AddChild(subNode *Node) {
+	subNode.Parent = node
+	node.childNodes = append(node.childNodes, subNode)
 }
 
-func (tree *Tree) String() (s string) {
+func (node *Node) String() (s string) {
 	s = "<"
-	if tree.Parent == nil {
+	if node.Parent == nil {
 		s += "root, "
 	}
-	if tree.Name != "" {
-		s += "name=" + tree.Name + ", "
+	if node.Name != "" {
+		s += "name=" + node.Name + ", "
 	}
-	s += fmt.Sprintf("Id=%v, BranchLength=%v", tree.Id, tree.BranchLength)
-	if tree.Class != 0 {
-		s += fmt.Sprintf(", Class=%v", tree.Class)
+	s += fmt.Sprintf("Id=%v, BranchLength=%v", node.Id, node.BranchLength)
+	if node.Class != 0 {
+		s += fmt.Sprintf(", Class=%v", node.Class)
 	}
 	s += ">"
 	return
 }
 
-func (tree *Tree) FullString() string {
-	return strings.TrimSpace(tree.prefixString(""))
+func (node *Node) FullString() string {
+	return strings.TrimSpace(node.prefixString(""))
 }
 
-func (tree *Tree) prefixString(prefix string) (s string) {
-	s = prefix + tree.String() + "\n"
-	for _, node := range tree.childNodes {
+func (node *Node) prefixString(prefix string) (s string) {
+	s = prefix + node.String() + "\n"
+	for _, node := range node.childNodes {
 		s += node.prefixString(prefix + "    ")
 	}
 	return
 }
 
-func (tree *Tree) ChildNodes() <-chan *Tree {
-	ch := make(chan *Tree)
+func (node *Node) ChildNodes() <-chan *Node {
+	ch := make(chan *Node)
 	go func() {
-		for _, node := range tree.childNodes {
+		for _, node := range node.childNodes {
 			ch <- node
 		}
 		close(ch)
@@ -83,45 +81,45 @@ func (tree *Tree) ChildNodes() <-chan *Tree {
 	return ch
 }
 
-func (tree *Tree) Walk(ch chan *Tree, filter func(*Tree) bool) {
-	if filter == nil || filter(tree) {
-		ch <- tree
+func (node *Node) Walk(ch chan *Node, filter func(*Node) bool) {
+	if filter == nil || filter(node) {
+		ch <- node
 	}
-	for _, node := range tree.childNodes {
+	for _, node := range node.childNodes {
 		node.Walk(ch, filter)
 	}
 }
 
-func (tree *Tree) Walker(filter func(*Tree) bool) <-chan *Tree {
-	ch := make(chan *Tree)
+func (node *Node) Walker(filter func(*Node) bool) <-chan *Node {
+	ch := make(chan *Node)
 	go func() {
-		tree.Walk(ch, filter)
+		node.Walk(ch, filter)
 		close(ch)
 	}()
 	return ch
 }
 
-func (tree *Tree) Nodes() <-chan *Tree {
-	return tree.Walker(nil)
+func (node *Node) Nodes() <-chan *Node {
+	return node.Walker(nil)
 }
 
-func (tree *Tree) NNodes() (size int) {
-	for _, node := range tree.childNodes {
-		size += node.NNodes()
+func (node *Node) NSubNodes() (size int) {
+	for _, node := range node.childNodes {
+		size += node.NSubNodes()
 	}
 	return size + 1
 }
-func (tree *Tree) Terminals() <-chan *Tree {
-	return tree.Walker(func(t *Tree) bool {
-		if len(t.childNodes) == 0 {
+func (node *Node) Terminals() <-chan *Node {
+	return node.Walker(func(n *Node) bool {
+		if len(n.childNodes) == 0 {
 			return true
 		}
 		return false
 	})
 }
 
-func (tree *Tree) NonTerminals() <-chan *Tree {
-	return tree.Walker(func(t *Tree) bool {
+func (tree *Node) NonTerminals() <-chan *Node {
+	return tree.Walker(func(t *Node) bool {
 		if len(t.childNodes) > 0 {
 			return true
 		}
@@ -129,8 +127,8 @@ func (tree *Tree) NonTerminals() <-chan *Tree {
 	})
 }
 
-func (tree *Tree) ClassNodes(class int) <-chan *Tree {
-	return tree.Walker(func(t *Tree) bool {
+func (tree *Node) ClassNodes(class int) <-chan *Node {
+	return tree.Walker(func(t *Node) bool {
 		if t.Class == class {
 			return true
 		}
@@ -138,7 +136,7 @@ func (tree *Tree) ClassNodes(class int) <-chan *Tree {
 	})
 }
 
-func (tree *Tree) IsRoot() bool {
+func (tree *Node) IsRoot() bool {
 	return tree.Parent == nil
 }
 
@@ -188,34 +186,40 @@ func ParseNewick(rd io.Reader) (tree *Tree, err error) {
 
 	scanner.Split(NewickSplit)
 
-	nodeId = 0
+	nodeId := 0
 
-	tree = NewTree(nil)
+	node := NewNode(nil, nodeId)
+	tree = &Tree{node}
+	nodeId++
+
 	mode := NORMAL
 
 	for scanner.Scan() {
 		text := scanner.Text()
 		switch text {
 		case "(":
-			subTree := NewTree(nil)
-			if tree != nil {
-				tree.AddChild(subTree)
+			subNode := NewNode(nil, nodeId)
+			nodeId++
+			if node != nil {
+				node.AddChild(subNode)
 			}
-			tree = subTree
+			node = subNode
 
 		case ",":
-			if tree.Parent == nil {
+			if node.Parent == nil {
 				return nil, errors.New("top level comma mismatch")
 			}
-			subTree := NewTree(nil)
-			tree.Parent.AddChild(subTree)
-			tree = subTree
+			subNode := NewNode(nil, nodeId)
+			nodeId++
+
+			node.Parent.AddChild(subNode)
+			node = subNode
 
 		case ")":
-			if tree.Parent == nil {
+			if node.Parent == nil {
 				return nil, errors.New("brackets mismatch")
 			}
-			tree = tree.Parent
+			node = node.Parent
 		case "#":
 			mode = CLASS
 		case ":":
@@ -229,17 +233,17 @@ func ParseNewick(rd io.Reader) (tree *Tree, err error) {
 				if err != nil {
 					return nil, err
 				}
-				tree.BranchLength = l
+				node.BranchLength = l
 				mode = NORMAL
 			case CLASS:
 				cl, err := strconv.ParseInt(text, 0, 0)
 				if err != nil {
 					return nil, err
 				}
-				tree.Class = int(cl)
+				node.Class = int(cl)
 				mode = NORMAL
 			default:
-				tree.Name = text
+				node.Name = text
 			}
 		}
 	}

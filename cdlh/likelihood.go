@@ -10,13 +10,13 @@ import (
 
 type expTask struct {
 	class int
-	node  *tree.Tree
+	node  *tree.Node
 }
 
 func ExpBranch(t *tree.Tree, Qs [][]*EMatrix, scale []float64) (eQts [][]*matrix.DenseMatrix) {
 	eQts = make([][]*matrix.DenseMatrix, len(Qs))
 
-	nTasks := len(Qs) * t.NNodes()
+	nTasks := len(Qs) * t.NSubNodes()
 	tasks := make(chan expTask, nTasks)
 	status := make(chan struct{}, nTasks)
 
@@ -35,7 +35,7 @@ func ExpBranch(t *tree.Tree, Qs [][]*EMatrix, scale []float64) (eQts [][]*matrix
 	}
 
 	for class, _ := range Qs {
-		eQts[class] = make([]*matrix.DenseMatrix, t.NNodes())
+		eQts[class] = make([]*matrix.DenseMatrix, t.NSubNodes())
 		for node := range t.Nodes() {
 			var oclass int
 			for oclass = class - 1; oclass >= 0; oclass-- {
@@ -95,7 +95,7 @@ func L(ali CodonSequences, t *tree.Tree, prop []float64, scale []float64, Qs [][
 func subL(ali CodonSequences, t *tree.Tree, eQts []*matrix.DenseMatrix, cf CodonFrequency, pos int, plhch chan [][]float64) float64 {
 	res := 0.0
 	plh := <-plhch
-	nNodes := t.NNodes()
+	nNodes := t.NSubNodes()
 	if plh == nil {
 		plh = make([][]float64, nNodes)
 		for i := 0; i < nNodes; i++ {
@@ -107,7 +107,7 @@ func subL(ali CodonSequences, t *tree.Tree, eQts []*matrix.DenseMatrix, cf Codon
 		plh[i][0] = math.NaN()
 	}
 
-	nodes := make(chan *tree.Tree, len(ali))
+	nodes := make(chan *tree.Node, len(ali))
 	for node := range t.Terminals() {
 		for l := byte(0); l < byte(nCodon); l++ {
 			if l == ali[nm2id[node.Name]].Sequence[pos] {
