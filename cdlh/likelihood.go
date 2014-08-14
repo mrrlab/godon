@@ -2,6 +2,7 @@ package main
 
 import (
 	"math"
+	"sync"
 
 	"github.com/skelterjohn/go.matrix"
 
@@ -18,9 +19,10 @@ func ExpBranch(t *tree.Tree, Qs [][]*EMatrix, scale []float64) (eQts [][]*matrix
 
 	nTasks := len(Qs) * t.NNodes()
 	tasks := make(chan expTask, nTasks)
-	status := make(chan struct{}, nTasks)
+	var wg sync.WaitGroup
 
 	for i := 0; i < mxprc; i++ {
+		wg.Add(1)
 		go func() {
 			var err error
 			cD := matrix.Zeros(nCodon, nCodon)
@@ -29,8 +31,8 @@ func ExpBranch(t *tree.Tree, Qs [][]*EMatrix, scale []float64) (eQts [][]*matrix
 				if err != nil {
 					panic("error exponentiating matrix")
 				}
-				status <- struct{}{}
 			}
+			wg.Done()
 		}()
 	}
 
@@ -43,7 +45,6 @@ func ExpBranch(t *tree.Tree, Qs [][]*EMatrix, scale []float64) (eQts [][]*matrix
 					defer func(class, oclass, nid int) {
 						eQts[class][nid] = eQts[oclass][nid]
 					}(class, oclass, node.Id)
-					nTasks--
 					break
 				}
 			}
@@ -53,10 +54,7 @@ func ExpBranch(t *tree.Tree, Qs [][]*EMatrix, scale []float64) (eQts [][]*matrix
 		}
 	}
 	close(tasks)
-
-	for i := 0; i < nTasks; i++ {
-		<-status
-	}
+	wg.Wait()
 
 	return
 }
