@@ -2,41 +2,49 @@ package main
 
 import (
 	"math"
-	"sync"
 
 	"github.com/skelterjohn/go.matrix"
 
 	"bitbucket.com/Davydov/golh/tree"
 )
 
+type expTask struct {
+	class int
+	node  *tree.Tree
+}
+
 func ExpBranch(t *tree.Tree, Qs [][]*EMatrix, scale []float64) (eQts [][]*matrix.DenseMatrix) {
 	eQts = make([][]*matrix.DenseMatrix, len(Qs))
 
-	cDch := make(chan *matrix.DenseMatrix, mxprc)
+	nTasks := len(Qs) * t.NNodes()
+	tasks := make(chan expTask, nTasks)
+	status := make(chan struct{}, nTasks)
+
 	for i := 0; i < mxprc; i++ {
-		cDch <- matrix.Zeros(nCodon, nCodon)
+		go func() {
+			var err error
+			cD := matrix.Zeros(nCodon, nCodon)
+			for s := range tasks {
+				eQts[s.class][s.node.Id], err = Qs[s.class][s.node.Id].Exp(cD, s.node.BranchLength/scale[s.node.Id])
+				if err != nil {
+					panic("error exponentiating matrix")
+				}
+				status <- struct{}{}
+			}
+		}()
 	}
 
-	var wg sync.WaitGroup
-
-	for i, _ := range Qs {
-		eQts[i] = make([]*matrix.DenseMatrix, t.NNodes())
+	for class, _ := range Qs {
+		eQts[class] = make([]*matrix.DenseMatrix, t.NNodes())
 		for node := range t.Nodes() {
-			wg.Add(1)
-			go func(i int, node *tree.Tree) {
-
-				var err error
-				cD := <-cDch
-				eQts[i][node.Id], err = Qs[i][node.Id].Exp(cD, node.BranchLength/scale[node.Id])
-				if err != nil {
-					panic("Error exponentiating matrix")
-				}
-				cDch <- cD
-				wg.Done()
-			}(i, node)
+			tasks <- expTask{class, node}
 		}
 	}
-	wg.Wait()
+	close(tasks)
+
+	for i := 0; i < nTasks; i++ {
+		<-status
+	}
 	return
 }
 
