@@ -90,6 +90,7 @@ func createTransitionMatrix(cf CodonFrequency, kappa, omega float64, m *matrix.D
 	for i1 := 0; i1 < nCodon; i1++ {
 		for i2 := 0; i2 < nCodon; i2++ {
 			if i1 == i2 {
+				m.Set(i1, i2, 0)
 				continue
 			}
 			c1 := numCodon[byte(i1)]
@@ -97,6 +98,7 @@ func createTransitionMatrix(cf CodonFrequency, kappa, omega float64, m *matrix.D
 			dist, transitions := codonDistance(c1, c2)
 
 			if dist > 1 {
+				m.Set(i1, i2, 0)
 				continue
 			}
 			m.Set(i1, i2, cf[i2])
@@ -265,8 +267,13 @@ func main() {
 	m0.SetParameters(2, 0.5)
 	fmt.Println(m0.Likelihood())
 
-	fmt.Println(H1(cali, t, cf, 2, 0.5, 0.5, 0.94702, 0.00000, 0.05298, 0.00000))
-	fmt.Println(H1(cali, t, cf, 1.90991, 0.02000, 1, 0.94680, 0.00010, 0.05310, 0.00001))
-	fmt.Println(H1(cali, t, cf, 1.87689, 0.01454, 1.68249, 0.89978, 0.04150, 0.05613, 0.00259))
-	//fmt.Println(M3(cali, t, cf, 1.98115, 0.00424, 0.08123, 0.32679, 0.62517, 0.31211, 0.06272))
+	h1 := NewH1(cali, t, cf)
+	h1.SetParameters(2, 0.5, 0.6, 0.94702, 0.00000, 0.05298, 0.00000)
+	fmt.Println(h1.Likelihood())
+
+	h1.SetParameters(1.90991, 0.02000, 1, 0.94680, 0.00010, 0.05310, 0.00001)
+	fmt.Println(h1.Likelihood())
+
+	h1.SetParameters(1.87689, 0.01454, 1.68249, 0.89978, 0.04150, 0.05613, 0.00259)
+	fmt.Println(h1.Likelihood())
 }

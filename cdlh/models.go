@@ -3,107 +3,150 @@ package main
 import (
 	"fmt"
 
+	"github.com/skelterjohn/go.matrix"
+
 	"bitbucket.com/Davydov/golh/tree"
 )
 
-type Model interface {
-	Likelihood()
+type Model struct {
+	tree  *tree.Tree
+	cali  CodonSequences
+	cf    CodonFrequency
+	qs    [][]*EMatrix
+	scale []float64
+	prop  []float64
+
+	eQts [][]*matrix.DenseMatrix
+}
+
+type BranchData struct {
 }
 
 type M0 struct {
-	q *EMatrix
-	qs [][]*EMatrix
-	cf CodonFrequency
-	cali CodonSequences
-	tree *tree.Tree
+	Model
+	q            *EMatrix
 	omega, kappa float64
-	scale []float64
-	prop []float64
 }
 
-func NewM0(cali CodonSequences, t *tree.Tree, cf CodonFrequency) (m0 *M0) {
-	m0 = &M0{cali: cali,
-		tree:  t,
-		cf: cf,
-		qs: make([][]*EMatrix, 1),
-		scale: make([]float64, t.NNodes()),
-		prop: []float64{1},
+func NewM0(cali CodonSequences, t *tree.Tree, cf CodonFrequency) (m *M0) {
+	m = &M0{
+		Model: Model{cali: cali,
+			tree:  t,
+			cf:    cf,
+			qs:    make([][]*EMatrix, 1),
+			scale: make([]float64, t.NNodes()),
+			prop:  []float64{1},
+		},
 		q: &EMatrix{},
 	}
-	m0.qs[0] = make([]*EMatrix, t.NNodes())
+	m.qs[0] = make([]*EMatrix, t.NNodes())
+	t.NodeOrder()
+	return
+}
+
+func (m *M0) SetParameters(kappa, omega float64) {
+	m.kappa = kappa
+	m.omega = omega
+	m.UpdateMatrices()
+}
+
+func (m *M0) UpdateMatrices() {
+	Q, s := createTransitionMatrix(m.cf, m.kappa, m.omega, m.q.Q)
+	m.q.Set(Q)
+
+	err := m.q.Eigen()
+	if err != nil {
+		panic(fmt.Sprintf("error finding eigen: %v", err))
+	}
+	for i := 0; i < len(m.qs[0]); i++ {
+		m.qs[0][i] = m.q
+		m.scale[i] = s
+	}
+}
+
+type H1 struct {
+	Model
+	q0, q1, q2     *EMatrix
+	kappa          float64
+	omega0, omega2 float64
+}
+
+func NewH1(cali CodonSequences, t *tree.Tree, cf CodonFrequency) (m *H1) {
+	m = &H1{
+		Model: Model{cali: cali,
+			tree:  t,
+			cf:    cf,
+			qs:    make([][]*EMatrix, 4),
+			scale: make([]float64, t.NNodes()),
+			prop:  make([]float64, 4),
+		},
+		q0: &EMatrix{},
+		q1: &EMatrix{},
+		q2: &EMatrix{},
+	}
+	for i := 0; i < len(m.qs); i++ {
+		m.qs[i] = make([]*EMatrix, t.NNodes())
+	}
+	t.NodeOrder()
 	return
 
 }
 
-func (m0 *M0) SetParameters(kappa, omega float64) {
-	m0.kappa = kappa
-	m0.omega = omega
-	m0.UpdateMatrices()
+func (m *H1) SetParameters(kappa float64, omega0, omega2 float64, p0, p1, p2a, p2b float64) {
+	m.kappa = kappa
+	m.omega0 = omega0
+	m.omega2 = omega2
+	m.prop[0] = p0
+	m.prop[1] = p1
+	m.prop[2] = p2a
+	m.prop[3] = p2b
+	m.UpdateMatrices()
 }
 
-func (m0 *M0) UpdateMatrices() {
-	Q, s := createTransitionMatrix(m0.cf, m0.kappa, m0.omega, m0.q.Q)
-	m0.q.Set(Q)
+func (m *H1) UpdateMatrices() {
+	Q0, s0 := createTransitionMatrix(m.cf, m.kappa, m.omega0, m.q0.Q)
+	m.q0.Set(Q0)
+	Q1, s1 := createTransitionMatrix(m.cf, m.kappa, 1, m.q1.Q)
+	m.q1.Set(Q1)
+	Q2, s2 := createTransitionMatrix(m.cf, m.kappa, m.omega2, m.q2.Q)
+	m.q2.Set(Q2)
 
-	err := m0.q.Eigen()
-	if err != nil {
-		panic(fmt.Sprintf("error finding eigen: %v", err))
-	}
-	for i := 0; i < len(m0.qs[0]); i++ {
-		m0.qs[0][i] = m0.q
-		m0.scale[i] = s
-	}
-}
+	err0 := m.q0.Eigen()
+	err1 := m.q1.Eigen()
+	err2 := m.q2.Eigen()
 
-func (m0 *M0) Likelihood() float64 {
-	return L(m0.cali, m0.tree, m0.prop, m0.scale, m0.qs, m0.cf)
-}
-
-func H1(cali CodonSequences, t *tree.Tree, cf CodonFrequency, kappa float64, omega0, omega2 float64, p0, p1, p2a, p2b float64) float64 {
-	//fmt.Printf("kappa=%f, omega0=%f, omega2=%f, p=[%f, %f, %f, %f]\n", kappa, omega0, omega2, p0, p1, p2a, p2b)
-	Q0, s0 := createTransitionMatrix(cf, kappa, omega0, nil)
-	Q1, s1 := createTransitionMatrix(cf, kappa, 1, nil)
-	Q2, s2 := createTransitionMatrix(cf, kappa, omega2, nil)
-	em0 := NewEMatrix(Q0)
-	em1 := NewEMatrix(Q1)
-	em2 := NewEMatrix(Q2)
-	err1 := em0.Eigen()
-	err2 := em1.Eigen()
-	err3 := em2.Eigen()
-	if err1 != nil || err2 != nil || err3 != nil {
-		panic(fmt.Sprintf("error finding eigen: %v, %v, %v", err1, err2, err3))
+	if err0 != nil || err1 != nil || err2 != nil {
+		panic(fmt.Sprintf("error finding eigen: %v, %v, %v", err0, err1, err2))
 	}
-	Qs := make([][]*EMatrix, 4)
-	scale := make([]float64, t.NNodes())
-	for _, node := range t.Nodes() {
+
+	for _, node := range m.tree.Nodes() {
 		if node.Class == 0 {
-			scale[node.Id] = (p0+p2a)*s0 + (p1+p2b)*s1
+			m.scale[node.Id] = (m.prop[0]+m.prop[2])*s0 + (m.prop[1]+m.prop[3])*s1
 		} else {
-			scale[node.Id] = p0*s0 + p1*s1 + (p2a+p2b)*s2
+			m.scale[node.Id] = m.prop[0]*s0 + m.prop[1]*s1 + (m.prop[2]+m.prop[3])*s2
 		}
 	}
-	for i := 0; i < len(Qs); i++ {
-		Qs[i] = make([]*EMatrix, t.NNodes())
-		for _, node := range t.Nodes() {
+
+	for i := 0; i < len(m.qs); i++ {
+		for _, node := range m.tree.Nodes() {
 			switch i {
 			case 0:
-				Qs[i][node.Id] = em0
+				m.qs[i][node.Id] = m.q0
 			case 1:
-				Qs[i][node.Id] = em1
+				m.qs[i][node.Id] = m.q1
 			case 2:
 				if node.Class == 0 {
-					Qs[i][node.Id] = em0
+					m.qs[i][node.Id] = m.q0
 				} else {
-					Qs[i][node.Id] = em2
+					m.qs[i][node.Id] = m.q2
 				}
 			case 3:
 				if node.Class == 0 {
-					Qs[i][node.Id] = em1
+					m.qs[i][node.Id] = m.q1
 				} else {
-					Qs[i][node.Id] = em2
+					m.qs[i][node.Id] = m.q2
 				}
 			}
 		}
 	}
-	return L(cali, t, []float64{p0, p1, p2a, p2b}, scale, Qs, cf)
 }
