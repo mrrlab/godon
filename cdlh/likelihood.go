@@ -76,7 +76,7 @@ func nodeOrder(t *tree.Tree) (nodes []*tree.Node) {
 			continue
 		}
 		allComputed := true
-		for childNode := range node.ChildNodes() {
+		for _, childNode := range node.ChildNodes() {
 			if !computed[childNode] {
 				allComputed = false
 				break
@@ -153,7 +153,7 @@ func subL(ali CodonSequences, t *tree.Tree, no []*tree.Node, eQts []*matrix.Dens
 	for _, node := range no {
 		for l1 := 0; l1 < nCodon; l1++ {
 			l := 1.0
-			for child := range node.ChildNodes() {
+			for _, child := range node.ChildNodes() {
 				s := 0.0
 				for l2 := 0; l2 < nCodon; l2++ {
 					s += eQts[child.Id].Get(l1, l2) * plh[child.Id][l2]

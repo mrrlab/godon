@@ -36,12 +36,47 @@ func (tree *Tree) Nodes() []*Node {
 	if tree.nodes == nil {
 		tree.nodes = make([]*Node, tree.NNodes())
 		i := 0
-		for node := range tree.Node.Nodes() {
+		for node := range tree.Walker(nil) {
 			tree.nodes[i] = node
 			i ++
 		}
 	}
 	return tree.nodes
+}
+
+func (tree *Tree) Terminals() <-chan *Node {
+	return tree.Walker(func(n *Node) bool {
+		if len(n.childNodes) == 0 {
+			return true
+		}
+		return false
+	})
+}
+
+func (tree *Tree) NonTerminals() <-chan *Node {
+	return tree.Walker(func(t *Node) bool {
+		if len(t.childNodes) > 0 {
+			return true
+		}
+		return false
+	})
+}
+
+func (tree *Tree) ClassNodes(class int) <-chan *Node {
+	return tree.Walker(func(t *Node) bool {
+		if t.Class == class {
+			return true
+		}
+		return false
+	})
+}
+
+
+func (tree *Tree) Walker(filter func(*Node) bool) <-chan *Node {
+	ch := make(chan *Node, tree.NNodes())
+	tree.Walk(ch, filter)
+		close(ch)
+	return ch
 }
 
 type Node struct {
@@ -91,15 +126,8 @@ func (node *Node) prefixString(prefix string) (s string) {
 	return
 }
 
-func (node *Node) ChildNodes() <-chan *Node {
-	ch := make(chan *Node)
-	go func() {
-		for _, node := range node.childNodes {
-			ch <- node
-		}
-		close(ch)
-	}()
-	return ch
+func (node *Node) ChildNodes() []*Node {
+	return node.childNodes
 }
 
 func (node *Node) Walk(ch chan *Node, filter func(*Node) bool) {
@@ -111,52 +139,12 @@ func (node *Node) Walk(ch chan *Node, filter func(*Node) bool) {
 	}
 }
 
-func (node *Node) Walker(filter func(*Node) bool) <-chan *Node {
-	ch := make(chan *Node)
-	go func() {
-		node.Walk(ch, filter)
-		close(ch)
-	}()
-	return ch
-}
-
-func (node *Node) Nodes() <-chan *Node {
-	return node.Walker(nil)
-}
-
 func (node *Node) NSubNodes() (size int) {
 	for _, node := range node.childNodes {
 		size += node.NSubNodes()
 	}
 	return size + 1
 }
-func (node *Node) Terminals() <-chan *Node {
-	return node.Walker(func(n *Node) bool {
-		if len(n.childNodes) == 0 {
-			return true
-		}
-		return false
-	})
-}
-
-func (tree *Node) NonTerminals() <-chan *Node {
-	return tree.Walker(func(t *Node) bool {
-		if len(t.childNodes) > 0 {
-			return true
-		}
-		return false
-	})
-}
-
-func (tree *Node) ClassNodes(class int) <-chan *Node {
-	return tree.Walker(func(t *Node) bool {
-		if t.Class == class {
-			return true
-		}
-		return false
-	})
-}
-
 func (tree *Node) IsRoot() bool {
 	return tree.Parent == nil
 }
