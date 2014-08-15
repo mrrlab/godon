@@ -21,8 +21,9 @@ const (
 
 type Tree struct {
 	*Node
-	nNodes int
-	nodes  []*Node
+	nNodes    int
+	nodes     []*Node
+	nodeOrder []*Node
 }
 
 func (tree *Tree) NNodes() int {
@@ -38,7 +39,7 @@ func (tree *Tree) Nodes() []*Node {
 		i := 0
 		for node := range tree.Walker(nil) {
 			tree.nodes[i] = node
-			i ++
+			i++
 		}
 	}
 	return tree.nodes
@@ -71,12 +72,47 @@ func (tree *Tree) ClassNodes(class int) <-chan *Node {
 	})
 }
 
-
 func (tree *Tree) Walker(filter func(*Node) bool) <-chan *Node {
 	ch := make(chan *Node, tree.NNodes())
 	tree.Walk(ch, filter)
-		close(ch)
+	close(ch)
 	return ch
+}
+
+func (tree *Tree) NodeOrder() []*Node {
+	if tree.nodeOrder == nil {
+		tree.nodeOrder = make([]*Node, 0, tree.NNodes())
+		computed := make(map[*Node]bool, tree.NNodes())
+		awaiting := make(chan *Node, tree.NNodes()*2)
+		for node := range tree.Terminals() {
+			computed[node] = true
+			awaiting <- node.Parent
+		}
+
+		for node := range awaiting {
+			if node == nil {
+				break
+			}
+			if computed[node] {
+				continue
+			}
+			allComputed := true
+			for _, childNode := range node.ChildNodes() {
+				if !computed[childNode] {
+					allComputed = false
+					break
+				}
+			}
+			if !allComputed {
+				awaiting <- node
+			} else {
+				tree.nodeOrder = append(tree.nodeOrder, node)
+				computed[node] = true
+				awaiting <- node.Parent
+			}
+		}
+	}
+	return tree.nodeOrder
 }
 
 type Node struct {
@@ -198,7 +234,7 @@ func ParseNewick(rd io.Reader) (tree *Tree, err error) {
 	nodeId := 0
 
 	node := NewNode(nil, nodeId)
-	tree = &Tree{Node:node}
+	tree = &Tree{Node: node}
 	nodeId++
 
 	mode := NORMAL

@@ -59,40 +59,6 @@ func ExpBranch(t *tree.Tree, Qs [][]*EMatrix, scale []float64) (eQts [][]*matrix
 	return
 }
 
-func nodeOrder(t *tree.Tree) (nodes []*tree.Node) {
-	nodes = make([]*tree.Node, 0, t.NNodes())
-	computed := make(map[*tree.Node]bool, t.NNodes())
-	awaiting := make(chan *tree.Node, t.NNodes() * 2)
-	for node := range t.Terminals() {
-		computed[node] = true
-		awaiting <- node.Parent
-	}
-
-	for node := range awaiting {
-		if node == nil {
-			break
-		}
-		if computed[node] {
-			continue
-		}
-		allComputed := true
-		for _, childNode := range node.ChildNodes() {
-			if !computed[childNode] {
-				allComputed = false
-				break
-			}
-		}
-		if !allComputed {
-			awaiting <- node
-		} else {
-			nodes = append(nodes, node)
-			computed[node] = true
-			awaiting <- node.Parent
-		}
-	}
-	return
-}
-
 func L(ali CodonSequences, t *tree.Tree, prop []float64, scale []float64, Qs [][]*EMatrix, cf CodonFrequency) (lnL float64) {
 	if len(prop) != len(Qs) {
 		panic("incorrect proportion length")
@@ -100,7 +66,7 @@ func L(ali CodonSequences, t *tree.Tree, prop []float64, scale []float64, Qs [][
 
 	eQts := ExpBranch(t, Qs, scale)
 
-	no := nodeOrder(t)
+	no := t.NodeOrder()
 
 	nTasks := len(ali[0].Sequence)
 	results := make(chan float64, nTasks)
