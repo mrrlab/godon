@@ -63,8 +63,12 @@ func TestM0F0D1(tst *testing.T) {
 	}
 
 	cf := F0()
-	L := M0(cali, t, cf, 2, 0.5)
+	m0 := NewM0(cali, t, cf)
+	m0.SetParameters(2, 0.5)
+
+	L := m0.Likelihood()
 	refL := -2836.196647
+
 	tst.Log("L=", L, ", Ref=", refL, ", diff=", math.Abs(L-refL))
 	if math.Abs(L-refL) > smallDiff {
 		tst.Error("Expected ", refL, ", got", L)
@@ -78,8 +82,12 @@ func TestM0F3X4D1(tst *testing.T) {
 	}
 
 	cf := F3X4(cali)
-	L := M0(cali, t, cf, 2, 0.5)
+	m0 := NewM0(cali, t, cf)
+	m0.SetParameters(2, 0.5)
+
+	L := m0.Likelihood()
 	refL := -2892.446106
+
 	tst.Log("L=", L, ", Ref=", refL, ", diff=", math.Abs(L-refL))
 	if math.Abs(L-refL) > smallDiff {
 		tst.Error("Expected ", refL, ", got", L)
@@ -93,8 +101,12 @@ func TestM0F0D2(tst *testing.T) {
 	}
 
 	cf := F0()
-	L := M0(cali, t, cf, 1.79668, 0.09879)
+	m0 := NewM0(cali, t, cf)
+	m0.SetParameters(1.79668, 0.09879)
+
+	L := m0.Likelihood()
 	refL := -1463.253413
+
 	tst.Log("L=", L, ", Ref=", refL, ", diff=", math.Abs(L-refL))
 	if math.Abs(L-refL) > smallDiff {
 		tst.Error("Expected ", refL, ", got", L)
@@ -108,8 +120,12 @@ func TestM0F3X4D2(tst *testing.T) {
 	}
 
 	cf := F3X4(cali)
-	L := M0(cali, t, cf, 3.12566, 0.03430)
+	m0 := NewM0(cali, t, cf)
+	m0.SetParameters(3.12566, 0.03430)
+
+	L := m0.Likelihood()
 	refL := -1473.371833
+
 	tst.Log("L=", L, ", Ref=", refL, ", diff=", math.Abs(L-refL))
 	if math.Abs(L-refL) > smallDiff {
 		tst.Error("Expected ", refL, ", got", L)
@@ -126,8 +142,12 @@ func TestM0F0D3(tst *testing.T) {
 	}
 
 	cf := F0()
-	L := M0(cali, t, cf, 1.77621, 0.10313)
+	m0 := NewM0(cali, t, cf)
+	m0.SetParameters(1.77621, 0.10313)
+
+	L := m0.Likelihood()
 	refL := -48631.160712
+
 	tst.Log("L=", L, ", Ref=", refL, ", diff=", math.Abs(L-refL))
 	if math.Abs(L-refL) > smallDiff {
 		tst.Error("Expected ", refL, ", got", L)
@@ -258,10 +278,13 @@ func BenchmarkM0F0D1(b *testing.B) {
 
 	cf := F0()
 
+	m0 := NewM0(cali, t, cf)
+
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		M0(cali, t, cf, 2, 0.5)
+		m0.SetParameters(2, 0.5)
+		m0.Likelihood()
 	}
 }
 
@@ -273,10 +296,13 @@ func BenchmarkM0F0D2(b *testing.B) {
 
 	cf := F0()
 
+	m0 := NewM0(cali, t, cf)
+
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		M0(cali, t, cf, 1.77621, 0.10313)
+		m0.SetParameters(1.77621, 0.10313)
+		m0.Likelihood()
 	}
 }
 

@@ -82,9 +82,11 @@ func codonDistance(c1, c2 string) (dist, transitions int) {
 	return
 }
 
-func createTransitionMatrix(cf CodonFrequency, kappa, omega float64) (m *matrix.DenseMatrix, scale float64) {
+func createTransitionMatrix(cf CodonFrequency, kappa, omega float64, m *matrix.DenseMatrix) (*matrix.DenseMatrix, float64) {
 	//fmt.Println("kappa=", kappa, ", omega=", omega)
-	m = matrix.Zeros(nCodon, nCodon)
+	if m == nil {
+		m = matrix.Zeros(nCodon, nCodon)
+	}
 	for i1 := 0; i1 < nCodon; i1++ {
 		for i2 := 0; i2 < nCodon; i2++ {
 			if i1 == i2 {
@@ -113,11 +115,12 @@ func createTransitionMatrix(cf CodonFrequency, kappa, omega float64) (m *matrix.
 		}
 		m.Set(i1, i1, -rowSum)
 	}
+	scale := 0.0
 	for i := 0; i < nCodon; i++ {
 		scale += -cf[i] * m.Get(i, i)
 	}
 
-	return
+	return m, scale
 
 }
 
@@ -258,7 +261,9 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
-	fmt.Println(M0(cali, t, cf, 2, 0.5))
+	m0 := NewM0(cali, t, cf)
+	m0.SetParameters(2, 0.5)
+	fmt.Println(m0.Likelihood())
 
 	fmt.Println(H1(cali, t, cf, 2, 0.5, 0.5, 0.94702, 0.00000, 0.05298, 0.00000))
 	fmt.Println(H1(cali, t, cf, 1.90991, 0.02000, 1, 0.94680, 0.00010, 0.05310, 0.00001))

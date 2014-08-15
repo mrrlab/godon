@@ -6,28 +6,64 @@ import (
 	"bitbucket.com/Davydov/golh/tree"
 )
 
-func M0(cali CodonSequences, t *tree.Tree, cf CodonFrequency, kappa, omega float64) float64 {
-	Q, s := createTransitionMatrix(cf, kappa, omega)
-	Qs := make([][]*EMatrix, 1)
-	Qs[0] = make([]*EMatrix, t.NNodes())
-	scale := make([]float64, t.NNodes())
-	em := NewEMatrix(Q)
-	err := em.Eigen()
+type Model interface {
+	Likelihood()
+}
+
+type M0 struct {
+	q *EMatrix
+	qs [][]*EMatrix
+	cf CodonFrequency
+	cali CodonSequences
+	tree *tree.Tree
+	omega, kappa float64
+	scale []float64
+	prop []float64
+}
+
+func NewM0(cali CodonSequences, t *tree.Tree, cf CodonFrequency) (m0 *M0) {
+	m0 = &M0{cali: cali,
+		tree:  t,
+		cf: cf,
+		qs: make([][]*EMatrix, 1),
+		scale: make([]float64, t.NNodes()),
+		prop: []float64{1},
+		q: &EMatrix{},
+	}
+	m0.qs[0] = make([]*EMatrix, t.NNodes())
+	return
+
+}
+
+func (m0 *M0) SetParameters(kappa, omega float64) {
+	m0.kappa = kappa
+	m0.omega = omega
+	m0.UpdateMatrices()
+}
+
+func (m0 *M0) UpdateMatrices() {
+	Q, s := createTransitionMatrix(m0.cf, m0.kappa, m0.omega, m0.q.Q)
+	m0.q.Set(Q)
+
+	err := m0.q.Eigen()
 	if err != nil {
 		panic(fmt.Sprintf("error finding eigen: %v", err))
 	}
-	for i := 0; i < len(Qs[0]); i++ {
-		Qs[0][i] = em
-		scale[i] = s
+	for i := 0; i < len(m0.qs[0]); i++ {
+		m0.qs[0][i] = m0.q
+		m0.scale[i] = s
 	}
-	return L(cali, t, []float64{1}, scale, Qs, cf)
+}
+
+func (m0 *M0) Likelihood() float64 {
+	return L(m0.cali, m0.tree, m0.prop, m0.scale, m0.qs, m0.cf)
 }
 
 func H1(cali CodonSequences, t *tree.Tree, cf CodonFrequency, kappa float64, omega0, omega2 float64, p0, p1, p2a, p2b float64) float64 {
 	//fmt.Printf("kappa=%f, omega0=%f, omega2=%f, p=[%f, %f, %f, %f]\n", kappa, omega0, omega2, p0, p1, p2a, p2b)
-	Q0, s0 := createTransitionMatrix(cf, kappa, omega0)
-	Q1, s1 := createTransitionMatrix(cf, kappa, 1)
-	Q2, s2 := createTransitionMatrix(cf, kappa, omega2)
+	Q0, s0 := createTransitionMatrix(cf, kappa, omega0, nil)
+	Q1, s1 := createTransitionMatrix(cf, kappa, 1, nil)
+	Q2, s2 := createTransitionMatrix(cf, kappa, omega2, nil)
 	em0 := NewEMatrix(Q0)
 	em1 := NewEMatrix(Q1)
 	em2 := NewEMatrix(Q2)

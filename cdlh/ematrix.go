@@ -9,24 +9,30 @@ import (
 
 type EMatrix struct {
 	Q  *matrix.DenseMatrix
-	V  *matrix.DenseMatrix
-	D  *matrix.DenseMatrix
-	iV *matrix.DenseMatrix
+	v  *matrix.DenseMatrix
+	d  *matrix.DenseMatrix
+	iv *matrix.DenseMatrix
 }
 
 func NewEMatrix(Q *matrix.DenseMatrix) *EMatrix {
 	return &EMatrix{Q, nil, nil, nil}
 }
 
+func (m *EMatrix) Set(Q *matrix.DenseMatrix) {
+	m.Q = Q
+	m.v = nil
+	m.d = nil
+	m.iv = nil
+}
 func (m *EMatrix) Eigen() (err error) {
-	if m.V != nil {
+	if m.v != nil {
 		return nil
 	}
-	m.V, m.D, err = m.Q.Eigen()
+	m.v, m.d, err = m.Q.Eigen()
 	if err != nil {
 		return err
 	}
-	m.iV, err = m.V.Inverse()
+	m.iv, err = m.v.Inverse()
 	if err != nil {
 		return err
 	}
@@ -34,11 +40,11 @@ func (m *EMatrix) Eigen() (err error) {
 }
 
 func (m *EMatrix) Exp(cD *matrix.DenseMatrix, t float64) (*matrix.DenseMatrix, error) {
-	if m.D.Cols() != m.D.Rows() {
+	if m.d.Cols() != m.d.Rows() {
 		return nil, errors.New("D isn't a square matrix")
 	}
-	for i := 0; i < m.D.Rows(); i++ {
-		cD.Set(i, i, math.Exp(m.D.Get(i, i)*t))
+	for i := 0; i < m.d.Rows(); i++ {
+		cD.Set(i, i, math.Exp(m.d.Get(i, i)*t))
 	}
-	return matrix.Product(m.V, cD, m.iV), nil
+	return matrix.Product(m.v, cD, m.iv), nil
 }
