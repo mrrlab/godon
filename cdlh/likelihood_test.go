@@ -19,8 +19,6 @@ const (
 )
 
 func GetTreeAlignment(data string) (t *tree.Tree, cali CodonSequences, err error) {
-	initCC()
-
 	tf, err := os.Open(path.Join("testdata", data+".nwk"))
 	if err != nil {
 		return
@@ -46,10 +44,6 @@ func GetTreeAlignment(data string) (t *tree.Tree, cali CodonSequences, err error
 	cali, err = ToCodonSequences(ali)
 	if err != nil {
 		return
-	}
-	nm2id = make(map[string]int)
-	for i, s := range cali {
-		nm2id[s.Name] = i
 	}
 
 	return

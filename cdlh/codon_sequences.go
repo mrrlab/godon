@@ -8,6 +8,14 @@ import (
 	"bitbucket.com/Davydov/golh/bio"
 )
 
+var (
+	alphabet  = [...]byte{'T', 'C', 'A', 'G'}
+	rAlphabet = map[byte]byte{'T': 0, 'C': 1, 'A': 2, 'G': 3}
+	codonNum  = map[string]byte{}
+	numCodon  = map[byte]string{}
+	nCodon    int
+)
+
 type CodonSequence struct {
 	Name     string
 	Sequence []byte

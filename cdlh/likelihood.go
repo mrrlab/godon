@@ -1,6 +1,7 @@
 package main
 
 import (
+	"runtime"
 	"math"
 	"sync"
 
@@ -32,7 +33,7 @@ func (m *Model) ExpBranch() {
 	tasks := make(chan expTask, nTasks)
 	var wg sync.WaitGroup
 
-	for i := 0; i < mxprc; i++ {
+	for i := 0; i < runtime.GOMAXPROCS(0); i++ {
 		wg.Add(1)
 		go func() {
 			var err error
@@ -78,7 +79,7 @@ func (m *Model) Likelihood() (lnL float64) {
 	results := make(chan float64, nTasks)
 	tasks := make(chan int, nTasks)
 
-	for i := 0; i < mxprc; i++ {
+	for i := 0; i < runtime.GOMAXPROCS(0); i++ {
 		go func() {
 			plh := make([][]float64, m.tree.NNodes())
 			for i := 0; i < m.tree.NNodes(); i++ {
@@ -113,7 +114,7 @@ func (m *Model) subL(class, pos int, plh [][]float64) (res float64) {
 
 	for node := range m.tree.Terminals() {
 		for l := byte(0); l < byte(nCodon); l++ {
-			if l == m.cali[nm2id[node.Name]].Sequence[pos] {
+			if l == m.cali[m.nm2id[node.Name]].Sequence[pos] {
 				plh[node.Id][l] = 1
 			} else {
 				plh[node.Id][l] = 0

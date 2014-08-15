@@ -9,38 +9,53 @@ import (
 )
 
 type Model struct {
-	tree  *tree.Tree
-	cali  CodonSequences
-	cf    CodonFrequency
-	qs    [][]*EMatrix
-	scale []float64
-	prop  []float64
+	tree   *tree.Tree
+	cali   CodonSequences
+	cf     CodonFrequency
+	qs     [][]*EMatrix
+	scale  []float64
+	prop   []float64
+	nm2id  map[string]int
+	nclass int
 
 	eQts [][]*matrix.DenseMatrix
 }
 
-type BranchData struct {
+func NewModel(cali CodonSequences, t *tree.Tree, cf CodonFrequency, nclass int) (m *Model) {
+	m = &Model{cali: cali,
+		tree:   t,
+		cf:     cf,
+		qs:     make([][]*EMatrix, nclass),
+		scale:  make([]float64, t.NNodes()),
+		prop:   make([]float64, nclass),
+		nclass: nclass,
+	}
+	for i := 0; i < nclass; i++ {
+		m.qs[i] = make([]*EMatrix, t.NNodes())
+	}
+	t.NodeOrder()
+
+	m.nm2id = make(map[string]int)
+	for i, s := range m.cali {
+		m.nm2id[s.Name] = i
+	}
+
+	return
 }
 
 type M0 struct {
-	Model
+	*Model
 	q            *EMatrix
 	omega, kappa float64
 }
 
 func NewM0(cali CodonSequences, t *tree.Tree, cf CodonFrequency) (m *M0) {
 	m = &M0{
-		Model: Model{cali: cali,
-			tree:  t,
-			cf:    cf,
-			qs:    make([][]*EMatrix, 1),
-			scale: make([]float64, t.NNodes()),
-			prop:  []float64{1},
-		},
-		q: &EMatrix{},
+		Model: NewModel(cali, t, cf, 1),
+		q:     &EMatrix{},
 	}
-	m.qs[0] = make([]*EMatrix, t.NNodes())
-	t.NodeOrder()
+	m.prop[0] = 1
+
 	return
 }
 
@@ -65,7 +80,7 @@ func (m *M0) UpdateMatrices() {
 }
 
 type H1 struct {
-	Model
+	*Model
 	q0, q1, q2     *EMatrix
 	kappa          float64
 	omega0, omega2 float64
@@ -73,21 +88,11 @@ type H1 struct {
 
 func NewH1(cali CodonSequences, t *tree.Tree, cf CodonFrequency) (m *H1) {
 	m = &H1{
-		Model: Model{cali: cali,
-			tree:  t,
-			cf:    cf,
-			qs:    make([][]*EMatrix, 4),
-			scale: make([]float64, t.NNodes()),
-			prop:  make([]float64, 4),
-		},
-		q0: &EMatrix{},
-		q1: &EMatrix{},
-		q2: &EMatrix{},
+		Model: NewModel(cali, t, cf, 4),
+		q0:    &EMatrix{},
+		q1:    &EMatrix{},
+		q2:    &EMatrix{},
 	}
-	for i := 0; i < len(m.qs); i++ {
-		m.qs[i] = make([]*EMatrix, t.NNodes())
-	}
-	t.NodeOrder()
 	return
 
 }

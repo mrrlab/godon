@@ -9,6 +9,19 @@ import (
 	"bitbucket.com/Davydov/golh/bio"
 )
 
+func init() {
+	i := byte(0)
+	for codon := range getCodons() {
+		if bio.IsStopCodon(codon) {
+			continue
+		}
+		codonNum[codon] = i
+		numCodon[i] = codon
+		i++
+	}
+	nCodon = int(i)
+}
+
 type CodonFrequency []float64
 
 func readFrequency(rd io.Reader) (CodonFrequency, error) {

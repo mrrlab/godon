@@ -16,16 +16,6 @@ import (
 	"bitbucket.com/Davydov/golh/tree"
 )
 
-var (
-	alphabet  = [...]byte{'T', 'C', 'A', 'G'}
-	rAlphabet = map[byte]byte{'T': 0, 'C': 1, 'A': 2, 'G': 3}
-	codonNum  = map[string]byte{}
-	numCodon  = map[byte]string{}
-	nm2id     = make(map[string]int)
-	nCodon    int
-	mxprc     int
-)
-
 func Sum(m *matrix.DenseMatrix) (s float64) {
 	for i := 0; i < m.Rows(); i++ {
 		for j := 0; j < m.Cols(); j++ {
@@ -52,19 +42,6 @@ func getCodons() <-chan string {
 	}
 	go cn("")
 	return ch
-}
-
-func initCodon() int {
-	i := byte(0)
-	for codon := range getCodons() {
-		if bio.IsStopCodon(codon) {
-			continue
-		}
-		codonNum[codon] = i
-		numCodon[i] = codon
-		i++
-	}
-	return int(i)
 }
 
 func codonDistance(c1, c2 string) (dist, transitions int) {
@@ -164,11 +141,6 @@ func PrintUnQ(Q *matrix.DenseMatrix) {
 	}
 }
 
-func initCC() {
-	mxprc = runtime.GOMAXPROCS(0)
-	nCodon = initCodon()
-}
-
 func main() {
 	cFreqFileName := flag.String("cfreq", "", "codon frequencies file")
 	nCPU := flag.Int("cpu", 0, "number of cpu to use")
@@ -179,8 +151,7 @@ func main() {
 
 	runtime.GOMAXPROCS(*nCPU)
 
-	initCC()
-	log.Printf("Using CPUs: %d.\n", mxprc)
+	log.Printf("Using CPUs: %d.\n", runtime.GOMAXPROCS(0))
 	log.Print("nCodon=", nCodon)
 
 	if len(flag.Args()) < 2 {
@@ -231,10 +202,6 @@ func main() {
 		//cf = F0()
 	}
 	log.Print(cf)
-
-	for i, s := range cali {
-		nm2id[s.Name] = i
-	}
 
 	if *fgBranch >= 0 {
 		for _, node := range t.Nodes() {
