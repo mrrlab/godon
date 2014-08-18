@@ -31,6 +31,7 @@ func (m *BranchSite) SetParameters(kappa float64, omega0, omega2 float64, p0, p1
 	m.prop[2] = (1 - p0 - p1) * p0 / (p0 + p1)
 	m.prop[3] = (1 - p0 - p1) * p1 / (p0 + p1)
 	m.UpdateMatrices(true, true, true)
+	m.SetBranchMatrices()
 	m.ExpBranches()
 }
 
@@ -42,7 +43,34 @@ func (m *BranchSite) SetDefault() {
 	m.prop[1] = 0.25
 	m.prop[2] = 0.25
 	m.prop[3] = 0.25
+	m.SetBranchMatrices()
 	m.UpdateMatrices(true, true, true)
+	m.ExpBranches()
+}
+
+func (m *BranchSite) SetBranchMatrices() {
+	for i := 0; i < len(m.qs); i++ {
+		for _, node := range m.tree.Nodes() {
+			switch i {
+			case 0:
+				m.qs[i][node.Id] = m.q0
+			case 1:
+				m.qs[i][node.Id] = m.q1
+			case 2:
+				if node.Class == 0 {
+					m.qs[i][node.Id] = m.q0
+				} else {
+					m.qs[i][node.Id] = m.q2
+				}
+			case 3:
+				if node.Class == 0 {
+					m.qs[i][node.Id] = m.q1
+				} else {
+					m.qs[i][node.Id] = m.q2
+				}
+			}
+		}
+	}
 }
 
 func (m *BranchSite) UpdateMatrices(uq0, uq1, uq2 bool) {
@@ -81,26 +109,4 @@ func (m *BranchSite) UpdateMatrices(uq0, uq1, uq2 bool) {
 		}
 	}
 
-	for i := 0; i < len(m.qs); i++ {
-		for _, node := range m.tree.Nodes() {
-			switch i {
-			case 0:
-				m.qs[i][node.Id] = m.q0
-			case 1:
-				m.qs[i][node.Id] = m.q1
-			case 2:
-				if node.Class == 0 {
-					m.qs[i][node.Id] = m.q0
-				} else {
-					m.qs[i][node.Id] = m.q2
-				}
-			case 3:
-				if node.Class == 0 {
-					m.qs[i][node.Id] = m.q1
-				} else {
-					m.qs[i][node.Id] = m.q2
-				}
-			}
-		}
-	}
 }
