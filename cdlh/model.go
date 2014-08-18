@@ -28,7 +28,7 @@ type Model struct {
 	prop   []float64
 	nclass int
 
-	eQts [][]*matrix.DenseMatrix
+	eQts [][][]float64
 }
 
 func NewModel(cali CodonSequences, t *tree.Tree, cf CodonFrequency, nclass int) (m *Model) {
@@ -80,20 +80,20 @@ func (m *Model) ExpBranch(br int) {
 			}
 		}
 		if oclass < 0 {
-			var err error
-			m.eQts[class][node.Id], err = m.qs[class][node.Id].Exp(cD, node.BranchLength/m.scale[node.Id])
+			Q, err := m.qs[class][node.Id].Exp(cD, node.BranchLength/m.scale[node.Id])
 			if err != nil {
 				panic("Error exponentiating")
 			}
+			m.eQts[class][node.Id] = Q.Array()
 		}
 	}
 }
 
 func (m *Model) ExpBranches() {
 	if m.eQts == nil {
-		m.eQts = make([][]*matrix.DenseMatrix, len(m.qs))
+		m.eQts = make([][][]float64, len(m.qs))
 		for class, _ := range m.qs {
-			m.eQts[class] = make([]*matrix.DenseMatrix, m.tree.NNodes())
+			m.eQts[class] = make([][]float64, m.tree.NNodes())
 		}
 	} else {
 		for class, _ := range m.eQts {
@@ -110,13 +110,13 @@ func (m *Model) ExpBranches() {
 	for i := 0; i < runtime.GOMAXPROCS(0); i++ {
 		wg.Add(1)
 		go func() {
-			var err error
 			cD := matrix.Zeros(nCodon, nCodon)
 			for s := range tasks {
-				m.eQts[s.class][s.node.Id], err = m.qs[s.class][s.node.Id].Exp(cD, s.node.BranchLength/m.scale[s.node.Id])
+				Q, err := m.qs[s.class][s.node.Id].Exp(cD, s.node.BranchLength/m.scale[s.node.Id])
 				if err != nil {
 					panic("error exponentiating matrix")
 				}
+				m.eQts[s.class][s.node.Id] = Q.Array()
 			}
 			wg.Done()
 		}()
@@ -198,11 +198,11 @@ func (m *Model) subL(class, pos int, plh [][]float64) (res float64) {
 		for l1 := 0; l1 < nCodon; l1++ {
 			l := 1.0
 			for _, child := range node.ChildNodes() {
-				q := m.eQts[class][child.Id].Array()
+				q := m.eQts[class][child.Id]
 				s := 0.0
 				for l2 := 0; l2 < nCodon; l2++ {
 					//s += q.Get(l1, l2) * plh[child.Id][l2]
-					s += q[l1 * nCodon + l2] * plh[child.Id][l2]
+					s += q[l1*nCodon+l2] * plh[child.Id][l2]
 				}
 				l *= s
 			}
