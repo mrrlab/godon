@@ -16,7 +16,6 @@ func init() {
 func MCMC(m Optimizable, iterations int) {
 	accepted := 0
 	np := m.GetNumberOfParameters()
-	m.SetDefaults()
 	L := m.Likelihood()
 	for i := 0; i < iterations; i++ {
 		p := rand.Intn(np)
