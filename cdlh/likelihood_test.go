@@ -64,7 +64,7 @@ func TestM0F0D1(tst *testing.T) {
 	refL := -2836.196647
 
 	tst.Log("L=", L, ", Ref=", refL, ", diff=", math.Abs(L-refL))
-	if math.Abs(L-refL) > smallDiff {
+	if math.IsNaN(L) || math.Abs(L-refL) > smallDiff {
 		tst.Error("Expected ", refL, ", got", L)
 	}
 }
@@ -83,7 +83,7 @@ func TestM0F3X4D1(tst *testing.T) {
 	refL := -2892.446106
 
 	tst.Log("L=", L, ", Ref=", refL, ", diff=", math.Abs(L-refL))
-	if math.Abs(L-refL) > smallDiff {
+	if math.IsNaN(L) || math.Abs(L-refL) > smallDiff {
 		tst.Error("Expected ", refL, ", got", L)
 	}
 }
@@ -102,7 +102,7 @@ func TestM0F0D2(tst *testing.T) {
 	refL := -1463.253413
 
 	tst.Log("L=", L, ", Ref=", refL, ", diff=", math.Abs(L-refL))
-	if math.Abs(L-refL) > smallDiff {
+	if math.IsNaN(L) || math.Abs(L-refL) > smallDiff {
 		tst.Error("Expected ", refL, ", got", L)
 	}
 }
@@ -121,7 +121,7 @@ func TestM0F3X4D2(tst *testing.T) {
 	refL := -1473.371833
 
 	tst.Log("L=", L, ", Ref=", refL, ", diff=", math.Abs(L-refL))
-	if math.Abs(L-refL) > smallDiff {
+	if math.IsNaN(L) || math.Abs(L-refL) > smallDiff {
 		tst.Error("Expected ", refL, ", got", L)
 	}
 }
@@ -143,7 +143,7 @@ func TestM0F0D3(tst *testing.T) {
 	refL := -48631.160712
 
 	tst.Log("L=", L, ", Ref=", refL, ", diff=", math.Abs(L-refL))
-	if math.Abs(L-refL) > smallDiff {
+	if math.IsNaN(L) || math.Abs(L-refL) > smallDiff {
 		tst.Error("Expected ", refL, ", got", L)
 	}
 }
@@ -164,7 +164,7 @@ func TestH1F0D1(tst *testing.T) {
 	refL := -2467.931313
 
 	tst.Log("L=", L, ", Ref=", refL, ", diff=", math.Abs(L-refL))
-	if math.Abs(L-refL) > smallDiff {
+	if math.IsNaN(L) || math.Abs(L-refL) > smallDiff {
 		tst.Error("Expected ", refL, ", got", L)
 	}
 }
@@ -184,7 +184,7 @@ func TestH1F3X4D1(tst *testing.T) {
 
 	refL := -2474.003708
 	tst.Log("L=", L, ", Ref=", refL, ", diff=", math.Abs(L-refL))
-	if math.Abs(L-refL) > smallDiff {
+	if math.IsNaN(L) || math.Abs(L-refL) > smallDiff {
 		tst.Error("Expected ", refL, ", got", L)
 	}
 }
@@ -204,7 +204,7 @@ func TestH1F0D2(tst *testing.T) {
 	refL := -1405.850679
 
 	tst.Log("L=", L, ", Ref=", refL, ", diff=", math.Abs(L-refL))
-	if math.Abs(L-refL) > smallDiff {
+	if math.IsNaN(L) || math.Abs(L-refL) > smallDiff {
 		tst.Error("Expected ", refL, ", got", L)
 	}
 }
@@ -224,7 +224,7 @@ func TestH1F3X4D2(tst *testing.T) {
 	L := h1.Likelihood()
 
 	tst.Log("L=", L, ", Ref=", refL, ", diff=", math.Abs(L-refL))
-	if math.Abs(L-refL) > smallDiff {
+	if math.IsNaN(L) || math.Abs(L-refL) > smallDiff {
 		tst.Error("Expected ", refL, ", got", L)
 	}
 }
@@ -247,7 +247,7 @@ func TestH1F0D3(tst *testing.T) {
 	refL := -48019.677814
 
 	tst.Log("L=", L, ", Ref=", refL, ", diff=", math.Abs(L-refL))
-	if math.Abs(L-refL) > smallDiff {
+	if math.IsNaN(L) || math.Abs(L-refL) > smallDiff {
 		tst.Error("Expected ", refL, ", got", L)
 	}
 }
@@ -270,7 +270,7 @@ func TestH1F3X4D3(tst *testing.T) {
 	L := h1.Likelihood()
 
 	tst.Log("L=", L, ", Ref=", refL, ", diff=", math.Abs(L-refL))
-	if math.Abs(L-refL) > smallDiff {
+	if math.IsNaN(L) || math.Abs(L-refL) > smallDiff {
 		tst.Error("Expected ", refL, ", got", L)
 	}
 }
