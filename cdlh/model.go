@@ -198,9 +198,10 @@ func (m *Model) subL(class, pos int, plh [][]float64) (res float64) {
 		for l1 := 0; l1 < nCodon; l1++ {
 			l := 1.0
 			for _, child := range node.ChildNodes() {
+				q := m.eQts[class][child.Id]
 				s := 0.0
 				for l2 := 0; l2 < nCodon; l2++ {
-					s += m.eQts[class][child.Id].Get(l1, l2) * plh[child.Id][l2]
+					s += q.Get(l1, l2) * plh[child.Id][l2]
 				}
 				l *= s
 			}
