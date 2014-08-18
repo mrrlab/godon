@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"math"
 
 	"bitbucket.com/Davydov/golh/tree"
@@ -8,6 +9,7 @@ import (
 
 type M0 struct {
 	*Model
+	optBranch    bool
 	q            *EMatrix
 	omega, kappa float64
 }
@@ -29,9 +31,24 @@ func (m *M0) SetDefaults() {
 	m.ExpBranches()
 }
 
-func (m *M0) GetNumberOfParameters() int {
+func (m *M0) GetNumberOfParameters() (np int) {
 	// root branch is not considered
-	return 2 + m.tree.NNodes() - 1
+	np = 2
+	if m.optBranch {
+		np += m.tree.NNodes() - 1
+	}
+	return
+}
+
+func (m *M0) GetParameterName(i int) string {
+	switch i {
+	case 0:
+		return "kappa"
+	case 1:
+		return "omega"
+	default:
+		return fmt.Sprintf("br%d", m.tree.Nodes()[i-2+1].Id)
+	}
 }
 
 func (m *M0) GetParameter(i int) float64 {

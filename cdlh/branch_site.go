@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"math"
 
 	"bitbucket.com/Davydov/golh/tree"
@@ -8,6 +9,7 @@ import (
 
 type BranchSite struct {
 	*Model
+	optBranch      bool
 	q0, q1, q2     *EMatrix
 	kappa          float64
 	omega0, omega2 float64
@@ -47,12 +49,35 @@ func (m *BranchSite) SetDefaults() {
 	m.ExpBranches()
 }
 
-func (m *BranchSite) GetNumberOfParameters() int {
-	return 5 + m.tree.NNodes() - 1
+func (m *BranchSite) GetNumberOfParameters() (np int) {
+	// root branch is not considered
+	np = 5
+	if m.optBranch {
+		np += m.tree.NNodes() - 1
+	}
+	return
 }
 
-func (m	*BranchSite) GetParameter(i int) float64 {
-	switch (i) {
+func (m *BranchSite) GetParameterName(i int) string {
+	switch i {
+	case 0:
+		return "kappa"
+	case 1:
+		return "omega0"
+	case 2:
+		return "omega2"
+	case 3:
+		// We use reparametrization
+		return "p01sum"
+	case 4:
+		return "p0prop"
+	default:
+		return fmt.Sprintf("br%d", m.tree.Nodes()[i-5+1].BranchLength)
+	}
+}
+
+func (m *BranchSite) GetParameter(i int) float64 {
+	switch i {
 	case 0:
 		return m.kappa
 	case 1:
@@ -70,7 +95,7 @@ func (m	*BranchSite) GetParameter(i int) float64 {
 }
 
 func (m *BranchSite) SetParameter(i int, val float64) {
-	switch (i) {
+	switch i {
 	case 0:
 		m.kappa = math.Abs(val)
 		m.UpdateMatrices(true, true, true)
