@@ -9,7 +9,7 @@ import (
 
 type M0 struct {
 	*Model
-	optBranch    bool
+	OptBranch    bool
 	q            *EMatrix
 	omega, kappa float64
 }
@@ -34,7 +34,7 @@ func (m *M0) SetDefaults() {
 func (m *M0) GetNumberOfParameters() (np int) {
 	// root branch is not considered
 	np = 2
-	if m.optBranch {
+	if m.OptBranch {
 		np += m.tree.NNodes() - 1
 	}
 	return

@@ -244,6 +244,7 @@ func main() {
 	h1.SetParameters(1.87689, 0.01454, 1.68249, 0.89978, 0.04150)
 	fmt.Println(h1.Likelihood())
 
-	log.Printf("Doing MCMC on M0")
-	MCMC(m0, 100)
+	log.Printf("Doing MCMC on H1")
+	h1.OptBranch=true
+	MCMC(h1, 100)
 }

@@ -9,7 +9,7 @@ import (
 
 type BranchSite struct {
 	*Model
-	optBranch      bool
+	OptBranch      bool
 	q0, q1, q2     *EMatrix
 	kappa          float64
 	omega0, omega2 float64
@@ -52,7 +52,7 @@ func (m *BranchSite) SetDefaults() {
 func (m *BranchSite) GetNumberOfParameters() (np int) {
 	// root branch is not considered
 	np = 5
-	if m.optBranch {
+	if m.OptBranch {
 		np += m.tree.NNodes() - 1
 	}
 	return
@@ -72,7 +72,7 @@ func (m *BranchSite) GetParameterName(i int) string {
 	case 4:
 		return "p0prop"
 	default:
-		return fmt.Sprintf("br%d", m.tree.Nodes()[i-5+1].BranchLength)
+		return fmt.Sprintf("br%d", m.tree.Nodes()[i-5+1].Id)
 	}
 }
 
@@ -115,7 +115,7 @@ func (m *BranchSite) SetParameter(i int, val float64) {
 		m.p0prop = Reflect(val, 0, 1)
 		m.UpdateMatrices(false, false, false)
 	default:
-		br := i - 2 + 1
+		br := i - 5 + 1
 		m.tree.Nodes()[br].BranchLength = math.Abs(val)
 		m.ExpBranch(br)
 	}
