@@ -1,6 +1,8 @@
 package main
 
 import (
+	"math"
+
 	"bitbucket.com/Davydov/golh/tree"
 )
 
@@ -9,6 +11,7 @@ type BranchSite struct {
 	q0, q1, q2     *EMatrix
 	kappa          float64
 	omega0, omega2 float64
+	p01sum, p0prop float64
 }
 
 func NewBranchSite(cali CodonSequences, t *tree.Tree, cf CodonFrequency) (m *BranchSite) {
@@ -26,26 +29,71 @@ func (m *BranchSite) SetParameters(kappa float64, omega0, omega2 float64, p0, p1
 	m.kappa = kappa
 	m.omega0 = omega0
 	m.omega2 = omega2
-	m.prop[0] = p0
-	m.prop[1] = p1
-	m.prop[2] = (1 - p0 - p1) * p0 / (p0 + p1)
-	m.prop[3] = (1 - p0 - p1) * p1 / (p0 + p1)
+	m.p01sum = p0 + p1
+	m.p0prop = p0 / (p0 + p1)
 	m.UpdateMatrices(true, true, true)
 	m.SetBranchMatrices()
 	m.ExpBranches()
 }
 
-func (m *BranchSite) SetDefault() {
+func (m *BranchSite) SetDefaults() {
 	m.kappa = 1
 	m.omega0 = 0.5
 	m.omega2 = 2
-	m.prop[0] = 0.25
-	m.prop[1] = 0.25
-	m.prop[2] = 0.25
-	m.prop[3] = 0.25
+	m.p01sum = 0.5
+	m.p0prop = 0.5
 	m.SetBranchMatrices()
 	m.UpdateMatrices(true, true, true)
 	m.ExpBranches()
+}
+
+func (m *BranchSite) GetNumberOfParameters() int {
+	return 5 + m.tree.NNodes() - 1
+}
+
+func (m	*BranchSite) GetParameter(i int) float64 {
+	switch (i) {
+	case 0:
+		return m.kappa
+	case 1:
+		return m.omega0
+	case 2:
+		return m.omega2
+	case 3:
+		// We use reparametrization
+		return m.p01sum
+	case 4:
+		return m.p0prop
+	default:
+		return m.tree.Nodes()[i-5+1].BranchLength
+	}
+}
+
+func (m *BranchSite) SetParameter(i int, val float64) {
+	switch (i) {
+	case 0:
+		m.kappa = math.Abs(val)
+		m.UpdateMatrices(true, true, true)
+		m.ExpBranches()
+	case 1:
+		m.omega0 = math.Abs(val)
+		m.UpdateMatrices(true, false, false)
+		m.ExpBranches()
+	case 2:
+		m.omega2 = math.Abs(val)
+		m.UpdateMatrices(false, false, true)
+		m.ExpBranches()
+	case 3:
+		m.p01sum = Reflect(val, 1e-6, 1)
+		m.UpdateMatrices(false, false, false)
+	case 4:
+		m.p0prop = Reflect(val, 0, 1)
+		m.UpdateMatrices(false, false, false)
+	default:
+		br := i - 2 + 1
+		m.tree.Nodes()[br].BranchLength = math.Abs(val)
+		m.ExpBranch(br)
+	}
 }
 
 func (m *BranchSite) SetBranchMatrices() {
@@ -100,6 +148,13 @@ func (m *BranchSite) UpdateMatrices(uq0, uq1, uq2 bool) {
 			panic("error eigen q2")
 		}
 	}
+
+	p0 := m.p0prop * m.p01sum
+	p1 := m.p01sum - p0
+	m.prop[0] = p0
+	m.prop[1] = p1
+	m.prop[2] = (1 - p0 - p1) * p0 / (p0 + p1)
+	m.prop[3] = (1 - p0 - p1) * p1 / (p0 + p1)
 
 	for _, node := range m.tree.Nodes() {
 		if node.Class == 0 {

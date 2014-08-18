@@ -11,7 +11,7 @@ import (
 )
 
 type Optimizable interface {
-	SetDefault()
+	SetDefaults()
 	GetNumberOfParameters() int
 	GetParameter(i int) float64
 	SetParameter(i int, val float64)

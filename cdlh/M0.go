@@ -22,9 +22,11 @@ func NewM0(cali CodonSequences, t *tree.Tree, cf CodonFrequency) (m *M0) {
 	return
 }
 
-func (m *M0) SetDefault() {
+func (m *M0) SetDefaults() {
 	m.kappa = 1
 	m.omega = 1
+	m.UpdateMatrix()
+	m.ExpBranches()
 }
 
 func (m *M0) GetNumberOfParameters() int {
