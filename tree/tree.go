@@ -55,21 +55,27 @@ func (tree *Tree) Terminals() <-chan *Node {
 }
 
 func (tree *Tree) NonTerminals() <-chan *Node {
-	return tree.Walker(func(t *Node) bool {
-		if len(t.childNodes) > 0 {
+	return tree.Walker(func(node *Node) bool {
+		return node.IsTerminal()
+	})
+}
+
+func (tree *Tree) ClassNodes(class int) <-chan *Node {
+	return tree.Walker(func(node *Node) bool {
+		if node.Class == class {
 			return true
 		}
 		return false
 	})
 }
 
-func (tree *Tree) ClassNodes(class int) <-chan *Node {
-	return tree.Walker(func(t *Node) bool {
-		if t.Class == class {
-			return true
-		}
-		return false
-	})
+func (tree *Tree) NLeaves() (i int) {
+	for _ = range tree.Walker(func(node *Node) bool {
+		return node.IsTerminal()
+	}) {
+		i++
+	}
+	return
 }
 
 func (tree *Tree) Walker(filter func(*Node) bool) <-chan *Node {
@@ -121,6 +127,7 @@ type Node struct {
 	Parent       *Node
 	childNodes   []*Node
 	Id           int
+	LeafId       int
 	Class        int
 }
 
@@ -143,6 +150,9 @@ func (node *Node) String() (s string) {
 		s += "name=" + node.Name + ", "
 	}
 	s += fmt.Sprintf("Id=%v, BranchLength=%v", node.Id, node.BranchLength)
+	if node.IsTerminal() {
+		s += fmt.Sprintf(", TipId=%v", node.LeafId)
+	}
 	if node.Class != 0 {
 		s += fmt.Sprintf(", Class=%v", node.Class)
 	}
@@ -181,8 +191,13 @@ func (node *Node) NSubNodes() (size int) {
 	}
 	return size + 1
 }
-func (tree *Node) IsRoot() bool {
-	return tree.Parent == nil
+
+func (node *Node) IsRoot() bool {
+	return node.Parent == nil
+}
+
+func (node *Node) IsTerminal() bool {
+	return len(node.childNodes) == 0
 }
 
 func IsSpecial(c rune) bool {
@@ -232,6 +247,7 @@ func ParseNewick(rd io.Reader) (tree *Tree, err error) {
 	scanner.Split(NewickSplit)
 
 	nodeId := 0
+	leafId := 0
 
 	node := NewNode(nil, nodeId)
 	tree = &Tree{Node: node}
@@ -288,6 +304,8 @@ func ParseNewick(rd io.Reader) (tree *Tree, err error) {
 				node.Class = int(cl)
 				mode = NORMAL
 			default:
+				node.LeafId = leafId
+				leafId++
 				node.Name = text
 			}
 		}

@@ -26,7 +26,6 @@ type Model struct {
 	qs     [][]*EMatrix
 	scale  []float64
 	prop   []float64
-	nm2id  map[string]int
 	nclass int
 
 	eQts [][]*matrix.DenseMatrix
@@ -45,13 +44,23 @@ func NewModel(cali CodonSequences, t *tree.Tree, cf CodonFrequency, nclass int) 
 		m.qs[i] = make([]*EMatrix, t.NNodes())
 	}
 	t.NodeOrder()
-
-	m.nm2id = make(map[string]int)
-	for i, s := range m.cali {
-		m.nm2id[s.Name] = i
-	}
+	m.ReorderAlignment()
 
 	return
+}
+
+func (m *Model) ReorderAlignment() {
+	nm2id := make(map[string]int)
+	for i, s := range m.cali {
+		nm2id[s.Name] = i
+	}
+
+	newCali := make(CodonSequences, m.tree.NLeaves())
+	for node := range m.tree.Terminals() {
+		newCali[node.LeafId] = m.cali[nm2id[node.Name]]
+	}
+
+	m.cali = newCali
 }
 
 type expTask struct {
@@ -177,7 +186,7 @@ func (m *Model) subL(class, pos int, plh [][]float64) (res float64) {
 
 	for node := range m.tree.Terminals() {
 		for l := byte(0); l < byte(nCodon); l++ {
-			if l == m.cali[m.nm2id[node.Name]].Sequence[pos] {
+			if l == m.cali[node.LeafId].Sequence[pos] {
 				plh[node.Id][l] = 1
 			} else {
 				plh[node.Id][l] = 0
