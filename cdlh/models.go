@@ -59,6 +59,11 @@ func NewM0(cali CodonSequences, t *tree.Tree, cf CodonFrequency) (m *M0) {
 	return
 }
 
+func (m *M0) SetDefault() {
+	m.kappa = 1
+	m.omega = 1
+}
+
 func (m *M0) SetParameters(kappa, omega float64) {
 	m.kappa = kappa
 	m.omega = omega
@@ -97,15 +102,25 @@ func NewH1(cali CodonSequences, t *tree.Tree, cf CodonFrequency) (m *H1) {
 
 }
 
-func (m *H1) SetParameters(kappa float64, omega0, omega2 float64, p0, p1, p2a, p2b float64) {
+func (m *H1) SetParameters(kappa float64, omega0, omega2 float64, p0, p1 float64) {
 	m.kappa = kappa
 	m.omega0 = omega0
 	m.omega2 = omega2
 	m.prop[0] = p0
 	m.prop[1] = p1
-	m.prop[2] = p2a
-	m.prop[3] = p2b
+	m.prop[2] = (1 - p0 - p1) * p0 / (p0 + p1)
+	m.prop[3] = (1 - p0 - p1) * p1 / (p0 + p1)
 	m.UpdateMatrices()
+}
+
+func (m *H1) SetDefault() {
+	m.kappa = 1
+	m.omega0 = 0.5
+	m.omega2 = 2
+	m.prop[0] = 0.25
+	m.prop[1] = 0.25
+	m.prop[2] = 0.25
+	m.prop[3] = 0.25
 }
 
 func (m *H1) UpdateMatrices() {

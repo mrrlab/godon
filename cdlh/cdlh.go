@@ -235,12 +235,12 @@ func main() {
 	fmt.Println(m0.Likelihood())
 
 	h1 := NewH1(cali, t, cf)
-	h1.SetParameters(2, 0.5, 0.6, 0.94702, 0.00000, 0.05298, 0.00000)
+	h1.SetParameters(2, 0.5, 0.6, 0.94702, 0.00000)
 	fmt.Println(h1.Likelihood())
 
-	h1.SetParameters(1.90991, 0.02000, 1, 0.94680, 0.00010, 0.05310, 0.00001)
+	h1.SetParameters(1.90991, 0.02000, 1, 0.94680, 0.00010)
 	fmt.Println(h1.Likelihood())
 
-	h1.SetParameters(1.87689, 0.01454, 1.68249, 0.89978, 0.04150, 0.05613, 0.00259)
+	h1.SetParameters(1.87689, 0.01454, 1.68249, 0.89978, 0.04150)
 	fmt.Println(h1.Likelihood())
 }
