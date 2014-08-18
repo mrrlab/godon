@@ -47,11 +47,11 @@ func (m *M0) SetParameter(i int, value float64) {
 	switch i {
 	case 0:
 		m.kappa = math.Abs(value)
-		m.UpdateMatrices()
+		m.UpdateMatrix()
 		m.ExpBranches()
 	case 1:
 		m.omega = math.Abs(value)
-		m.UpdateMatrices()
+		m.UpdateMatrix()
 		m.ExpBranches()
 	default:
 		br := i - 2 + 1
@@ -63,11 +63,11 @@ func (m *M0) SetParameter(i int, value float64) {
 func (m *M0) SetParameters(kappa, omega float64) {
 	m.kappa = kappa
 	m.omega = omega
-	m.UpdateMatrices()
+	m.UpdateMatrix()
 	m.ExpBranches()
 }
 
-func (m *M0) UpdateMatrices() {
+func (m *M0) UpdateMatrix() {
 	Q, s := createTransitionMatrix(m.cf, m.kappa, m.omega, m.q.Q)
 	m.q.Set(Q, s)
 
