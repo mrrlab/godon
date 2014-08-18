@@ -2,11 +2,20 @@ package main
 
 import (
 	"fmt"
+	"math"
 
 	"github.com/skelterjohn/go.matrix"
 
 	"bitbucket.com/Davydov/golh/tree"
 )
+
+type Optimizable interface {
+	SetDefault()
+	GetNumberOfParameters() int
+	GetParameter(i int) float64
+	SetParameter(i int, val float64)
+	Likelihood()
+}
 
 type Model struct {
 	tree   *tree.Tree
@@ -64,15 +73,49 @@ func (m *M0) SetDefault() {
 	m.omega = 1
 }
 
+func (m *M0) GetNumberOfParameters() int {
+	// root branch is not considered
+	return 2 + m.tree.NNodes() - 1
+}
+
+func (m *M0) GetParameter(i int) float64 {
+	switch i {
+	case 0:
+		return m.kappa
+	case 1:
+		return m.omega
+	default:
+		return m.tree.Nodes()[i-2+1].BranchLength
+	}
+}
+
+func (m *M0) SetParameter(i int, value float64) {
+	switch i {
+	case 0:
+		m.kappa = math.Abs(value)
+		m.UpdateMatrices()
+		m.ExpBranches()
+	case 1:
+		m.omega = math.Abs(value)
+		m.UpdateMatrices()
+		m.ExpBranches()
+	default:
+		br := i - 2 + 1
+		m.tree.Nodes()[br].BranchLength = math.Abs(value)
+		m.ExpBranch(br)
+	}
+}
+
 func (m *M0) SetParameters(kappa, omega float64) {
 	m.kappa = kappa
 	m.omega = omega
 	m.UpdateMatrices()
+	m.ExpBranches()
 }
 
 func (m *M0) UpdateMatrices() {
 	Q, s := createTransitionMatrix(m.cf, m.kappa, m.omega, m.q.Q)
-	m.q.Set(Q)
+	m.q.Set(Q, s)
 
 	err := m.q.Eigen()
 	if err != nil {
@@ -80,7 +123,7 @@ func (m *M0) UpdateMatrices() {
 	}
 	for i := 0; i < len(m.qs[0]); i++ {
 		m.qs[0][i] = m.q
-		m.scale[i] = s
+		m.scale[i] = m.q.Scale
 	}
 }
 
@@ -110,7 +153,8 @@ func (m *H1) SetParameters(kappa float64, omega0, omega2 float64, p0, p1 float64
 	m.prop[1] = p1
 	m.prop[2] = (1 - p0 - p1) * p0 / (p0 + p1)
 	m.prop[3] = (1 - p0 - p1) * p1 / (p0 + p1)
-	m.UpdateMatrices()
+	m.UpdateMatrices(true, true, true)
+	m.ExpBranches()
 }
 
 func (m *H1) SetDefault() {
@@ -121,29 +165,42 @@ func (m *H1) SetDefault() {
 	m.prop[1] = 0.25
 	m.prop[2] = 0.25
 	m.prop[3] = 0.25
+	m.UpdateMatrices(true, true, true)
 }
 
-func (m *H1) UpdateMatrices() {
-	Q0, s0 := createTransitionMatrix(m.cf, m.kappa, m.omega0, m.q0.Q)
-	m.q0.Set(Q0)
-	Q1, s1 := createTransitionMatrix(m.cf, m.kappa, 1, m.q1.Q)
-	m.q1.Set(Q1)
-	Q2, s2 := createTransitionMatrix(m.cf, m.kappa, m.omega2, m.q2.Q)
-	m.q2.Set(Q2)
+func (m *H1) UpdateMatrices(uq0, uq1, uq2 bool) {
+	if uq0 {
+		Q0, s0 := createTransitionMatrix(m.cf, m.kappa, m.omega0, m.q0.Q)
+		m.q0.Set(Q0, s0)
+		err := m.q0.Eigen()
+		if err != nil {
+			panic("error eigen q0")
+		}
+	}
 
-	err0 := m.q0.Eigen()
-	err1 := m.q1.Eigen()
-	err2 := m.q2.Eigen()
+	if uq1 {
+		Q1, s1 := createTransitionMatrix(m.cf, m.kappa, 1, m.q1.Q)
+		m.q1.Set(Q1, s1)
+		err := m.q1.Eigen()
+		if err != nil {
+			panic("error eigen q1")
+		}
+	}
 
-	if err0 != nil || err1 != nil || err2 != nil {
-		panic(fmt.Sprintf("error finding eigen: %v, %v, %v", err0, err1, err2))
+	if uq2 {
+		Q2, s2 := createTransitionMatrix(m.cf, m.kappa, m.omega2, m.q2.Q)
+		m.q2.Set(Q2, s2)
+		err := m.q2.Eigen()
+		if err != nil {
+			panic("error eigen q2")
+		}
 	}
 
 	for _, node := range m.tree.Nodes() {
 		if node.Class == 0 {
-			m.scale[node.Id] = (m.prop[0]+m.prop[2])*s0 + (m.prop[1]+m.prop[3])*s1
+			m.scale[node.Id] = (m.prop[0]+m.prop[2])*m.q0.Scale + (m.prop[1]+m.prop[3])*m.q1.Scale
 		} else {
-			m.scale[node.Id] = m.prop[0]*s0 + m.prop[1]*s1 + (m.prop[2]+m.prop[3])*s2
+			m.scale[node.Id] = m.prop[0]*m.q0.Scale + m.prop[1]*m.q1.Scale + (m.prop[2]+m.prop[3])*m.q2.Scale
 		}
 	}
 

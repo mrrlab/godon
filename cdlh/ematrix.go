@@ -8,22 +8,23 @@ import (
 )
 
 type EMatrix struct {
-	Q  *matrix.DenseMatrix
-	v  *matrix.DenseMatrix
-	d  *matrix.DenseMatrix
-	iv *matrix.DenseMatrix
+	Q     *matrix.DenseMatrix
+	Scale float64
+	v     *matrix.DenseMatrix
+	d     *matrix.DenseMatrix
+	iv    *matrix.DenseMatrix
 }
 
-func NewEMatrix(Q *matrix.DenseMatrix) *EMatrix {
-	return &EMatrix{Q, nil, nil, nil}
+func NewEMatrix(Q *matrix.DenseMatrix, scale float64) *EMatrix {
+	return &EMatrix{Q: Q, Scale: scale}
 }
 
-func (m *EMatrix) Set(Q *matrix.DenseMatrix) {
+func (m *EMatrix) Set(Q *matrix.DenseMatrix, scale float64) {
 	m.Q = Q
+	m.Scale = scale
 	m.v = nil
-	m.d = nil
-	m.iv = nil
 }
+
 func (m *EMatrix) Eigen() (err error) {
 	if m.v != nil {
 		return nil

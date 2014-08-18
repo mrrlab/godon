@@ -1,8 +1,8 @@
 package main
 
 import (
-	"runtime"
 	"math"
+	"runtime"
 	"sync"
 
 	"github.com/skelterjohn/go.matrix"
@@ -15,7 +15,28 @@ type expTask struct {
 	node  *tree.Node
 }
 
-func (m *Model) ExpBranch() {
+func (m *Model) ExpBranch(br int) {
+	node := m.tree.Nodes()[br]
+	cD := matrix.Zeros(nCodon, nCodon)
+	for class, _ := range m.qs {
+		var oclass int
+		for oclass = class - 1; oclass >= 0; oclass-- {
+			if m.qs[class][node.Id] == m.qs[oclass][node.Id] {
+				m.eQts[class][node.Id] = m.eQts[oclass][node.Id]
+				break
+			}
+		}
+		if oclass < 0 {
+			var err error
+			m.eQts[class][node.Id], err = m.qs[class][node.Id].Exp(cD, node.BranchLength/m.scale[node.Id])
+			if err != nil {
+				panic("Error exponentiating")
+			}
+		}
+	}
+}
+
+func (m *Model) ExpBranches() {
 	if m.eQts == nil {
 		m.eQts = make([][]*matrix.DenseMatrix, len(m.qs))
 		for class, _ := range m.qs {
@@ -72,8 +93,6 @@ func (m *Model) Likelihood() (lnL float64) {
 	if len(m.prop) != len(m.qs) {
 		panic("incorrect proportion length")
 	}
-
-	m.ExpBranch()
 
 	nTasks := len(m.cali[0].Sequence)
 	results := make(chan float64, nTasks)

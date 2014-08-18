@@ -38,7 +38,7 @@ func (tree *Tree) Nodes() []*Node {
 		tree.nodes = make([]*Node, tree.NNodes())
 		i := 0
 		for node := range tree.Walker(nil) {
-			tree.nodes[i] = node
+			tree.nodes[node.Id] = node
 			i++
 		}
 	}
