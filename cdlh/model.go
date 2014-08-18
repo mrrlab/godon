@@ -10,6 +10,49 @@ import (
 	"bitbucket.com/Davydov/golh/tree"
 )
 
+type Optimizable interface {
+	SetDefault()
+	GetNumberOfParameters() int
+	GetParameter(i int) float64
+	SetParameter(i int, val float64)
+	Likelihood()
+}
+
+type Model struct {
+	tree   *tree.Tree
+	cali   CodonSequences
+	cf     CodonFrequency
+	qs     [][]*EMatrix
+	scale  []float64
+	prop   []float64
+	nm2id  map[string]int
+	nclass int
+
+	eQts [][]*matrix.DenseMatrix
+}
+
+func NewModel(cali CodonSequences, t *tree.Tree, cf CodonFrequency, nclass int) (m *Model) {
+	m = &Model{cali: cali,
+		tree:   t,
+		cf:     cf,
+		qs:     make([][]*EMatrix, nclass),
+		scale:  make([]float64, t.NNodes()),
+		prop:   make([]float64, nclass),
+		nclass: nclass,
+	}
+	for i := 0; i < nclass; i++ {
+		m.qs[i] = make([]*EMatrix, t.NNodes())
+	}
+	t.NodeOrder()
+
+	m.nm2id = make(map[string]int)
+	for i, s := range m.cali {
+		m.nm2id[s.Name] = i
+	}
+
+	return
+}
+
 type expTask struct {
 	class int
 	node  *tree.Node

@@ -234,7 +234,7 @@ func main() {
 	m0.SetParameters(2, 0.5)
 	fmt.Println(m0.Likelihood())
 
-	h1 := NewH1(cali, t, cf)
+	h1 := NewBranchSite(cali, t, cf)
 	h1.SetParameters(2, 0.5, 0.6, 0.94702, 0.00000)
 	fmt.Println(h1.Likelihood())
 
