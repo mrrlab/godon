@@ -11,14 +11,9 @@ import (
 	"bitbucket.com/Davydov/golh/tree"
 )
 
-type Optimizable interface {
-	SetDefaults()
-	GetNumberOfParameters() int
-	GetParameterName(i int) string
-	GetParameter(i int) float64
-	SetParameter(i int, val float64)
+type TreeOptimizable interface {
+	Optimizable
 	SetOptBranch(optBranch bool)
-	Likelihood() float64
 }
 
 type Model struct {

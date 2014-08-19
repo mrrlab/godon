@@ -244,7 +244,7 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
-	var m Optimizable
+	var m TreeOptimizable
 	switch *model {
 	case "M0":
 		log.Print("Using M0 model")
