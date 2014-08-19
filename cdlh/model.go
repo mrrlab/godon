@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"math"
 	"runtime"
 	"sync"
@@ -16,17 +17,19 @@ type Optimizable interface {
 	GetParameterName(i int) string
 	GetParameter(i int) float64
 	SetParameter(i int, val float64)
+	SetOptBranch(optBranch bool)
 	Likelihood() float64
 }
 
 type Model struct {
-	tree   *tree.Tree
-	cali   CodonSequences
-	cf     CodonFrequency
-	qs     [][]*EMatrix
-	scale  []float64
-	prop   []float64
-	nclass int
+	tree      *tree.Tree
+	cali      CodonSequences
+	cf        CodonFrequency
+	qs        [][]*EMatrix
+	scale     []float64
+	prop      []float64
+	nclass    int
+	optBranch bool
 
 	eQts [][][]float64
 }
@@ -47,6 +50,41 @@ func NewModel(cali CodonSequences, t *tree.Tree, cf CodonFrequency, nclass int) 
 	m.ReorderAlignment()
 
 	return
+}
+
+func (m *Model) GetNumberOfParameters() int {
+	// root branch is not considered
+	if m.optBranch {
+		return m.tree.NNodes() - 1
+	}
+	return 0
+}
+
+func (m *Model) GetParameterName(i int) string {
+	if !m.optBranch {
+		panic("branch length are not optimizable")
+	}
+	return fmt.Sprintf("br%d", m.tree.Nodes()[i+1].Id)
+}
+
+func (m *Model) GetParameter(i int) float64 {
+	if !m.optBranch {
+		panic("branch length are not optimizable")
+	}
+	return m.tree.Nodes()[i+1].BranchLength
+}
+
+func (m *Model) SetParameter(i int, val float64) {
+	if !m.optBranch {
+		panic("branch length are not optimizable")
+	}
+	br := i + 1
+	m.tree.Nodes()[br].BranchLength = math.Abs(val)
+	m.ExpBranch(br)
+}
+
+func (m *Model) SetOptBranch(optBranch bool) {
+	m.optBranch = optBranch
 }
 
 func (m *Model) ReorderAlignment() {

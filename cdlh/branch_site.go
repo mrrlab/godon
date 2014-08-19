@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"math"
 
 	"bitbucket.com/Davydov/golh/tree"
@@ -9,7 +8,6 @@ import (
 
 type BranchSite struct {
 	*Model
-	OptBranch      bool
 	q0, q1, q2     *EMatrix
 	kappa          float64
 	omega0, omega2 float64
@@ -52,9 +50,7 @@ func (m *BranchSite) SetDefaults() {
 func (m *BranchSite) GetNumberOfParameters() (np int) {
 	// root branch is not considered
 	np = 5
-	if m.OptBranch {
-		np += m.tree.NNodes() - 1
-	}
+	np += m.Model.GetNumberOfParameters()
 	return
 }
 
@@ -72,7 +68,7 @@ func (m *BranchSite) GetParameterName(i int) string {
 	case 4:
 		return "p0prop"
 	default:
-		return fmt.Sprintf("br%d", m.tree.Nodes()[i-5+1].Id)
+		return m.Model.GetParameterName(i - 5)
 	}
 }
 
@@ -90,34 +86,32 @@ func (m *BranchSite) GetParameter(i int) float64 {
 	case 4:
 		return m.p0prop
 	default:
-		return m.tree.Nodes()[i-5+1].BranchLength
+		return m.Model.GetParameter(i - 5)
 	}
 }
 
-func (m *BranchSite) SetParameter(i int, val float64) {
+func (m *BranchSite) SetParameter(i int, value float64) {
 	switch i {
 	case 0:
-		m.kappa = math.Abs(val)
+		m.kappa = math.Abs(value)
 		m.UpdateMatrices(true, true, true)
 		m.ExpBranches()
 	case 1:
-		m.omega0 = math.Abs(val)
+		m.omega0 = math.Abs(value)
 		m.UpdateMatrices(true, false, false)
 		m.ExpBranches()
 	case 2:
-		m.omega2 = Reflect(val, 1, )
+		m.omega2 = Reflect(value, 1, math.Inf(+1))
 		m.UpdateMatrices(false, false, true)
 		m.ExpBranches()
 	case 3:
-		m.p01sum = Reflect(val, 1e-6, 1)
+		m.p01sum = Reflect(value, 1e-6, 1)
 		m.UpdateMatrices(false, false, false)
 	case 4:
-		m.p0prop = Reflect(val, 0, 1)
+		m.p0prop = Reflect(value, 0, 1)
 		m.UpdateMatrices(false, false, false)
 	default:
-		br := i - 5 + 1
-		m.tree.Nodes()[br].BranchLength = math.Abs(val)
-		m.ExpBranch(br)
+		m.Model.SetParameter(i - 5, value)
 	}
 }
 

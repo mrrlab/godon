@@ -142,11 +142,14 @@ func PrintUnQ(Q *matrix.DenseMatrix) {
 }
 
 func main() {
-	cFreqFileName := flag.String("cfreq", "", "codon frequencies file")
+	cFreqFileName := flag.String("cfreqfn", "", "codon frequencies file (overrides -cfreq)")
 	nCPU := flag.Int("cpu", 0, "number of cpu to use")
 	fgBranch := flag.Int("fg", -1, "fg branch number")
 	cpuProfile := flag.String("cpuprofile", "", "write cpu profile to file")
 	iterations := flag.Int("iter", 10000, "number of iterations")
+	model := flag.String("model", "M0", "todel type (M0 or BS for branch site)")
+	optBranch := flag.Bool("brlen", true, "optimize branch lengths")
+	cFreq := flag.String("cfreq", "F3X4", "codon frequecny (F0 or F3X4)")
 
 	flag.Parse()
 
@@ -199,8 +202,16 @@ func main() {
 			log.Fatal(err)
 		}
 	} else {
-		cf = F3X4(cali)
-		//cf = F0()
+		switch *cFreq {
+		case "F0":
+			log.Print("F0 frequency")
+			cf = F0()
+		case "F3X4":
+			log.Print("F3X4 frequency")
+			cf = F3X4(cali)
+		default:
+			log.Fatal("Unknow codon freuquency specification")
+		}
 	}
 	log.Print(cf)
 
@@ -231,22 +242,26 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
-	m0 := NewM0(cali, t, cf)
-	m0.SetParameters(2, 0.5)
-	fmt.Println(m0.Likelihood())
+	var m Optimizable
+	switch *model {
+	case "M0":
+		log.Print("Using M0 model")
+		m = NewM0(cali, t, cf)
+	case "BS":
+		log.Print("Using branch site model")
+		m = NewBranchSite(cali, t, cf)
+	default:
+		log.Fatal("Unknown model specification")
+	}
 
-	h1 := NewBranchSite(cali, t, cf)
-	h1.SetParameters(2, 0.5, 0.6, 0.94702, 0.00000)
-	fmt.Println(h1.Likelihood())
+	log.Printf("Model has %d parameters.", m.GetNumberOfParameters())
+	if *optBranch {
+		log.Print("Will optimize branch lengths")
+		m.SetOptBranch(true)
+	} else {
+		log.Print("Will not optimize branch lengths")
+	}
 
-	h1.SetParameters(1.90991, 0.02000, 1, 0.94680, 0.00010)
-	fmt.Println(h1.Likelihood())
-
-	h1.SetParameters(1.87689, 0.01454, 1.68249, 0.89978, 0.04150)
-	fmt.Println(h1.Likelihood())
-
-	log.Printf("Doing MCMC on BranchSite")
-	h1.SetDefaults()
-	h1.OptBranch=true
-	MCMC(h1, *iterations)
+	m.SetDefaults()
+	MCMC(m, *iterations)
 }
