@@ -146,10 +146,12 @@ func main() {
 	nCPU := flag.Int("cpu", 0, "number of cpu to use")
 	fgBranch := flag.Int("fg", -1, "fg branch number")
 	cpuProfile := flag.String("cpuprofile", "", "write cpu profile to file")
-	iterations := flag.Int("iter", 10000, "number of iterations")
 	model := flag.String("model", "M0", "todel type (M0 or BS for branch site)")
 	optBranch := flag.Bool("brlen", true, "optimize branch lengths")
 	cFreq := flag.String("cfreq", "F3X4", "codon frequecny (F0 or F3X4)")
+	iterations := flag.Int("iter", 10000, "number of iterations")
+	burnIn := flag.Int("burnin", 0, "number of burn-in iterations")
+	report := flag.Int("report", 10, "report every N iterations")
 
 	flag.Parse()
 
@@ -263,5 +265,5 @@ func main() {
 	}
 
 	m.SetDefaults()
-	MCMC(m, *iterations)
+	MCMC(m, *burnIn, *iterations, *report)
 }

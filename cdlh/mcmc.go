@@ -4,8 +4,8 @@ import (
 	"log"
 	"math"
 	"math/rand"
-	"time"
 	"strconv"
+	"time"
 )
 
 const stdev = 1e-2
@@ -14,11 +14,21 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
-func MCMC(m Optimizable, iterations int) {
+func MCMC(m Optimizable, burnIn, iterations int, report int) {
 	accepted := 0
 	np := m.GetNumberOfParameters()
 	L := m.Likelihood()
-	for i := 0; i < iterations; i++ {
+	if burnIn > 0 {
+		log.Printf("Burnin for %d iterations", burnIn)
+	}
+	for i := 0; i < burnIn+iterations+burnIn; i++ {
+		iter := i - burnIn
+		if iter == 0 {
+			log.Print("Starting sampling")
+		}
+		if iter >= 0 && iter%report == 0 {
+			log.Printf("%d: L=%f", i, L)
+		}
 		p := rand.Intn(np)
 		val := m.GetParameter(p)
 		newVal := val + rand.NormFloat64()*stdev
@@ -30,13 +40,9 @@ func MCMC(m Optimizable, iterations int) {
 		} else {
 			L = newL
 			accepted++
-			if accepted % 10 == 0 {
-				log.Printf("%d: Accept, L=%f", i, newL)
-				log.Println(ParameterString(m))
-			}
 		}
 	}
-	log.Printf("Finished MCMC, acceptance rate %f%%", 100*float64(accepted)/float64(iterations))
+	log.Printf("Finished MCMC, acceptance rate %f%%", 100*float64(accepted)/float64(iterations+burnIn))
 	for i := 0; i < np; i++ {
 		log.Printf("%s=%f", m.GetParameterName(i), m.GetParameter(i))
 	}
