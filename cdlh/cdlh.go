@@ -146,6 +146,7 @@ func main() {
 	nCPU := flag.Int("cpu", 0, "number of cpu to use")
 	fgBranch := flag.Int("fg", -1, "fg branch number")
 	cpuProfile := flag.String("cpuprofile", "", "write cpu profile to file")
+	iterations := flag.Int("iter", 10000, "number of iterations")
 
 	flag.Parse()
 
@@ -244,10 +245,8 @@ func main() {
 	h1.SetParameters(1.87689, 0.01454, 1.68249, 0.89978, 0.04150)
 	fmt.Println(h1.Likelihood())
 
-	log.Printf("Doing MCMC on M0")
-	m0.SetDefaults()
-	MCMC(m0, 100)
-	log.Printf("Include branches now")
+	log.Printf("Doing MCMC on BranchSite")
+	h1.SetDefaults()
 	h1.OptBranch=true
-	MCMC(m0, 500)
+	MCMC(h1, *iterations)
 }

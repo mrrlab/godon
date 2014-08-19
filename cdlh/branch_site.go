@@ -105,7 +105,7 @@ func (m *BranchSite) SetParameter(i int, val float64) {
 		m.UpdateMatrices(true, false, false)
 		m.ExpBranches()
 	case 2:
-		m.omega2 = math.Abs(val)
+		m.omega2 = Reflect(val, 1, )
 		m.UpdateMatrices(false, false, true)
 		m.ExpBranches()
 	case 3:

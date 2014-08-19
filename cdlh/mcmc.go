@@ -5,6 +5,7 @@ import (
 	"math"
 	"math/rand"
 	"time"
+	"strconv"
 )
 
 const stdev = 1e-2
@@ -29,11 +30,24 @@ func MCMC(m Optimizable, iterations int) {
 		} else {
 			L = newL
 			accepted++
-			log.Printf("%d: Accept, L=%f", i, newL)
+			if accepted % 10 == 0 {
+				log.Printf("%d: Accept, L=%f", i, newL)
+				log.Println(ParameterString(m))
+			}
 		}
 	}
 	log.Printf("Finished MCMC, acceptance rate %f%%", 100*float64(accepted)/float64(iterations))
 	for i := 0; i < np; i++ {
 		log.Printf("%s=%f", m.GetParameterName(i), m.GetParameter(i))
 	}
+}
+
+func ParameterString(m Optimizable) (s string) {
+	for i := 0; i < m.GetNumberOfParameters(); i++ {
+		if i != 0 {
+			s += " "
+		}
+		s += strconv.FormatFloat(m.GetParameter(i), 'f', 6, 64)
+	}
+	return
 }
