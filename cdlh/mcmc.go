@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"math"
 	"math/rand"
@@ -21,6 +22,7 @@ func MCMC(m Optimizable, burnIn, iterations int, report int) {
 	if burnIn > 0 {
 		log.Printf("Burnin for %d iterations", burnIn)
 	}
+	fmt.Printf("iteration likelihood %s\n", ParameterNamesString(m))
 	for i := 0; i < burnIn+iterations+burnIn; i++ {
 		iter := i - burnIn
 		if iter == 0 {
@@ -28,6 +30,7 @@ func MCMC(m Optimizable, burnIn, iterations int, report int) {
 		}
 		if iter >= 0 && iter%report == 0 {
 			log.Printf("%d: L=%f", i, L)
+			fmt.Printf("%d %f %s\n", i, L, ParameterString(m))
 		}
 		p := rand.Intn(np)
 		val := m.GetParameter(p)
@@ -48,6 +51,15 @@ func MCMC(m Optimizable, burnIn, iterations int, report int) {
 	}
 }
 
+func ParameterNamesString(m Optimizable) (s string) {
+	for i := 0; i < m.GetNumberOfParameters(); i++ {
+		if i != 0 {
+			s += " "
+		}
+		s += m.GetParameterName(i)
+	}
+	return
+}
 func ParameterString(m Optimizable) (s string) {
 	for i := 0; i < m.GetNumberOfParameters(); i++ {
 		if i != 0 {
