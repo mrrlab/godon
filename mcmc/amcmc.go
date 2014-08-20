@@ -24,7 +24,7 @@ func AMCMC(m Optimizable, burnIn, iterations int, report int) {
 	if burnIn > 0 {
 		log.Printf("Burnin for %d iterations", burnIn)
 	}
-	fmt.Printf("iteration likelihood %s\n", ParameterNamesString(m))
+	fmt.Printf("iteration\tlikelihood\t%s\n", ParameterNamesString(m))
 
 	t := make([]int, np)
 	loct := make([]int, np)
@@ -55,7 +55,7 @@ func AMCMC(m Optimizable, burnIn, iterations int, report int) {
 		}
 		if iter >= 0 && iter%report == 0 {
 			log.Printf("%d: L=%f", i, L)
-			fmt.Printf("%d %f %s\n", i, L, ParameterString(m))
+			fmt.Printf("%d\t%f\t%s\n", i, L, ParameterString(m))
 		}
 		p := rand.Intn(np)
 		val := m.GetParameter(p)

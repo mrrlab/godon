@@ -33,7 +33,7 @@ func MCMC(m Optimizable, burnIn, iterations int, report int) {
 		log.Printf("Burnin for %d iterations", burnIn)
 	}
 	accepted := 0
-	fmt.Printf("iteration likelihood %s\n", ParameterNamesString(m))
+	fmt.Printf("iteration\tlikelihood\t%s\n",ParameterNamesString(m))
 	for i := 0; i < burnIn+iterations+burnIn; i++ {
 		if i%report == 0 && i > 0 {
 			log.Printf("Acceptance rate %f%%", 100*float64(accepted)/float64(report))
@@ -46,7 +46,7 @@ func MCMC(m Optimizable, burnIn, iterations int, report int) {
 		}
 		if iter >= 0 && iter%report == 0 {
 			log.Printf("%d: L=%f", i, L)
-			fmt.Printf("%d %f %s\n", i, L, ParameterString(m))
+			fmt.Printf("%d\t%f\t%s\n", i, L, ParameterString(m))
 		}
 		p := rand.Intn(np)
 		val := m.GetParameter(p)
@@ -70,7 +70,7 @@ func MCMC(m Optimizable, burnIn, iterations int, report int) {
 func ParameterNamesString(m Optimizable) (s string) {
 	for i := 0; i < m.GetNumberOfParameters(); i++ {
 		if i != 0 {
-			s += " "
+			s += "\t"
 		}
 		s += m.GetParameterName(i)
 	}
@@ -79,7 +79,7 @@ func ParameterNamesString(m Optimizable) (s string) {
 func ParameterString(m Optimizable) (s string) {
 	for i := 0; i < m.GetNumberOfParameters(); i++ {
 		if i != 0 {
-			s += " "
+			s += "\t"
 		}
 		s += strconv.FormatFloat(m.GetParameter(i), 'f', 6, 64)
 	}
