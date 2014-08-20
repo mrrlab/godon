@@ -4,7 +4,6 @@
 
 
 ## repository contents ##
-
 * ``bio`` reads fasta and translates genetic code
 * ``matrix`` is a wrapper for some GNU Scientific Library functions (not used currently)
 * ``mcmc.go`` is the MCMC implementation
@@ -12,7 +11,6 @@
 * ``cdlh`` is MCMC sampler for branchsite model
 
 ## cdlh ##
-
 * ``M0.go`` — M0 model
 * ``branch_site.go`` — branch site model
 * ``cdlh.go`` — main file (mcmc sampler itself)
@@ -28,6 +26,5 @@
 * ``tools_test.go`` — test for tools
 
 ## mcmc ##
-
 * ``mcmc.go`` — simple metropolis hastings implementation
 * ``amcmc.go`` — adaptive MCMC implementation
