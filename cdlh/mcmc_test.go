@@ -2,6 +2,8 @@ package main
 
 import (
 	"testing"
+
+	"bitbucket.com/Davydov/golh/mcmc"
 )
 
 func BenchmarkMCMCD1(b *testing.B) {
@@ -17,6 +19,6 @@ func BenchmarkMCMCD1(b *testing.B) {
 	b.ResetTimer()
 
 	m0.SetDefaults()
-	MCMC(m0, 100)
+	mcmc.MCMC(m0, 100, 0, 1000)
 }
 
