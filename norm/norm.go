@@ -153,6 +153,7 @@ func main() {
 	if *amcmc {
 		mcmc.AMCMC(m, 0, 100000, 10)
 	} else {
-		mcmc.MCMC(m, 0, 100000, 10)
+		m := mcmc.NewMCMC(m)
+		m.Run(10000)
 	}
 }

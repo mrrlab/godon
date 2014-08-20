@@ -26,43 +26,64 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
-func MCMC(m Optimizable, burnIn, iterations int, report int) {
-	np := m.GetNumberOfParameters()
-	L := m.Likelihood()
-	if burnIn > 0 {
-		log.Printf("Burnin for %d iterations", burnIn)
+type MCMC struct {
+	Optimizable
+	L float64
+	np int
+	i int
+	RepPeriod int
+	AccPeriod int
+}
+
+func NewMCMC(m Optimizable) *MCMC {
+	return &MCMC{Optimizable: m,
+	RepPeriod: 1000,
+	np:  m.GetNumberOfParameters(),
+	AccPeriod: 1000,
 	}
+}
+
+func (m *MCMC) Run(iterations int) {
+	m.L = m.Likelihood()
+	m.PrintHeader()
 	accepted := 0
-	fmt.Printf("iteration\tlikelihood\t%s\n",ParameterNamesString(m))
-	for i := 0; i < burnIn+iterations+burnIn; i++ {
-		if i%report == 0 && i > 0 {
-			log.Printf("Acceptance rate %f%%", 100*float64(accepted)/float64(report))
+	for m.i = 0; m.i < iterations; m.i++ {
+		if m.i > 0 && m.i%m.AccPeriod == 0 {
+			log.Printf("Acceptance rate %f%%", 100*float64(accepted)/float64(m.RepPeriod))
 			accepted = 0
 		}
 
-		iter := i - burnIn
-		if iter == 0 {
-			log.Print("Starting sampling")
+		if m.i%m.RepPeriod == 0 {
+			log.Printf("%d: L=%f", m.i, m.L)
+			m.PrintLine()
 		}
-		if iter >= 0 && iter%report == 0 {
-			log.Printf("%d: L=%f", i, L)
-			fmt.Printf("%d\t%f\t%s\n", i, L, ParameterString(m))
-		}
-		p := rand.Intn(np)
+		p := rand.Intn(m.np)
 		val := m.GetParameter(p)
 		newVal := val + rand.NormFloat64()*STDEV
 		m.SetParameter(p, newVal)
 		newL := m.Likelihood()
-		a := math.Exp(newL - L)
+		a := math.Exp(newL - m.L)
 		if a < 1 && rand.Float64() > a {
 			m.SetParameter(p, val)
 		} else {
-			L = newL
+			m.L = newL
 			accepted++
 		}
 	}
 	log.Print("Finished MCMC")
-	for i := 0; i < np; i++ {
+	m.PrintFinal()
+}
+
+func (m *MCMC) PrintHeader() {
+	fmt.Printf("iteration\tlikelihood\t%s\n",ParameterNamesString(m))
+}
+
+func (m *MCMC) PrintLine() {
+	fmt.Printf("%d\t%f\t%s\n", m.i, m.L, ParameterString(m))
+}
+
+func (m *MCMC) PrintFinal() {
+	for i := 0; i < m.np; i++ {
 		log.Printf("%s=%f", m.GetParameterName(i), m.GetParameter(i))
 	}
 }
