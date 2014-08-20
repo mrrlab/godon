@@ -18,15 +18,6 @@ const (
 	sdev = 2
 )
 
-type Optimizable interface {
-	SetDefaults()
-	GetNumberOfParameters() int
-	GetParameterName(i int) string
-	GetParameter(i int) float64
-	SetParameter(i int, val float64)
-	Likelihood() float64
-}
-
 type MNormModel struct {
 	data [][]float64
 	mean []float64
