@@ -10,8 +10,7 @@ import (
 )
 
 const (
-	STDEV         = 1e-2
-	ACCEPTED_RATE = 100
+	STDEV = 1e-2
 )
 
 type Optimizable interface {
@@ -36,8 +35,8 @@ func MCMC(m Optimizable, burnIn, iterations int, report int) {
 	accepted := 0
 	fmt.Printf("iteration likelihood %s\n", ParameterNamesString(m))
 	for i := 0; i < burnIn+iterations+burnIn; i++ {
-		if i%ACCEPTED_RATE == 0 {
-			log.Printf("Acceptance rate %f%%", 100*float64(accepted)/float64(ACCEPTED_RATE))
+		if i%report == 0 && i > 0 {
+			log.Printf("Acceptance rate %f%%", 100*float64(accepted)/float64(report))
 			accepted = 0
 		}
 

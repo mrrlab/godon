@@ -44,8 +44,8 @@ func AMCMC(m Optimizable, burnIn, iterations int, report int) {
 	nconverged := 0
 
 	for i := 0; i < burnIn+iterations+burnIn; i++ {
-		if i%ACCEPTED_RATE == 0 {
-			log.Printf("Acceptance rate %f%%", 100*float64(accepted)/float64(ACCEPTED_RATE))
+		if i%report == 0 && i > 0 {
+			log.Printf("Acceptance rate %f%%", 100*float64(accepted)/float64(report))
 			accepted = 0
 		}
 
