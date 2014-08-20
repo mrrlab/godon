@@ -9,7 +9,9 @@ import (
 	"time"
 )
 
-const stdev = 1e-2
+const (
+	STDEV = 1e-2
+)
 
 type Optimizable interface {
 	SetDefaults()
@@ -43,7 +45,7 @@ func MCMC(m Optimizable, burnIn, iterations int, report int) {
 		}
 		p := rand.Intn(np)
 		val := m.GetParameter(p)
-		newVal := val + rand.NormFloat64()*stdev
+		newVal := val + rand.NormFloat64()*STDEV
 		m.SetParameter(p, newVal)
 		newL := m.Likelihood()
 		a := math.Exp(newL - L)
