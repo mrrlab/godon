@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"math"
@@ -93,7 +94,7 @@ func (m *MNormModel) SetParameter(i int, val float64) {
 func (m *MNormModel) Likelihood() (res float64) {
 	for i := 0; i < m.n; i++ {
 		for _, x := range m.data[i] {
-			lnL := - math.Log(m.sd[i] * math.Sqrt(2*math.Pi)) - square(x-m.mean[i])/2/square(m.sd[i])
+			lnL := -math.Log(m.sd[i]*math.Sqrt(2*math.Pi)) - square(x-m.mean[i])/2/square(m.sd[i])
 			res += lnL
 		}
 	}
@@ -137,6 +138,8 @@ func getMeanSD(data []float64) (mean, sd float64) {
 }
 
 func main() {
+	amcmc := flag.Bool("amcmc", false, "adaptive mcmc")
+	flag.Parse()
 	log.Print("Starting")
 	log.Printf("Will generate %d values for %d normal distributions", K, N)
 	mean := make([]float64, 0, K)
@@ -156,5 +159,9 @@ func main() {
 
 	m := NewMNormModel(data)
 
-	mcmc.MCMC(m, 0, 100000, 1000)
+	if *amcmc {
+		mcmc.AMCMC(m, 0, 100000, 10)
+	} else {
+		mcmc.MCMC(m, 0, 100000, 10)
+	}
 }
