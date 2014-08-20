@@ -13,6 +13,7 @@ import (
 	"github.com/skelterjohn/go.matrix"
 
 	"bitbucket.com/Davydov/golh/bio"
+	"bitbucket.com/Davydov/golh/mcmc"
 	"bitbucket.com/Davydov/golh/tree"
 )
 
@@ -265,5 +266,5 @@ func main() {
 	}
 
 	m.SetDefaults()
-	MCMC(m, *burnIn, *iterations, *report)
+	mcmc.MCMC(m, *burnIn, *iterations, *report)
 }

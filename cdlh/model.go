@@ -8,11 +8,12 @@ import (
 
 	"github.com/skelterjohn/go.matrix"
 
+	"bitbucket.com/Davydov/golh/mcmc"
 	"bitbucket.com/Davydov/golh/tree"
 )
 
 type TreeOptimizable interface {
-	Optimizable
+	mcmc.Optimizable
 	SetOptBranch(optBranch bool)
 }
 
