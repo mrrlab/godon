@@ -6,7 +6,7 @@
 ## repository contents ##
 * ``bio`` reads fasta and translates genetic code
 * ``matrix`` is a wrapper for some GNU Scientific Library functions (not used currently)
-* ``mcmc.go`` is the MCMC implementation
+* ``mcmc`` is the MCMC implementation
 * ``tlh``is a simple tree likelihood calculation (JC69)
 * ``cdlh`` is MCMC sampler for branchsite model
 
