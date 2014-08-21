@@ -9,10 +9,6 @@ import (
 	"time"
 )
 
-const (
-	STDEV = 1e-2
-)
-
 type Optimizable interface {
 	SetDefaults()
 	GetNumberOfParameters() int
@@ -28,18 +24,31 @@ func init() {
 
 type MCMC struct {
 	Optimizable
-	L float64
-	np int
-	i int
+	L         float64
+	np        int
+	i         int
 	RepPeriod int
 	AccPeriod int
+	SD        float64
+	*Adaptive
 }
 
 func NewMCMC(m Optimizable) *MCMC {
 	return &MCMC{Optimizable: m,
-	RepPeriod: 1000,
-	np:  m.GetNumberOfParameters(),
-	AccPeriod: 1000,
+		np:        m.GetNumberOfParameters(),
+		RepPeriod: 10,
+		AccPeriod: 10,
+		SD:        1e-2,
+	}
+}
+
+func (m *MCMC) SetAdaptive(adaptive bool) {
+	if adaptive {
+		log.Print("Setting adaptive")
+		m.Adaptive = NewAdaptive(m.np, m.SD)
+	} else {
+		log.Print("Setting nonadaptive")
+		m.Adaptive = nil
 	}
 }
 
@@ -59,13 +68,22 @@ func (m *MCMC) Run(iterations int) {
 		}
 		p := rand.Intn(m.np)
 		val := m.GetParameter(p)
-		newVal := val + rand.NormFloat64()*STDEV
+		var sd float64
+		if m.Adaptive != nil {
+			sd = m.Adaptive.SD[p]
+		} else {
+			sd = m.SD
+		}
+		newVal := val + rand.NormFloat64()*sd
 		m.SetParameter(p, newVal)
 		newL := m.Likelihood()
 		a := math.Exp(newL - m.L)
 		if a < 1 && rand.Float64() > a {
 			m.SetParameter(p, val)
 		} else {
+			if m.Adaptive != nil {
+				m.UpdateMu(p, newVal)
+			}
 			m.L = newL
 			accepted++
 		}
@@ -75,7 +93,7 @@ func (m *MCMC) Run(iterations int) {
 }
 
 func (m *MCMC) PrintHeader() {
-	fmt.Printf("iteration\tlikelihood\t%s\n",ParameterNamesString(m))
+	fmt.Printf("iteration\tlikelihood\t%s\n", ParameterNamesString(m))
 }
 
 func (m *MCMC) PrintLine() {

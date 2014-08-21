@@ -1,10 +1,8 @@
 package mcmc
 
 import (
-	"fmt"
 	"log"
 	"math"
-	"math/rand"
 )
 
 const (
@@ -17,95 +15,81 @@ const (
 	LAMBDA     = 2.4
 )
 
-func AMCMC(m Optimizable, burnIn, iterations int, report int) {
-	accepted := 0
-	np := m.GetNumberOfParameters()
-	L := m.Likelihood()
-	if burnIn > 0 {
-		log.Printf("Burnin for %d iterations", burnIn)
+type Adaptive struct {
+	np         int
+	t          []int
+	loct       []int
+	bmu        []float64
+	mu         []float64
+	vals       []chan float64
+	sum        []float64
+	sumsq      []float64
+	SD      []float64
+	delta      []bool
+	converged  []bool
+	nconverged int
+}
+
+func NewAdaptive(np int, sd float64) (a *Adaptive) {
+	a = &Adaptive{
+		np:        np,
+		t:         make([]int, np),
+		loct:      make([]int, np),
+		bmu:       make([]float64, np),
+		mu:        make([]float64, np),
+		vals:      make([]chan float64, np),
+		sum:       make([]float64, np),
+		sumsq:     make([]float64, np),
+		SD:        make([]float64, np),
+		delta:     make([]bool, np),
+		converged: make([]bool, np),
 	}
-	fmt.Printf("iteration\tlikelihood\t%s\n", ParameterNamesString(m))
-
-	t := make([]int, np)
-	loct := make([]int, np)
-	bmu := make([]float64, np)
-	mu := make([]float64, np)
-	vals := make([]chan float64, np)
-	sum := make([]float64, np)
-	sumsq := make([]float64, np)
-	stdev := make([]float64, np)
-	for p, _ := range mu {
-		mu[p] = m.GetParameter(p)
-		vals[p] = make(chan float64, W_SIZE)
-		stdev[p] = STDEV
+	for p := 0; p < np; p++ {
+		a.mu[p] = math.NaN()
+		a.vals[p] = make(chan float64, W_SIZE)
+		a.SD[p] = sd
 	}
-	delta := make([]bool, np)
-	converged := make([]bool, np)
-	nconverged := 0
 
-	for i := 0; i < burnIn+iterations+burnIn; i++ {
-		if i%report == 0 && i > 0 {
-			log.Printf("Acceptance rate %f%%", 100*float64(accepted)/float64(report))
-			accepted = 0
-		}
+	return
+}
 
-		iter := i - burnIn
-		if iter == 0 {
-			log.Print("Starting sampling")
-		}
-		if iter >= 0 && iter%report == 0 {
-			log.Printf("%d: L=%f", i, L)
-			fmt.Printf("%d\t%f\t%s\n", i, L, ParameterString(m))
-		}
-		p := rand.Intn(np)
-		val := m.GetParameter(p)
-		newVal := val + rand.NormFloat64()*stdev[p]*LAMBDA
-		m.SetParameter(p, newVal)
-		newL := m.Likelihood()
-		a := math.Exp(newL - L)
-		if a < 1 && rand.Float64() > a {
-			m.SetParameter(p, val)
-		} else {
-			if !converged[p] {
-				bmu[p] = newVal/K + bmu[p]
-				if t[p] > 0 && t[p] > 0 && t[p]%K == 0 {
-					tdelta := bmu[p] - mu[p]
-					if (tdelta > 0 && !delta[p]) || (tdelta < 0 && delta[p]) {
-						loct[p]++
-					}
-					delta[p] = tdelta > 0
-					beta := 1 / math.Max(1, 1+NU)
-					gamma := C * math.Pow(float64(loct[p]), beta)
-					bmu[p] = 0
-					mu[p] = mu[p] + gamma*tdelta
-					if len(vals[p]) == W_SIZE {
-						oldVal := <-vals[p]
-						sum[p] -= oldVal
-						sumsq[p] -= oldVal * oldVal
-					}
-					vals[p] <- newVal
-					sum[p] += newVal
-					sumsq[p] += newVal * newVal
-					if len(vals[p]) == W_SIZE {
+func (a *Adaptive) UpdateMu(p int, val float64) {
+	if a.converged[p] {
+		return
+	}
+	if math.IsNaN(a.mu[p]) {
+		a.mu[p] = val
+	}
 
-						mean := sum[p] / float64(len(vals[p]))
-						stdev[p] = math.Sqrt(sumsq[p]/float64(len(vals[p])) - mean*mean)
-						log.Printf("%v stdev = %v", m.GetParameterName(p), stdev[p])
-						if stdev[p]/mean < EPSILON2 || t[p]/K > MAX_UPDATE {
-							converged[p] = true
-							nconverged++
-							log.Printf("%s converged (%d/%d)", m.GetParameterName(p), nconverged, np)
-						}
-					}
-				}
-				t[p]++
+	a.bmu[p] = val/K + a.bmu[p]
+	if a.t[p] > 0 && a.t[p]%K == 0 {
+		tdelta := a.bmu[p] - a.mu[p]
+		if (tdelta > 0 && !a.delta[p]) || (tdelta < 0 && a.delta[p]) {
+			a.loct[p]++
+		}
+		a.delta[p] = tdelta > 0
+		beta := 1 / math.Max(1, 1+NU)
+		gamma := C * math.Pow(float64(a.loct[p]), beta)
+		a.bmu[p] = 0
+		a.mu[p] = a.mu[p] + gamma*tdelta
+		if len(a.vals[p]) == W_SIZE {
+			oldVal := <-a.vals[p]
+			a.sum[p] -= oldVal
+			a.sumsq[p] -= oldVal * oldVal
+		}
+		a.vals[p] <- val
+		a.sum[p] += val
+		a.sumsq[p] += val * val
+		if len(a.vals[p]) == W_SIZE {
+
+			mean := a.sum[p] / float64(len(a.vals[p]))
+			a.SD[p] = math.Sqrt(a.sumsq[p]/float64(len(a.vals[p])) - mean*mean)
+			if a.SD[p]/mean < EPSILON2 || a.t[p]/K > MAX_UPDATE {
+				a.converged[p] = true
+				a.nconverged++
+				log.Printf("#%d converged (%d/%d)", p, a.nconverged, a.np)
 			}
-			L = newL
-			accepted++
 		}
 	}
-	log.Print("Finished MCMC")
-	for i := 0; i < np; i++ {
-		log.Printf("%s=%f", m.GetParameterName(i), m.GetParameter(i))
-	}
+	a.t[p]++
 }
