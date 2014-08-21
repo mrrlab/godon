@@ -7,7 +7,7 @@
 * ``bio`` reads fasta and translates genetic code
 * ``matrix`` is a wrapper for some GNU Scientific Library functions (not used currently)
 * ``mcmc`` is the MCMC implementation
-* ``tlh``is a simple tree likelihood calculation (JC69)
+* ``tlh`` is a simple tree likelihood calculation (JC69)
 * ``cdlh`` is MCMC sampler for branchsite model
 
 ## cdlh ##
