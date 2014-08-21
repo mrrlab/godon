@@ -8,7 +8,7 @@ import (
 const (
 	K          = 20
 	W_SIZE     = 10
-	MAX_UPDATE = 200
+	MAX_UPDATE = 2000
 	EPSILON2   = 5e-1
 	C          = 1
 	NU         = 3
@@ -24,7 +24,7 @@ type Adaptive struct {
 	vals       []chan float64
 	sum        []float64
 	sumsq      []float64
-	SD      []float64
+	SD         []float64
 	delta      []bool
 	converged  []bool
 	nconverged int
@@ -53,6 +53,40 @@ func NewAdaptive(np int, sd float64) (a *Adaptive) {
 	return
 }
 
+func (a *Adaptive) RobbinsMonro(p int) (gamma, tdelta float64) {
+	tdelta = a.bmu[p] - a.mu[p]
+	if (tdelta > 0 && !a.delta[p]) || (tdelta < 0 && a.delta[p]) {
+		a.loct[p]++
+	}
+	a.delta[p] = tdelta > 0
+	beta := 1 / math.Max(1, 1+NU)
+	gamma = C * math.Pow(float64(a.loct[p]), beta)
+	return
+}
+
+func (a *Adaptive) CheckConvergenceMu(p int, val float64) {
+	if len(a.vals[p]) == W_SIZE {
+		oldVal := <-a.vals[p]
+		a.sum[p] -= oldVal
+		a.sumsq[p] -= oldVal * oldVal
+	}
+	a.vals[p] <- val
+	a.sum[p] += val
+	a.sumsq[p] += val * val
+	if len(a.vals[p]) == W_SIZE {
+		mean := a.sum[p] / float64(len(a.vals[p]))
+		a.SD[p] = math.Sqrt(a.sumsq[p]/float64(len(a.vals[p])) - mean*mean)
+		if a.SD[p]/mean < EPSILON2 || a.t[p]/K > MAX_UPDATE {
+			a.converged[p] = true
+			a.nconverged++
+			log.Printf("#%d converged (%d/%d)", p, a.nconverged, a.np)
+			if a.SD[p]/mean < EPSILON2 {
+				log.Print("(reason: SD/mean)")
+			}
+		}
+	}
+}
+
 func (a *Adaptive) UpdateMu(p int, val float64) {
 	if a.converged[p] {
 		return
@@ -61,35 +95,16 @@ func (a *Adaptive) UpdateMu(p int, val float64) {
 		a.mu[p] = val
 	}
 
+	// Recursive mu formua
 	a.bmu[p] = val/K + a.bmu[p]
-	if a.t[p] > 0 && a.t[p]%K == 0 {
-		tdelta := a.bmu[p] - a.mu[p]
-		if (tdelta > 0 && !a.delta[p]) || (tdelta < 0 && a.delta[p]) {
-			a.loct[p]++
-		}
-		a.delta[p] = tdelta > 0
-		beta := 1 / math.Max(1, 1+NU)
-		gamma := C * math.Pow(float64(a.loct[p]), beta)
-		a.bmu[p] = 0
-		a.mu[p] = a.mu[p] + gamma*tdelta
-		if len(a.vals[p]) == W_SIZE {
-			oldVal := <-a.vals[p]
-			a.sum[p] -= oldVal
-			a.sumsq[p] -= oldVal * oldVal
-		}
-		a.vals[p] <- val
-		a.sum[p] += val
-		a.sumsq[p] += val * val
-		if len(a.vals[p]) == W_SIZE {
 
-			mean := a.sum[p] / float64(len(a.vals[p]))
-			a.SD[p] = math.Sqrt(a.sumsq[p]/float64(len(a.vals[p])) - mean*mean)
-			if a.SD[p]/mean < EPSILON2 || a.t[p]/K > MAX_UPDATE {
-				a.converged[p] = true
-				a.nconverged++
-				log.Printf("#%d converged (%d/%d)", p, a.nconverged, a.np)
-			}
-		}
+	if a.t[p] > 0 && a.t[p]%K == 0 {
+		gamma, delta := a.RobbinsMonro(p)
+
+		// reset batch mu
+		a.bmu[p] = 0
+		a.mu[p] = a.mu[p] + gamma*delta
+		a.CheckConvergenceMu(p, val)
 	}
 	a.t[p]++
 }

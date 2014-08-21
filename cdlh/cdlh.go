@@ -269,7 +269,7 @@ func main() {
 	chain := mcmc.NewMCMC(m)
 	chain.RepPeriod = *report
 	chain.AccPeriod = *report
-	if (*adaptive) {
+	if *adaptive {
 		chain.SetAdaptive(true)
 	}
 	chain.Run(*iterations)
