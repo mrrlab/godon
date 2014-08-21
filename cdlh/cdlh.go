@@ -151,8 +151,8 @@ func main() {
 	optBranch := flag.Bool("brlen", true, "optimize branch lengths")
 	cFreq := flag.String("cfreq", "F3X4", "codon frequecny (F0 or F3X4)")
 	iterations := flag.Int("iter", 10000, "number of iterations")
-	burnIn := flag.Int("burnin", 0, "number of burn-in iterations")
 	report := flag.Int("report", 10, "report every N iterations")
+	adaptive := flag.Bool("adaptive", false, "use adaptive MCMC")
 
 	flag.Parse()
 
@@ -266,5 +266,11 @@ func main() {
 	}
 
 	m.SetDefaults()
-	mcmc.MCMC(m, *burnIn, *iterations, *report)
+	chain := mcmc.NewMCMC(m)
+	chain.RepPeriod = *report
+	chain.AccPeriod = *report
+	if (*adaptive) {
+		chain.SetAdaptive(true)
+	}
+	chain.Run(*iterations)
 }
