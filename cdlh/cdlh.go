@@ -150,10 +150,11 @@ func main() {
 	fgBranch := flag.Int("fg", -1, "fg branch number")
 	cpuProfile := flag.String("cpuprofile", "", "write cpu profile to file")
 	model := flag.String("model", "M0", "todel type (M0 or BS for branch site)")
-	optBranch := flag.Bool("brlen", true, "optimize branch lengths")
+	noOptBranch := flag.Bool("nobrlen", false, "don't optimize branch lengths")
 	cFreq := flag.String("cfreq", "F3X4", "codon frequecny (F0 or F3X4)")
 	iterations := flag.Int("iter", 10000, "number of iterations")
 	report := flag.Int("report", 10, "report every N iterations")
+	accept := flag.Int("acceptance perion", 200, "report acceptance rate every N iterations")
 	adaptive := flag.Bool("adaptive", false, "use adaptive MCMC")
 
 	flag.Parse()
@@ -259,7 +260,7 @@ func main() {
 		log.Fatal("Unknown model specification")
 	}
 
-	if *optBranch {
+	if !*noOptBranch {
 		log.Print("Will optimize branch lengths")
 		m.SetOptBranch(true)
 	} else {
@@ -270,7 +271,7 @@ func main() {
 	m.SetDefaults()
 	chain := mcmc.NewMCMC(m)
 	chain.RepPeriod = *report
-	chain.AccPeriod = *report
+	chain.AccPeriod = *accept
 	if *adaptive {
 		chain.SetAdaptive(true)
 	}

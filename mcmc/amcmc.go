@@ -17,6 +17,7 @@ const (
 
 type Adaptive struct {
 	np         int
+	pnames     []string
 	t          []int
 	loct       []int
 	bmu        []float64
@@ -30,9 +31,10 @@ type Adaptive struct {
 	nconverged int
 }
 
-func NewAdaptive(np int, sd float64) (a *Adaptive) {
+func NewAdaptive(np int, pnames []string, sd float64) (a *Adaptive) {
 	a = &Adaptive{
 		np:        np,
+		pnames:    pnames,
 		t:         make([]int, np),
 		loct:      make([]int, np),
 		bmu:       make([]float64, np),
@@ -86,7 +88,7 @@ func (a *Adaptive) CheckConvergenceMu(p int, val float64) {
 			} else {
 				reason = "max_update"
 			}
-			log.Printf("#%d converged, reason: %s (%d/%d)", p, reason, a.nconverged, a.np)
+			log.Printf("%s converged, reason: %s (%d/%d)", a.pnames[p], reason, a.nconverged, a.np)
 		}
 	}
 }

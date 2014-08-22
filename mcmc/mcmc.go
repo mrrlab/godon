@@ -30,22 +30,29 @@ type MCMC struct {
 	RepPeriod int
 	AccPeriod int
 	SD        float64
+	pnames    []string
 	*Adaptive
 }
 
-func NewMCMC(m Optimizable) *MCMC {
-	return &MCMC{Optimizable: m,
-		np:        m.GetNumberOfParameters(),
+func NewMCMC(m Optimizable) (mcmc *MCMC) {
+	np := m.GetNumberOfParameters()
+	mcmc = &MCMC{Optimizable: m,
+		np:        np,
 		RepPeriod: 10,
 		AccPeriod: 10,
 		SD:        1e-2,
+		pnames:    make([]string, np),
 	}
+	for p := 0; p < np; p++ {
+		mcmc.pnames[p] = m.GetParameterName(p)
+	}
+	return
 }
 
 func (m *MCMC) SetAdaptive(adaptive bool) {
 	if adaptive {
 		log.Print("Setting adaptive")
-		m.Adaptive = NewAdaptive(m.np, m.SD)
+		m.Adaptive = NewAdaptive(m.np, m.pnames, m.SD)
 	} else {
 		log.Print("Setting nonadaptive")
 		m.Adaptive = nil
@@ -58,7 +65,7 @@ func (m *MCMC) Run(iterations int) {
 	accepted := 0
 	for m.i = 0; m.i < iterations; m.i++ {
 		if m.i > 0 && m.i%m.AccPeriod == 0 {
-			log.Printf("Acceptance rate %f%%", 100*float64(accepted)/float64(m.RepPeriod))
+			log.Printf("Acceptance rate %.2f%%", 100*float64(accepted)/float64(m.AccPeriod))
 			accepted = 0
 		}
 
@@ -93,30 +100,31 @@ func (m *MCMC) Run(iterations int) {
 }
 
 func (m *MCMC) PrintHeader() {
-	fmt.Printf("iteration\tlikelihood\t%s\n", ParameterNamesString(m))
+	fmt.Printf("iteration\tlikelihood\t%s\n", m.ParameterNamesString())
 }
 
 func (m *MCMC) PrintLine() {
-	fmt.Printf("%d\t%f\t%s\n", m.i, m.L, ParameterString(m))
+	fmt.Printf("%d\t%f\t%s\n", m.i, m.L, m.ParameterString())
 }
 
 func (m *MCMC) PrintFinal() {
 	for i := 0; i < m.np; i++ {
-		log.Printf("%s=%f", m.GetParameterName(i), m.GetParameter(i))
+		log.Printf("%s=%f", m.pnames[i], m.GetParameter(i))
 	}
 }
 
-func ParameterNamesString(m Optimizable) (s string) {
-	for i := 0; i < m.GetNumberOfParameters(); i++ {
+func (m *MCMC) ParameterNamesString() (s string) {
+	for i := 0; i < m.np; i++ {
 		if i != 0 {
 			s += "\t"
 		}
-		s += m.GetParameterName(i)
+		s += m.pnames[i]
 	}
 	return
 }
-func ParameterString(m Optimizable) (s string) {
-	for i := 0; i < m.GetNumberOfParameters(); i++ {
+
+func (m *MCMC) ParameterString() (s string) {
+	for i := 0; i < m.np; i++ {
 		if i != 0 {
 			s += "\t"
 		}
