@@ -9,6 +9,7 @@ import (
 	"runtime"
 	"runtime/pprof"
 	"sort"
+	"time"
 
 	"github.com/skelterjohn/go.matrix"
 
@@ -143,6 +144,7 @@ func PrintUnQ(Q *matrix.DenseMatrix) {
 }
 
 func main() {
+	startTime := time.Now()
 	cFreqFileName := flag.String("cfreqfn", "", "codon frequencies file (overrides -cfreq)")
 	nCPU := flag.Int("cpu", 0, "number of cpu to use")
 	fgBranch := flag.Int("fg", -1, "fg branch number")
@@ -273,4 +275,7 @@ func main() {
 		chain.SetAdaptive(true)
 	}
 	chain.Run(*iterations)
+
+	endTime := time.Now()
+	log.Printf("Runing time: %v", endTime.Sub(startTime))
 }
