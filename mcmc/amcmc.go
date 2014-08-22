@@ -79,10 +79,14 @@ func (a *Adaptive) CheckConvergenceMu(p int, val float64) {
 		if a.SD[p]/mean < EPSILON2 || a.t[p]/K > MAX_UPDATE {
 			a.converged[p] = true
 			a.nconverged++
-			log.Printf("#%d converged (%d/%d)", p, a.nconverged, a.np)
+			var reason string
 			if a.SD[p]/mean < EPSILON2 {
+				reason = "SD/mean"
 				log.Print("(reason: SD/mean)")
+			} else {
+				reason = "max_update"
 			}
+			log.Printf("#%d converged, reason: %s (%d/%d)", p, reason, a.nconverged, a.np)
 		}
 	}
 }
