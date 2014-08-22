@@ -26,5 +26,5 @@
 * ``tools_test.go`` — test for tools
 
 ## mcmc ##
-* ``mcmc.go`` — simple metropolis hastings implementation
-* ``amcmc.go`` — adaptive MCMC implementation
+* ``mh.go`` — simple metropolis hastings implementation
+* ``adaptive.go`` — adaptive MCMC implementation

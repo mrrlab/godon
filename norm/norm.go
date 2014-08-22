@@ -150,10 +150,10 @@ func main() {
 
 	m := NewMNormModel(data)
 
-	chain := mcmc.NewMCMC(m)
+	chain := mcmc.NewMH(m)
 
 	if *amcmc {
-		chain.SetAdaptive(true)
+		chain.SetAdaptive(mcmc.NewAdaptiveParameters())
 	}
 	chain.Run(100000)
 }

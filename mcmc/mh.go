@@ -22,7 +22,7 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
-type MCMC struct {
+type MH struct {
 	Optimizable
 	L         float64
 	np        int
@@ -34,9 +34,9 @@ type MCMC struct {
 	*Adaptive
 }
 
-func NewMCMC(m Optimizable) (mcmc *MCMC) {
+func NewMH(m Optimizable) (mcmc *MH) {
 	np := m.GetNumberOfParameters()
-	mcmc = &MCMC{Optimizable: m,
+	mcmc = &MH{Optimizable: m,
 		np:        np,
 		RepPeriod: 10,
 		AccPeriod: 10,
@@ -49,18 +49,20 @@ func NewMCMC(m Optimizable) (mcmc *MCMC) {
 	return
 }
 
-func (m *MCMC) SetAdaptive(adaptive bool) {
-	if adaptive {
+func (m *MH) SetAdaptive(ap *AdaptiveParameters) {
+	if ap != nil {
 		log.Print("Setting adaptive")
-		m.Adaptive = NewAdaptive(m.np, m.pnames, m.SD)
+		m.Adaptive = NewAdaptive(m.np, m.pnames, m.SD, ap)
 	} else {
 		log.Print("Setting nonadaptive")
-		m.Adaptive = nil
 	}
 }
 
-func (m *MCMC) Run(iterations int) {
+func (m *MH) Run(iterations int) {
 	m.L = m.Likelihood()
+	if m.Adaptive != nil {
+		log.Print(m.Adaptive)
+	}
 	m.PrintHeader()
 	accepted := 0
 	for m.i = 0; m.i < iterations; m.i++ {
@@ -88,7 +90,7 @@ func (m *MCMC) Run(iterations int) {
 		if a < 1 && rand.Float64() > a {
 			m.SetParameter(p, val)
 		} else {
-			if m.Adaptive != nil {
+			if m.Adaptive != nil && m.i >= m.Skip {
 				m.UpdateMu(p, newVal)
 			}
 			m.L = newL
@@ -99,21 +101,21 @@ func (m *MCMC) Run(iterations int) {
 	m.PrintFinal()
 }
 
-func (m *MCMC) PrintHeader() {
+func (m *MH) PrintHeader() {
 	fmt.Printf("iteration\tlikelihood\t%s\n", m.ParameterNamesString())
 }
 
-func (m *MCMC) PrintLine() {
+func (m *MH) PrintLine() {
 	fmt.Printf("%d\t%f\t%s\n", m.i, m.L, m.ParameterString())
 }
 
-func (m *MCMC) PrintFinal() {
+func (m *MH) PrintFinal() {
 	for i := 0; i < m.np; i++ {
 		log.Printf("%s=%f", m.pnames[i], m.GetParameter(i))
 	}
 }
 
-func (m *MCMC) ParameterNamesString() (s string) {
+func (m *MH) ParameterNamesString() (s string) {
 	for i := 0; i < m.np; i++ {
 		if i != 0 {
 			s += "\t"
@@ -123,7 +125,7 @@ func (m *MCMC) ParameterNamesString() (s string) {
 	return
 }
 
-func (m *MCMC) ParameterString() (s string) {
+func (m *MH) ParameterString() (s string) {
 	for i := 0; i < m.np; i++ {
 		if i != 0 {
 			s += "\t"

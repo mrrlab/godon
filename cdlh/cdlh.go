@@ -269,11 +269,11 @@ func main() {
 	log.Printf("Model has %d parameters.", m.GetNumberOfParameters())
 
 	m.SetDefaults()
-	chain := mcmc.NewMCMC(m)
+	chain := mcmc.NewMH(m)
 	chain.RepPeriod = *report
 	chain.AccPeriod = *accept
 	if *adaptive {
-		chain.SetAdaptive(true)
+		chain.SetAdaptive(mcmc.NewAdaptiveParameters())
 	}
 	chain.Run(*iterations)
 

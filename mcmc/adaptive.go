@@ -1,6 +1,7 @@
 package mcmc
 
 import (
+	"fmt"
 	"log"
 	"math"
 )
@@ -20,18 +21,34 @@ type Adaptive struct {
 	converged  []bool
 	nconverged int
 
-	// constants
-	wSize      int
-	K          int
-	Skip       int
-	MaxUpdate  int
-	Epsilon    float64
-	C          float64
-	Nu         float64
-	Lambda     float64
+	*AdaptiveParameters
 }
 
-func NewAdaptive(np int, pnames []string, sd float64) (a *Adaptive) {
+type AdaptiveParameters struct {
+	WSize     int
+	K         int
+	Skip      int
+	MaxUpdate int
+	Epsilon   float64
+	C         float64
+	Nu        float64
+	Lambda    float64
+}
+
+func NewAdaptiveParameters() *AdaptiveParameters {
+	return &AdaptiveParameters{
+		WSize:     10,
+		K:         20,
+		Skip:      2000,
+		MaxUpdate: 2000,
+		Epsilon:   5e-1,
+		C:         1,
+		Nu:        3,
+		Lambda:    2.4,
+	}
+}
+
+func NewAdaptive(np int, pnames []string, sd float64, ap *AdaptiveParameters) (a *Adaptive) {
 	a = &Adaptive{
 		np:        np,
 		pnames:    pnames,
@@ -45,29 +62,22 @@ func NewAdaptive(np int, pnames []string, sd float64) (a *Adaptive) {
 		SD:        make([]float64, np),
 		delta:     make([]bool, np),
 		converged: make([]bool, np),
+
+		AdaptiveParameters: ap,
 	}
-	a.K = 20
-	a.Skip = 2000
-	a.MaxUpdate = 2000
-	a.Epsilon = 5e-1
-	a.C = 1
-	a.Nu = 3
-	a.Lambda = 2.4
 
 	for p := 0; p < np; p++ {
 		a.mu[p] = math.NaN()
-		a.vals[p] = make(chan float64, a.wSize)
+		a.vals[p] = make(chan float64, a.WSize)
 		a.SD[p] = sd
 	}
 
 	return
 }
 
-func (a *Adaptive) SetWSize(wSize int) {
-	a.wSize = wSize
-	for p:=0 ; p < a.np; p ++ {
-		a.vals[p] = make(chan float64, a.wSize)
-	}
+func (a *Adaptive) String() string {
+	return fmt.Sprintf("Adaptive MCMC (n=%v, K=%v, Skip=%v, MaxUpdate=%v, C=%v, Nu=%v, Lambda=%v)",
+		a.np, a.K, a.Skip, a.MaxUpdate, a.C, a.Nu, a.Lambda)
 }
 
 func (a *Adaptive) RobbinsMonro(p int) (gamma, tdelta float64) {
@@ -82,7 +92,7 @@ func (a *Adaptive) RobbinsMonro(p int) (gamma, tdelta float64) {
 }
 
 func (a *Adaptive) CheckConvergenceMu(p int, val float64) {
-	if len(a.vals[p]) == a.wSize {
+	if len(a.vals[p]) == a.WSize {
 		oldVal := <-a.vals[p]
 		a.sum[p] -= oldVal
 		a.sumsq[p] -= oldVal * oldVal
@@ -90,7 +100,7 @@ func (a *Adaptive) CheckConvergenceMu(p int, val float64) {
 	a.vals[p] <- val
 	a.sum[p] += val
 	a.sumsq[p] += val * val
-	if len(a.vals[p]) == a.wSize {
+	if len(a.vals[p]) == a.WSize {
 		mean := a.sum[p] / float64(len(a.vals[p]))
 		a.SD[p] = math.Sqrt(a.sumsq[p]/float64(len(a.vals[p])) - mean*mean)
 		if a.SD[p]/mean < a.Epsilon || a.t[p]/a.K > a.MaxUpdate {
