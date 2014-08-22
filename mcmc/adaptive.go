@@ -11,12 +11,13 @@ type Adaptive struct {
 	pnames     []string
 	t          []int
 	loct       []int
+	locMean    []float64
+	m2         []float64
 	bmu        []float64
 	mu         []float64
+	bvariance  []float64
+	variance   []float64
 	vals       []chan float64
-	sum        []float64
-	sumsq      []float64
-	SD         []float64
 	delta      []bool
 	converged  []bool
 	nconverged int
@@ -33,6 +34,10 @@ type AdaptiveParameters struct {
 	C         float64
 	Nu        float64
 	Lambda    float64
+}
+
+func square(x float64) float64 {
+	return x * x
 }
 
 func NewAdaptiveParameters() *AdaptiveParameters {
@@ -56,10 +61,11 @@ func NewAdaptive(np int, pnames []string, sd float64, ap *AdaptiveParameters) (a
 		loct:      make([]int, np),
 		bmu:       make([]float64, np),
 		mu:        make([]float64, np),
+		locMean:   make([]float64, np),
+		m2:        make([]float64, np),
+		bvariance: make([]float64, np),
+		variance:  make([]float64, np),
 		vals:      make([]chan float64, np),
-		sum:       make([]float64, np),
-		sumsq:     make([]float64, np),
-		SD:        make([]float64, np),
 		delta:     make([]bool, np),
 		converged: make([]bool, np),
 
@@ -69,7 +75,7 @@ func NewAdaptive(np int, pnames []string, sd float64, ap *AdaptiveParameters) (a
 	for p := 0; p < np; p++ {
 		a.mu[p] = math.NaN()
 		a.vals[p] = make(chan float64, a.WSize)
-		a.SD[p] = sd
+		a.variance[p] = square(sd)
 	}
 
 	return
@@ -80,12 +86,13 @@ func (a *Adaptive) String() string {
 		a.np, a.K, a.Skip, a.MaxUpdate, a.C, a.Nu, a.Lambda)
 }
 
-func (a *Adaptive) RobbinsMonro(p int) (gamma, tdelta float64) {
-	tdelta = a.bmu[p] - a.mu[p]
-	if (tdelta > 0 && !a.delta[p]) || (tdelta < 0 && a.delta[p]) {
+func (a *Adaptive) RobbinsMonro(p int) (gamma, udelta, vdelta float64) {
+	udelta = a.bmu[p] - a.mu[p]
+	vdelta = a.bvariance[p] - a.variance[p]
+	if (udelta > 0 && !a.delta[p]) || (udelta < 0 && a.delta[p]) {
 		a.loct[p]++
 	}
-	a.delta[p] = tdelta > 0
+	a.delta[p] = udelta > 0
 	beta := 1 / math.Max(1, 1+a.Nu)
 	gamma = a.C * math.Pow(float64(a.loct[p]), beta)
 	return
@@ -94,20 +101,25 @@ func (a *Adaptive) RobbinsMonro(p int) (gamma, tdelta float64) {
 func (a *Adaptive) CheckConvergenceMu(p int, val float64) {
 	if len(a.vals[p]) == a.WSize {
 		oldVal := <-a.vals[p]
-		a.sum[p] -= oldVal
-		a.sumsq[p] -= oldVal * oldVal
+		delta := oldVal - a.locMean[p]
+		a.locMean[p] -= delta / float64(len(a.vals[p]))
+		a.m2[p] -= delta * (oldVal - a.locMean[p])
 	}
+
 	a.vals[p] <- val
-	a.sum[p] += val
-	a.sumsq[p] += val * val
+	delta := val - a.locMean[p]
+	a.locMean[p] += delta / float64(len(a.vals[p]))
+	a.m2[p] += delta * (val - a.locMean[p])
+
+	variance := a.m2[p] / float64(len(a.vals[p])-1)
+
 	if len(a.vals[p]) == a.WSize {
-		mean := a.sum[p] / float64(len(a.vals[p]))
-		a.SD[p] = math.Sqrt(a.sumsq[p]/float64(len(a.vals[p])) - mean*mean)
-		if a.SD[p]/mean < a.Epsilon || a.t[p]/a.K > a.MaxUpdate {
+		sd := math.Sqrt(variance)
+		if sd/a.locMean[p] < a.Epsilon || a.t[p]/a.K > a.MaxUpdate {
 			a.converged[p] = true
 			a.nconverged++
 			var reason string
-			if a.SD[p]/mean < a.Epsilon {
+			if sd/a.locMean[p] < a.Epsilon {
 				reason = "SD/mean"
 				log.Print("(reason: SD/mean)")
 			} else {
@@ -128,13 +140,15 @@ func (a *Adaptive) UpdateMu(p int, val float64) {
 
 	// Recursive mu formua
 	a.bmu[p] = val/float64(a.K) + a.bmu[p]
+	a.bvariance[p] = square(val)/float64(a.K-1) + a.bvariance[p]
 
 	if a.t[p] > 0 && a.t[p]%a.K == 0 {
-		gamma, delta := a.RobbinsMonro(p)
+		gamma, udelta, vdelta := a.RobbinsMonro(p)
 
 		// reset batch mu
 		a.bmu[p] = 0
-		a.mu[p] = a.mu[p] + gamma*delta
+		a.mu[p] += gamma * udelta
+		a.variance[p] += gamma * vdelta
 		a.CheckConvergenceMu(p, val)
 	}
 	a.t[p]++

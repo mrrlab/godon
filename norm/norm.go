@@ -151,6 +151,7 @@ func main() {
 	m := NewMNormModel(data)
 
 	chain := mcmc.NewMH(m)
+	chain.AccPeriod = 200
 
 	if *amcmc {
 		chain.SetAdaptive(mcmc.NewAdaptiveParameters())

@@ -79,7 +79,7 @@ func (m *MH) Run(iterations int) {
 		val := m.GetParameter(p)
 		var sd float64
 		if m.Adaptive != nil {
-			sd = m.Adaptive.SD[p]
+			sd = math.Sqrt(m.Adaptive.variance[p]) * 2.4
 		} else {
 			sd = m.SD
 		}

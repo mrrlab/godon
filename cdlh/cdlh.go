@@ -154,7 +154,7 @@ func main() {
 	cFreq := flag.String("cfreq", "F3X4", "codon frequecny (F0 or F3X4)")
 	iterations := flag.Int("iter", 10000, "number of iterations")
 	report := flag.Int("report", 10, "report every N iterations")
-	accept := flag.Int("acceptance perion", 200, "report acceptance rate every N iterations")
+	accept := flag.Int("acceptance period", 200, "report acceptance rate every N iterations")
 	adaptive := flag.Bool("adaptive", false, "use adaptive MCMC")
 
 	flag.Parse()
