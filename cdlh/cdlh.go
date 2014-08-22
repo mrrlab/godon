@@ -259,13 +259,13 @@ func main() {
 		log.Fatal("Unknown model specification")
 	}
 
-	log.Printf("Model has %d parameters.", m.GetNumberOfParameters())
 	if *optBranch {
 		log.Print("Will optimize branch lengths")
 		m.SetOptBranch(true)
 	} else {
 		log.Print("Will not optimize branch lengths")
 	}
+	log.Printf("Model has %d parameters.", m.GetNumberOfParameters())
 
 	m.SetDefaults()
 	chain := mcmc.NewMCMC(m)
