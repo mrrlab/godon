@@ -130,7 +130,9 @@ func getMeanSD(data []float64) (mean, sd float64) {
 
 func main() {
 	amcmc := flag.Bool("a", false, "adaptive mcmc")
+	iter := flag.Int("iter", 100000, "number of iterations")
 	flag.Parse()
+
 	log.Print("Starting")
 	log.Printf("Will generate %d values for %d normal distributions", K, N)
 	mean := make([]float64, 0, K)
@@ -156,5 +158,5 @@ func main() {
 	if *amcmc {
 		chain.SetAdaptive(mcmc.NewAdaptiveParameters())
 	}
-	chain.Run(100000)
+	chain.Run(*iter)
 }
