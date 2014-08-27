@@ -2,11 +2,11 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"math"
 	"math/rand"
 	"os"
+	"strconv"
 	"syscall"
 	"time"
 
@@ -21,67 +21,42 @@ const (
 )
 
 type MNormModel struct {
-	data [][]float64
-	mean []float64
-	sd   []float64
-	n    int
+	data       [][]float64
+	mean       []float64
+	sd         []float64
+	n          int
+	parameters mcmc.Parameters
 }
 
 func square(x float64) float64 {
 	return x * x
 }
+
 func NewMNormModel(data [][]float64) *MNormModel {
 	mean := make([]float64, len(data))
 	sd := make([]float64, len(data))
+	parameters := make(mcmc.Parameters, 0, len(data)*2)
 	for i, _ := range sd {
 		sd[i] = 1
+		par := mcmc.NewFloat64Parameter(&sd[i], "sd"+strconv.Itoa(i))
+		par.PriorFunc = mcmc.UniformPrior(0, 100, false, false)
+		par.ProposalFunc = mcmc.NormalProposal(0.1)
+		parameters = append(parameters, par)
+
+		par = mcmc.NewFloat64Parameter(&mean[i], "mean"+strconv.Itoa(i))
+		par.PriorFunc = mcmc.UniformPrior(-100, 100, false, false)
+		par.ProposalFunc = mcmc.NormalProposal(0.1)
+		parameters = append(parameters, par)
 	}
 	return &MNormModel{data: data,
-		mean: mean,
-		sd:   sd,
-		n:    len(data)}
+		mean:       mean,
+		sd:         sd,
+		n:          len(data),
+		parameters: parameters}
 }
 
-func (m *MNormModel) SetDefaults() {
-}
-
-func (m *MNormModel) GetNumberOfParameters() int {
-	return m.n * 2
-}
-
-func (m *MNormModel) GetParameterName(i int) (s string) {
-	if i >= 2*m.n {
-		panic("Unknown parameter")
-	}
-	if i < m.n {
-		s = "mean"
-	} else {
-		s = "sd"
-	}
-	return fmt.Sprintf("%s%d", s, i%m.n)
-}
-
-func (m *MNormModel) GetParameter(i int) float64 {
-	if i >= 2*m.n {
-		panic("Unknown parameter")
-	}
-	if i < m.n {
-		return m.mean[i]
-	} else {
-		return m.sd[i%m.n]
-	}
-}
-
-func (m *MNormModel) SetParameter(i int, val float64) {
-	if i >= 2*m.n {
-		panic("Unknown parameter")
-	}
-	if i < m.n {
-		m.mean[i] = val
-	} else {
-		val = math.Max(math.Abs(val), 0)
-		m.sd[i%m.n] = val
-	}
+func (m *MNormModel) GetParameters() mcmc.Parameters {
+	return m.parameters
 }
 
 func (m *MNormModel) Likelihood() (res float64) {

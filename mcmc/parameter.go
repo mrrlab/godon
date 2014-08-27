@@ -89,12 +89,16 @@ func (p *Float64Parameter) reflect() {
 func (p *Float64Parameter) Propose() {
 	p.old, *p.float64 = *p.float64, p.ProposalFunc(*p.float64)
 	p.reflect()
-	p.OnChange()
+	if p.OnChange != nil {
+		p.OnChange()
+	}
 }
 
 func (p *Float64Parameter) Reject() {
 	*p.float64, p.old = p.old, *p.float64
-	p.OnChange()
+	if p.OnChange != nil {
+		p.OnChange()
+	}
 }
 
 func (p *Float64Parameter) Value() string {
