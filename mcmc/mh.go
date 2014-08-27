@@ -5,6 +5,8 @@ import (
 	"log"
 	"math"
 	"math/rand"
+	"os"
+	"os/signal"
 	"strconv"
 	"time"
 )
@@ -31,6 +33,7 @@ type MH struct {
 	AccPeriod int
 	SD        float64
 	pnames    []string
+	sig       chan os.Signal
 	*Adaptive
 }
 
@@ -49,6 +52,11 @@ func NewMH(m Optimizable) (mcmc *MH) {
 	return
 }
 
+func (m *MH) WatchSignals(sigs ...os.Signal) {
+	m.sig = make(chan os.Signal, 1)
+	signal.Notify(m.sig, sigs...)
+}
+
 func (m *MH) SetAdaptive(ap *AdaptiveParameters) {
 	if ap != nil {
 		log.Print("Setting adaptive")
@@ -65,6 +73,7 @@ func (m *MH) Run(iterations int) {
 	}
 	m.PrintHeader()
 	accepted := 0
+Iter:
 	for m.i = 0; m.i < iterations; m.i++ {
 		if m.i > 0 && m.i%m.AccPeriod == 0 {
 			log.Printf("Acceptance rate %.2f%%", 100*float64(accepted)/float64(m.AccPeriod))
@@ -95,6 +104,12 @@ func (m *MH) Run(iterations int) {
 			}
 			m.L = newL
 			accepted++
+		}
+		select {
+		case s := <-m.sig:
+			log.Printf("Received signal %v, exiting.", s)
+			break Iter
+		default:
 		}
 	}
 	log.Print("Finished MCMC")

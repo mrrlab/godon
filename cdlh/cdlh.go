@@ -6,6 +6,7 @@ import (
 	"log"
 	"math"
 	"os"
+	"syscall"
 	"runtime"
 	"runtime/pprof"
 	"sort"
@@ -275,6 +276,7 @@ func main() {
 	if *adaptive {
 		chain.SetAdaptive(mcmc.NewAdaptiveParameters())
 	}
+	chain.WatchSignals(os.Interrupt, syscall.SIGUSR2)
 	chain.Run(*iterations)
 
 	endTime := time.Now()

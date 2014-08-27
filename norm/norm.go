@@ -6,6 +6,8 @@ import (
 	"log"
 	"math"
 	"math/rand"
+	"os"
+	"syscall"
 	"time"
 
 	"bitbucket.com/Davydov/golh/mcmc"
@@ -158,5 +160,6 @@ func main() {
 	if *amcmc {
 		chain.SetAdaptive(mcmc.NewAdaptiveParameters())
 	}
+	chain.WatchSignals(os.Interrupt, syscall.SIGUSR2)
 	chain.Run(*iter)
 }
