@@ -7,16 +7,11 @@ import (
 	"math/rand"
 	"os"
 	"os/signal"
-	"strconv"
 	"time"
 )
 
 type Optimizable interface {
-	SetDefaults()
-	GetNumberOfParameters() int
-	GetParameterName(i int) string
-	GetParameter(i int) float64
-	SetParameter(i int, val float64)
+	GetParameters() Parameters
 	Likelihood() float64
 }
 
@@ -26,28 +21,22 @@ func init() {
 
 type MH struct {
 	Optimizable
-	L         float64
-	np        int
-	i         int
-	RepPeriod int
-	AccPeriod int
-	SD        float64
-	pnames    []string
-	sig       chan os.Signal
+	L          float64
+	i          int
+	RepPeriod  int
+	AccPeriod  int
+	SD         float64
+	sig        chan os.Signal
+	parameters Parameters
 	*Adaptive
 }
 
 func NewMH(m Optimizable) (mcmc *MH) {
-	np := m.GetNumberOfParameters()
 	mcmc = &MH{Optimizable: m,
-		np:        np,
-		RepPeriod: 10,
-		AccPeriod: 10,
-		SD:        1e-2,
-		pnames:    make([]string, np),
-	}
-	for p := 0; p < np; p++ {
-		mcmc.pnames[p] = m.GetParameterName(p)
+		RepPeriod:  10,
+		AccPeriod:  10,
+		SD:         1e-2,
+		parameters: m.GetParameters(),
 	}
 	return
 }
@@ -84,27 +73,19 @@ Iter:
 			log.Printf("%d: L=%f", m.i, m.L)
 			m.PrintLine()
 		}
-		p := rand.Intn(m.np)
-		val := m.GetParameter(p)
-		var sd float64
-		if m.Adaptive != nil {
-			sd = math.Sqrt(m.Adaptive.variance[p]) * 2.4
-		} else {
-			sd = m.SD
-		}
-		newVal := val + rand.NormFloat64()*sd
-		m.SetParameter(p, newVal)
+		p := rand.Intn(len(m.parameters))
+		par := m.parameters[p]
+		par.Propose()
 		newL := m.Likelihood()
-		a := math.Exp(newL - m.L)
-		if a < 1 && rand.Float64() > a {
-			m.SetParameter(p, val)
-		} else {
-			if m.Adaptive != nil && m.i >= m.Skip {
-				m.UpdateMu(p, newVal)
-			}
+
+		a := math.Exp(par.Prior() - par.OldPrior() + newL - m.L)
+		if a > 1 || rand.Float64() < a {
 			m.L = newL
 			accepted++
+		} else {
+			par.Reject()
 		}
+
 		select {
 		case s := <-m.sig:
 			log.Printf("Received signal %v, exiting.", s)
@@ -125,27 +106,27 @@ func (m *MH) PrintLine() {
 }
 
 func (m *MH) PrintFinal() {
-	for i := 0; i < m.np; i++ {
-		log.Printf("%s=%f", m.pnames[i], m.GetParameter(i))
+	for _, par := range m.parameters {
+		log.Printf("%s=%s", par.Name(), par.Value())
 	}
 }
 
 func (m *MH) ParameterNamesString() (s string) {
-	for i := 0; i < m.np; i++ {
+	for i, par := range m.parameters {
 		if i != 0 {
 			s += "\t"
 		}
-		s += m.pnames[i]
+		s += par.Name()
 	}
 	return
 }
 
 func (m *MH) ParameterString() (s string) {
-	for i := 0; i < m.np; i++ {
+	for i, par := range m.parameters {
 		if i != 0 {
 			s += "\t"
 		}
-		s += strconv.FormatFloat(m.GetParameter(i), 'f', 6, 64)
+		s += par.Value()
 	}
 	return
 }

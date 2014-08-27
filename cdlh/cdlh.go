@@ -6,10 +6,10 @@ import (
 	"log"
 	"math"
 	"os"
-	"syscall"
 	"runtime"
 	"runtime/pprof"
 	"sort"
+	"syscall"
 	"time"
 
 	"github.com/skelterjohn/go.matrix"
@@ -151,7 +151,7 @@ func main() {
 	fgBranch := flag.Int("fg", -1, "fg branch number")
 	cpuProfile := flag.String("cpuprofile", "", "write cpu profile to file")
 	model := flag.String("model", "M0", "todel type (M0 or BS for branch site)")
-	noOptBranch := flag.Bool("nobrlen", false, "don't optimize branch lengths")
+	optBrLen := flag.Bool("brlen", false, "don't optimize branch lengths")
 	cFreq := flag.String("cfreq", "F3X4", "codon frequecny (F0 or F3X4)")
 	iterations := flag.Int("iter", 10000, "number of iterations")
 	report := flag.Int("report", 10, "report every N iterations")
@@ -249,27 +249,27 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
-	var m TreeOptimizable
+	if !*optBrLen {
+		log.Print("Will optimize branch lengths")
+	} else {
+		log.Print("Will not optimize branch lengths")
+	}
+
+	var m mcmc.Optimizable
+
 	switch *model {
 	case "M0":
 		log.Print("Using M0 model")
-		m = NewM0(cali, t, cf)
+		m = NewM0(cali, t, cf, *optBrLen)
 	case "BS":
 		log.Print("Using branch site model")
-		m = NewBranchSite(cali, t, cf)
+		m = NewBranchSite(cali, t, cf, *optBrLen)
 	default:
 		log.Fatal("Unknown model specification")
 	}
 
-	if !*noOptBranch {
-		log.Print("Will optimize branch lengths")
-		m.SetOptBranch(true)
-	} else {
-		log.Print("Will not optimize branch lengths")
-	}
-	log.Printf("Model has %d parameters.", m.GetNumberOfParameters())
+	log.Printf("Model has %d parameters.", len(m.GetParameters()))
 
-	m.SetDefaults()
 	chain := mcmc.NewMH(m)
 	chain.RepPeriod = *report
 	chain.AccPeriod = *accept

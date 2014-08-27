@@ -14,11 +14,11 @@ func BenchmarkMCMCD1(b *testing.B) {
 
 	cf := F0()
 
-	m0 := NewM0(cali, t, cf)
+	m0 := NewM0(cali, t, cf, false)
 
 	b.ResetTimer()
 
 	m0.SetDefaults()
-	mcmc.MCMC(m0, 100, 0, 1000)
+	chain := mcmc.NewMH(m0)
+	chain.Run(100)
 }
-

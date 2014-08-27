@@ -1,9 +1,9 @@
 package main
 
 import (
-	"fmt"
 	"math"
 	"runtime"
+	"strconv"
 	"sync"
 
 	"github.com/skelterjohn/go.matrix"
@@ -12,25 +12,20 @@ import (
 	"bitbucket.com/Davydov/golh/tree"
 )
 
-type TreeOptimizable interface {
-	mcmc.Optimizable
-	SetOptBranch(optBranch bool)
-}
-
 type Model struct {
-	tree      *tree.Tree
-	cali      CodonSequences
-	cf        CodonFrequency
-	qs        [][]*EMatrix
-	scale     []float64
-	prop      []float64
-	nclass    int
-	optBranch bool
+	tree       *tree.Tree
+	cali       CodonSequences
+	cf         CodonFrequency
+	qs         [][]*EMatrix
+	scale      []float64
+	prop       []float64
+	nclass     int
+	parameters mcmc.Parameters
 
 	eQts [][][]float64
 }
 
-func NewModel(cali CodonSequences, t *tree.Tree, cf CodonFrequency, nclass int) (m *Model) {
+func NewModel(cali CodonSequences, t *tree.Tree, cf CodonFrequency, nclass int, optBranch bool) (m *Model) {
 	m = &Model{cali: cali,
 		tree:   t,
 		cf:     cf,
@@ -44,43 +39,23 @@ func NewModel(cali CodonSequences, t *tree.Tree, cf CodonFrequency, nclass int) 
 	}
 	t.NodeOrder()
 	m.ReorderAlignment()
+	if optBranch {
+		m.parameters = make(mcmc.Parameters, t.NNodes()-1)
+		for i, node := range t.Nodes() {
+			if i > 0 {
+				br := i - 1
+				par := mcmc.NewFloat64Parameter(&node.BranchLength, "br"+strconv.Itoa(node.Id))
+				par.OnChange = func() {
+					m.ExpBranch(br)
+				}
+				par.PriorFunc = mcmc.GammaPrior(1, 2, false)
+				par.ProposalFunc = mcmc.NormalProposal(0.01)
+				m.parameters[br] = par
+			}
 
+		}
+	}
 	return
-}
-
-func (m *Model) GetNumberOfParameters() int {
-	// root branch is not considered
-	if m.optBranch {
-		return m.tree.NNodes() - 1
-	}
-	return 0
-}
-
-func (m *Model) GetParameterName(i int) string {
-	if !m.optBranch {
-		panic("branch length are not optimizable")
-	}
-	return fmt.Sprintf("br%d", m.tree.Nodes()[i+1].Id)
-}
-
-func (m *Model) GetParameter(i int) float64 {
-	if !m.optBranch {
-		panic("branch length are not optimizable")
-	}
-	return m.tree.Nodes()[i+1].BranchLength
-}
-
-func (m *Model) SetParameter(i int, val float64) {
-	if !m.optBranch {
-		panic("branch length are not optimizable")
-	}
-	br := i + 1
-	m.tree.Nodes()[br].BranchLength = math.Abs(val)
-	m.ExpBranch(br)
-}
-
-func (m *Model) SetOptBranch(optBranch bool) {
-	m.optBranch = optBranch
 }
 
 func (m *Model) ReorderAlignment() {

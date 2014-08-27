@@ -1,8 +1,7 @@
 package main
 
 import (
-	"math"
-
+	"bitbucket.com/Davydov/golh/mcmc"
 	"bitbucket.com/Davydov/golh/tree"
 )
 
@@ -10,67 +9,47 @@ type M0 struct {
 	*Model
 	q            *EMatrix
 	omega, kappa float64
+	parameters   mcmc.Parameters
 }
 
-func NewM0(cali CodonSequences, t *tree.Tree, cf CodonFrequency) (m *M0) {
+func NewM0(cali CodonSequences, t *tree.Tree, cf CodonFrequency, optBranch bool) (m *M0) {
 	m = &M0{
-		Model: NewModel(cali, t, cf, 1),
+		Model: NewModel(cali, t, cf, 1, optBranch),
 		q:     &EMatrix{},
 	}
 	m.prop[0] = 1
+	m.parameters = m.Model.parameters
+	omega := mcmc.NewFloat64Parameter(&m.omega, "omega")
+	omega.OnChange = func() {
+		m.UpdateMatrix()
+		m.ExpBranches()
+	}
+	omega.PriorFunc = mcmc.GammaPrior(1, 2, false)
+	omega.ProposalFunc = mcmc.NormalProposal(0.01)
+	omega.Min = 0
 
-	return
-}
+	kappa := mcmc.NewFloat64Parameter(&m.kappa, "kappa")
+	kappa.OnChange = func() {
+		m.UpdateMatrix()
+		m.ExpBranches()
+	}
+	kappa.PriorFunc = mcmc.UniformPrior(0, 20, false, true)
+	kappa.ProposalFunc = mcmc.NormalProposal(0.01)
+	kappa.Min = 0
+	kappa.Max = 20
 
-func (m *M0) SetDefaults() {
+	m.parameters = append(m.parameters, omega)
+	m.parameters = append(m.parameters, kappa)
+
 	m.kappa = 1
 	m.omega = 1
 	m.UpdateMatrix()
 	m.ExpBranches()
-}
-
-func (m *M0) GetNumberOfParameters() (np int) {
-	// root branch is not considered
-	np = 2
-	np += m.Model.GetNumberOfParameters()
 	return
 }
 
-func (m *M0) GetParameterName(i int) string {
-	switch i {
-	case 0:
-		return "kappa"
-	case 1:
-		return "omega"
-	default:
-		return m.Model.GetParameterName(i - 2)
-	}
-}
-
-func (m *M0) GetParameter(i int) float64 {
-	switch i {
-	case 0:
-		return m.kappa
-	case 1:
-		return m.omega
-	default:
-		return m.Model.GetParameter(i - 2)
-	}
-}
-
-func (m *M0) SetParameter(i int, value float64) {
-	switch i {
-	case 0:
-		m.kappa = math.Abs(value)
-		m.UpdateMatrix()
-		m.ExpBranches()
-	case 1:
-		m.omega = math.Abs(value)
-		m.UpdateMatrix()
-		m.ExpBranches()
-	default:
-		m.Model.SetParameter(i - 2, value)
-	}
+func (m *M0) GetParameters() mcmc.Parameters {
+	return mcmc.Parameters(m.parameters)
 }
 
 func (m *M0) SetParameters(kappa, omega float64) {
@@ -78,6 +57,10 @@ func (m *M0) SetParameters(kappa, omega float64) {
 	m.omega = omega
 	m.UpdateMatrix()
 	m.ExpBranches()
+}
+
+func (m *M0) SetDefaults() {
+	m.SetParameters(1, 1)
 }
 
 func (m *M0) UpdateMatrix() {

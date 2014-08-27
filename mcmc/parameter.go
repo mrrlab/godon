@@ -1,53 +1,107 @@
 package mcmc
 
 import (
-	"fmt"
 	"math"
 	"math/rand"
+	"strconv"
 )
 
 type Parameter interface {
+	Name() string
 	Prior() float64
+	OldPrior() float64
 	Propose()
 	Reject()
-	Value() fmt.Stringer
+	Value() string
+}
+
+type Parameters []Parameter
+
+type Float64Parameters []*Float64Parameter
+
+func (p Float64Parameters) Get(n string) float64 {
+	for _, par := range p {
+		if par.Name() == n {
+			return *par.float64
+		}
+	}
+	panic("unknown parameter name")
+	//return math.NaN()
+}
+
+func (p Float64Parameters) Set(n string, x float64) {
+	for _, par := range p {
+		if par.Name() == n {
+			par.old, *par.float64 = *par.float64, x
+			par.reflect()
+			par.OnChange()
+			return
+		}
+	}
+	panic("unknown parameter name")
 }
 
 type Float64Parameter struct {
-	float64
+	*float64
 	old          float64
+	name         string
 	PriorFunc    func(float64) float64
 	ProposalFunc func(float64) float64
 	Min          float64
 	Max          float64
+	OnChange     func()
+}
+
+func NewFloat64Parameter(par *float64, name string) *Float64Parameter {
+	return &Float64Parameter{
+		float64:      par,
+		name:         name,
+		PriorFunc:    UniformPrior(-1, 1, true, true),
+		ProposalFunc: NormalProposal(1),
+		Min:          math.Inf(-1),
+		Max:          math.Inf(+1),
+	}
+}
+
+func (p *Float64Parameter) Name() string {
+	return p.name
 }
 
 func (p *Float64Parameter) Prior() float64 {
-	return p.PriorFunc(p.float64)
+	return p.PriorFunc(*p.float64)
 }
 
-func (p *Float64Parameter) Propose() {
-	p.old, p.float64 = p.float64, p.ProposalFunc(p.float64)
+func (p *Float64Parameter) OldPrior() float64 {
+	return p.PriorFunc(p.old)
+}
 
-	for p.float64 < p.Min || p.float64 > p.Max {
-		if p.float64 < p.Min {
-			p.float64 = p.Min + (p.Min - p.float64)
+func (p *Float64Parameter) reflect() {
+	for *p.float64 < p.Min || *p.float64 > p.Max {
+		if *p.float64 < p.Min {
+			*p.float64 = p.Min + (p.Min - *p.float64)
 		}
-		if p.float64 > p.Max {
-			p.float64 = p.Max - (p.float64 - p.Max)
+		if *p.float64 > p.Max {
+			*p.float64 = p.Max - (*p.float64 - p.Max)
 		}
 	}
 }
 
+func (p *Float64Parameter) Propose() {
+	p.old, *p.float64 = *p.float64, p.ProposalFunc(*p.float64)
+	p.reflect()
+	p.OnChange()
+}
+
 func (p *Float64Parameter) Reject() {
-	p.float64 = p.old
+	*p.float64, p.old = p.old, *p.float64
+	p.OnChange()
 }
 
-func (p *Float64Parameter) Value() float64 {
-	return p.float64
+func (p *Float64Parameter) Value() string {
+	return strconv.FormatFloat(*p.float64, 'f', 6, 64)
 }
 
-func FlatPrior(min, max float64, incmin, incmax bool) func(float64) float64 {
+func UniformPrior(min, max float64, incmin, incmax bool) func(float64) float64 {
 	if max <= min {
 		panic("max <= min")
 	}
@@ -73,6 +127,18 @@ func GammaPrior(shape, scale float64, inczero bool) func(float64) float64 {
 		}
 		g, _ := math.Lgamma(shape)
 		return (shape-1)*math.Log(x) - x/scale - shape*math.Log(scale) - g
+	}
+}
+
+func ExponentialPrior(rate float64, inczero bool) func(float64) float64 {
+	if rate <= 0 {
+		panic("exponential rate should be > 0")
+	}
+	return func(x float64) float64 {
+		if x < 0 || x == 0 || !inczero {
+			return math.Inf(-1)
+		}
+		return math.Log(rate) - rate*x
 	}
 }
 
