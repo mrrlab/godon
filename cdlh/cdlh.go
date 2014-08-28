@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"math/rand"
 	"os"
 	"runtime"
 	"runtime/pprof"
@@ -148,6 +149,7 @@ func main() {
 	startTime := time.Now()
 	cFreqFileName := flag.String("cfreqfn", "", "codon frequencies file (overrides -cfreq)")
 	nCPU := flag.Int("cpu", 0, "number of cpu to use")
+	seed := flag.Int64("seed", -1, "random generator seed, default time based")
 	fgBranch := flag.Int("fg", -1, "fg branch number")
 	cpuProfile := flag.String("cpuprofile", "", "write cpu profile to file")
 	model := flag.String("model", "M0", "todel type (M0 or BS for branch site)")
@@ -160,6 +162,13 @@ func main() {
 
 	flag.Parse()
 
+	if *seed == -1 {
+		*seed = time.Now().UnixNano()
+		log.Println("Random seed from time")
+	} 
+	log.Printf("Random seed=%v", *seed)
+
+	rand.Seed(*seed)
 	runtime.GOMAXPROCS(*nCPU)
 
 	log.Printf("Using CPUs: %d.\n", runtime.GOMAXPROCS(0))
@@ -274,7 +283,7 @@ func main() {
 	chain.RepPeriod = *report
 	chain.AccPeriod = *accept
 	if *adaptive {
-		chain.SetAdaptive(mcmc.NewAdaptiveParameters())
+		panic("not implemented")
 	}
 	chain.WatchSignals(os.Interrupt, syscall.SIGUSR2)
 	chain.Run(*iterations)

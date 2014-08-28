@@ -22,6 +22,10 @@ type Model struct {
 	nclass     int
 	parameters mcmc.Parameters
 
+	// remember computations wee need to perform
+	expAllBr bool
+	expBr    []bool
+
 	eQts [][][]float64
 }
 
@@ -31,6 +35,7 @@ func NewModel(cali CodonSequences, t *tree.Tree, cf CodonFrequency, nclass int, 
 		cf:     cf,
 		qs:     make([][]*EMatrix, nclass),
 		scale:  make([]float64, t.NNodes()),
+		expBr:  make([]bool, t.NNodes()),
 		prop:   make([]float64, nclass),
 		nclass: nclass,
 	}
@@ -46,7 +51,7 @@ func NewModel(cali CodonSequences, t *tree.Tree, cf CodonFrequency, nclass int, 
 				br := i - 1
 				par := mcmc.NewFloat64Parameter(&node.BranchLength, "br"+strconv.Itoa(node.Id))
 				par.OnChange = func() {
-					m.ExpBranch(br)
+					m.expBr[br] = false
 				}
 				par.PriorFunc = mcmc.GammaPrior(1, 2, false)
 				par.ProposalFunc = mcmc.NormalProposal(0.01)
@@ -145,13 +150,25 @@ func (m *Model) ExpBranches() {
 			if oclass < 0 {
 				tasks <- expTask{class, node}
 			}
+			m.expBr[node.Id] = true
 		}
 	}
 	close(tasks)
 	wg.Wait()
+	m.expAllBr = true
 }
 
 func (m *Model) Likelihood() (lnL float64) {
+	if !m.expAllBr {
+		m.ExpBranches()
+	} else {
+		for _, node := range m.tree.Nodes() {
+			if !m.expBr[node.Id] {
+				m.ExpBranch(node.Id)
+			}
+		}
+	}
+
 	if len(m.prop) != len(m.qs) {
 		panic("incorrect proportion length")
 	}
