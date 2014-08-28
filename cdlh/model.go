@@ -101,6 +101,7 @@ func (m *Model) ExpBranch(br int) {
 			m.eQts[class][node.Id] = Q.Array()
 		}
 	}
+	m.expBr[br] = true
 }
 
 func (m *Model) ExpBranches() {
