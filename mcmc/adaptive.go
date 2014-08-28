@@ -130,25 +130,26 @@ func (a *AdaptiveParameter) UpdateMu() {
 	if math.IsNaN(a.mu) {
 		a.mu = *a.float64
 	}
+	if a.t > a.Skip {
+		// Recursive mu formua
+		a.bmu = *a.float64/float64(a.K) + a.bmu
+		a.bvariance = square(*a.float64)/float64(a.K-1) + a.bvariance
 
-	// Recursive mu formua
-	a.bmu = *a.float64/float64(a.K) + a.bmu
-	a.bvariance = square(*a.float64)/float64(a.K-1) + a.bvariance
+		if a.t%a.K == 0 {
+			gamma, udelta, vdelta := a.RobbinsMonro()
 
-	if a.t > 0 && a.t%a.K == 0 {
-		gamma, udelta, vdelta := a.RobbinsMonro()
-
-		// reset batch mu
-		a.bmu = 0
-		a.mu += gamma * udelta
-		a.variance += gamma * vdelta
-		a.CheckConvergenceMu()
+			// reset batch mu
+			a.bmu = 0
+			a.mu += gamma * udelta
+			a.variance += gamma * vdelta
+			a.CheckConvergenceMu()
+		}
 	}
 	a.t++
 }
 
 func (a *AdaptiveParameter) AdaptiveProposal() func(float64) float64 {
 	return func(x float64) float64 {
-		return x + rand.NormFloat64()*math.Sqrt(a.variance)
+		return x + rand.NormFloat64()*math.Sqrt(a.variance)*a.Lambda
 	}
 }
