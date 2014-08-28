@@ -53,7 +53,7 @@ func NewMNormModel(data [][]float64, adaptive bool) (m *MNormModel) {
 }
 
 func (m *MNormModel) AddParameters() {
-	for i, _ := range m.mean {
+	for i := 0; i < m.n; i++ {
 		name := "sd" + strconv.Itoa(i)
 		par := mcmc.NewFloat64Parameter(&m.sd[i], name)
 		par.Min = 0
@@ -73,7 +73,7 @@ func (m *MNormModel) AddParameters() {
 }
 
 func (m *MNormModel) AddAdaptiveParameters() {
-	for i, _ := range m.mean {
+	for i := 0; i < m.n; i++ {
 		name := "sd" + strconv.Itoa(i)
 		s := mcmc.NewAdaptiveSettings()
 		par := mcmc.NewAdaptiveParameter(&m.sd[i], name, s)
@@ -103,10 +103,6 @@ func (m *MNormModel) Likelihood() (res float64) {
 		}
 	}
 	return
-}
-
-func init() {
-	rand.Seed(time.Now().UnixNano())
 }
 
 func genData(mean []float64, sd []float64, n int) (data [][]float64) {
@@ -144,10 +140,16 @@ func getMeanSD(data []float64) (mean, sd float64) {
 func main() {
 	amcmc := flag.Bool("a", false, "adaptive mcmc")
 	iter := flag.Int("iter", 100000, "number of iterations")
+	seed := flag.Int64("seed", -1, "random generator seed, default time based")
 	flag.Parse()
 
 	log.Print("Starting")
 	log.Printf("Will generate %d values for %d normal distributions", K, N)
+	if *seed == -1 {
+		rand.Seed(time.Now().UnixNano())
+	} else {
+		rand.Seed(*seed)
+	}
 	mean := make([]float64, 0, K)
 	sd := make([]float64, 0, K)
 

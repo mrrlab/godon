@@ -7,16 +7,11 @@ import (
 	"math/rand"
 	"os"
 	"os/signal"
-	"time"
 )
 
 type Optimizable interface {
 	GetParameters() Parameters
 	Likelihood() float64
-}
-
-func init() {
-	rand.Seed(time.Now().UnixNano())
 }
 
 type MH struct {
