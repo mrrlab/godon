@@ -11,6 +11,7 @@ type Parameter interface {
 	Prior() float64
 	OldPrior() float64
 	Propose()
+	Accept()
 	Reject()
 	Value() string
 }
@@ -99,6 +100,9 @@ func (p *Float64Parameter) Reject() {
 	if p.OnChange != nil {
 		p.OnChange()
 	}
+}
+
+func (p *Float64Parameter) Accept() {
 }
 
 func (p *Float64Parameter) Value() string {

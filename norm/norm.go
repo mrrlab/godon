@@ -32,27 +32,63 @@ func square(x float64) float64 {
 	return x * x
 }
 
-func NewMNormModel(data [][]float64) *MNormModel {
+func NewMNormModel(data [][]float64, adaptive bool) (m *MNormModel) {
 	mean := make([]float64, len(data))
 	sd := make([]float64, len(data))
 	parameters := make(mcmc.Parameters, 0, len(data)*2)
 	for i, _ := range sd {
 		sd[i] = 1
-		par := mcmc.NewFloat64Parameter(&sd[i], "sd"+strconv.Itoa(i))
-		par.PriorFunc = mcmc.UniformPrior(0, 100, false, false)
-		par.ProposalFunc = mcmc.NormalProposal(0.1)
-		parameters = append(parameters, par)
-
-		par = mcmc.NewFloat64Parameter(&mean[i], "mean"+strconv.Itoa(i))
-		par.PriorFunc = mcmc.UniformPrior(-100, 100, false, false)
-		par.ProposalFunc = mcmc.NormalProposal(0.1)
-		parameters = append(parameters, par)
 	}
-	return &MNormModel{data: data,
+	m = &MNormModel{data: data,
 		mean:       mean,
 		sd:         sd,
 		n:          len(data),
 		parameters: parameters}
+	if adaptive {
+		m.AddAdaptiveParameters()
+	} else {
+		m.AddParameters()
+	}
+	return
+}
+
+func (m *MNormModel) AddParameters() {
+	for i, _ := range m.mean {
+		name := "sd" + strconv.Itoa(i)
+		par := mcmc.NewFloat64Parameter(&m.sd[i], name)
+		par.Min = 0
+		par.Max = 100
+		par.PriorFunc = mcmc.UniformPrior(0, 100, false, false)
+		par.ProposalFunc = mcmc.NormalProposal(0.1)
+		m.parameters = append(m.parameters, par)
+
+		name = "mean" + strconv.Itoa(i)
+		par = mcmc.NewFloat64Parameter(&m.mean[i], name)
+		par.Min = -100
+		par.Max = 100
+		par.PriorFunc = mcmc.UniformPrior(-100, 100, false, false)
+		par.ProposalFunc = mcmc.NormalProposal(0.1)
+		m.parameters = append(m.parameters, par)
+	}
+}
+
+func (m *MNormModel) AddAdaptiveParameters() {
+	for i, _ := range m.mean {
+		name := "sd" + strconv.Itoa(i)
+		s := mcmc.NewAdaptiveSettings()
+		par := mcmc.NewAdaptiveParameter(&m.sd[i], name, s)
+		par.Min = 0
+		par.Max = 100
+		par.PriorFunc = mcmc.UniformPrior(0, 100, false, false)
+		m.parameters = append(m.parameters, par)
+
+		name = "mean" + strconv.Itoa(i)
+		par = mcmc.NewAdaptiveParameter(&m.mean[i], name, s)
+		par.Min = -100
+		par.Max = 100
+		par.PriorFunc = mcmc.UniformPrior(-100, 100, false, false)
+		m.parameters = append(m.parameters, par)
+	}
 }
 
 func (m *MNormModel) GetParameters() mcmc.Parameters {
@@ -127,14 +163,11 @@ func main() {
 		log.Printf("%v: Norm(%v, %v^2), mean=%v, sd=%v", i, mean[i], sd[i], m, s)
 	}
 
-	m := NewMNormModel(data)
+	m := NewMNormModel(data, *amcmc)
 
 	chain := mcmc.NewMH(m)
 	chain.AccPeriod = 200
 
-	if *amcmc {
-		chain.SetAdaptive(mcmc.NewAdaptiveParameters())
-	}
 	chain.WatchSignals(os.Interrupt, syscall.SIGUSR2)
 	chain.Run(*iter)
 }

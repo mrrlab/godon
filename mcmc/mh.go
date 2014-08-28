@@ -28,7 +28,6 @@ type MH struct {
 	SD         float64
 	sig        chan os.Signal
 	parameters Parameters
-	*Adaptive
 }
 
 func NewMH(m Optimizable) (mcmc *MH) {
@@ -46,20 +45,18 @@ func (m *MH) WatchSignals(sigs ...os.Signal) {
 	signal.Notify(m.sig, sigs...)
 }
 
-func (m *MH) SetAdaptive(ap *AdaptiveParameters) {
-	if ap != nil {
+func (m *MH) SetAdaptive() {
+	panic("not implemented")
+	/*if ap != nil {
 		log.Print("Setting adaptive")
-		m.Adaptive = NewAdaptive(m.np, m.pnames, m.SD, ap)
+		//m.Adaptive = NewAdaptive(m.np, m.pnames, m.SD, ap)
 	} else {
 		log.Print("Setting nonadaptive")
-	}
+	}*/
 }
 
 func (m *MH) Run(iterations int) {
 	m.L = m.Likelihood()
-	if m.Adaptive != nil {
-		log.Print(m.Adaptive)
-	}
 	m.PrintHeader()
 	accepted := 0
 Iter:
@@ -81,6 +78,7 @@ Iter:
 		a := math.Exp(par.Prior() - par.OldPrior() + newL - m.L)
 		if a > 1 || rand.Float64() < a {
 			m.L = newL
+			par.Accept()
 			accepted++
 		} else {
 			par.Reject()
