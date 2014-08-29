@@ -287,9 +287,6 @@ func main() {
 	chain := mcmc.NewMH(m)
 	chain.RepPeriod = *report
 	chain.AccPeriod = *accept
-	if *adaptive {
-		panic("not implemented")
-	}
 	chain.WatchSignals(os.Interrupt, syscall.SIGUSR2)
 	chain.Run(*iterations)
 
