@@ -80,7 +80,7 @@ func NewBranchSite(cali CodonSequences, t *tree.Tree, cf CodonFrequency, optBran
 
 }
 
-func (m *BranchSite) GetParameters() mcmc.Parameters {
+func (m *BranchSite) GetModelParameters() mcmc.Parameters {
 	return m.parameters
 }
 

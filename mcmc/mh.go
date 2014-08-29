@@ -10,7 +10,7 @@ import (
 )
 
 type Optimizable interface {
-	GetParameters() Parameters
+	GetModelParameters() Parameters
 	Likelihood() float64
 }
 
@@ -30,7 +30,7 @@ func NewMH(m Optimizable) (mcmc *MH) {
 		RepPeriod:  10,
 		AccPeriod:  10,
 		SD:         1e-2,
-		parameters: m.GetParameters(),
+		parameters: m.GetModelParameters(),
 	}
 	return
 }

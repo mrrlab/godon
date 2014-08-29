@@ -277,7 +277,7 @@ func main() {
 		log.Fatal("Unknown model specification")
 	}
 
-	log.Printf("Model has %d parameters.", len(m.GetParameters()))
+	log.Printf("Model has %d parameters.", len(m.GetModelParameters()))
 
 	chain := mcmc.NewMH(m)
 	chain.RepPeriod = *report

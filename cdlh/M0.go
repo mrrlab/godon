@@ -46,7 +46,7 @@ func NewM0(cali CodonSequences, t *tree.Tree, cf CodonFrequency, optBranch bool)
 	return
 }
 
-func (m *M0) GetParameters() mcmc.Parameters {
+func (m *M0) GetModelParameters() mcmc.Parameters {
 	return mcmc.Parameters(m.parameters)
 }
 

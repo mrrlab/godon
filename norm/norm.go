@@ -91,7 +91,7 @@ func (m *MNormModel) AddAdaptiveParameters() {
 	}
 }
 
-func (m *MNormModel) GetParameters() mcmc.Parameters {
+func (m *MNormModel) GetModelParameters() mcmc.Parameters {
 	return m.parameters
 }
 
