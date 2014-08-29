@@ -50,16 +50,20 @@ func NewModel(cali CodonSequences, t *tree.Tree, cf CodonFrequency, nclass int, 
 	t.NodeOrder()
 	m.ReorderAlignment()
 	if optBranch {
-		m.parameters = make(mcmc.Parameters, t.NNodes())
+		m.parameters = make(mcmc.Parameters, 0, t.NNodes())
 		for _, node := range t.Nodes() {
 			nodeId := node.Id
+			// Branch 0 is not optimized
+			if nodeId == 0 {
+				continue
+			}
 			par := mcmc.NewFloat64Parameter(&node.BranchLength, "br"+strconv.Itoa(node.Id))
 			par.OnChange = func() {
 				m.expBr[nodeId] = false
 			}
 			par.PriorFunc = mcmc.GammaPrior(1, 2, false)
 			par.ProposalFunc = mcmc.NormalProposal(0.01)
-			m.parameters[node.Id] = par
+			m.parameters = append(m.parameters, par)
 
 		}
 	}
@@ -68,16 +72,20 @@ func NewModel(cali CodonSequences, t *tree.Tree, cf CodonFrequency, nclass int, 
 
 func (m *Model) SetAdaptive() {
 	if len(m.parameters) > 0 {
-		m.parameters = make(mcmc.Parameters, m.tree.NNodes())
+		m.parameters = make(mcmc.Parameters, 0, m.tree.NNodes())
 		as := mcmc.NewAdaptiveSettings()
 		for _, node := range m.tree.Nodes() {
 			nodeId := node.Id
+			// Branch 0 is not optimized
+			if nodeId == 0 {
+				continue
+			}
 			par := mcmc.NewAdaptiveParameter(&node.BranchLength, "br"+strconv.Itoa(node.Id), as)
 			par.OnChange = func() {
 				m.expBr[nodeId] = false
 			}
 			par.PriorFunc = mcmc.GammaPrior(1, 2, false)
-			m.parameters[node.Id] = par
+			m.parameters = append(m.parameters, par)
 		}
 	}
 }
