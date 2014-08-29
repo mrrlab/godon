@@ -1,26 +1,26 @@
 package main
 
 import (
-	"fmt"
-	"os"
-	"math"
-	"tree"
 	"bio"
+	"fmt"
+	"math"
+	"os"
 	"runtime"
+	"tree"
 )
 
 var (
 	alphabet = [...]byte{'A', 'T', 'G', 'C'}
-	nm2id = make(map[string]int)	
+	nm2id    = make(map[string]int)
 )
 
 func L(ali bio.Sequences, t *tree.Tree) (lnL float64) {
 	ch := make(chan float64, len(ali[0].Sequence))
 	for i, _ := range ali[0].Sequence {
 		go func(i int) {
-			//fmt.Println(i); 
+			//fmt.Println(i);
 			ch <- subL(ali, t, i)
-		}(i);
+		}(i)
 	}
 
 	for _, _ = range ali[0].Sequence {
@@ -37,20 +37,19 @@ func subL(ali bio.Sequences, t *tree.Tree, i int) float64 {
 	for node := range t.Nodes() {
 		plh[node] = make(map[byte]float64)
 	}
-		
+
 	nodes := make(chan *tree.Tree, len(ali))
 	for node := range t.Terminals() {
 		for _, l := range alphabet {
 			if l == ali[nm2id[node.Name]].Sequence[i] {
 				plh[node][l] = 1
-			}else {
+			} else {
 				plh[node][l] = 0
 			}
 		}
 		nodes <- node.Parent
 	}
-			
-			
+
 NodeLoop:
 	for node := range nodes {
 		for child := range node.ChildNodes() {
@@ -69,9 +68,9 @@ NodeLoop:
 				for _, l2 := range alphabet {
 					var x float64
 					if l1 == l2 {
-						x = 1. / 4 + 3. / 4 * math.Exp(-4. * child.BranchLength / 3)
+						x = 1./4 + 3./4*math.Exp(-4.*child.BranchLength/3)
 					} else {
-						x = 1. / 4 - 1. / 4 * math.Exp(-4. * child.BranchLength / 3)
+						x = 1./4 - 1./4*math.Exp(-4.*child.BranchLength/3)
 					}
 					s += x * plh[child][l2]
 				}
@@ -81,19 +80,19 @@ NodeLoop:
 		}
 		nodes <- node.Parent
 		if node.IsRoot() {
-			for _, l := range alphabet { 
+			for _, l := range alphabet {
 				res += 0.25 * plh[node][l]
 			}
 			break NodeLoop
 		}
-		
+
 	}
 	close(nodes)
 	return math.Log(res)
 }
 
 func main() {
-	if (len(os.Args) < 3) {
+	if len(os.Args) < 3 {
 		fmt.Println("specify files")
 		return
 	}
@@ -112,7 +111,6 @@ func main() {
 	runtime.GOMAXPROCS(2)
 	fmt.Println("Will use ", runtime.GOMAXPROCS(0), "CPUs")
 
-
 	for i, s := range ali {
 		nm2id[s.Name] = i
 	}
@@ -124,8 +122,6 @@ func main() {
 	}
 
 	//var lnL float64
-
-
 
 	//fmt.Println(lnL)
 }

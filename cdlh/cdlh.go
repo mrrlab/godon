@@ -165,7 +165,7 @@ func main() {
 	if *seed == -1 {
 		*seed = time.Now().UnixNano()
 		log.Println("Random seed from time")
-	} 
+	}
 	log.Printf("Random seed=%v", *seed)
 
 	rand.Seed(*seed)

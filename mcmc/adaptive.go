@@ -96,7 +96,7 @@ func (a *AdaptiveParameter) RobbinsMonro() (gamma float64) {
 	}
 	a.delta = delta > 0
 	beta := 1 / math.Max(1, 1+a.Nu)
-	gamma = a.C / math.Pow(float64(a.loct + 1), beta)
+	gamma = a.C / math.Pow(float64(a.loct+1), beta)
 	return
 }
 
@@ -112,7 +112,6 @@ func (a *AdaptiveParameter) CheckConvergenceMu() {
 	delta := *a.float64 - a.cmean
 	a.cmean += delta / float64(len(a.vals))
 	a.cm2 += delta * (*a.float64 - a.cmean)
-
 
 	if len(a.vals) == a.WSize {
 		variance := a.cm2 / float64(len(a.vals)-1)
