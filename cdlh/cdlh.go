@@ -153,7 +153,7 @@ func main() {
 	fgBranch := flag.Int("fg", -1, "fg branch number")
 	cpuProfile := flag.String("cpuprofile", "", "write cpu profile to file")
 	model := flag.String("model", "M0", "todel type (M0 or BS for branch site)")
-	optBrLen := flag.Bool("brlen", false, "don't optimize branch lengths")
+	noOptBrLen := flag.Bool("nobrlen", false, "don't optimize branch lengths")
 	cFreq := flag.String("cfreq", "F3X4", "codon frequecny (F0 or F3X4)")
 	iterations := flag.Int("iter", 10000, "number of iterations")
 	report := flag.Int("report", 10, "report every N iterations")
@@ -258,7 +258,7 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
-	if !*optBrLen {
+	if !*noOptBrLen {
 		log.Print("Will optimize branch lengths")
 	} else {
 		log.Print("Will not optimize branch lengths")
@@ -269,10 +269,10 @@ func main() {
 	switch *model {
 	case "M0":
 		log.Print("Using M0 model")
-		m = NewM0(cali, t, cf, *optBrLen)
+		m = NewM0(cali, t, cf, !*noOptBrLen)
 	case "BS":
 		log.Print("Using branch site model")
-		m = NewBranchSite(cali, t, cf, *optBrLen)
+		m = NewBranchSite(cali, t, cf, !*noOptBrLen)
 	default:
 		log.Fatal("Unknown model specification")
 	}
