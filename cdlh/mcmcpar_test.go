@@ -48,6 +48,7 @@ func TestBranchSiteReprM0D2(tst *testing.T) {
 	cf := F0()
 
 	m0 := NewM0(cali, t, cf, false)
+	m0.SetAdaptive()
 	chain := mcmc.NewMH(m0)
 	chain.Quiet = true
 	chain.Run(10)
@@ -189,6 +190,7 @@ func TestBranchSiteReprBSD3(tst *testing.T) {
 	cf := F3X4(cali)
 
 	h1 := NewBranchSite(cali, t, cf, true)
+	h1.SetAdaptive()
 	chain := mcmc.NewMH(h1)
 	chain.Quiet = true
 	chain.Run(10)

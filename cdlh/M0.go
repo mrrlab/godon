@@ -20,6 +20,19 @@ func NewM0(cali CodonSequences, t *tree.Tree, cf CodonFrequency, optBranch bool)
 	}
 	m.prop[0] = 1
 	m.parameters = m.Model.parameters
+
+	m.addParameters()
+	m.SetDefaults()
+	return
+}
+
+func (m *M0) SetAdaptive() {
+	m.Model.SetAdaptive()
+	m.parameters = m.Model.parameters
+	m.addAdaptiveParameters()
+}
+
+func (m *M0) addParameters() {
 	omega := mcmc.NewFloat64Parameter(&m.omega, "omega")
 	omega.OnChange = func() {
 		m.qdone = false
@@ -41,9 +54,30 @@ func NewM0(cali CodonSequences, t *tree.Tree, cf CodonFrequency, optBranch bool)
 
 	m.parameters = append(m.parameters, omega)
 	m.parameters = append(m.parameters, kappa)
+}
 
-	m.SetDefaults()
-	return
+func (m *M0) addAdaptiveParameters() {
+	ap := mcmc.NewAdaptiveSettings()
+	omega := mcmc.NewAdaptiveParameter(&m.omega, "omega", ap)
+	omega.OnChange = func() {
+		m.qdone = false
+		m.expAllBr = false
+	}
+	omega.PriorFunc = mcmc.GammaPrior(1, 2, false)
+	omega.Min = 0
+
+	kappa := mcmc.NewAdaptiveParameter(&m.kappa, "kappa", ap)
+	kappa.OnChange = func() {
+		m.qdone = false
+		m.expAllBr = false
+	}
+	kappa.PriorFunc = mcmc.UniformPrior(0, 20, false, true)
+	kappa.ProposalFunc = mcmc.NormalProposal(0.01)
+	kappa.Min = 0
+	kappa.Max = 20
+
+	m.parameters = append(m.parameters, omega)
+	m.parameters = append(m.parameters, kappa)
 }
 
 func (m *M0) GetModelParameters() mcmc.Parameters {

@@ -264,7 +264,7 @@ func main() {
 		log.Print("Will not optimize branch lengths")
 	}
 
-	var m mcmc.Optimizable
+	var m TreeOptimizable
 
 	switch *model {
 	case "M0":
@@ -275,6 +275,11 @@ func main() {
 		m = NewBranchSite(cali, t, cf, *optBrLen)
 	default:
 		log.Fatal("Unknown model specification")
+	}
+
+	if *adaptive {
+		m.SetAdaptive()
+		log.Print("Setting adaptive parameters")
 	}
 
 	log.Printf("Model has %d parameters.", len(m.GetModelParameters()))

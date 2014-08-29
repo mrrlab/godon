@@ -23,7 +23,23 @@ func NewBranchSite(cali CodonSequences, t *tree.Tree, cf CodonFrequency, optBran
 		q1:    &EMatrix{},
 		q2:    &EMatrix{},
 	}
+
 	m.parameters = m.Model.parameters
+	m.addParameters()
+	m.SetBranchMatrices()
+	m.SetDefaults()
+
+	return
+
+}
+
+func (m *BranchSite) SetAdaptive() {
+	m.Model.SetAdaptive()
+	m.parameters = m.Model.parameters
+	m.addAdaptiveParameters()
+}
+
+func (m *BranchSite) addParameters() {
 	kappa := mcmc.NewFloat64Parameter(&m.kappa, "kappa")
 	kappa.OnChange = func() {
 		m.q0done = false
@@ -69,12 +85,50 @@ func NewBranchSite(cali CodonSequences, t *tree.Tree, cf CodonFrequency, optBran
 	p0prop.PriorFunc = mcmc.UniformPrior(0, 1, false, false)
 	p0prop.ProposalFunc = mcmc.NormalProposal(0.01)
 	m.parameters = append(m.parameters, p0prop)
+}
 
-	m.SetBranchMatrices()
-	m.SetDefaults()
+func (m *BranchSite) addAdaptiveParameters() {
+	as := mcmc.NewAdaptiveSettings()
+	kappa := mcmc.NewAdaptiveParameter(&m.kappa, "kappa", as)
+	kappa.OnChange = func() {
+		m.q0done = false
+		m.q1done = false
+		m.q2done = false
+	}
+	kappa.PriorFunc = mcmc.UniformPrior(0, 20, false, true)
+	kappa.Min = 0
+	kappa.Max = 20
+	m.parameters = append(m.parameters, kappa)
 
-	return
+	omega0 := mcmc.NewAdaptiveParameter(&m.omega0, "omega0", as)
+	omega0.OnChange = func() {
+		m.q0done = false
+	}
+	omega0.PriorFunc = mcmc.GammaPrior(1, 2, false)
+	omega0.Min = 0
+	m.parameters = append(m.parameters, omega0)
 
+	omega2 := mcmc.NewAdaptiveParameter(&m.omega2, "omega2", as)
+	omega2.OnChange = func() {
+		m.q2done = false
+	}
+	omega2.PriorFunc = mcmc.GammaPrior(1, 2, false)
+	omega2.Min = 0
+	m.parameters = append(m.parameters, omega2)
+
+	p01sum := mcmc.NewAdaptiveParameter(&m.p01sum, "p01sum", as)
+	p01sum.OnChange = func() {
+		m.propdone = false
+	}
+	p01sum.PriorFunc = mcmc.UniformPrior(0, 1, false, false)
+	m.parameters = append(m.parameters, p01sum)
+
+	p0prop := mcmc.NewAdaptiveParameter(&m.p0prop, "p0prop", as)
+	p0prop.OnChange = func() {
+		m.propdone = false
+	}
+	p0prop.PriorFunc = mcmc.UniformPrior(0, 1, false, false)
+	m.parameters = append(m.parameters, p0prop)
 }
 
 func (m *BranchSite) GetModelParameters() mcmc.Parameters {

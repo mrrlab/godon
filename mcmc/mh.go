@@ -41,16 +41,6 @@ func (m *MH) WatchSignals(sigs ...os.Signal) {
 	signal.Notify(m.sig, sigs...)
 }
 
-func (m *MH) SetAdaptive() {
-	panic("not implemented")
-	/*if ap != nil {
-		log.Print("Setting adaptive")
-		//m.Adaptive = NewAdaptive(m.np, m.pnames, m.SD, ap)
-	} else {
-		log.Print("Setting nonadaptive")
-	}*/
-}
-
 func (m *MH) Run(iterations int) {
 	m.L = m.Likelihood()
 	m.PrintHeader()

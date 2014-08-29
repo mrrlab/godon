@@ -12,6 +12,11 @@ import (
 	"bitbucket.com/Davydov/golh/tree"
 )
 
+type TreeOptimizable interface {
+	mcmc.Optimizable
+	SetAdaptive()
+}
+
 type Model struct {
 	tree       *tree.Tree
 	cali       CodonSequences
@@ -59,6 +64,22 @@ func NewModel(cali CodonSequences, t *tree.Tree, cf CodonFrequency, nclass int, 
 		}
 	}
 	return
+}
+
+func (m *Model) SetAdaptive() {
+	if len(m.parameters) > 0 {
+		m.parameters = make(mcmc.Parameters, m.tree.NNodes())
+		as := mcmc.NewAdaptiveSettings()
+		for _, node := range m.tree.Nodes() {
+			nodeId := node.Id
+			par := mcmc.NewAdaptiveParameter(&node.BranchLength, "br"+strconv.Itoa(node.Id), as)
+			par.OnChange = func() {
+				m.expBr[nodeId] = false
+			}
+			par.PriorFunc = mcmc.GammaPrior(1, 2, false)
+			m.parameters[node.Id] = par
+		}
+	}
 }
 
 func (m *Model) ReorderAlignment() {
