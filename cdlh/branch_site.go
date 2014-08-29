@@ -139,6 +139,7 @@ func (m *BranchSite) UpdateProportions() {
 		}
 	}
 	m.propdone = true
+	m.expAllBr = false
 }
 
 func (m *BranchSite) UpdateMatrices() {

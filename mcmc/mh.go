@@ -23,6 +23,7 @@ type MH struct {
 	SD         float64
 	sig        chan os.Signal
 	parameters Parameters
+	Quiet      bool
 }
 
 func NewMH(m Optimizable) (mcmc *MH) {
@@ -56,12 +57,12 @@ func (m *MH) Run(iterations int) {
 	accepted := 0
 Iter:
 	for m.i = 0; m.i < iterations; m.i++ {
-		if m.i > 0 && m.i%m.AccPeriod == 0 {
+		if !m.Quiet && m.i > 0 && m.i%m.AccPeriod == 0 {
 			log.Printf("Acceptance rate %.2f%%", 100*float64(accepted)/float64(m.AccPeriod))
 			accepted = 0
 		}
 
-		if m.i%m.RepPeriod == 0 {
+		if !m.Quiet && m.i%m.RepPeriod == 0 {
 			log.Printf("%d: L=%f", m.i, m.L)
 			m.PrintLine()
 		}
@@ -86,21 +87,29 @@ Iter:
 		default:
 		}
 	}
-	log.Print("Finished MCMC")
+	if !m.Quiet {
+		log.Print("Finished MCMC")
+	}
 	m.PrintFinal()
 }
 
 func (m *MH) PrintHeader() {
-	fmt.Printf("iteration\tlikelihood\t%s\n", m.ParameterNamesString())
+	if !m.Quiet {
+		fmt.Printf("iteration\tlikelihood\t%s\n", m.ParameterNamesString())
+	}
 }
 
 func (m *MH) PrintLine() {
-	fmt.Printf("%d\t%f\t%s\n", m.i, m.L, m.ParameterString())
+	if !m.Quiet {
+		fmt.Printf("%d\t%f\t%s\n", m.i, m.L, m.ParameterString())
+	}
 }
 
 func (m *MH) PrintFinal() {
-	for _, par := range m.parameters {
-		log.Printf("%s=%s", par.Name(), par.Value())
+	if !m.Quiet {
+		for _, par := range m.parameters {
+			log.Printf("%s=%s", par.Name(), par.Value())
+		}
 	}
 }
 

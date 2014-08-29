@@ -45,18 +45,16 @@ func NewModel(cali CodonSequences, t *tree.Tree, cf CodonFrequency, nclass int, 
 	t.NodeOrder()
 	m.ReorderAlignment()
 	if optBranch {
-		m.parameters = make(mcmc.Parameters, t.NNodes()-1)
-		for i, node := range t.Nodes() {
-			if i > 0 {
-				br := i - 1
-				par := mcmc.NewFloat64Parameter(&node.BranchLength, "br"+strconv.Itoa(node.Id))
-				par.OnChange = func() {
-					m.expBr[br] = false
-				}
-				par.PriorFunc = mcmc.GammaPrior(1, 2, false)
-				par.ProposalFunc = mcmc.NormalProposal(0.01)
-				m.parameters[br] = par
+		m.parameters = make(mcmc.Parameters, t.NNodes())
+		for _, node := range t.Nodes() {
+			nodeId := node.Id
+			par := mcmc.NewFloat64Parameter(&node.BranchLength, "br"+strconv.Itoa(node.Id))
+			par.OnChange = func() {
+				m.expBr[nodeId] = false
 			}
+			par.PriorFunc = mcmc.GammaPrior(1, 2, false)
+			par.ProposalFunc = mcmc.NormalProposal(0.01)
+			m.parameters[node.Id] = par
 
 		}
 	}
