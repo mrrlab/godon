@@ -7,13 +7,13 @@ import (
 
 type BranchSite struct {
 	*Model
-	q0, q1, q2     *EMatrix
-	kappa          float64
-	omega0, omega2 float64
-	p01sum, p0prop float64
-	parameters     mcmc.Parameters
+	q0, q1, q2             *EMatrix
+	kappa                  float64
+	omega0, omega2         float64
+	p01sum, p0prop         float64
+	parameters             mcmc.Parameters
 	q0done, q1done, q2done bool
-	propdone bool
+	propdone               bool
 }
 
 func NewBranchSite(cali CodonSequences, t *tree.Tree, cf CodonFrequency, optBranch bool) (m *BranchSite) {
@@ -170,7 +170,7 @@ func (m *BranchSite) UpdateMatrices() {
 		m.q2done = true
 	}
 
-		m.UpdateProportions()
+	m.UpdateProportions()
 }
 
 func (m *BranchSite) Likelihood() float64 {

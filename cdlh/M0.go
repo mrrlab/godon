@@ -10,6 +10,7 @@ type M0 struct {
 	q            *EMatrix
 	omega, kappa float64
 	parameters   mcmc.Parameters
+	qdone        bool
 }
 
 func NewM0(cali CodonSequences, t *tree.Tree, cf CodonFrequency, optBranch bool) (m *M0) {
@@ -21,8 +22,8 @@ func NewM0(cali CodonSequences, t *tree.Tree, cf CodonFrequency, optBranch bool)
 	m.parameters = m.Model.parameters
 	omega := mcmc.NewFloat64Parameter(&m.omega, "omega")
 	omega.OnChange = func() {
-		m.UpdateMatrix()
-		m.ExpBranches()
+		m.qdone = false
+		m.expAllBr = false
 	}
 	omega.PriorFunc = mcmc.GammaPrior(1, 2, false)
 	omega.ProposalFunc = mcmc.NormalProposal(0.01)
@@ -30,8 +31,8 @@ func NewM0(cali CodonSequences, t *tree.Tree, cf CodonFrequency, optBranch bool)
 
 	kappa := mcmc.NewFloat64Parameter(&m.kappa, "kappa")
 	kappa.OnChange = func() {
-		m.UpdateMatrix()
-		m.ExpBranches()
+		m.qdone = false
+		m.expAllBr = false
 	}
 	kappa.PriorFunc = mcmc.UniformPrior(0, 20, false, true)
 	kappa.ProposalFunc = mcmc.NormalProposal(0.01)
@@ -41,10 +42,7 @@ func NewM0(cali CodonSequences, t *tree.Tree, cf CodonFrequency, optBranch bool)
 	m.parameters = append(m.parameters, omega)
 	m.parameters = append(m.parameters, kappa)
 
-	m.kappa = 1
-	m.omega = 1
-	m.UpdateMatrix()
-	m.ExpBranches()
+	m.SetDefaults()
 	return
 }
 
@@ -55,8 +53,8 @@ func (m *M0) GetParameters() mcmc.Parameters {
 func (m *M0) SetParameters(kappa, omega float64) {
 	m.kappa = kappa
 	m.omega = omega
-	m.UpdateMatrix()
-	m.ExpBranches()
+	m.qdone = false
+	m.expAllBr = false
 }
 
 func (m *M0) SetDefaults() {
@@ -75,4 +73,11 @@ func (m *M0) UpdateMatrix() {
 		m.qs[0][i] = m.q
 		m.scale[i] = m.q.Scale
 	}
+}
+
+func (m *M0) Likelihood() float64 {
+	if !m.qdone {
+		m.UpdateMatrix()
+	}
+	return m.Model.Likelihood()
 }
