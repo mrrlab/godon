@@ -50,11 +50,14 @@ func (m *M0) GetModelParameters() mcmc.Parameters {
 	return mcmc.Parameters(m.parameters)
 }
 
+func (m *M0) GetParameters() (kappa, omega float64) {
+	return m.kappa, m.omega
+}
+
 func (m *M0) SetParameters(kappa, omega float64) {
 	m.kappa = kappa
 	m.omega = omega
 	m.qdone = false
-	m.expAllBr = false
 }
 
 func (m *M0) SetDefaults() {
@@ -73,6 +76,7 @@ func (m *M0) UpdateMatrix() {
 		m.qs[0][i] = m.q
 		m.scale[i] = m.q.Scale
 	}
+	m.expAllBr = false
 }
 
 func (m *M0) Likelihood() float64 {

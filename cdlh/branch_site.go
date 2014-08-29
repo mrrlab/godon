@@ -29,7 +29,6 @@ func NewBranchSite(cali CodonSequences, t *tree.Tree, cf CodonFrequency, optBran
 		m.q0done = false
 		m.q1done = false
 		m.q2done = false
-		m.expAllBr = false
 	}
 	kappa.PriorFunc = mcmc.UniformPrior(0, 20, false, true)
 	kappa.ProposalFunc = mcmc.NormalProposal(0.01)
@@ -40,7 +39,6 @@ func NewBranchSite(cali CodonSequences, t *tree.Tree, cf CodonFrequency, optBran
 	omega0 := mcmc.NewFloat64Parameter(&m.omega0, "omega0")
 	omega0.OnChange = func() {
 		m.q0done = false
-		m.expAllBr = false
 	}
 	omega0.PriorFunc = mcmc.GammaPrior(1, 2, false)
 	omega0.ProposalFunc = mcmc.NormalProposal(0.01)
@@ -50,7 +48,6 @@ func NewBranchSite(cali CodonSequences, t *tree.Tree, cf CodonFrequency, optBran
 	omega2 := mcmc.NewFloat64Parameter(&m.omega2, "omega2")
 	omega2.OnChange = func() {
 		m.q2done = false
-		m.expAllBr = false
 	}
 	omega2.PriorFunc = mcmc.GammaPrior(1, 2, false)
 	omega2.ProposalFunc = mcmc.NormalProposal(0.01)
@@ -90,6 +87,11 @@ func (m *BranchSite) SetParameters(kappa float64, omega0, omega2 float64, p0, p1
 	m.omega2 = omega2
 	m.p01sum = p0 + p1
 	m.p0prop = p0 / (p0 + p1)
+	m.q0done, m.q1done, m.q2done = false, false, false
+}
+
+func (m *BranchSite) GetParameters() (kappa float64, omega0, omega2 float64, p0, p1 float64) {
+	return m.kappa, m.omega0, m.omega2, m.p01sum * m.p0prop, m.p01sum * (1 - m.p0prop)
 }
 
 func (m *BranchSite) SetDefaults() {
@@ -171,6 +173,7 @@ func (m *BranchSite) UpdateMatrices() {
 	}
 
 	m.UpdateProportions()
+	m.expAllBr = false
 }
 
 func (m *BranchSite) Likelihood() float64 {
