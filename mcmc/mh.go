@@ -17,6 +17,7 @@ type Optimizable interface {
 type MH struct {
 	Optimizable
 	L          float64
+	MaxL       float64
 	i          int
 	RepPeriod  int
 	AccPeriod  int
@@ -43,6 +44,7 @@ func (m *MH) WatchSignals(sigs ...os.Signal) {
 
 func (m *MH) Run(iterations int) {
 	m.L = m.Likelihood()
+	m.MaxL = m.L
 	m.PrintHeader()
 	accepted := 0
 Iter:
@@ -66,6 +68,7 @@ Iter:
 			m.L = newL
 			par.Accept(m.i)
 			accepted++
+			m.MaxL = math.Max(m.L, m.MaxL)
 		} else {
 			par.Reject()
 		}
@@ -79,6 +82,7 @@ Iter:
 	}
 	if !m.Quiet {
 		log.Print("Finished MCMC")
+		log.Printf("Maximum likelihood: %v", m.MaxL)
 	}
 	m.PrintFinal()
 }
