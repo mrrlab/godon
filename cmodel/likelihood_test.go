@@ -2,56 +2,12 @@ package cmodel
 
 import (
 	"math"
-	"os"
-	"path"
 	"testing"
-
-	"bitbucket.com/Davydov/golh/bio"
-	"bitbucket.com/Davydov/golh/tree"
 )
-
-const (
-	data1 = "EMGT00050000008747.Drosophila.002"
-	data2 = "ENSGT00550000073950.Euteleostomi.07.001"
-	data3 = "EMGT00050000000025.Drosophila.001"
-
-	smallDiff = 1e-4
-)
-
-func GetTreeAlignment(data string) (t *tree.Tree, cali CodonSequences, err error) {
-	tf, err := os.Open(path.Join("testdata", data+".nwk"))
-	if err != nil {
-		return
-	}
-	defer tf.Close()
-
-	t, err = tree.ParseNewick(tf)
-	if err != nil {
-		return
-	}
-
-	af, err := os.Open(path.Join("testdata", data+".fst"))
-	if err != nil {
-		return
-	}
-	defer af.Close()
-
-	ali, err := bio.ParseFasta(af)
-	if err != nil {
-		return
-	}
-
-	cali, err = ToCodonSequences(ali)
-	if err != nil {
-		return
-	}
-
-	return
-}
 
 /*** Test M0 ***/
 func TestM0F0D1(tst *testing.T) {
-	t, cali, err := GetTreeAlignment(data1)
+	t, cali, err := getTreeAlignment(data1)
 	if err != nil {
 		tst.Error("Error: ", err)
 	}
@@ -70,7 +26,7 @@ func TestM0F0D1(tst *testing.T) {
 }
 
 func TestM0F3X4D1(tst *testing.T) {
-	t, cali, err := GetTreeAlignment(data1)
+	t, cali, err := getTreeAlignment(data1)
 	if err != nil {
 		tst.Error("Error: ", err)
 	}
@@ -89,7 +45,7 @@ func TestM0F3X4D1(tst *testing.T) {
 }
 
 func TestM0F0D2(tst *testing.T) {
-	t, cali, err := GetTreeAlignment(data2)
+	t, cali, err := getTreeAlignment(data2)
 	if err != nil {
 		tst.Error("Error: ", err)
 	}
@@ -108,7 +64,7 @@ func TestM0F0D2(tst *testing.T) {
 }
 
 func TestM0F3X4D2(tst *testing.T) {
-	t, cali, err := GetTreeAlignment(data2)
+	t, cali, err := getTreeAlignment(data2)
 	if err != nil {
 		tst.Error("Error: ", err)
 	}
@@ -130,7 +86,7 @@ func TestM0F0D3(tst *testing.T) {
 	if testing.Short() {
 		tst.Skip("skipping test in short mode.")
 	}
-	t, cali, err := GetTreeAlignment(data3)
+	t, cali, err := getTreeAlignment(data3)
 	if err != nil {
 		tst.Error("Error: ", err)
 	}
@@ -150,7 +106,7 @@ func TestM0F0D3(tst *testing.T) {
 
 /*** Test BranchSite ***/
 func TestBranchSiteF0D1(tst *testing.T) {
-	t, cali, err := GetTreeAlignment(data1)
+	t, cali, err := getTreeAlignment(data1)
 	if err != nil {
 		tst.Error("Error: ", err)
 	}
@@ -170,7 +126,7 @@ func TestBranchSiteF0D1(tst *testing.T) {
 }
 
 func TestBranchSiteF3X4D1(tst *testing.T) {
-	t, cali, err := GetTreeAlignment(data1)
+	t, cali, err := getTreeAlignment(data1)
 	if err != nil {
 		tst.Error("Error: ", err)
 	}
@@ -190,7 +146,7 @@ func TestBranchSiteF3X4D1(tst *testing.T) {
 }
 
 func TestBranchSiteF0D2(tst *testing.T) {
-	t, cali, err := GetTreeAlignment(data2)
+	t, cali, err := getTreeAlignment(data2)
 	if err != nil {
 		tst.Error("Error: ", err)
 	}
@@ -210,7 +166,7 @@ func TestBranchSiteF0D2(tst *testing.T) {
 }
 
 func TestBranchSiteF3X4D2(tst *testing.T) {
-	t, cali, err := GetTreeAlignment(data2)
+	t, cali, err := getTreeAlignment(data2)
 	if err != nil {
 		tst.Error("Error: ", err)
 	}
@@ -233,7 +189,7 @@ func TestBranchSiteF0D3(tst *testing.T) {
 	if testing.Short() {
 		tst.Skip("skipping test in short mode.")
 	}
-	t, cali, err := GetTreeAlignment(data3)
+	t, cali, err := getTreeAlignment(data3)
 	if err != nil {
 		tst.Error("Error: ", err)
 	}
@@ -256,7 +212,7 @@ func TestBranchSiteF3X4D3(tst *testing.T) {
 	if testing.Short() {
 		tst.Skip("skipping test in short mode.")
 	}
-	t, cali, err := GetTreeAlignment(data3)
+	t, cali, err := getTreeAlignment(data3)
 	if err != nil {
 		tst.Error("Error: ", err)
 	}
@@ -277,7 +233,7 @@ func TestBranchSiteF3X4D3(tst *testing.T) {
 
 /*** Benchmark M0 ***/
 func BenchmarkM0F0D1(b *testing.B) {
-	t, cali, err := GetTreeAlignment(data1)
+	t, cali, err := getTreeAlignment(data1)
 	if err != nil {
 		b.Error("Error: ", err)
 	}
@@ -295,7 +251,7 @@ func BenchmarkM0F0D1(b *testing.B) {
 }
 
 func BenchmarkM0F0D2(b *testing.B) {
-	t, cali, err := GetTreeAlignment(data2)
+	t, cali, err := getTreeAlignment(data2)
 	if err != nil {
 		b.Error("Error: ", err)
 	}
@@ -314,7 +270,7 @@ func BenchmarkM0F0D2(b *testing.B) {
 
 /*** Benchmark BranchSite ***/
 func BenchmarkBranchSiteF0D1(b *testing.B) {
-	t, cali, err := GetTreeAlignment(data1)
+	t, cali, err := getTreeAlignment(data1)
 	if err != nil {
 		b.Error("Error: ", err)
 	}
@@ -332,7 +288,7 @@ func BenchmarkBranchSiteF0D1(b *testing.B) {
 }
 
 func BenchmarkBranchSiteF0D2(b *testing.B) {
-	t, cali, err := GetTreeAlignment(data1)
+	t, cali, err := getTreeAlignment(data1)
 	if err != nil {
 		b.Error("Error: ", err)
 	}

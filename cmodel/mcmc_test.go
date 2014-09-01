@@ -1,4 +1,4 @@
-package main
+package cmodel
 
 import (
 	"testing"
@@ -7,7 +7,7 @@ import (
 )
 
 func BenchmarkMCMCD1(b *testing.B) {
-	t, cali, err := GetTreeAlignment(data1)
+	t, cali, err := getTreeAlignment(data1)
 	if err != nil {
 		b.Error("Error: ", err)
 	}
@@ -20,5 +20,6 @@ func BenchmarkMCMCD1(b *testing.B) {
 
 	m0.SetDefaults()
 	chain := mcmc.NewMH(m0)
+	chain.Quiet = true
 	chain.Run(100)
 }
