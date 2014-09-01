@@ -67,7 +67,7 @@ func (m *BranchSite) addParameters() {
 	}
 	omega2.PriorFunc = mcmc.GammaPrior(1, 2, false)
 	omega2.ProposalFunc = mcmc.NormalProposal(0.01)
-	omega2.Min = 0
+	omega2.Min = 1
 	m.parameters = append(m.parameters, omega2)
 
 	p01sum := mcmc.NewFloat64Parameter(&m.p01sum, "p01sum")
@@ -113,7 +113,7 @@ func (m *BranchSite) addAdaptiveParameters() {
 		m.q2done = false
 	}
 	omega2.PriorFunc = mcmc.GammaPrior(1, 2, false)
-	omega2.Min = 0
+	omega2.Min = 1
 	m.parameters = append(m.parameters, omega2)
 
 	p01sum := mcmc.NewAdaptiveParameter(&m.p01sum, "p01sum", as)
