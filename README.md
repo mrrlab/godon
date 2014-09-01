@@ -30,3 +30,5 @@
 * ``mh.go`` — simple metropolis hastings implementation
 * ``parameter.go`` — float64 parameter class
 * ``adaptive.go`` — adaptive parameter class
+* ``prior.go`` — prior functions
+* ``proposal.go`` — proposal functions
