@@ -1,3 +1,4 @@
+// MCMC sampler for branch-site and M0 models.
 package main
 
 import (
@@ -20,6 +21,7 @@ import (
 	"bitbucket.com/Davydov/golh/tree"
 )
 
+// Sum calculates matrix sum.
 func Sum(m *matrix.DenseMatrix) (s float64) {
 	for i := 0; i < m.Rows(); i++ {
 		for j := 0; j < m.Cols(); j++ {
@@ -29,6 +31,7 @@ func Sum(m *matrix.DenseMatrix) (s float64) {
 	return
 }
 
+// getCodons returns a channel with every codon (64).
 func getCodons() <-chan string {
 	ch := make(chan string)
 	var cn func(string)
