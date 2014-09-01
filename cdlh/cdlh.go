@@ -147,20 +147,28 @@ func PrintUnQ(Q *matrix.DenseMatrix) {
 
 func main() {
 	startTime := time.Now()
-	cFreqFileName := flag.String("cfreqfn", "", "codon frequencies file (overrides -cfreq)")
-	nCPU := flag.Int("cpu", 0, "number of cpu to use")
-	seed := flag.Int64("seed", -1, "random generator seed, default time based")
-	fgBranch := flag.Int("fg", -1, "fg branch number")
-	cpuProfile := flag.String("cpuprofile", "", "write cpu profile to file")
+
+	// model
 	model := flag.String("model", "M0", "todel type (M0 or BS for branch site)")
+	fgBranch := flag.Int("fg", -1, "fg branch number")
 	noOptBrLen := flag.Bool("nobrlen", false, "don't optimize branch lengths")
 	cFreq := flag.String("cfreq", "F3X4", "codon frequecny (F0 or F3X4)")
+	cFreqFileName := flag.String("cfreqfn", "", "codon frequencies file (overrides -cfreq)")
+
+	// mcmc parameters
 	iterations := flag.Int("iter", 10000, "number of iterations")
+	report := flag.Int("report", 10, "report every N iterations")
+	accept := flag.Int("accept", 200, "report acceptance rate every N iterations")
+
+	// adaptive mcmc parameters
+	adaptive := flag.Bool("adaptive", false, "use adaptive MCMC")
 	skip := flag.Int("skip", -1, "number of iterations to skip for adaptive mcmc (5% by default)")
 	maxAdapt := flag.Int("maxadapt", -1, "stop adapting after iteration (20% by default)")
-	report := flag.Int("report", 10, "report every N iterations")
-	accept := flag.Int("acceptance period", 200, "report acceptance rate every N iterations")
-	adaptive := flag.Bool("adaptive", false, "use adaptive MCMC")
+
+	// technical
+	nCPU := flag.Int("cpu", 0, "number of cpu to use")
+	seed := flag.Int64("seed", -1, "random generator seed, default time based")
+	cpuProfile := flag.String("cpuprofile", "", "write cpu profile to file")
 
 	flag.Parse()
 
