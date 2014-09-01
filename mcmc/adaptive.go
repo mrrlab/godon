@@ -9,7 +9,6 @@ import (
 
 type AdaptiveParameter struct {
 	*Float64Parameter
-	iter int
 	t    int
 	loct int
 
@@ -89,8 +88,7 @@ func (a *AdaptiveSettings) String() string {
 }
 
 func (a *AdaptiveParameter) Accept(iter int) {
-	if iter >= a.Skip {
-		a.iter = iter
+	if iter >= a.Skip && iter < a.MaxAdapt {
 		a.UpdateMu()
 	}
 }
@@ -122,7 +120,7 @@ func (a *AdaptiveParameter) CheckConvergenceMu() {
 	if len(a.vals) == a.WSize {
 		variance := a.cm2 / float64(len(a.vals)-1)
 		sd := math.Sqrt(variance)
-		if sd/a.cmean < a.Epsilon || a.t/a.K > a.MaxUpdate || a.iter >= a.MaxAdapt {
+		if sd/a.cmean < a.Epsilon || a.t/a.K > a.MaxUpdate {
 			a.converged = true
 			var reason string
 			switch {
@@ -131,7 +129,7 @@ func (a *AdaptiveParameter) CheckConvergenceMu() {
 			case a.t/a.K > a.MaxUpdate:
 				reason = "max update"
 			default:
-				reason = "max adapt"
+				reason = "unknown"
 			}
 			log.Printf("%s converged, reason: %s", a.Name(), reason)
 		}

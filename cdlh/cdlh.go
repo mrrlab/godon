@@ -295,7 +295,7 @@ func main() {
 		if *maxAdapt < 0 {
 			*maxAdapt = *iterations / 5
 		}
-		log.Printf("Setting adaptive parameters, skip=%d, maxAdapt=", *skip, *maxAdapt)
+		log.Printf("Setting adaptive parameters, skip=%v, maxAdapt=%v", *skip, *maxAdapt)
 		as.Skip = *skip
 		as.MaxAdapt = *maxAdapt
 		m.SetAdaptive(as)
