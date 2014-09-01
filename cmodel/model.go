@@ -1,3 +1,4 @@
+// Package cmodel provides codon evolution models.
 package cmodel
 
 import (
@@ -17,6 +18,7 @@ type TreeOptimizable interface {
 	SetAdaptive(*mcmc.AdaptiveSettings)
 }
 
+// Model stores tree and alignment. Matrices and site classes are stored and cached as well.
 type Model struct {
 	tree       *tree.Tree
 	cali       CodonSequences
@@ -34,6 +36,7 @@ type Model struct {
 	eQts [][][]float64
 }
 
+// Creates a new base Model.
 func NewModel(cali CodonSequences, t *tree.Tree, cf CodonFrequency, nclass int, optBranch bool) (m *Model) {
 	m = &Model{cali: cali,
 		tree:   t,
@@ -70,6 +73,7 @@ func NewModel(cali CodonSequences, t *tree.Tree, cf CodonFrequency, nclass int, 
 	return
 }
 
+// Make branch length parameters adaptive.
 func (m *Model) SetAdaptive() {
 	if len(m.parameters) > 0 {
 		m.parameters = make(mcmc.Parameters, 0, m.tree.NNodes())
@@ -90,6 +94,8 @@ func (m *Model) SetAdaptive() {
 	}
 }
 
+// Reorder codon alignment so order of nodes and sequences are the same.
+// This allows faster access to sequences by their index in the array.
 func (m *Model) ReorderAlignment() {
 	nm2id := make(map[string]int)
 	for i, s := range m.cali {
@@ -109,6 +115,7 @@ type expTask struct {
 	node  *tree.Node
 }
 
+// Exponentiate a signle branch. This uses eigen decomposed matrices.
 func (m *Model) ExpBranch(br int) {
 	node := m.tree.Nodes()[br]
 	cD := matrix.Zeros(nCodon, nCodon)
@@ -131,6 +138,7 @@ func (m *Model) ExpBranch(br int) {
 	m.expBr[br] = true
 }
 
+// Exponentiate all branches in the tree.
 func (m *Model) ExpBranches() {
 	if m.eQts == nil {
 		m.eQts = make([][][]float64, len(m.qs))
@@ -186,6 +194,7 @@ func (m *Model) ExpBranches() {
 	m.expAllBr = true
 }
 
+// Calculate tree likelihood.
 func (m *Model) Likelihood() (lnL float64) {
 	if !m.expAllBr {
 		m.ExpBranches()
@@ -233,6 +242,7 @@ func (m *Model) Likelihood() (lnL float64) {
 	return
 }
 
+// This calculates likelihood for given site class and position.
 func (m *Model) subL(class, pos int, plh [][]float64) (res float64) {
 	for i := 0; i < m.tree.NNodes(); i++ {
 		plh[i][0] = math.NaN()
