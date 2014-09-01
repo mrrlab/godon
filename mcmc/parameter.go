@@ -11,7 +11,7 @@ type Parameter interface {
 	Prior() float64
 	OldPrior() float64
 	Propose()
-	Accept()
+	Accept(int)
 	Reject()
 	Value() string
 }
@@ -102,7 +102,7 @@ func (p *Float64Parameter) Reject() {
 	}
 }
 
-func (p *Float64Parameter) Accept() {
+func (p *Float64Parameter) Accept(iter int) {
 }
 
 func (p *Float64Parameter) Value() string {

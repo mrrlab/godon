@@ -9,6 +9,7 @@ import (
 
 type AdaptiveParameter struct {
 	*Float64Parameter
+	iter int
 	t    int
 	loct int
 
@@ -85,8 +86,10 @@ func (a *AdaptiveSettings) String() string {
 		a.WSize, a.K, a.Skip, a.MaxUpdate, a.C, a.Nu, a.Lambda)
 }
 
-func (a *AdaptiveParameter) Accept() {
-	a.UpdateMu()
+func (a *AdaptiveParameter) Accept(iter int) {
+	if iter >= a.Skip {
+		a.UpdateMu()
+	}
 }
 
 func (a *AdaptiveParameter) RobbinsMonro() (gamma float64) {
@@ -137,31 +140,30 @@ func (a *AdaptiveParameter) UpdateMu() {
 	if math.IsNaN(a.mean) {
 		a.mean = *a.float64
 	}
-	if a.t >= a.Skip {
-		// Incremental batch mean and variance
-		// index in batch 0 .. a.K-1
-		bi := (a.t - a.Skip) % a.K
+	// Incremental batch mean and variance
+	// index in batch 0 .. a.K-1
+	bi := (a.t - a.Skip) % a.K
 
-		if (a.t-a.Skip) > 0 && bi == 0 {
-			gamma := a.RobbinsMonro()
+	if (a.t-a.Skip) > 0 && bi == 0 {
+		gamma := a.RobbinsMonro()
 
-			bvariance := a.bm2 / float64(a.K-1)
+		bvariance := a.bm2 / float64(a.K-1)
 
-			a.mean += gamma * (a.bmean - a.mean)
-			a.variance += gamma * (bvariance - a.variance)
+		a.mean += gamma * (a.bmean - a.mean)
+		a.variance += gamma * (bvariance - a.variance)
 
-			a.CheckConvergenceMu()
+		a.CheckConvergenceMu()
 
-			// reset batch mu
-			a.bmean = 0
-			a.bm2 = 0
-		}
-
-		delta := *a.float64 - a.bmean
-		a.bmean += delta / float64(bi+1)
-		a.bm2 += delta * (*a.float64 - a.bmean)
-		// there is no need to calculate this every iterations
+		// reset batch mu
+		a.bmean = 0
+		a.bm2 = 0
 	}
+
+	delta := *a.float64 - a.bmean
+	a.bmean += delta / float64(bi+1)
+	a.bm2 += delta * (*a.float64 - a.bmean)
+	// there is no need to calculate this every iterations
+
 	a.t++
 }
 

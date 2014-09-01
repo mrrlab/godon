@@ -64,7 +64,7 @@ Iter:
 		a := math.Exp(par.Prior() - par.OldPrior() + newL - m.L)
 		if a > 1 || rand.Float64() < a {
 			m.L = newL
-			par.Accept()
+			par.Accept(m.i)
 			accepted++
 		} else {
 			par.Reject()
