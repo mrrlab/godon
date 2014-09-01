@@ -1,4 +1,4 @@
-package main
+package cmodel
 
 import (
 	"bufio"
@@ -24,7 +24,27 @@ func init() {
 
 type CodonFrequency []float64
 
-func readFrequency(rd io.Reader) (CodonFrequency, error) {
+// getCodons returns a channel with every codon (64).
+func getCodons() <-chan string {
+	ch := make(chan string)
+	var cn func(string)
+	cn = func(prefix string) {
+		if len(prefix) == 3 {
+			ch <- prefix
+		} else {
+			for _, l := range alphabet {
+				cn(prefix + string(l))
+			}
+			if len(prefix) == 0 {
+				close(ch)
+			}
+		}
+	}
+	go cn("")
+	return ch
+}
+
+func ReadFrequency(rd io.Reader) (CodonFrequency, error) {
 	cf := make(CodonFrequency, nCodon)
 
 	scanner := bufio.NewScanner(rd)

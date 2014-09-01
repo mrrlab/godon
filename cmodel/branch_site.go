@@ -1,4 +1,4 @@
-package main
+package cmodel
 
 import (
 	"bitbucket.com/Davydov/golh/mcmc"
