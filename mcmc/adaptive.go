@@ -35,6 +35,7 @@ type AdaptiveSettings struct {
 	WSize     int
 	K         int
 	Skip      int
+	MaxAdapt  int
 	MaxUpdate int
 	Epsilon   float64
 	C         float64
@@ -52,6 +53,7 @@ func NewAdaptiveSettings() *AdaptiveSettings {
 		WSize:     10,
 		K:         20,
 		Skip:      500,
+		MaxAdapt:  2000,
 		MaxUpdate: 200,
 		Epsilon:   5e-1,
 		C:         1,
@@ -88,6 +90,7 @@ func (a *AdaptiveSettings) String() string {
 
 func (a *AdaptiveParameter) Accept(iter int) {
 	if iter >= a.Skip {
+		a.iter = iter
 		a.UpdateMu()
 	}
 }
@@ -119,14 +122,16 @@ func (a *AdaptiveParameter) CheckConvergenceMu() {
 	if len(a.vals) == a.WSize {
 		variance := a.cm2 / float64(len(a.vals)-1)
 		sd := math.Sqrt(variance)
-		if sd/a.cmean < a.Epsilon || a.t/a.K > a.MaxUpdate {
+		if sd/a.cmean < a.Epsilon || a.t/a.K > a.MaxUpdate || a.iter >= a.MaxAdapt {
 			a.converged = true
 			var reason string
-			if sd/a.cmean < a.Epsilon {
+			switch {
+			case sd/a.cmean < a.Epsilon:
 				reason = "SD/mean"
-				log.Print("(reason: SD/mean)")
-			} else {
-				reason = "max_update"
+			case a.t/a.K > a.MaxUpdate:
+				reason = "max update"
+			default:
+				reason = "max adapt"
 			}
 			log.Printf("%s converged, reason: %s", a.Name(), reason)
 		}

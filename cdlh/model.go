@@ -14,7 +14,7 @@ import (
 
 type TreeOptimizable interface {
 	mcmc.Optimizable
-	SetAdaptive()
+	SetAdaptive(*mcmc.AdaptiveSettings)
 }
 
 type Model struct {

@@ -33,10 +33,10 @@ func NewBranchSite(cali CodonSequences, t *tree.Tree, cf CodonFrequency, optBran
 
 }
 
-func (m *BranchSite) SetAdaptive() {
+func (m *BranchSite) SetAdaptive(as *mcmc.AdaptiveSettings) {
 	m.Model.SetAdaptive()
 	m.parameters = m.Model.parameters
-	m.addAdaptiveParameters()
+	m.addAdaptiveParameters(as)
 }
 
 func (m *BranchSite) addParameters() {
@@ -87,8 +87,7 @@ func (m *BranchSite) addParameters() {
 	m.parameters = append(m.parameters, p0prop)
 }
 
-func (m *BranchSite) addAdaptiveParameters() {
-	as := mcmc.NewAdaptiveSettings()
+func (m *BranchSite) addAdaptiveParameters(as *mcmc.AdaptiveSettings) {
 	kappa := mcmc.NewAdaptiveParameter(&m.kappa, "kappa", as)
 	kappa.OnChange = func() {
 		m.q0done = false
