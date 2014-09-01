@@ -7,8 +7,10 @@
 * ``bio`` reads fasta and translates genetic code
 * ``matrix`` is a wrapper for some GNU Scientific Library functions (not used currently)
 * ``mcmc`` is the MCMC implementation
+* ``tree`` is tree manipulation library
 * ``tlh`` is a simple tree likelihood calculation (JC69)
 * ``cdlh`` is MCMC sampler for branchsite model
+* ``norm`` sampler for multiple normal distribution model
 
 ## cdlh ##
 * ``M0.go`` — M0 model
@@ -18,13 +20,13 @@
 * ``codon_sequences.go`` — codon alignment class
 * ``ematrix.go`` — matrix class which remembers its eigen decomposition
 * ``model.go`` — tree + alignment model base class
-* ``tools.go`` — misc tools
 
 ### cdlh tests ###
 * ``likelihood_test.go`` — likelihood test (compare with codeml)
 * ``mcmc_test.go`` — MCMC benchmark
-* ``tools_test.go`` — test for tools
+* ``mcmcpar_test.go`` — test that likelihood is consistent during chain evaluation
 
 ## mcmc ##
 * ``mh.go`` — simple metropolis hastings implementation
-* ``adaptive.go`` — adaptive MCMC implementation
+* ``parameter.go`` — float64 parameter class
+* ``adaptive.go`` — adaptive parameter class
