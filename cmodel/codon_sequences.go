@@ -78,3 +78,20 @@ func (seqs CodonSequences) NFixed() (f int) {
 	}
 	return
 }
+
+func (seqs CodonSequences) Fixed() (fixed []bool) {
+	fixed = make([]bool, len(seqs[0].Sequence))
+	for pos, _ := range seqs[0].Sequence {
+		isFixed := true
+		for i := 1; i < len(seqs); i++ {
+			if seqs[i].Sequence[pos] != seqs[0].Sequence[pos] {
+				isFixed = false
+				break
+			}
+		}
+		if isFixed {
+			fixed[pos] = true
+		}
+	}
+	return
+}

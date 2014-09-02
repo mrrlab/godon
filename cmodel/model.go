@@ -22,6 +22,7 @@ type TreeOptimizable interface {
 type Model struct {
 	tree       *tree.Tree
 	cali       CodonSequences
+	fixed      []bool
 	cf         CodonFrequency
 	qs         [][]*EMatrix
 	scale      []float64
@@ -39,6 +40,7 @@ type Model struct {
 // Creates a new base Model.
 func NewModel(cali CodonSequences, t *tree.Tree, cf CodonFrequency, nclass int, optBranch bool) (m *Model) {
 	m = &Model{cali: cali,
+		fixed:  cali.Fixed(),
 		tree:   t,
 		cf:     cf,
 		qs:     make([][]*EMatrix, nclass),
@@ -223,7 +225,11 @@ func (m *Model) Likelihood() (lnL float64) {
 			for pos := range tasks {
 				res := 0.0
 				for class, p := range m.prop {
-					res += m.subL(class, pos, plh) * p
+					if m.fixed[pos] {
+						res += m.fixedSubL(class, pos, plh) * p
+					} else {
+						res += m.subL(class, pos, plh) * p
+					}
 				}
 				results <- math.Log(res)
 			}
@@ -242,7 +248,7 @@ func (m *Model) Likelihood() (lnL float64) {
 	return
 }
 
-// This calculates likelihood for given site class and position.
+// subL calculates likelihood for given site class and position.
 func (m *Model) subL(class, pos int, plh [][]float64) (res float64) {
 	for i := 0; i < m.tree.NNodes(); i++ {
 		plh[i][0] = math.NaN()
@@ -280,6 +286,49 @@ func (m *Model) subL(class, pos int, plh [][]float64) (res float64) {
 			for l := 0; l < nCodon; l++ {
 				res += m.cf[l] * plh[node.Id][l]
 			}
+			break
+		}
+
+	}
+	return
+}
+
+// fixedSubL calculates likelihood for given site class and position
+// if the site is fixed.
+func (m *Model) fixedSubL(class, pos int, plh [][]float64) (res float64) {
+	for i := 0; i < m.tree.NNodes(); i++ {
+		plh[i][0] = math.NaN()
+	}
+
+	l := int(m.cali[0].Sequence[pos])
+
+	for node := range m.tree.Terminals() {
+		plh[node.Id][0] = 1
+		plh[node.Id][1] = 0
+	}
+
+	for _, node := range m.tree.NodeOrder() {
+		plh[node.Id][0] = 1
+		plh[node.Id][1] = 1
+		for _, child := range node.ChildNodes() {
+			p00 := m.eQts[class][child.Id][l*nCodon+l]
+			p01 := 1 - p00
+			p10 := 0.0
+			for l1 := 0; l1 < nCodon; l1++ {
+				if l != l1 {
+					p10 += m.cf[l1] * m.eQts[class][child.Id][l1*nCodon+l]
+				}
+			}
+			p10 /= (1 - m.cf[l])
+			p11 := 1 - p10
+
+			cplh := plh[child.Id]
+			plh[node.Id][0] *= p00*cplh[0] + p01*cplh[1]
+			plh[node.Id][1] *= p10*cplh[0] + p11*cplh[1]
+		}
+
+		if node.IsRoot() {
+			res = m.cf[l]*plh[node.Id][0] + (1-m.cf[l])*plh[node.Id][1]
 			break
 		}
 
