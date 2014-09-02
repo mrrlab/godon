@@ -22,7 +22,8 @@ type TreeOptimizable interface {
 type Model struct {
 	tree       *tree.Tree
 	cali       CodonSequences
-	fixed      []bool
+	lettersF   [][]int
+	lettersA   [][]int
 	cf         CodonFrequency
 	qs         [][]*EMatrix
 	scale      []float64
@@ -39,15 +40,17 @@ type Model struct {
 
 // Creates a new base Model.
 func NewModel(cali CodonSequences, t *tree.Tree, cf CodonFrequency, nclass int, optBranch bool) (m *Model) {
+	f, a := cali.Letters()
 	m = &Model{cali: cali,
-		fixed:  cali.Fixed(),
-		tree:   t,
-		cf:     cf,
-		qs:     make([][]*EMatrix, nclass),
-		scale:  make([]float64, t.NNodes()),
-		expBr:  make([]bool, t.NNodes()),
-		prop:   make([]float64, nclass),
-		nclass: nclass,
+		lettersF: f,
+		lettersA: a,
+		tree:     t,
+		cf:       cf,
+		qs:       make([][]*EMatrix, nclass),
+		scale:    make([]float64, t.NNodes()),
+		expBr:    make([]bool, t.NNodes()),
+		prop:     make([]float64, nclass),
+		nclass:   nclass,
 	}
 	for i := 0; i < nclass; i++ {
 		m.qs[i] = make([]*EMatrix, t.NNodes())
@@ -220,16 +223,12 @@ func (m *Model) Likelihood() (lnL float64) {
 		go func() {
 			plh := make([][]float64, m.tree.NNodes())
 			for i := 0; i < m.tree.NNodes(); i++ {
-				plh[i] = make([]float64, nCodon)
+				plh[i] = make([]float64, nCodon+1)
 			}
 			for pos := range tasks {
 				res := 0.0
 				for class, p := range m.prop {
-					if m.fixed[pos] {
-						res += m.fixedSubL(class, pos, plh) * p
-					} else {
-						res += m.subL(class, pos, plh) * p
-					}
+					res += m.subL(class, pos, plh) * p
 				}
 				results <- math.Log(res)
 			}
@@ -250,13 +249,16 @@ func (m *Model) Likelihood() (lnL float64) {
 
 // subL calculates likelihood for given site class and position.
 func (m *Model) subL(class, pos int, plh [][]float64) (res float64) {
-	for i := 0; i < m.tree.NNodes(); i++ {
-		plh[i][0] = math.NaN()
+	lettersF := m.lettersF[pos]
+	lettersA := m.lettersA[pos]
+	fabs := 0.0
+	for _, l := range lettersA {
+		fabs += m.cf[l]
 	}
 
 	for node := range m.tree.Terminals() {
-		for l := byte(0); l < byte(nCodon); l++ {
-			if l == m.cali[node.LeafId].Sequence[pos] {
+		for _, l := range lettersF {
+			if l == int(m.cali[node.LeafId].Sequence[pos]) {
 				plh[node.Id][l] = 1
 			} else {
 				plh[node.Id][l] = 0
@@ -265,17 +267,45 @@ func (m *Model) subL(class, pos int, plh [][]float64) (res float64) {
 	}
 
 	for _, node := range m.tree.NodeOrder() {
-		for l1 := 0; l1 < nCodon; l1++ {
+		for _, l1 := range lettersF {
 			l := 1.0
 			for _, child := range node.ChildNodes() {
-				// get the row
-				q := m.eQts[class][child.Id][l1*nCodon:]
 				// get child partial likelhiood
 				cplh := plh[child.Id]
 				s := 0.0
-				for l2 := 0; l2 < nCodon; l2++ {
-					//s += q.Get(l1, l2) * plh[child.Id][l2]
-					s += q[l2] * cplh[l2]
+				if l1 != nCodon {
+					// get the row
+					q := m.eQts[class][child.Id][l1*nCodon:]
+
+					for _, l2 := range lettersF {
+						//s += q.Get(l1, l2) * plh[child.Id][l2]
+						if l2 != nCodon {
+							s += q[l2] * cplh[l2]
+						} else {
+							pia := 0.0
+							for _, l2 := range lettersA {
+								pia += q[l2]
+							}
+							s += pia * cplh[l2]
+						}
+					}
+				} else {
+
+					paa := 1.0
+					for _, l2 := range lettersF {
+						pai := 0.0
+						if l2 != nCodon {
+							for _, l1 := range lettersA {
+								pai += m.cf[l1] * m.eQts[class][child.Id][l1*nCodon+l2]
+							}
+							pai /= fabs
+
+							paa -= pai
+							s += pai * cplh[l2]
+						} else {
+							s += paa * cplh[l2]
+						}
+					}
 				}
 				l *= s
 			}
@@ -283,8 +313,13 @@ func (m *Model) subL(class, pos int, plh [][]float64) (res float64) {
 		}
 
 		if node.IsRoot() {
-			for l := 0; l < nCodon; l++ {
-				res += m.cf[l] * plh[node.Id][l]
+			for _, l := range lettersF {
+				if l != nCodon {
+
+					res += m.cf[l] * plh[node.Id][l]
+				} else {
+					res += fabs * plh[node.Id][l]
+				}
 			}
 			break
 		}

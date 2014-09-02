@@ -95,3 +95,29 @@ func (seqs CodonSequences) Fixed() (fixed []bool) {
 	}
 	return
 }
+
+func (seqs CodonSequences) Letters() (found [][]int, absent [][]int) {
+	found = make([][]int, len(seqs[0].Sequence))
+	absent = make([][]int, len(seqs[0].Sequence))
+	for pos, _ := range seqs[0].Sequence {
+		found[pos] = make([]int, 0, nCodon)
+		absent[pos] = make([]int, 0, nCodon)
+		pf := make(map[int]bool, nCodon)
+		for i := 0; i < len(seqs); i++ {
+			pf[int(seqs[i].Sequence[pos])] = true
+		}
+		for l := 0; l < nCodon; l++ {
+			if pf[l] {
+				found[pos] = append(found[pos], l)
+			} else {
+				absent[pos] = append(absent[pos], l)
+				//found[pos] = append(found[pos], l)
+			}
+		}
+
+		if len(found[pos]) < nCodon {
+			found[pos] = append(found[pos], nCodon)
+		}
+	}
+	return
+}
