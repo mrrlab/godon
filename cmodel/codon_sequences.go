@@ -64,3 +64,17 @@ func ToCodonSequences(seqs bio.Sequences) (cs CodonSequences, err error) {
 	}
 	return
 }
+
+// NFixed calculates number of constant positions in the alignment.
+func (seqs CodonSequences) NFixed() (f int) {
+	f = len(seqs[0].Sequence)
+	for pos, _ := range seqs[0].Sequence {
+		for i := 1; i < len(seqs); i++ {
+			if seqs[i].Sequence[pos] != seqs[0].Sequence[pos] {
+				f--
+				break
+			}
+		}
+	}
+	return
+}

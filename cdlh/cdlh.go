@@ -88,6 +88,8 @@ func main() {
 		log.Fatal(err)
 	}
 
+	log.Printf("Read alignment of %d codons, %d fixed positions", len(cali[0].Sequence), cali.NFixed())
+
 	var cf cmodel.CodonFrequency
 
 	if *cFreqFileName != "" {
