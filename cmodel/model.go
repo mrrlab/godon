@@ -228,7 +228,11 @@ func (m *Model) Likelihood() (lnL float64) {
 			for pos := range tasks {
 				res := 0.0
 				for class, p := range m.prop {
-					res += m.subL(class, pos, plh) * p
+					if len(m.lettersF[pos]) == 1 {
+						res += m.fixedSubL(class, pos, plh) * p
+					} else {
+						res += m.subL(class, pos, plh) * p
+					}
 				}
 				results <- math.Log(res)
 			}
