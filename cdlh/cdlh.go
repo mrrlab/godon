@@ -38,6 +38,10 @@ func main() {
 	skip := flag.Int("skip", -1, "number of iterations to skip for adaptive mcmc (5% by default)")
 	maxAdapt := flag.Int("maxadapt", -1, "stop adapting after iteration (20% by default)")
 
+	// optimizations
+	optFixed := flag.Bool("fixed", false, "optimize fixed position likelihood by limiting markov chain to observed states")
+	optAll := flag.Bool("observed", false, "optimize likelihood computation by limiting markov chain to observed states")
+
 	// technical
 	nCPU := flag.Int("cpu", 0, "number of cpu to use")
 	seed := flag.Int64("seed", -1, "random generator seed, default time based")
@@ -160,6 +164,9 @@ func main() {
 	default:
 		log.Fatal("Unknown model specification")
 	}
+
+	log.Printf("Optimize likelihood computations. Fixed positions: %t, all positions: %t.", *optFixed, *optAll)
+	m.SetOptimizations(*optFixed, *optAll)
 
 	if *adaptive {
 		as := mcmc.NewAdaptiveSettings()

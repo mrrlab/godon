@@ -16,6 +16,9 @@ import (
 type TreeOptimizable interface {
 	mcmc.Optimizable
 	SetAdaptive(*mcmc.AdaptiveSettings)
+	// It's a bit confusing name. Here we
+	// enable program optimizations.
+	SetOptimizations(fixed, all bool)
 }
 
 // Model stores tree and alignment. Matrices and site classes are stored and cached as well.
@@ -30,6 +33,10 @@ type Model struct {
 	prop       []float64
 	nclass     int
 	parameters mcmc.Parameters
+
+	// optimizations
+	optFixed bool
+	optAll   bool
 
 	// remember computations wee need to perform
 	expAllBr bool
@@ -97,6 +104,11 @@ func (m *Model) SetAdaptive() {
 			m.parameters = append(m.parameters, par)
 		}
 	}
+}
+
+func (m *Model) SetOptimizations(fixed, all bool) {
+	m.optFixed = fixed
+	m.optAll = all
 }
 
 // Reorder codon alignment so order of nodes and sequences are the same.
@@ -228,10 +240,14 @@ func (m *Model) Likelihood() (lnL float64) {
 			for pos := range tasks {
 				res := 0.0
 				for class, p := range m.prop {
-					if len(m.lettersF[pos]) == 1 {
+					if m.optFixed && len(m.lettersF[pos]) == 2 {
 						res += m.fixedSubL(class, pos, plh) * p
 					} else {
-						res += m.fullSubL(class, pos, plh) * p
+						if m.optAll {
+							res += m.observedSubL(class, pos, plh) * p
+						} else {
+							res += m.fullSubL(class, pos, plh) * p
+						}
 					}
 				}
 				results <- math.Log(res)
