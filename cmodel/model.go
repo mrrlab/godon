@@ -231,7 +231,7 @@ func (m *Model) Likelihood() (lnL float64) {
 					if len(m.lettersF[pos]) == 1 {
 						res += m.fixedSubL(class, pos, plh) * p
 					} else {
-						res += m.subL(class, pos, plh) * p
+						res += m.fullSubL(class, pos, plh) * p
 					}
 				}
 				results <- math.Log(res)
@@ -251,8 +251,54 @@ func (m *Model) Likelihood() (lnL float64) {
 	return
 }
 
-// subL calculates likelihood for given site class and position.
-func (m *Model) subL(class, pos int, plh [][]float64) (res float64) {
+// fullSubL calculates likelihood for given site class and position.
+func (m *Model) fullSubL(class, pos int, plh [][]float64) (res float64) {
+	for i := 0; i < m.tree.NNodes(); i++ {
+		plh[i][0] = math.NaN()
+	}
+
+	for node := range m.tree.Terminals() {
+		for l := byte(0); l < byte(nCodon); l++ {
+			if l == m.cali[node.LeafId].Sequence[pos] {
+				plh[node.Id][l] = 1
+			} else {
+				plh[node.Id][l] = 0
+			}
+		}
+	}
+
+	for _, node := range m.tree.NodeOrder() {
+		for l1 := 0; l1 < nCodon; l1++ {
+			l := 1.0
+			for _, child := range node.ChildNodes() {
+				// get the row
+				q := m.eQts[class][child.Id][l1*nCodon:]
+				// get child partial likelhiood
+				cplh := plh[child.Id]
+				s := 0.0
+				for l2 := 0; l2 < nCodon; l2++ {
+					//s += q.Get(l1, l2) * plh[child.Id][l2]
+					s += q[l2] * cplh[l2]
+				}
+				l *= s
+			}
+			plh[node.Id][l1] = l
+		}
+
+		if node.IsRoot() {
+			for l := 0; l < nCodon; l++ {
+				res += m.cf[l] * plh[node.Id][l]
+			}
+			break
+		}
+
+	}
+	return
+}
+
+// observedSubL calculates likelihood for given site class and position
+// taking into account only visible states.
+func (m *Model) observedSubL(class, pos int, plh [][]float64) (res float64) {
 	lettersF := m.lettersF[pos]
 	lettersA := m.lettersA[pos]
 	fabs := 0.0
