@@ -109,7 +109,7 @@ func (m *MH) PrintLine() {
 func (m *MH) PrintFinal() {
 	if !m.Quiet {
 		for _, par := range m.parameters {
-			log.Printf("%s=%s", par.Name(), par.Value())
+			log.Printf("%s=%v", par.Name(), par.GetValue())
 		}
 	}
 }
@@ -129,7 +129,7 @@ func (m *MH) ParameterString() (s string) {
 		if i != 0 {
 			s += "\t"
 		}
-		s += par.Value()
+		s += par.GetValue().String()
 	}
 	return
 }

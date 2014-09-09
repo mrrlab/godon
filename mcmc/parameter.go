@@ -1,6 +1,7 @@
 package mcmc
 
 import (
+	"fmt"
 	"math"
 	"strconv"
 )
@@ -12,12 +13,19 @@ type Parameter interface {
 	Propose()
 	Accept(int)
 	Reject()
-	Value() string
+	GetValue() fmt.Stringer
+	SetValue(interface{})
 }
 
 type Parameters []Parameter
 
 type Float64Parameters []*Float64Parameter
+
+type Float64 float64
+
+func (f *Float64) String() string {
+	return strconv.FormatFloat(*(*float64)(f), 'f', 6, 64)
+}
 
 func (p Float64Parameters) Get(n string) float64 {
 	for _, par := range p {
@@ -104,6 +112,10 @@ func (p *Float64Parameter) Reject() {
 func (p *Float64Parameter) Accept(iter int) {
 }
 
-func (p *Float64Parameter) Value() string {
-	return strconv.FormatFloat(*p.float64, 'f', 6, 64)
+func (p *Float64Parameter) GetValue() fmt.Stringer {
+	return (*Float64)(p.float64)
+}
+
+func (p *Float64Parameter) SetValue(x interface{}) {
+	*p.float64 = x.(float64)
 }
