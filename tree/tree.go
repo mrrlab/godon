@@ -26,6 +26,13 @@ type Tree struct {
 	nodeOrder []*Node
 }
 
+func (tree *Tree) ClearCache() {
+	tree.nNodes = 0
+	// can we use something like append here? do we need to bother?
+	tree.nodes = nil
+	tree.nodeOrder = nil
+}
+
 func (tree *Tree) NNodes() int {
 	if tree.nNodes == 0 {
 		tree.nNodes = tree.NSubNodes()
@@ -85,6 +92,43 @@ func (tree *Tree) Walker(filter func(*Node) bool) <-chan *Node {
 	return ch
 }
 
+// Copy creates independent copy of the tree.
+func (tree *Tree) Copy() (newTree *Tree) {
+	nNodes := tree.NNodes()
+	newTree = &Tree{
+		nNodes:    nNodes,
+		nodes:     make([]*Node, nNodes),
+		nodeOrder: make([]*Node, len(tree.NodeOrder())),
+	}
+
+	// Create node list.
+	for i, node := range tree.Nodes() {
+		if i != node.Id {
+			panic("node id mismatch")
+		}
+		newTree.nodes[i] = node.Copy()
+	}
+
+	// Rewire node/parent connections.
+	for i, node := range tree.Nodes() {
+		newNode := newTree.nodes[i]
+		for _, child := range node.childNodes {
+			newChild := newTree.nodes[child.Id]
+			newNode.AddChild(newChild)
+		}
+	}
+
+	// Set nodeOrder
+	for i, node := range tree.NodeOrder() {
+		newTree.nodeOrder[i] = newTree.nodes[node.Id]
+	}
+
+	// Set root node.
+	newTree.Node = newTree.nodes[0]
+
+	return
+}
+
 func (tree *Tree) NodeOrder() []*Node {
 	if tree.nodeOrder == nil {
 		tree.nodeOrder = make([]*Node, 0, tree.NNodes())
@@ -134,6 +178,18 @@ type Node struct {
 func NewNode(parent *Node, nodeId int) (node *Node) {
 	node = &Node{Parent: parent, Id: nodeId}
 	return
+}
+
+// Copy creates copy of node with empty parent and children.
+func (node *Node) Copy() *Node {
+	return &Node{
+		Name:         node.Name,
+		BranchLength: node.BranchLength,
+		childNodes:   make([]*Node, 0, len(node.childNodes)),
+		Id:           node.Id,
+		LeafId:       node.LeafId,
+		Class:        node.Class,
+	}
 }
 
 func (node *Node) AddChild(subNode *Node) {
