@@ -7,6 +7,11 @@ import (
 	"os/signal"
 )
 
+type Optimizable interface {
+	GetModelParameters() Parameters
+	Likelihood() float64
+}
+
 type Optimizer interface {
 	SetOptimizable(Optimizable)
 	WatchSignals(...os.Signal)

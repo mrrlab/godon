@@ -6,11 +6,6 @@ import (
 	"math/rand"
 )
 
-type Optimizable interface {
-	GetModelParameters() Parameters
-	Likelihood() float64
-}
-
 type MH struct {
 	*BaseOptimizer
 	AccPeriod int
