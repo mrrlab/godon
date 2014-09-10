@@ -1,7 +1,7 @@
 package cmodel
 
 import (
-	"bitbucket.com/Davydov/golh/mcmc"
+	"bitbucket.com/Davydov/golh/optimize"
 	"bitbucket.com/Davydov/golh/tree"
 )
 
@@ -9,7 +9,7 @@ type M0 struct {
 	*Model
 	q            *EMatrix
 	omega, kappa float64
-	parameters   mcmc.Parameters
+	parameters   optimize.Parameters
 	qdone        bool
 }
 
@@ -26,29 +26,29 @@ func NewM0(cali CodonSequences, t *tree.Tree, cf CodonFrequency, optBranch bool)
 	return
 }
 
-func (m *M0) SetAdaptive(as *mcmc.AdaptiveSettings) {
+func (m *M0) SetAdaptive(as *optimize.AdaptiveSettings) {
 	m.Model.SetAdaptive()
 	m.parameters = m.Model.parameters
 	m.addAdaptiveParameters(as)
 }
 
 func (m *M0) addParameters() {
-	omega := mcmc.NewFloat64Parameter(&m.omega, "omega")
+	omega := optimize.NewFloat64Parameter(&m.omega, "omega")
 	omega.OnChange = func() {
 		m.qdone = false
 		m.expAllBr = false
 	}
-	omega.PriorFunc = mcmc.GammaPrior(1, 2, false)
-	omega.ProposalFunc = mcmc.NormalProposal(0.01)
+	omega.PriorFunc = optimize.GammaPrior(1, 2, false)
+	omega.ProposalFunc = optimize.NormalProposal(0.01)
 	omega.Min = 0
 
-	kappa := mcmc.NewFloat64Parameter(&m.kappa, "kappa")
+	kappa := optimize.NewFloat64Parameter(&m.kappa, "kappa")
 	kappa.OnChange = func() {
 		m.qdone = false
 		m.expAllBr = false
 	}
-	kappa.PriorFunc = mcmc.UniformPrior(0, 20, false, true)
-	kappa.ProposalFunc = mcmc.NormalProposal(0.01)
+	kappa.PriorFunc = optimize.UniformPrior(0, 20, false, true)
+	kappa.ProposalFunc = optimize.NormalProposal(0.01)
 	kappa.Min = 0
 	kappa.Max = 20
 
@@ -56,22 +56,22 @@ func (m *M0) addParameters() {
 	m.parameters = append(m.parameters, kappa)
 }
 
-func (m *M0) addAdaptiveParameters(as *mcmc.AdaptiveSettings) {
-	omega := mcmc.NewAdaptiveParameter(&m.omega, "omega", as)
+func (m *M0) addAdaptiveParameters(as *optimize.AdaptiveSettings) {
+	omega := optimize.NewAdaptiveParameter(&m.omega, "omega", as)
 	omega.OnChange = func() {
 		m.qdone = false
 		m.expAllBr = false
 	}
-	omega.PriorFunc = mcmc.GammaPrior(1, 2, false)
+	omega.PriorFunc = optimize.GammaPrior(1, 2, false)
 	omega.Min = 0
 
-	kappa := mcmc.NewAdaptiveParameter(&m.kappa, "kappa", as)
+	kappa := optimize.NewAdaptiveParameter(&m.kappa, "kappa", as)
 	kappa.OnChange = func() {
 		m.qdone = false
 		m.expAllBr = false
 	}
-	kappa.PriorFunc = mcmc.UniformPrior(0, 20, false, true)
-	kappa.ProposalFunc = mcmc.NormalProposal(0.01)
+	kappa.PriorFunc = optimize.UniformPrior(0, 20, false, true)
+	kappa.ProposalFunc = optimize.NormalProposal(0.01)
 	kappa.Min = 0
 	kappa.Max = 20
 
@@ -79,8 +79,8 @@ func (m *M0) addAdaptiveParameters(as *mcmc.AdaptiveSettings) {
 	m.parameters = append(m.parameters, kappa)
 }
 
-func (m *M0) GetModelParameters() mcmc.Parameters {
-	return mcmc.Parameters(m.parameters)
+func (m *M0) GetModelParameters() optimize.Parameters {
+	return optimize.Parameters(m.parameters)
 }
 
 func (m *M0) GetParameters() (kappa, omega float64) {

@@ -1,4 +1,4 @@
-package mcmc
+package optimize
 
 import (
 	"math"

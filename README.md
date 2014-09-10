@@ -6,7 +6,7 @@
 ## repository contents ##
 * ``bio`` reads fasta and translates genetic code
 * ``matrix`` is a wrapper for some GNU Scientific Library functions (not used currently)
-* ``mcmc`` is the MCMC implementation
+* ``optimize`` is the MCMC & downhill simplex implementation
 * ``tree`` is tree manipulation library
 * ``tlh`` is a simple tree likelihood calculation (JC69)
 * ``cdlh`` is MCMC sampler for branchsite model
@@ -26,7 +26,7 @@
 * ``mcmc_test.go`` — MCMC benchmark
 * ``mcmcpar_test.go`` — test that likelihood is consistent during chain evaluation
 
-## mcmc ##
+## optimize ##
 * ``mh.go`` — simple metropolis hastings implementation
 * ``parameter.go`` — float64 parameter class
 * ``adaptive.go`` — adaptive parameter class

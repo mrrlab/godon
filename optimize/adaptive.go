@@ -1,6 +1,6 @@
 // This code implements ideas and pseudocode presented by Xavier Meyer <Xavier.Meyer.2 at unil.ch>.
 
-package mcmc
+package optimize
 
 import (
 	"fmt"

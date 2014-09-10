@@ -14,7 +14,7 @@ import (
 
 	"bitbucket.com/Davydov/golh/bio"
 	"bitbucket.com/Davydov/golh/cmodel"
-	"bitbucket.com/Davydov/golh/mcmc"
+	"bitbucket.com/Davydov/golh/optimize"
 	"bitbucket.com/Davydov/golh/tree"
 )
 
@@ -169,7 +169,7 @@ func main() {
 	m.SetOptimizations(*optFixed, *optAll)
 
 	if *adaptive {
-		as := mcmc.NewAdaptiveSettings()
+		as := optimize.NewAdaptiveSettings()
 		if *skip < 0 {
 			*skip = *iterations / 20
 		}
@@ -184,7 +184,7 @@ func main() {
 
 	log.Printf("Model has %d parameters.", len(m.GetModelParameters()))
 
-	chain := mcmc.NewMH(m)
+	chain := optimize.NewMH(m)
 	chain.RepPeriod = *report
 	chain.AccPeriod = *accept
 	chain.WatchSignals(os.Interrupt, syscall.SIGUSR2)

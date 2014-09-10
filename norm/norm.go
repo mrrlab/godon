@@ -10,7 +10,7 @@ import (
 	"syscall"
 	"time"
 
-	"bitbucket.com/Davydov/golh/mcmc"
+	"bitbucket.com/Davydov/golh/optimize"
 )
 
 const (
@@ -25,7 +25,7 @@ type MNormModel struct {
 	mean       []float64
 	sd         []float64
 	n          int
-	parameters mcmc.Parameters
+	parameters optimize.Parameters
 }
 
 func square(x float64) float64 {
@@ -35,7 +35,7 @@ func square(x float64) float64 {
 func NewMNormModel(data [][]float64, adaptive bool) (m *MNormModel) {
 	mean := make([]float64, len(data))
 	sd := make([]float64, len(data))
-	parameters := make(mcmc.Parameters, 0, len(data)*2)
+	parameters := make(optimize.Parameters, 0, len(data)*2)
 	for i, _ := range sd {
 		sd[i] = 1
 	}
@@ -55,19 +55,19 @@ func NewMNormModel(data [][]float64, adaptive bool) (m *MNormModel) {
 func (m *MNormModel) AddParameters() {
 	for i := 0; i < m.n; i++ {
 		name := "sd" + strconv.Itoa(i)
-		par := mcmc.NewFloat64Parameter(&m.sd[i], name)
+		par := optimize.NewFloat64Parameter(&m.sd[i], name)
 		par.Min = 0
 		par.Max = 100
-		par.PriorFunc = mcmc.UniformPrior(0, 100, false, false)
-		par.ProposalFunc = mcmc.NormalProposal(0.1)
+		par.PriorFunc = optimize.UniformPrior(0, 100, false, false)
+		par.ProposalFunc = optimize.NormalProposal(0.1)
 		m.parameters = append(m.parameters, par)
 
 		name = "mean" + strconv.Itoa(i)
-		par = mcmc.NewFloat64Parameter(&m.mean[i], name)
+		par = optimize.NewFloat64Parameter(&m.mean[i], name)
 		par.Min = -100
 		par.Max = 100
-		par.PriorFunc = mcmc.UniformPrior(-100, 100, false, false)
-		par.ProposalFunc = mcmc.NormalProposal(0.1)
+		par.PriorFunc = optimize.UniformPrior(-100, 100, false, false)
+		par.ProposalFunc = optimize.NormalProposal(0.1)
 		m.parameters = append(m.parameters, par)
 	}
 }
@@ -75,23 +75,23 @@ func (m *MNormModel) AddParameters() {
 func (m *MNormModel) AddAdaptiveParameters() {
 	for i := 0; i < m.n; i++ {
 		name := "sd" + strconv.Itoa(i)
-		s := mcmc.NewAdaptiveSettings()
-		par := mcmc.NewAdaptiveParameter(&m.sd[i], name, s)
+		s := optimize.NewAdaptiveSettings()
+		par := optimize.NewAdaptiveParameter(&m.sd[i], name, s)
 		par.Min = 0
 		par.Max = 100
-		par.PriorFunc = mcmc.UniformPrior(0, 100, false, false)
+		par.PriorFunc = optimize.UniformPrior(0, 100, false, false)
 		m.parameters = append(m.parameters, par)
 
 		name = "mean" + strconv.Itoa(i)
-		par = mcmc.NewAdaptiveParameter(&m.mean[i], name, s)
+		par = optimize.NewAdaptiveParameter(&m.mean[i], name, s)
 		par.Min = -100
 		par.Max = 100
-		par.PriorFunc = mcmc.UniformPrior(-100, 100, false, false)
+		par.PriorFunc = optimize.UniformPrior(-100, 100, false, false)
 		m.parameters = append(m.parameters, par)
 	}
 }
 
-func (m *MNormModel) GetModelParameters() mcmc.Parameters {
+func (m *MNormModel) GetModelParameters() optimize.Parameters {
 	return m.parameters
 }
 
@@ -167,7 +167,7 @@ func main() {
 
 	m := NewMNormModel(data, *amcmc)
 
-	chain := mcmc.NewMH(m)
+	chain := optimize.NewMH(m)
 	chain.AccPeriod = 200
 
 	chain.WatchSignals(os.Interrupt, syscall.SIGUSR2)

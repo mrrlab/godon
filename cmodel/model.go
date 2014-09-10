@@ -9,13 +9,13 @@ import (
 
 	"github.com/skelterjohn/go.matrix"
 
-	"bitbucket.com/Davydov/golh/mcmc"
+	"bitbucket.com/Davydov/golh/optimize"
 	"bitbucket.com/Davydov/golh/tree"
 )
 
 type TreeOptimizable interface {
-	mcmc.Optimizable
-	SetAdaptive(*mcmc.AdaptiveSettings)
+	optimize.Optimizable
+	SetAdaptive(*optimize.AdaptiveSettings)
 	// It's a bit confusing name. Here we
 	// enable program optimizations.
 	SetOptimizations(fixed, all bool)
@@ -32,7 +32,7 @@ type Model struct {
 	scale      []float64
 	prop       []float64
 	nclass     int
-	parameters mcmc.Parameters
+	parameters optimize.Parameters
 
 	// optimizations
 	optFixed bool
@@ -65,19 +65,19 @@ func NewModel(cali CodonSequences, t *tree.Tree, cf CodonFrequency, nclass int, 
 	t.NodeOrder()
 	m.ReorderAlignment()
 	if optBranch {
-		m.parameters = make(mcmc.Parameters, 0, t.NNodes())
+		m.parameters = make(optimize.Parameters, 0, t.NNodes())
 		for _, node := range t.Nodes() {
 			nodeId := node.Id
 			// Branch 0 is not optimized
 			if nodeId == 0 {
 				continue
 			}
-			par := mcmc.NewFloat64Parameter(&node.BranchLength, "br"+strconv.Itoa(node.Id))
+			par := optimize.NewFloat64Parameter(&node.BranchLength, "br"+strconv.Itoa(node.Id))
 			par.OnChange = func() {
 				m.expBr[nodeId] = false
 			}
-			par.PriorFunc = mcmc.GammaPrior(1, 2, false)
-			par.ProposalFunc = mcmc.NormalProposal(0.01)
+			par.PriorFunc = optimize.GammaPrior(1, 2, false)
+			par.ProposalFunc = optimize.NormalProposal(0.01)
 			m.parameters = append(m.parameters, par)
 
 		}
@@ -88,19 +88,19 @@ func NewModel(cali CodonSequences, t *tree.Tree, cf CodonFrequency, nclass int, 
 // Make branch length parameters adaptive.
 func (m *Model) SetAdaptive() {
 	if len(m.parameters) > 0 {
-		m.parameters = make(mcmc.Parameters, 0, m.tree.NNodes())
-		as := mcmc.NewAdaptiveSettings()
+		m.parameters = make(optimize.Parameters, 0, m.tree.NNodes())
+		as := optimize.NewAdaptiveSettings()
 		for _, node := range m.tree.Nodes() {
 			nodeId := node.Id
 			// Branch 0 is not optimized
 			if nodeId == 0 {
 				continue
 			}
-			par := mcmc.NewAdaptiveParameter(&node.BranchLength, "br"+strconv.Itoa(node.Id), as)
+			par := optimize.NewAdaptiveParameter(&node.BranchLength, "br"+strconv.Itoa(node.Id), as)
 			par.OnChange = func() {
 				m.expBr[nodeId] = false
 			}
-			par.PriorFunc = mcmc.GammaPrior(1, 2, false)
+			par.PriorFunc = optimize.GammaPrior(1, 2, false)
 			m.parameters = append(m.parameters, par)
 		}
 	}

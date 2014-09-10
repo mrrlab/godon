@@ -1,7 +1,7 @@
 package cmodel
 
 import (
-	"bitbucket.com/Davydov/golh/mcmc"
+	"bitbucket.com/Davydov/golh/optimize"
 	"bitbucket.com/Davydov/golh/tree"
 )
 
@@ -11,7 +11,7 @@ type BranchSite struct {
 	kappa                  float64
 	omega0, omega2         float64
 	p01sum, p0prop         float64
-	parameters             mcmc.Parameters
+	parameters             optimize.Parameters
 	q0done, q1done, q2done bool
 	propdone               bool
 }
@@ -33,104 +33,104 @@ func NewBranchSite(cali CodonSequences, t *tree.Tree, cf CodonFrequency, optBran
 
 }
 
-func (m *BranchSite) SetAdaptive(as *mcmc.AdaptiveSettings) {
+func (m *BranchSite) SetAdaptive(as *optimize.AdaptiveSettings) {
 	m.Model.SetAdaptive()
 	m.parameters = m.Model.parameters
 	m.addAdaptiveParameters(as)
 }
 
 func (m *BranchSite) addParameters() {
-	kappa := mcmc.NewFloat64Parameter(&m.kappa, "kappa")
+	kappa := optimize.NewFloat64Parameter(&m.kappa, "kappa")
 	kappa.OnChange = func() {
 		m.q0done = false
 		m.q1done = false
 		m.q2done = false
 	}
-	kappa.PriorFunc = mcmc.UniformPrior(0, 20, false, true)
-	kappa.ProposalFunc = mcmc.NormalProposal(0.01)
+	kappa.PriorFunc = optimize.UniformPrior(0, 20, false, true)
+	kappa.ProposalFunc = optimize.NormalProposal(0.01)
 	kappa.Min = 0
 	kappa.Max = 20
 	m.parameters = append(m.parameters, kappa)
 
-	omega0 := mcmc.NewFloat64Parameter(&m.omega0, "omega0")
+	omega0 := optimize.NewFloat64Parameter(&m.omega0, "omega0")
 	omega0.OnChange = func() {
 		m.q0done = false
 	}
-	omega0.PriorFunc = mcmc.GammaPrior(1, 2, false)
-	omega0.ProposalFunc = mcmc.NormalProposal(0.01)
+	omega0.PriorFunc = optimize.GammaPrior(1, 2, false)
+	omega0.ProposalFunc = optimize.NormalProposal(0.01)
 	omega0.Min = 0
 	m.parameters = append(m.parameters, omega0)
 
-	omega2 := mcmc.NewFloat64Parameter(&m.omega2, "omega2")
+	omega2 := optimize.NewFloat64Parameter(&m.omega2, "omega2")
 	omega2.OnChange = func() {
 		m.q2done = false
 	}
-	omega2.PriorFunc = mcmc.GammaPrior(1, 2, false)
-	omega2.ProposalFunc = mcmc.NormalProposal(0.01)
+	omega2.PriorFunc = optimize.GammaPrior(1, 2, false)
+	omega2.ProposalFunc = optimize.NormalProposal(0.01)
 	omega2.Min = 1
 	m.parameters = append(m.parameters, omega2)
 
-	p01sum := mcmc.NewFloat64Parameter(&m.p01sum, "p01sum")
+	p01sum := optimize.NewFloat64Parameter(&m.p01sum, "p01sum")
 	p01sum.OnChange = func() {
 		m.propdone = false
 	}
-	p01sum.PriorFunc = mcmc.UniformPrior(0, 1, false, false)
-	p01sum.ProposalFunc = mcmc.NormalProposal(0.01)
+	p01sum.PriorFunc = optimize.UniformPrior(0, 1, false, false)
+	p01sum.ProposalFunc = optimize.NormalProposal(0.01)
 	m.parameters = append(m.parameters, p01sum)
 
-	p0prop := mcmc.NewFloat64Parameter(&m.p0prop, "p0prop")
+	p0prop := optimize.NewFloat64Parameter(&m.p0prop, "p0prop")
 	p0prop.OnChange = func() {
 		m.propdone = false
 	}
-	p0prop.PriorFunc = mcmc.UniformPrior(0, 1, false, false)
-	p0prop.ProposalFunc = mcmc.NormalProposal(0.01)
+	p0prop.PriorFunc = optimize.UniformPrior(0, 1, false, false)
+	p0prop.ProposalFunc = optimize.NormalProposal(0.01)
 	m.parameters = append(m.parameters, p0prop)
 }
 
-func (m *BranchSite) addAdaptiveParameters(as *mcmc.AdaptiveSettings) {
-	kappa := mcmc.NewAdaptiveParameter(&m.kappa, "kappa", as)
+func (m *BranchSite) addAdaptiveParameters(as *optimize.AdaptiveSettings) {
+	kappa := optimize.NewAdaptiveParameter(&m.kappa, "kappa", as)
 	kappa.OnChange = func() {
 		m.q0done = false
 		m.q1done = false
 		m.q2done = false
 	}
-	kappa.PriorFunc = mcmc.UniformPrior(0, 20, false, true)
+	kappa.PriorFunc = optimize.UniformPrior(0, 20, false, true)
 	kappa.Min = 0
 	kappa.Max = 20
 	m.parameters = append(m.parameters, kappa)
 
-	omega0 := mcmc.NewAdaptiveParameter(&m.omega0, "omega0", as)
+	omega0 := optimize.NewAdaptiveParameter(&m.omega0, "omega0", as)
 	omega0.OnChange = func() {
 		m.q0done = false
 	}
-	omega0.PriorFunc = mcmc.GammaPrior(1, 2, false)
+	omega0.PriorFunc = optimize.GammaPrior(1, 2, false)
 	omega0.Min = 0
 	m.parameters = append(m.parameters, omega0)
 
-	omega2 := mcmc.NewAdaptiveParameter(&m.omega2, "omega2", as)
+	omega2 := optimize.NewAdaptiveParameter(&m.omega2, "omega2", as)
 	omega2.OnChange = func() {
 		m.q2done = false
 	}
-	omega2.PriorFunc = mcmc.GammaPrior(1, 2, false)
+	omega2.PriorFunc = optimize.GammaPrior(1, 2, false)
 	omega2.Min = 1
 	m.parameters = append(m.parameters, omega2)
 
-	p01sum := mcmc.NewAdaptiveParameter(&m.p01sum, "p01sum", as)
+	p01sum := optimize.NewAdaptiveParameter(&m.p01sum, "p01sum", as)
 	p01sum.OnChange = func() {
 		m.propdone = false
 	}
-	p01sum.PriorFunc = mcmc.UniformPrior(0, 1, false, false)
+	p01sum.PriorFunc = optimize.UniformPrior(0, 1, false, false)
 	m.parameters = append(m.parameters, p01sum)
 
-	p0prop := mcmc.NewAdaptiveParameter(&m.p0prop, "p0prop", as)
+	p0prop := optimize.NewAdaptiveParameter(&m.p0prop, "p0prop", as)
 	p0prop.OnChange = func() {
 		m.propdone = false
 	}
-	p0prop.PriorFunc = mcmc.UniformPrior(0, 1, false, false)
+	p0prop.PriorFunc = optimize.UniformPrior(0, 1, false, false)
 	m.parameters = append(m.parameters, p0prop)
 }
 
-func (m *BranchSite) GetModelParameters() mcmc.Parameters {
+func (m *BranchSite) GetModelParameters() optimize.Parameters {
 	return m.parameters
 }
 

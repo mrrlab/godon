@@ -4,7 +4,7 @@ import (
 	"math"
 	"testing"
 
-	"bitbucket.com/Davydov/golh/mcmc"
+	"bitbucket.com/Davydov/golh/optimize"
 )
 
 func TestBranchSiteReprM0D1(tst *testing.T) {
@@ -16,7 +16,7 @@ func TestBranchSiteReprM0D1(tst *testing.T) {
 	cf := F3X4(cali)
 
 	m0 := NewM0(cali, t, cf, false)
-	chain := mcmc.NewMH(m0)
+	chain := optimize.NewMH(m0)
 	chain.Quiet = true
 	chain.Run(10)
 	L := chain.L
@@ -48,9 +48,9 @@ func TestBranchSiteReprM0D2(tst *testing.T) {
 	cf := F0()
 
 	m0 := NewM0(cali, t, cf, false)
-	as := mcmc.NewAdaptiveSettings()
+	as := optimize.NewAdaptiveSettings()
 	m0.SetAdaptive(as)
-	chain := mcmc.NewMH(m0)
+	chain := optimize.NewMH(m0)
 	chain.Quiet = true
 	chain.Run(10)
 	L := chain.L
@@ -82,7 +82,7 @@ func TestBranchSiteReprM0D3(tst *testing.T) {
 	cf := F3X4(cali)
 
 	m0 := NewM0(cali, t, cf, true)
-	chain := mcmc.NewMH(m0)
+	chain := optimize.NewMH(m0)
 	chain.Quiet = true
 	chain.Run(20)
 	L := chain.L
@@ -118,7 +118,7 @@ func TestBranchSiteReprBSD1(tst *testing.T) {
 	cf := F3X4(cali)
 
 	h1 := NewBranchSite(cali, t, cf, false)
-	chain := mcmc.NewMH(h1)
+	chain := optimize.NewMH(h1)
 	chain.Quiet = true
 	chain.Run(10)
 	L := chain.L
@@ -154,7 +154,7 @@ func TestBranchSiteReprBSD2(tst *testing.T) {
 	cf := F0()
 
 	h1 := NewBranchSite(cali, t, cf, false)
-	chain := mcmc.NewMH(h1)
+	chain := optimize.NewMH(h1)
 	chain.Quiet = true
 	chain.Run(10)
 	L := chain.L
@@ -191,9 +191,9 @@ func TestBranchSiteReprBSD3(tst *testing.T) {
 	cf := F3X4(cali)
 
 	h1 := NewBranchSite(cali, t, cf, true)
-	as := mcmc.NewAdaptiveSettings()
+	as := optimize.NewAdaptiveSettings()
 	h1.SetAdaptive(as)
-	chain := mcmc.NewMH(h1)
+	chain := optimize.NewMH(h1)
 	chain.Quiet = true
 	chain.Run(10)
 	L := chain.L

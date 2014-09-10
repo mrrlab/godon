@@ -3,7 +3,7 @@ package cmodel
 import (
 	"testing"
 
-	"bitbucket.com/Davydov/golh/mcmc"
+	"bitbucket.com/Davydov/golh/optimize"
 )
 
 func BenchmarkMCMCD1(b *testing.B) {
@@ -19,7 +19,7 @@ func BenchmarkMCMCD1(b *testing.B) {
 	b.ResetTimer()
 
 	m0.SetDefaults()
-	chain := mcmc.NewMH(m0)
+	chain := optimize.NewMH(m0)
 	chain.Quiet = true
 	chain.Run(100)
 }
