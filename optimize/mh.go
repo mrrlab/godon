@@ -20,7 +20,7 @@ type MH struct {
 	MaxL       float64
 	MaxPar     string
 	i          int
-	RepPeriod  int
+	repPeriod  int
 	AccPeriod  int
 	SD         float64
 	sig        chan os.Signal
@@ -28,19 +28,26 @@ type MH struct {
 	Quiet      bool
 }
 
-func NewMH(m Optimizable) (mcmc *MH) {
-	mcmc = &MH{Optimizable: m,
-		RepPeriod:  10,
-		AccPeriod:  10,
-		SD:         1e-2,
-		parameters: m.GetModelParameters(),
+func NewMH() (mcmc *MH) {
+	mcmc = &MH{repPeriod: 10,
+		AccPeriod: 10,
+		SD:        1e-2,
 	}
 	return
+}
+
+func (m *MH) SetOptimizable(opt Optimizable) {
+	m.Optimizable = opt
+	m.parameters = opt.GetModelParameters()
 }
 
 func (m *MH) WatchSignals(sigs ...os.Signal) {
 	m.sig = make(chan os.Signal, 1)
 	signal.Notify(m.sig, sigs...)
+}
+
+func (m *MH) SetReportPeriod(period int) {
+	m.repPeriod = period
 }
 
 func (m *MH) Run(iterations int) {
@@ -56,7 +63,7 @@ Iter:
 			accepted = 0
 		}
 
-		if !m.Quiet && m.i%m.RepPeriod == 0 {
+		if !m.Quiet && m.i%m.repPeriod == 0 {
 			log.Printf("%d: L=%f", m.i, m.L)
 			m.PrintLine()
 		}

@@ -184,11 +184,13 @@ func main() {
 
 	log.Printf("Model has %d parameters.", len(m.GetModelParameters()))
 
-	chain := optimize.NewMH(m)
-	chain.RepPeriod = *report
+	chain := optimize.NewMH()
 	chain.AccPeriod = *accept
-	chain.WatchSignals(os.Interrupt, syscall.SIGUSR2)
-	chain.Run(*iterations)
+	var opt optimize.Optimizer = chain
+	opt.SetOptimizable(m)
+	opt.SetReportPeriod(*report)
+	opt.WatchSignals(os.Interrupt, syscall.SIGUSR2)
+	opt.Run(*iterations)
 
 	endTime := time.Now()
 	log.Printf("Runing time: %v", endTime.Sub(startTime))

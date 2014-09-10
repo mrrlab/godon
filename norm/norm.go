@@ -167,7 +167,8 @@ func main() {
 
 	m := NewMNormModel(data, *amcmc)
 
-	chain := optimize.NewMH(m)
+	chain := optimize.NewMH()
+	chain.SetOptimizable(m)
 	chain.AccPeriod = 200
 
 	chain.WatchSignals(os.Interrupt, syscall.SIGUSR2)
