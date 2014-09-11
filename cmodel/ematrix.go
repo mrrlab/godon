@@ -19,6 +19,23 @@ func NewEMatrix(Q *matrix.DenseMatrix, scale float64) *EMatrix {
 	return &EMatrix{Q: Q, Scale: scale}
 }
 
+func (m *EMatrix) Copy() (newM *EMatrix) {
+	newM = &EMatrix{Scale: m.Scale}
+	if m.Q != nil {
+		newM.Q = m.Q
+	}
+	if m.v != nil {
+		newM.v = m.v
+	}
+	if m.d != nil {
+		newM.d = m.d
+	}
+	if m.iv != nil {
+		newM.iv = m.iv
+	}
+	return
+}
+
 func (m *EMatrix) Set(Q *matrix.DenseMatrix, scale float64) {
 	m.Q = Q
 	m.Scale = scale
