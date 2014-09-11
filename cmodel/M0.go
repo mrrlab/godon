@@ -27,9 +27,10 @@ func NewM0(cali CodonSequences, t *tree.Tree, cf CodonFrequency, optBranch bool)
 }
 
 func (m *M0) SetAdaptive(as *optimize.AdaptiveSettings) {
-	m.Model.SetAdaptive()
+	m.as = as
+	m.Model.setParameters()
 	m.parameters = m.Model.parameters
-	m.addAdaptiveParameters(as)
+	m.addAdaptiveParameters()
 }
 
 func (m *M0) addParameters() {
@@ -56,8 +57,8 @@ func (m *M0) addParameters() {
 	m.parameters = append(m.parameters, kappa)
 }
 
-func (m *M0) addAdaptiveParameters(as *optimize.AdaptiveSettings) {
-	omega := optimize.NewAdaptiveParameter(&m.omega, "omega", as)
+func (m *M0) addAdaptiveParameters() {
+	omega := optimize.NewAdaptiveParameter(&m.omega, "omega", m.as)
 	omega.OnChange = func() {
 		m.qdone = false
 		m.expAllBr = false
@@ -65,7 +66,7 @@ func (m *M0) addAdaptiveParameters(as *optimize.AdaptiveSettings) {
 	omega.PriorFunc = optimize.GammaPrior(1, 2, false)
 	omega.Min = 0
 
-	kappa := optimize.NewAdaptiveParameter(&m.kappa, "kappa", as)
+	kappa := optimize.NewAdaptiveParameter(&m.kappa, "kappa", m.as)
 	kappa.OnChange = func() {
 		m.qdone = false
 		m.expAllBr = false

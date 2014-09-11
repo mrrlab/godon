@@ -34,9 +34,10 @@ func NewBranchSite(cali CodonSequences, t *tree.Tree, cf CodonFrequency, optBran
 }
 
 func (m *BranchSite) SetAdaptive(as *optimize.AdaptiveSettings) {
-	m.Model.SetAdaptive()
+	m.as = as
+	m.Model.setParameters()
 	m.parameters = m.Model.parameters
-	m.addAdaptiveParameters(as)
+	m.addAdaptiveParameters()
 }
 
 func (m *BranchSite) addParameters() {
@@ -87,8 +88,8 @@ func (m *BranchSite) addParameters() {
 	m.parameters = append(m.parameters, p0prop)
 }
 
-func (m *BranchSite) addAdaptiveParameters(as *optimize.AdaptiveSettings) {
-	kappa := optimize.NewAdaptiveParameter(&m.kappa, "kappa", as)
+func (m *BranchSite) addAdaptiveParameters() {
+	kappa := optimize.NewAdaptiveParameter(&m.kappa, "kappa", m.as)
 	kappa.OnChange = func() {
 		m.q0done = false
 		m.q1done = false
@@ -99,7 +100,7 @@ func (m *BranchSite) addAdaptiveParameters(as *optimize.AdaptiveSettings) {
 	kappa.Max = 20
 	m.parameters = append(m.parameters, kappa)
 
-	omega0 := optimize.NewAdaptiveParameter(&m.omega0, "omega0", as)
+	omega0 := optimize.NewAdaptiveParameter(&m.omega0, "omega0", m.as)
 	omega0.OnChange = func() {
 		m.q0done = false
 	}
@@ -107,7 +108,7 @@ func (m *BranchSite) addAdaptiveParameters(as *optimize.AdaptiveSettings) {
 	omega0.Min = 0
 	m.parameters = append(m.parameters, omega0)
 
-	omega2 := optimize.NewAdaptiveParameter(&m.omega2, "omega2", as)
+	omega2 := optimize.NewAdaptiveParameter(&m.omega2, "omega2", m.as)
 	omega2.OnChange = func() {
 		m.q2done = false
 	}
@@ -115,14 +116,14 @@ func (m *BranchSite) addAdaptiveParameters(as *optimize.AdaptiveSettings) {
 	omega2.Min = 1
 	m.parameters = append(m.parameters, omega2)
 
-	p01sum := optimize.NewAdaptiveParameter(&m.p01sum, "p01sum", as)
+	p01sum := optimize.NewAdaptiveParameter(&m.p01sum, "p01sum", m.as)
 	p01sum.OnChange = func() {
 		m.propdone = false
 	}
 	p01sum.PriorFunc = optimize.UniformPrior(0, 1, false, false)
 	m.parameters = append(m.parameters, p01sum)
 
-	p0prop := optimize.NewAdaptiveParameter(&m.p0prop, "p0prop", as)
+	p0prop := optimize.NewAdaptiveParameter(&m.p0prop, "p0prop", m.as)
 	p0prop.OnChange = func() {
 		m.propdone = false
 	}
