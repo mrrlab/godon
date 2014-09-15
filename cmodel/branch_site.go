@@ -33,6 +33,30 @@ func NewBranchSite(cali CodonSequences, t *tree.Tree, cf CodonFrequency, optBran
 
 }
 
+func (m *BranchSite) Copy() (newM *BranchSite) {
+	newM = &BranchSite{
+		Model:  NewModel(m.cali, m.tree.Copy(), m.cf, 4, m.optBranch),
+		q0:     &EMatrix{},
+		q1:     &EMatrix{},
+		q2:     &EMatrix{},
+		kappa:  m.kappa,
+		omega0: m.omega0,
+		omega2: m.omega2,
+		p01sum: m.p01sum,
+		p0prop: m.p0prop,
+	}
+	newM.as = m.as
+	newM.Model.setParameters()
+	newM.parameters = m.Model.parameters
+
+	if m.as != nil {
+		newM.addAdaptiveParameters()
+	} else {
+		newM.addParameters()
+	}
+	return
+}
+
 func (m *BranchSite) SetAdaptive(as *optimize.AdaptiveSettings) {
 	m.as = as
 	m.Model.setParameters()

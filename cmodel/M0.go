@@ -26,6 +26,26 @@ func NewM0(cali CodonSequences, t *tree.Tree, cf CodonFrequency, optBranch bool)
 	return
 }
 
+func (m *M0) Copy() (newM *M0) {
+	newM = &M0{
+		Model: NewModel(m.cali, m.tree.Copy(), m.cf, 1, m.optBranch),
+		q:     &EMatrix{},
+		omega: m.omega,
+		kappa: m.kappa,
+	}
+	m.prop[0] = 1
+	newM.as = m.as
+	newM.Model.setParameters()
+	newM.parameters = m.Model.parameters
+
+	if m.as != nil {
+		newM.addAdaptiveParameters()
+	} else {
+		newM.addParameters()
+	}
+	return
+}
+
 func (m *M0) SetAdaptive(as *optimize.AdaptiveSettings) {
 	m.as = as
 	m.Model.setParameters()

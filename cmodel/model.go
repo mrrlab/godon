@@ -71,61 +71,6 @@ func NewModel(cali CodonSequences, t *tree.Tree, cf CodonFrequency, nclass int, 
 	return
 }
 
-// Copy makes copy of the Model.
-func (m *Model) Copy() (newM *Model) {
-	newM = &Model{
-		tree:       m.tree.Copy(),
-		cali:       m.cali,
-		lettersF:   make([][]int, len(m.lettersF)),
-		lettersA:   make([][]int, len(m.lettersA)),
-		cf:         m.cf,
-		qs:         make([][]*EMatrix, len(m.qs)),
-		scale:      make([]float64, len(m.scale)),
-		prop:       make([]float64, len(m.prop)),
-		nclass:     m.nclass,
-		parameters: make(optimize.Parameters, 0, len(m.parameters)),
-
-		optFixed: m.optFixed,
-		optAll:   m.optAll,
-
-		expAllBr: m.expAllBr,
-		expBr:    make([]bool, len(m.expBr)),
-
-		eQts: make([][][]float64, len(m.eQts)),
-	}
-
-	for i, _ := range m.lettersF {
-		newM.lettersF[i] = make([]int, len(m.lettersF[i]))
-		copy(newM.lettersF[i], m.lettersF[i])
-	}
-
-	for i, _ := range m.lettersA {
-		newM.lettersA[i] = make([]int, len(m.lettersA[i]))
-		copy(newM.lettersA[i], m.lettersA[i])
-	}
-
-	for i, _ := range m.qs {
-		newM.qs[i] = make([]*EMatrix, len(m.qs[i]))
-		for j, _ := range newM.qs[i] {
-			newM.qs[i][j] = m.qs[i][j].Copy()
-		}
-	}
-
-	copy(newM.scale, m.scale)
-	copy(newM.prop, m.prop)
-	copy(newM.expBr, m.expBr)
-
-	for i, _ := range m.eQts {
-		newM.eQts[i] = make([][]float64, len(m.eQts[i]))
-		for j, _ := range m.eQts[i] {
-			newM.eQts[i][j] = make([]float64, len(m.eQts[i][j]))
-			copy(newM.eQts[i][j], m.eQts[i][j])
-		}
-	}
-	newM.setParameters()
-	return
-}
-
 // Make branch length parameters adaptive.
 func (m *Model) setParameters() {
 	if m.optBranch {
