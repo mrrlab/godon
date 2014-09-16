@@ -19,6 +19,26 @@ type Parameter interface {
 
 type Parameters []Parameter
 
+func (p Parameters) ParameterNamesString() (s string) {
+	for i, par := range p {
+		if i != 0 {
+			s += "\t"
+		}
+		s += par.Name()
+	}
+	return
+}
+
+func (p Parameters) ParameterString() (s string) {
+	for i, par := range p {
+		if i != 0 {
+			s += "\t"
+		}
+		s += par.GetValue().String()
+	}
+	return
+}
+
 type Float64Parameters []*Float64Parameter
 
 type Float64 float64

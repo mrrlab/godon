@@ -26,8 +26,8 @@ func NewM0(cali CodonSequences, t *tree.Tree, cf CodonFrequency, optBranch bool)
 	return
 }
 
-func (m *M0) Copy() (newM *M0) {
-	newM = &M0{
+func (m *M0) Copy() optimize.Optimizable {
+	newM := &M0{
 		Model: NewModel(m.cali, m.tree.Copy(), m.cf, 1, m.optBranch),
 		q:     &EMatrix{},
 		omega: m.omega,
@@ -43,7 +43,7 @@ func (m *M0) Copy() (newM *M0) {
 	} else {
 		newM.addParameters()
 	}
-	return
+	return newM
 }
 
 func (m *M0) SetAdaptive(as *optimize.AdaptiveSettings) {

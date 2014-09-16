@@ -9,6 +9,7 @@ import (
 
 type Optimizable interface {
 	GetModelParameters() Parameters
+	Copy() Optimizable
 	Likelihood() float64
 }
 
@@ -50,13 +51,13 @@ func (o *BaseOptimizer) SetReportPeriod(period int) {
 
 func (o *BaseOptimizer) PrintHeader() {
 	if !o.Quiet {
-		fmt.Printf("iteration\tlikelihood\t%s\n", o.ParameterNamesString())
+		fmt.Printf("iteration\tlikelihood\t%s\n", o.parameters.ParameterNamesString())
 	}
 }
 
 func (o *BaseOptimizer) PrintLine() {
 	if !o.Quiet {
-		fmt.Printf("%d\t%f\t%s\n", o.i, o.l, o.ParameterString())
+		fmt.Printf("%d\t%f\t%s\n", o.i, o.l, o.parameters.ParameterString())
 	}
 }
 
@@ -68,25 +69,6 @@ func (o *BaseOptimizer) PrintFinal() {
 	}
 }
 
-func (o *BaseOptimizer) ParameterNamesString() (s string) {
-	for i, par := range o.parameters {
-		if i != 0 {
-			s += "\t"
-		}
-		s += par.Name()
-	}
-	return
-}
-
-func (o *BaseOptimizer) ParameterString() (s string) {
-	for i, par := range o.parameters {
-		if i != 0 {
-			s += "\t"
-		}
-		s += par.GetValue().String()
-	}
-	return
-}
 func (o *BaseOptimizer) GetL() float64 {
 	return o.l
 }

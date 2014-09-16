@@ -7,14 +7,14 @@ import (
 )
 
 type MH struct {
-	*BaseOptimizer
+	BaseOptimizer
 	AccPeriod int
 	SD        float64
 }
 
 func NewMH() (mcmc *MH) {
 	mcmc = &MH{
-		BaseOptimizer: &BaseOptimizer{
+		BaseOptimizer: BaseOptimizer{
 			repPeriod: 10,
 		},
 		AccPeriod: 10,
@@ -26,7 +26,7 @@ func NewMH() (mcmc *MH) {
 func (m *MH) Run(iterations int) {
 	m.l = m.Likelihood()
 	m.maxL = m.l
-	m.maxLPar = m.ParameterString()
+	m.maxLPar = m.parameters.ParameterString()
 	m.PrintHeader()
 	accepted := 0
 Iter:
@@ -52,7 +52,7 @@ Iter:
 			accepted++
 			if m.l > m.maxL {
 				m.maxL = m.l
-				m.maxLPar = m.ParameterString()
+				m.maxLPar = m.parameters.ParameterString()
 			}
 		} else {
 			par.Reject()
@@ -68,7 +68,7 @@ Iter:
 	if !m.Quiet {
 		log.Print("Finished MCMC")
 		log.Printf("Maximum likelihood: %v", m.maxL)
-		log.Printf("Parameter  names: %v", m.ParameterNamesString())
+		log.Printf("Parameter  names: %v", m.parameters.ParameterNamesString())
 		log.Printf("Parameter values: %v", m.maxLPar)
 	}
 	m.PrintFinal()
