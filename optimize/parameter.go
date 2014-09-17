@@ -1,26 +1,54 @@
 package optimize
 
 import (
-	"fmt"
 	"math"
 	"strconv"
 )
 
-type Parameter interface {
+type FloatParameter interface {
 	Name() string
 	Prior() float64
 	OldPrior() float64
 	Propose()
 	Accept(int)
 	Reject()
-	GetValue() fmt.Stringer
-	SetValue(interface{})
+	String() string
+	Get() float64
+	Set(float64)
 }
 
-type Parameters []Parameter
+type FloatParameters []FloatParameter
 
-func (p Parameters) NamesString() (s string) {
-	for i, par := range p {
+func (p *FloatParameters) Append(par FloatParameter) {
+	*p = append(*p, par)
+}
+
+func (p *FloatParameters) Names(is []string) (s []string) {
+	if is == nil {
+		s = make([]string, len(*p))
+	} else {
+		s = is
+	}
+	for i, par := range *p {
+		s[i] = par.Name()
+	}
+	return
+}
+
+func (p *FloatParameters) Values(iv []float64) (v []float64) {
+	if v == nil {
+		v = make([]float64, len(*p))
+	} else {
+		v = iv
+	}
+	for i, par := range *p {
+		v[i] = par.Get()
+	}
+	return
+}
+
+func (p *FloatParameters) NamesString() (s string) {
+	for i, par := range *p {
 		if i != 0 {
 			s += "\t"
 		}
@@ -29,47 +57,17 @@ func (p Parameters) NamesString() (s string) {
 	return
 }
 
-func (p Parameters) ValuesString() (s string) {
-	for i, par := range p {
+func (p *FloatParameters) ValuesString() (s string) {
+	for i, par := range *p {
 		if i != 0 {
 			s += "\t"
 		}
-		s += par.GetValue().String()
+		s += par.String()
 	}
 	return
 }
 
-type Float64Parameters []*Float64Parameter
-
-type Float64 float64
-
-func (f Float64) String() string {
-	return strconv.FormatFloat(float64(f), 'f', 6, 64)
-}
-
-func (p Float64Parameters) Get(n string) float64 {
-	for _, par := range p {
-		if par.Name() == n {
-			return *par.float64
-		}
-	}
-	panic("unknown parameter name")
-	//return math.NaN()
-}
-
-func (p Float64Parameters) Set(n string, x float64) {
-	for _, par := range p {
-		if par.Name() == n {
-			par.old, *par.float64 = *par.float64, x
-			par.reflect()
-			par.OnChange()
-			return
-		}
-	}
-	panic("unknown parameter name")
-}
-
-type Float64Parameter struct {
+type BasicFloatParameter struct {
 	*float64
 	old          float64
 	name         string
@@ -80,8 +78,8 @@ type Float64Parameter struct {
 	OnChange     func()
 }
 
-func NewFloat64Parameter(par *float64, name string) *Float64Parameter {
-	return &Float64Parameter{
+func NewBasicFloatParameter(par *float64, name string) *BasicFloatParameter {
+	return &BasicFloatParameter{
 		float64:      par,
 		name:         name,
 		PriorFunc:    UniformPrior(-1, 1, true, true),
@@ -91,19 +89,29 @@ func NewFloat64Parameter(par *float64, name string) *Float64Parameter {
 	}
 }
 
-func (p *Float64Parameter) Name() string {
+func (p *BasicFloatParameter) Get() float64 {
+	return *p.float64
+}
+
+func (p *BasicFloatParameter) Set(v float64) {
+	*p.float64 = v
+	if p.OnChange != nil {
+		p.OnChange()
+	}
+}
+func (p *BasicFloatParameter) Name() string {
 	return p.name
 }
 
-func (p *Float64Parameter) Prior() float64 {
+func (p *BasicFloatParameter) Prior() float64 {
 	return p.PriorFunc(*p.float64)
 }
 
-func (p *Float64Parameter) OldPrior() float64 {
+func (p *BasicFloatParameter) OldPrior() float64 {
 	return p.PriorFunc(p.old)
 }
 
-func (p *Float64Parameter) reflect() {
+func (p *BasicFloatParameter) reflect() {
 	for *p.float64 < p.Min || *p.float64 > p.Max {
 		if *p.float64 < p.Min {
 			*p.float64 = p.Min + (p.Min - *p.float64)
@@ -114,7 +122,7 @@ func (p *Float64Parameter) reflect() {
 	}
 }
 
-func (p *Float64Parameter) Propose() {
+func (p *BasicFloatParameter) Propose() {
 	p.old, *p.float64 = *p.float64, p.ProposalFunc(*p.float64)
 	p.reflect()
 	if p.OnChange != nil {
@@ -122,20 +130,16 @@ func (p *Float64Parameter) Propose() {
 	}
 }
 
-func (p *Float64Parameter) Reject() {
+func (p *BasicFloatParameter) Reject() {
 	*p.float64, p.old = p.old, *p.float64
 	if p.OnChange != nil {
 		p.OnChange()
 	}
 }
 
-func (p *Float64Parameter) Accept(iter int) {
+func (p *BasicFloatParameter) Accept(iter int) {
 }
 
-func (p *Float64Parameter) GetValue() fmt.Stringer {
-	return (Float64)(*p.float64)
-}
-
-func (p *Float64Parameter) SetValue(x interface{}) {
-	*p.float64 = x.(float64)
+func (p *BasicFloatParameter) String() string {
+	return strconv.FormatFloat(*p.float64, 'f', 6, 64)
 }

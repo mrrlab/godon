@@ -3,7 +3,6 @@ package optimize
 import (
 	"log"
 	"math"
-	"reflect"
 )
 
 const (
@@ -19,7 +18,7 @@ type DS struct {
 	oldL          float64
 	points        []Optimizable
 	psum          []float64
-	allparameters []Parameters
+	allparameters []FloatParameters
 	l             []float64
 }
 
@@ -33,18 +32,17 @@ func NewDS() (ds *DS) {
 
 func (ds *DS) createSimplex(delta float64) {
 	ds.points = make([]Optimizable, len(ds.parameters)+1)
-	ds.allparameters = make([]Parameters, len(ds.points))
+	ds.allparameters = make([]FloatParameters, len(ds.points))
 	ds.l = make([]float64, len(ds.points))
 	ds.points[0] = ds.Optimizable
 	ds.allparameters[0] = ds.parameters
 	ds.l[0] = ds.Likelihood()
 	for i := 0; i < len(ds.parameters); i++ {
 		point := ds.Optimizable.Copy()
-		parameters := point.GetModelParameters()
+		parameters := point.GetFloatParameters()
 		ds.points[i+1] = point
 		ds.allparameters[i+1] = parameters
-		v := reflect.ValueOf(parameters[i].GetValue())
-		parameters[i].SetValue(v.Float() + delta)
+		parameters[i].Set(parameters[i].Get() + delta)
 		ds.l[i+1] = point.Likelihood()
 
 	}
@@ -58,14 +56,13 @@ func (ds *DS) amotry(ilo int, fac float64) float64 {
 	fac1 := (1 - fac) / float64(ndim)
 	fac2 := fac1 - fac
 	for j := 0; j < ndim; j++ {
-		v := reflect.ValueOf(ds.allparameters[ilo][j].GetValue())
-		ds.parameters[j].SetValue(ds.psum[j]*fac1 - v.Float()*fac2)
+		ds.parameters[j].Set(ds.psum[j]*fac1 - ds.allparameters[ilo][j].Get()*fac2)
 	}
 	l := ds.Likelihood()
 	if l > ds.l[ilo] {
 		ds.l[ilo] = l
 		ds.points[ilo] = ds.Optimizable
-		ds.allparameters[ilo] = ds.Optimizable.GetModelParameters()
+		ds.allparameters[ilo] = ds.Optimizable.GetFloatParameters()
 		ds.Optimizable = ds.Optimizable.Copy()
 	}
 	return l
@@ -75,8 +72,7 @@ func (ds *DS) calcPsum() {
 	ds.psum = make([]float64, len(ds.parameters))
 	for i := range ds.psum {
 		for _, parameters := range ds.allparameters {
-			v := reflect.ValueOf(parameters[i].GetValue())
-			ds.psum[i] += v.Float()
+			ds.psum[i] += parameters[i].Get()
 		}
 	}
 }
@@ -154,9 +150,7 @@ Iter:
 				for i, point := range ds.points {
 					if i != ihi {
 						for j := range ds.parameters {
-							vij := reflect.ValueOf(ds.allparameters[i][j].GetValue())
-							vihij := reflect.ValueOf(ds.allparameters[ihi][j].GetValue())
-							ds.allparameters[i][j].SetValue(0.5 * (vij.Float() + vihij.Float()))
+							ds.allparameters[i][j].Set(0.5 * (ds.allparameters[i][j].Get() + ds.allparameters[ihi][j].Get()))
 						}
 						ds.l[i] = point.Likelihood()
 					}

@@ -185,7 +185,7 @@ func main() {
 		m.SetAdaptive(as)
 	}
 
-	log.Printf("Model has %d parameters.", len(m.GetModelParameters()))
+	log.Printf("Model has %d parameters.", len(m.GetFloatParameters()))
 
 	var opt optimize.Optimizer
 	if !*simplex {

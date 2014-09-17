@@ -33,7 +33,7 @@ type Model struct {
 	scale      []float64
 	prop       []float64
 	nclass     int
-	parameters optimize.Parameters
+	parameters optimize.FloatParameters
 	as         *optimize.AdaptiveSettings
 
 	// optimizations
@@ -74,7 +74,7 @@ func NewModel(cali CodonSequences, t *tree.Tree, cf CodonFrequency, nclass int, 
 // Make branch length parameters adaptive.
 func (m *Model) setParameters() {
 	if m.optBranch {
-		m.parameters = make(optimize.Parameters, 0, m.tree.NNodes())
+		m.parameters = make(optimize.FloatParameters, 0, m.tree.NNodes())
 		for _, node := range m.tree.Nodes() {
 			nodeId := node.Id
 			// Branch 0 is not optimized
@@ -82,7 +82,7 @@ func (m *Model) setParameters() {
 				continue
 			}
 			if m.as == nil {
-				par := optimize.NewFloat64Parameter(&node.BranchLength, "br"+strconv.Itoa(node.Id))
+				par := optimize.NewBasicFloatParameter(&node.BranchLength, "br"+strconv.Itoa(node.Id))
 				par.OnChange = func() {
 					m.expBr[nodeId] = false
 				}

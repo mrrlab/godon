@@ -8,7 +8,7 @@ import (
 )
 
 type Optimizable interface {
-	GetModelParameters() Parameters
+	GetFloatParameters() FloatParameters
 	Copy() Optimizable
 	Likelihood() float64
 }
@@ -25,7 +25,7 @@ type Optimizer interface {
 
 type BaseOptimizer struct {
 	Optimizable
-	parameters Parameters
+	parameters FloatParameters
 	i          int
 	l          float64
 	maxL       float64
@@ -37,7 +37,7 @@ type BaseOptimizer struct {
 
 func (o *BaseOptimizer) SetOptimizable(opt Optimizable) {
 	o.Optimizable = opt
-	o.parameters = opt.GetModelParameters()
+	o.parameters = opt.GetFloatParameters()
 }
 
 func (o *BaseOptimizer) WatchSignals(sigs ...os.Signal) {
@@ -55,7 +55,7 @@ func (o *BaseOptimizer) PrintHeader() {
 	}
 }
 
-func (o *BaseOptimizer) PrintLine(par Parameters, l float64) {
+func (o *BaseOptimizer) PrintLine(par FloatParameters, l float64) {
 	if !o.Quiet {
 		fmt.Printf("%d\t%f\t%s\n", o.i, l, par.ValuesString())
 	}
@@ -64,7 +64,7 @@ func (o *BaseOptimizer) PrintLine(par Parameters, l float64) {
 func (o *BaseOptimizer) PrintFinal() {
 	if !o.Quiet {
 		for _, par := range o.parameters {
-			log.Printf("%s=%v", par.Name(), par.GetValue())
+			log.Printf("%s=%v", par.Name(), par.Get())
 		}
 	}
 }

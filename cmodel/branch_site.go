@@ -11,7 +11,7 @@ type BranchSite struct {
 	kappa                  float64
 	omega0, omega2         float64
 	p01sum, p0prop         float64
-	parameters             optimize.Parameters
+	parameters             optimize.FloatParameters
 	q0done, q1done, q2done bool
 	propdone               bool
 }
@@ -66,7 +66,7 @@ func (m *BranchSite) SetAdaptive(as *optimize.AdaptiveSettings) {
 }
 
 func (m *BranchSite) addParameters() {
-	kappa := optimize.NewFloat64Parameter(&m.kappa, "kappa")
+	kappa := optimize.NewBasicFloatParameter(&m.kappa, "kappa")
 	kappa.OnChange = func() {
 		m.q0done = false
 		m.q1done = false
@@ -78,7 +78,7 @@ func (m *BranchSite) addParameters() {
 	kappa.Max = 20
 	m.parameters = append(m.parameters, kappa)
 
-	omega0 := optimize.NewFloat64Parameter(&m.omega0, "omega0")
+	omega0 := optimize.NewBasicFloatParameter(&m.omega0, "omega0")
 	omega0.OnChange = func() {
 		m.q0done = false
 	}
@@ -87,7 +87,7 @@ func (m *BranchSite) addParameters() {
 	omega0.Min = 0
 	m.parameters = append(m.parameters, omega0)
 
-	omega2 := optimize.NewFloat64Parameter(&m.omega2, "omega2")
+	omega2 := optimize.NewBasicFloatParameter(&m.omega2, "omega2")
 	omega2.OnChange = func() {
 		m.q2done = false
 	}
@@ -96,7 +96,7 @@ func (m *BranchSite) addParameters() {
 	omega2.Min = 1
 	m.parameters = append(m.parameters, omega2)
 
-	p01sum := optimize.NewFloat64Parameter(&m.p01sum, "p01sum")
+	p01sum := optimize.NewBasicFloatParameter(&m.p01sum, "p01sum")
 	p01sum.OnChange = func() {
 		m.propdone = false
 	}
@@ -104,7 +104,7 @@ func (m *BranchSite) addParameters() {
 	p01sum.ProposalFunc = optimize.NormalProposal(0.01)
 	m.parameters = append(m.parameters, p01sum)
 
-	p0prop := optimize.NewFloat64Parameter(&m.p0prop, "p0prop")
+	p0prop := optimize.NewBasicFloatParameter(&m.p0prop, "p0prop")
 	p0prop.OnChange = func() {
 		m.propdone = false
 	}
@@ -156,7 +156,7 @@ func (m *BranchSite) addAdaptiveParameters() {
 	m.parameters = append(m.parameters, p0prop)
 }
 
-func (m *BranchSite) GetModelParameters() optimize.Parameters {
+func (m *BranchSite) GetFloatParameters() optimize.FloatParameters {
 	return m.parameters
 }
 

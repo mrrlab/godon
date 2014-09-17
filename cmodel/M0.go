@@ -9,7 +9,7 @@ type M0 struct {
 	*Model
 	q            *EMatrix
 	omega, kappa float64
-	parameters   optimize.Parameters
+	parameters   optimize.FloatParameters
 	qdone        bool
 }
 
@@ -54,7 +54,7 @@ func (m *M0) SetAdaptive(as *optimize.AdaptiveSettings) {
 }
 
 func (m *M0) addParameters() {
-	omega := optimize.NewFloat64Parameter(&m.omega, "omega")
+	omega := optimize.NewBasicFloatParameter(&m.omega, "omega")
 	omega.OnChange = func() {
 		m.qdone = false
 		m.expAllBr = false
@@ -63,7 +63,7 @@ func (m *M0) addParameters() {
 	omega.ProposalFunc = optimize.NormalProposal(0.01)
 	omega.Min = 0
 
-	kappa := optimize.NewFloat64Parameter(&m.kappa, "kappa")
+	kappa := optimize.NewBasicFloatParameter(&m.kappa, "kappa")
 	kappa.OnChange = func() {
 		m.qdone = false
 		m.expAllBr = false
@@ -73,8 +73,8 @@ func (m *M0) addParameters() {
 	kappa.Min = 0
 	kappa.Max = 20
 
-	m.parameters = append(m.parameters, omega)
-	m.parameters = append(m.parameters, kappa)
+	m.parameters.Append(omega)
+	m.parameters.Append(kappa)
 }
 
 func (m *M0) addAdaptiveParameters() {
@@ -96,12 +96,12 @@ func (m *M0) addAdaptiveParameters() {
 	kappa.Min = 0
 	kappa.Max = 20
 
-	m.parameters = append(m.parameters, omega)
-	m.parameters = append(m.parameters, kappa)
+	m.parameters.Append(omega)
+	m.parameters.Append(kappa)
 }
 
-func (m *M0) GetModelParameters() optimize.Parameters {
-	return optimize.Parameters(m.parameters)
+func (m *M0) GetFloatParameters() optimize.FloatParameters {
+	return m.parameters
 }
 
 func (m *M0) GetParameters() (kappa, omega float64) {

@@ -3,14 +3,13 @@
 package optimize
 
 import (
-	"fmt"
 	"log"
 	"math"
 	"math/rand"
 )
 
 type AdaptiveParameter struct {
-	*Float64Parameter
+	*BasicFloatParameter
 	t    int
 	loct int
 
@@ -66,8 +65,8 @@ func NewAdaptiveSettings() *AdaptiveSettings {
 
 func NewAdaptiveParameter(par *float64, name string, ap *AdaptiveSettings) (a *AdaptiveParameter) {
 	a = &AdaptiveParameter{
-		Float64Parameter: NewFloat64Parameter(par, name),
-		AdaptiveSettings: ap,
+		BasicFloatParameter: NewBasicFloatParameter(par, name),
+		AdaptiveSettings:    ap,
 	}
 	a.mean = math.NaN()
 	a.vals = make(chan float64, a.WSize)
@@ -82,11 +81,6 @@ func NewAdaptiveParameter(par *float64, name string, ap *AdaptiveSettings) (a *A
 	a.ProposalFunc = a.AdaptiveProposal()
 
 	return
-}
-
-func (a *AdaptiveSettings) String() string {
-	return fmt.Sprintf("Adaptive MCMC settings <WSize=%v, K=%v, Skip=%v, MaxUpdate=%v, C=%v, Nu=%v, Lambda=%v>",
-		a.WSize, a.K, a.Skip, a.MaxUpdate, a.C, a.Nu, a.Lambda)
 }
 
 func (a *AdaptiveParameter) Accept(iter int) {
