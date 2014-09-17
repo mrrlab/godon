@@ -33,10 +33,10 @@ func (m *M0) Copy() optimize.Optimizable {
 		omega: m.omega,
 		kappa: m.kappa,
 	}
-	m.prop[0] = 1
+	newM.prop[0] = 1
 	newM.as = m.as
 	newM.Model.setParameters()
-	newM.parameters = m.Model.parameters
+	newM.parameters = newM.Model.parameters
 
 	if m.as != nil {
 		newM.addAdaptiveParameters()

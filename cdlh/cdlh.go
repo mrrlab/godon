@@ -28,9 +28,12 @@ func main() {
 	cFreq := flag.String("cfreq", "F3X4", "codon frequecny (F0 or F3X4)")
 	cFreqFileName := flag.String("cfreqfn", "", "codon frequencies file (overrides -cfreq)")
 
-	// mcmc parameters
+	// optimizer parameters
 	iterations := flag.Int("iter", 10000, "number of iterations")
 	report := flag.Int("report", 10, "report every N iterations")
+	simplex := flag.Bool("simplex", false, "use downhill simplex to optimize parameters")
+
+	// mcmc parameters
 	accept := flag.Int("accept", 200, "report acceptance rate every N iterations")
 
 	// adaptive mcmc parameters
@@ -184,9 +187,15 @@ func main() {
 
 	log.Printf("Model has %d parameters.", len(m.GetModelParameters()))
 
-	chain := optimize.NewMH()
-	chain.AccPeriod = *accept
-	var opt optimize.Optimizer = chain
+	var opt optimize.Optimizer
+	if !*simplex {
+		chain := optimize.NewMH()
+		chain.AccPeriod = *accept
+		opt = chain
+	} else {
+		ds := optimize.NewDS()
+		opt = ds
+	}
 	opt.SetOptimizable(m)
 	opt.SetReportPeriod(*report)
 	opt.WatchSignals(os.Interrupt, syscall.SIGUSR2)

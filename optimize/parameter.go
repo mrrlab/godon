@@ -19,7 +19,7 @@ type Parameter interface {
 
 type Parameters []Parameter
 
-func (p Parameters) ParameterNamesString() (s string) {
+func (p Parameters) NamesString() (s string) {
 	for i, par := range p {
 		if i != 0 {
 			s += "\t"
@@ -29,7 +29,7 @@ func (p Parameters) ParameterNamesString() (s string) {
 	return
 }
 
-func (p Parameters) ParameterString() (s string) {
+func (p Parameters) ValuesString() (s string) {
 	for i, par := range p {
 		if i != 0 {
 			s += "\t"
@@ -43,8 +43,8 @@ type Float64Parameters []*Float64Parameter
 
 type Float64 float64
 
-func (f *Float64) String() string {
-	return strconv.FormatFloat(*(*float64)(f), 'f', 6, 64)
+func (f Float64) String() string {
+	return strconv.FormatFloat(float64(f), 'f', 6, 64)
 }
 
 func (p Float64Parameters) Get(n string) float64 {
@@ -133,7 +133,7 @@ func (p *Float64Parameter) Accept(iter int) {
 }
 
 func (p *Float64Parameter) GetValue() fmt.Stringer {
-	return (*Float64)(p.float64)
+	return (Float64)(*p.float64)
 }
 
 func (p *Float64Parameter) SetValue(x interface{}) {

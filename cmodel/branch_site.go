@@ -47,13 +47,14 @@ func (m *BranchSite) Copy() optimize.Optimizable {
 	}
 	newM.as = m.as
 	newM.Model.setParameters()
-	newM.parameters = m.Model.parameters
+	newM.parameters = newM.Model.parameters
 
 	if m.as != nil {
 		newM.addAdaptiveParameters()
 	} else {
 		newM.addParameters()
 	}
+	newM.SetBranchMatrices()
 	return newM
 }
 

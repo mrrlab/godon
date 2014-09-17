@@ -261,6 +261,9 @@ func (m *Model) Likelihood() (lnL float64) {
 		dlnL := <-results
 		lnL += dlnL
 	}
+	if math.IsNaN(lnL) {
+		lnL = math.Inf(-1)
+	}
 	return
 }
 

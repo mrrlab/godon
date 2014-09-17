@@ -51,13 +51,13 @@ func (o *BaseOptimizer) SetReportPeriod(period int) {
 
 func (o *BaseOptimizer) PrintHeader() {
 	if !o.Quiet {
-		fmt.Printf("iteration\tlikelihood\t%s\n", o.parameters.ParameterNamesString())
+		fmt.Printf("iteration\tlikelihood\t%s\n", o.parameters.NamesString())
 	}
 }
 
-func (o *BaseOptimizer) PrintLine() {
+func (o *BaseOptimizer) PrintLine(par Parameters, l float64) {
 	if !o.Quiet {
-		fmt.Printf("%d\t%f\t%s\n", o.i, o.l, o.parameters.ParameterString())
+		fmt.Printf("%d\t%f\t%s\n", o.i, l, par.ValuesString())
 	}
 }
 
