@@ -35,6 +35,7 @@ func main() {
 
 	// mcmc parameters
 	accept := flag.Int("accept", 200, "report acceptance rate every N iterations")
+	anneal := flag.Bool("anneal", false, "use simulated annealing to optimize parameters")
 
 	// adaptive mcmc parameters
 	adaptive := flag.Bool("adaptive", false, "use adaptive MCMC")
@@ -189,7 +190,7 @@ func main() {
 
 	var opt optimize.Optimizer
 	if !*simplex {
-		chain := optimize.NewMH()
+		chain := optimize.NewMH(*anneal)
 		chain.AccPeriod = *accept
 		opt = chain
 	} else {

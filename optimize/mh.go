@@ -9,16 +9,18 @@ import (
 type MH struct {
 	BaseOptimizer
 	AccPeriod int
+	annealing bool
 	SD        float64
 }
 
-func NewMH() (mcmc *MH) {
+func NewMH(annealing bool) (mcmc *MH) {
 	mcmc = &MH{
 		BaseOptimizer: BaseOptimizer{
 			repPeriod: 10,
 		},
 		AccPeriod: 10,
 		SD:        1e-2,
+		annealing: annealing,
 	}
 	return
 }
@@ -31,13 +33,19 @@ func (m *MH) Run(iterations int) {
 	accepted := 0
 Iter:
 	for m.i = 0; m.i < iterations; m.i++ {
+		var T float64
+		if m.annealing {
+			T = float64(iterations-m.i) / float64(iterations)
+		} else {
+			T = 1
+		}
 		if !m.Quiet && m.i > 0 && m.i%m.AccPeriod == 0 {
 			log.Printf("Acceptance rate %.2f%%", 100*float64(accepted)/float64(m.AccPeriod))
 			accepted = 0
 		}
 
 		if !m.Quiet && m.i%m.repPeriod == 0 {
-			log.Printf("%d: L=%f", m.i, m.l)
+			log.Printf("%d: L=%f, T=%f", m.i, m.l, T)
 			m.PrintLine(m.parameters, m.l)
 		}
 		p := rand.Intn(len(m.parameters))
@@ -45,7 +53,7 @@ Iter:
 		par.Propose()
 		newL := m.Likelihood()
 
-		a := math.Exp(par.Prior() - par.OldPrior() + newL - m.l)
+		a := math.Exp((par.Prior() - par.OldPrior() + newL - m.l) / T)
 		if a > 1 || rand.Float64() < a {
 			m.l = newL
 			par.Accept(m.i)
