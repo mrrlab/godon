@@ -29,7 +29,7 @@ type BaseOptimizer struct {
 	i          int
 	l          float64
 	maxL       float64
-	maxLPar    string
+	maxLPar    []float64
 	repPeriod  int
 	sig        chan os.Signal
 	Quiet      bool
@@ -75,6 +75,12 @@ func (o *BaseOptimizer) GetL() float64 {
 func (o *BaseOptimizer) GetMaxL() float64 {
 	return o.maxL
 }
-func (o *BaseOptimizer) GetMaxLParameters() string {
-	return o.maxLPar
+func (o *BaseOptimizer) GetMaxLParameters() (s string) {
+	for i, v := range o.maxLPar {
+		s += fmt.Sprintf("%0.5f", v)
+		if i != len(o.maxLPar)-1 {
+			s += "\t"
+		}
+	}
+	return s
 }

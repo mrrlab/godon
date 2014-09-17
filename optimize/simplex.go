@@ -34,17 +34,21 @@ func (ds *DS) createSimplex(delta float64) {
 	ds.points = make([]Optimizable, len(ds.parameters)+1)
 	ds.allparameters = make([]FloatParameters, len(ds.points))
 	ds.l = make([]float64, len(ds.points))
-	ds.points[0] = ds.Optimizable
-	ds.allparameters[0] = ds.parameters
-	ds.l[0] = ds.Likelihood()
-	for i := 0; i < len(ds.parameters); i++ {
+	for i := range ds.points {
 		point := ds.Optimizable.Copy()
-		parameters := point.GetFloatParameters()
-		ds.points[i+1] = point
-		ds.allparameters[i+1] = parameters
-		parameters[i].Set(parameters[i].Get() + delta)
-		ds.l[i+1] = point.Likelihood()
-
+		ds.points[i] = point
+		ds.allparameters[i] = point.GetFloatParameters()
+	}
+	for i := 0; i < len(ds.parameters); i++ {
+		parameter := ds.allparameters[i+1][i]
+		parameter.Set(parameter.Get() + delta)
+	}
+	for i := range ds.points {
+		if ds.parameters.InRange() {
+			ds.l[i] = ds.points[i].Likelihood()
+		} else {
+			ds.l[i] = math.Inf(-1)
+		}
 	}
 }
 
@@ -58,12 +62,16 @@ func (ds *DS) amotry(ilo int, fac float64) float64 {
 	for j := 0; j < ndim; j++ {
 		ds.parameters[j].Set(ds.psum[j]*fac1 - ds.allparameters[ilo][j].Get()*fac2)
 	}
-	l := ds.Likelihood()
+	var l float64
+	if ds.parameters.InRange() {
+		l = ds.Likelihood()
+	} else {
+		l = math.Inf(-1)
+	}
 	if l > ds.l[ilo] {
+		ds.points[ilo], ds.Optimizable = ds.Optimizable, ds.points[ilo]
+		ds.allparameters[ilo], ds.parameters = ds.parameters, ds.allparameters[ilo]
 		ds.l[ilo] = l
-		ds.points[ilo] = ds.Optimizable
-		ds.allparameters[ilo] = ds.Optimizable.GetFloatParameters()
-		ds.Optimizable = ds.Optimizable.Copy()
 	}
 	return l
 }
@@ -135,7 +143,7 @@ Iter:
 				ds.repeat = true
 				ds.oldL = lhi
 				ds.Optimizable = ds.points[ihi]
-				ds.createSimplex(SMALL_DELTA)
+				ds.createSimplex(ds.delta)
 				log.Printf("converged. retrying")
 			}
 		}

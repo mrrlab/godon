@@ -26,7 +26,7 @@ func NewMH() (mcmc *MH) {
 func (m *MH) Run(iterations int) {
 	m.l = m.Likelihood()
 	m.maxL = m.l
-	m.maxLPar = m.parameters.ValuesString()
+	m.maxLPar = m.parameters.Values(m.maxLPar)
 	m.PrintHeader()
 	accepted := 0
 Iter:
@@ -52,7 +52,7 @@ Iter:
 			accepted++
 			if m.l > m.maxL {
 				m.maxL = m.l
-				m.maxLPar = m.parameters.ValuesString()
+				m.maxLPar = m.parameters.Values(m.maxLPar)
 			}
 		} else {
 			par.Reject()
@@ -69,7 +69,7 @@ Iter:
 		log.Print("Finished MCMC")
 		log.Printf("Maximum likelihood: %v", m.maxL)
 		log.Printf("Parameter  names: %v", m.parameters.NamesString())
-		log.Printf("Parameter values: %v", m.maxLPar)
+		log.Printf("Parameter values: %v", m.GetMaxLParameters())
 	}
 	m.PrintFinal()
 }

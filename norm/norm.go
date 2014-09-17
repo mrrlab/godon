@@ -25,7 +25,8 @@ type MNormModel struct {
 	mean       []float64
 	sd         []float64
 	n          int
-	parameters optimize.Parameters
+	adaptive   bool
+	parameters optimize.FloatParameters
 }
 
 func square(x float64) float64 {
@@ -35,7 +36,7 @@ func square(x float64) float64 {
 func NewMNormModel(data [][]float64, adaptive bool) (m *MNormModel) {
 	mean := make([]float64, len(data))
 	sd := make([]float64, len(data))
-	parameters := make(optimize.Parameters, 0, len(data)*2)
+	parameters := make(optimize.FloatParameters, 0, len(data)*2)
 	for i, _ := range sd {
 		sd[i] = 1
 	}
@@ -43,7 +44,9 @@ func NewMNormModel(data [][]float64, adaptive bool) (m *MNormModel) {
 		mean:       mean,
 		sd:         sd,
 		n:          len(data),
-		parameters: parameters}
+		parameters: parameters,
+		adaptive:   adaptive,
+	}
 	if adaptive {
 		m.AddAdaptiveParameters()
 	} else {
@@ -52,23 +55,45 @@ func NewMNormModel(data [][]float64, adaptive bool) (m *MNormModel) {
 	return
 }
 
+func (m *MNormModel) Copy() optimize.Optimizable {
+	mean := make([]float64, m.n)
+	copy(mean, m.mean)
+	sd := make([]float64, m.n)
+	copy(sd, m.sd)
+	parameters := make(optimize.FloatParameters, 0, m.n*2)
+	adaptive := m.adaptive
+	newM := &MNormModel{data: m.data,
+		mean:       mean,
+		sd:         sd,
+		n:          m.n,
+		parameters: parameters,
+		adaptive:   adaptive,
+	}
+	if adaptive {
+		newM.AddAdaptiveParameters()
+	} else {
+		newM.AddParameters()
+	}
+	return newM
+}
+
 func (m *MNormModel) AddParameters() {
 	for i := 0; i < m.n; i++ {
 		name := "sd" + strconv.Itoa(i)
-		par := optimize.NewFloat64Parameter(&m.sd[i], name)
+		par := optimize.NewBasicFloatParameter(&m.sd[i], name)
 		par.Min = 0
 		par.Max = 100
 		par.PriorFunc = optimize.UniformPrior(0, 100, false, false)
 		par.ProposalFunc = optimize.NormalProposal(0.1)
-		m.parameters = append(m.parameters, par)
+		m.parameters.Append(par)
 
 		name = "mean" + strconv.Itoa(i)
-		par = optimize.NewFloat64Parameter(&m.mean[i], name)
+		par = optimize.NewBasicFloatParameter(&m.mean[i], name)
 		par.Min = -100
 		par.Max = 100
 		par.PriorFunc = optimize.UniformPrior(-100, 100, false, false)
 		par.ProposalFunc = optimize.NormalProposal(0.1)
-		m.parameters = append(m.parameters, par)
+		m.parameters.Append(par)
 	}
 }
 
@@ -80,23 +105,26 @@ func (m *MNormModel) AddAdaptiveParameters() {
 		par.Min = 0
 		par.Max = 100
 		par.PriorFunc = optimize.UniformPrior(0, 100, false, false)
-		m.parameters = append(m.parameters, par)
+		m.parameters.Append(par)
 
 		name = "mean" + strconv.Itoa(i)
 		par = optimize.NewAdaptiveParameter(&m.mean[i], name, s)
 		par.Min = -100
 		par.Max = 100
 		par.PriorFunc = optimize.UniformPrior(-100, 100, false, false)
-		m.parameters = append(m.parameters, par)
+		m.parameters.Append(par)
 	}
 }
 
-func (m *MNormModel) GetModelParameters() optimize.Parameters {
+func (m *MNormModel) GetFloatParameters() optimize.FloatParameters {
 	return m.parameters
 }
 
 func (m *MNormModel) Likelihood() (res float64) {
 	for i := 0; i < m.n; i++ {
+		if m.sd[i] < 0 {
+			return math.Inf(-1)
+		}
 		for _, x := range m.data[i] {
 			lnL := -math.Log(m.sd[i]*math.Sqrt(2*math.Pi)) - square(x-m.mean[i])/2/square(m.sd[i])
 			res += lnL
@@ -139,6 +167,7 @@ func getMeanSD(data []float64) (mean, sd float64) {
 
 func main() {
 	amcmc := flag.Bool("a", false, "adaptive mcmc")
+	simplex := flag.Bool("simplex", false, "use downhill simplex method")
 	iter := flag.Int("iter", 100000, "number of iterations")
 	seed := flag.Int64("seed", -1, "random generator seed, default time based")
 	flag.Parse()
@@ -167,10 +196,18 @@ func main() {
 
 	m := NewMNormModel(data, *amcmc)
 
-	chain := optimize.NewMH()
-	chain.SetOptimizable(m)
-	chain.AccPeriod = 200
+	var opt optimize.Optimizer
+	if !*simplex {
+		chain := optimize.NewMH()
+		chain.AccPeriod = 200
+		opt = chain
+	} else {
+		simp := optimize.NewDS()
+		opt = simp
+	}
 
-	chain.WatchSignals(os.Interrupt, syscall.SIGUSR2)
-	chain.Run(*iter)
+	opt.SetReportPeriod(100)
+	opt.SetOptimizable(m)
+	opt.WatchSignals(os.Interrupt, syscall.SIGUSR2)
+	opt.Run(*iter)
 }

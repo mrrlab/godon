@@ -87,6 +87,7 @@ func (m *Model) setParameters() {
 					m.expBr[nodeId] = false
 				}
 				par.PriorFunc = optimize.GammaPrior(1, 2, false)
+				par.Min = 0
 				par.ProposalFunc = optimize.NormalProposal(0.01)
 				m.parameters = append(m.parameters, par)
 			} else {
@@ -95,6 +96,7 @@ func (m *Model) setParameters() {
 					m.expBr[nodeId] = false
 				}
 				par.PriorFunc = optimize.GammaPrior(1, 2, false)
+				par.Min = 0
 				par.ProposalFunc = optimize.NormalProposal(0.01)
 				m.parameters = append(m.parameters, par)
 			}

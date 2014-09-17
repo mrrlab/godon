@@ -2,7 +2,13 @@ package optimize
 
 import (
 	"math"
+	"math/rand"
 	"strconv"
+)
+
+const (
+	MIN = -1000
+	MAX = +1000
 )
 
 type FloatParameter interface {
@@ -13,8 +19,11 @@ type FloatParameter interface {
 	Accept(int)
 	Reject()
 	String() string
+	GetMin() float64
+	GetMax() float64
 	Get() float64
 	Set(float64)
+	InRange() bool
 }
 
 type FloatParameters []FloatParameter
@@ -45,6 +54,30 @@ func (p *FloatParameters) Values(iv []float64) (v []float64) {
 		v[i] = par.Get()
 	}
 	return
+}
+
+func (p *FloatParameters) Update(pSrc *FloatParameters) {
+	for i := range *p {
+		(*p)[i].Set((*pSrc)[i].Get())
+	}
+}
+
+func (p *FloatParameters) Randomize() {
+	for _, par := range *p {
+		min := math.Max(MIN, par.GetMin())
+		max := math.Min(MAX, par.GetMax())
+		d := max - min
+		par.Set(min + rand.Float64()*d)
+	}
+
+}
+func (p *FloatParameters) InRange() bool {
+	for _, par := range *p {
+		if !par.InRange() {
+			return false
+		}
+	}
+	return true
 }
 
 func (p *FloatParameters) NamesString() (s string) {
@@ -98,6 +131,21 @@ func (p *BasicFloatParameter) Set(v float64) {
 	if p.OnChange != nil {
 		p.OnChange()
 	}
+}
+
+func (p *BasicFloatParameter) GetMin() float64 {
+	return p.Min
+}
+
+func (p *BasicFloatParameter) GetMax() float64 {
+	return p.Max
+}
+
+func (p *BasicFloatParameter) InRange() bool {
+	if *p.float64 < p.Min || *p.float64 > p.Max {
+		return false
+	}
+	return true
 }
 func (p *BasicFloatParameter) Name() string {
 	return p.name
