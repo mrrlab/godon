@@ -7,8 +7,8 @@ import (
 )
 
 const (
-	MIN = -1000
-	MAX = +1000
+	MIN = -10
+	MAX = +10
 )
 
 type FloatParameter interface {

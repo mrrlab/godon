@@ -90,6 +90,7 @@ func (ds *DS) Run(iterations int) {
 	// Lowest (worst), next-lowest and highest points
 	var ilo, inlo, ihi int
 	var llo, lnlo, lhi float64
+	ds.maxL = math.Inf(-1)
 Iter:
 	for ds.i = 1; ds.i <= iterations; ds.i++ {
 		if ds.l[0] < ds.l[1] {
@@ -118,6 +119,10 @@ Iter:
 				lnlo = ds.l[i]
 				inlo = i
 			}
+		}
+		if lhi > ds.maxL {
+			ds.maxL = lhi
+			ds.maxLPar = ds.allparameters[ihi].Values(ds.maxLPar)
 		}
 		ds.maxL = math.Max(ds.maxL, lhi)
 		ds.BaseOptimizer.l = lhi
@@ -177,8 +182,10 @@ Iter:
 		log.Printf("Iterations exceeded (%d)", iterations)
 	}
 	if !ds.Quiet {
-		log.Print("Finished downhill simples")
-		log.Printf("Likelihood: %v", ds.BaseOptimizer.l)
+		log.Print("Finished downhill simplex")
+		log.Printf("Maximum likelihood: %v", ds.maxL)
+		log.Printf("Parameter  names: %v", ds.parameters.NamesString())
+		log.Printf("Parameter values: %v", ds.GetMaxLParameters())
 		ds.PrintFinal()
 	}
 
