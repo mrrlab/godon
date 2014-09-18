@@ -101,6 +101,8 @@ func (m *BranchSite) addParameters() {
 		m.propdone = false
 	}
 	p01sum.PriorFunc = optimize.UniformPrior(0, 1, false, false)
+	p01sum.Min = 0
+	p01sum.Max = 1
 	p01sum.ProposalFunc = optimize.NormalProposal(0.01)
 	m.parameters = append(m.parameters, p01sum)
 
@@ -109,6 +111,8 @@ func (m *BranchSite) addParameters() {
 		m.propdone = false
 	}
 	p0prop.PriorFunc = optimize.UniformPrior(0, 1, false, false)
+	p0prop.Min = 0
+	p0prop.Max = 1
 	p0prop.ProposalFunc = optimize.NormalProposal(0.01)
 	m.parameters = append(m.parameters, p0prop)
 }

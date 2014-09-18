@@ -35,7 +35,7 @@ Iter:
 	for m.i = 0; m.i < iterations; m.i++ {
 		var T float64
 		if m.annealing {
-			T = float64(iterations-m.i) / float64(iterations)
+			T = math.Pow(0.9, float64(m.i)/float64(iterations)*100)
 		} else {
 			T = 1
 		}

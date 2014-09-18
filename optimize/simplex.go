@@ -24,7 +24,7 @@ type DS struct {
 
 func NewDS() (ds *DS) {
 	ds = &DS{
-		delta: 10,
+		delta: 1,
 		ftol:  1E-10,
 	}
 	return
@@ -44,10 +44,11 @@ func (ds *DS) createSimplex(delta float64) {
 		parameter.Set(parameter.Get() + delta)
 	}
 	for i := range ds.points {
-		if ds.parameters.InRange() {
+		if ds.allparameters[i].InRange() {
 			ds.l[i] = ds.points[i].Likelihood()
 		} else {
 			ds.l[i] = math.Inf(-1)
+			println("Warning: out of range", i)
 		}
 	}
 }
@@ -148,8 +149,11 @@ Iter:
 				ds.repeat = true
 				ds.oldL = lhi
 				ds.Optimizable = ds.points[ihi]
+				ds.parameters = ds.allparameters[ihi]
+				println(ds.parameters.ValuesString())
 				ds.createSimplex(ds.delta)
 				log.Printf("converged. retrying")
+				continue
 			}
 		}
 		l := ds.amotry(ilo, -1)
