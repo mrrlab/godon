@@ -12,14 +12,16 @@ const (
 
 type DS struct {
 	BaseOptimizer
-	delta         float64
-	ftol          float64
-	repeat        bool
-	oldL          float64
-	points        []Optimizable
-	psum          []float64
-	allparameters []FloatParameters
-	l             []float64
+	delta      float64
+	ftol       float64
+	repeat     bool
+	oldL       float64
+	points     []Optimizable
+	psum       []float64
+	parameters []FloatParameters
+	l          []float64
+	newOpt     Optimizable
+	newPar     FloatParameters
 }
 
 func NewDS() (ds *DS) {
@@ -30,21 +32,24 @@ func NewDS() (ds *DS) {
 	return
 }
 
-func (ds *DS) createSimplex(delta float64) {
-	ds.points = make([]Optimizable, len(ds.parameters)+1)
-	ds.allparameters = make([]FloatParameters, len(ds.points))
+func (ds *DS) createSimplex(opt Optimizable, delta float64) {
+	parameters := opt.GetFloatParameters()
+	ds.points = make([]Optimizable, len(parameters)+1)
+	ds.parameters = make([]FloatParameters, len(ds.points))
 	ds.l = make([]float64, len(ds.points))
-	for i := range ds.points {
-		point := ds.Optimizable.Copy()
+	ds.points[0] = opt
+	ds.parameters[0] = parameters
+	for i := 1; i < len(ds.points); i++ {
+		point := opt.Copy()
 		ds.points[i] = point
-		ds.allparameters[i] = point.GetFloatParameters()
+		ds.parameters[i] = point.GetFloatParameters()
 	}
-	for i := 0; i < len(ds.parameters); i++ {
-		parameter := ds.allparameters[i+1][i]
+	for i := 0; i < len(parameters); i++ {
+		parameter := ds.parameters[i+1][i]
 		parameter.Set(parameter.Get() + delta)
 	}
 	for i := range ds.points {
-		if ds.allparameters[i].InRange() {
+		if ds.parameters[i].InRange() {
 			ds.l[i] = ds.points[i].Likelihood()
 		} else {
 			ds.l[i] = math.Inf(-1)
@@ -56,38 +61,45 @@ func (ds *DS) createSimplex(delta float64) {
 // amotry extrapolates by factor fac throught the face of the simplex accros from
 // the low point, tries it, and replaces the high point if the new point is better.
 func (ds *DS) amotry(ilo int, fac float64) float64 {
+	if ds.newOpt == nil {
+		ds.newOpt = ds.points[0].Copy()
+		ds.newPar = ds.newOpt.GetFloatParameters()
+	}
 	ds.calcPsum()
-	ndim := len(ds.parameters)
+	ndim := len(ds.newPar)
 	fac1 := (1 - fac) / float64(ndim)
 	fac2 := fac1 - fac
 	for j := 0; j < ndim; j++ {
-		ds.parameters[j].Set(ds.psum[j]*fac1 - ds.allparameters[ilo][j].Get()*fac2)
+		ds.newPar[j].Set(ds.psum[j]*fac1 - ds.parameters[ilo][j].Get()*fac2)
 	}
 	var l float64
-	if ds.parameters.InRange() {
-		l = ds.Likelihood()
+	if ds.newPar.InRange() {
+		l = ds.newOpt.Likelihood()
 	} else {
 		l = math.Inf(-1)
 	}
 	if l > ds.l[ilo] {
-		ds.points[ilo], ds.Optimizable = ds.Optimizable, ds.points[ilo]
-		ds.allparameters[ilo], ds.parameters = ds.parameters, ds.allparameters[ilo]
+		ds.points[ilo], ds.newOpt = ds.newOpt, ds.points[ilo]
+		ds.parameters[ilo], ds.newPar = ds.newPar, ds.parameters[ilo]
 		ds.l[ilo] = l
 	}
 	return l
 }
 
 func (ds *DS) calcPsum() {
-	ds.psum = make([]float64, len(ds.parameters))
+	ds.psum = make([]float64, len(ds.parameters[0]))
 	for i := range ds.psum {
-		for _, parameters := range ds.allparameters {
+		for _, parameters := range ds.parameters {
 			ds.psum[i] += parameters[i].Get()
 		}
 	}
 }
 
+func (ds *DS) SetOptimizable(opt Optimizable) {
+	ds.createSimplex(opt, ds.delta)
+}
+
 func (ds *DS) Run(iterations int) {
-	ds.createSimplex(ds.delta)
 	// Lowest (worst), next-lowest and highest points
 	var ilo, inlo, ihi int
 	var llo, lnlo, lhi float64
@@ -123,14 +135,14 @@ Iter:
 		}
 		if lhi > ds.maxL {
 			ds.maxL = lhi
-			ds.maxLPar = ds.allparameters[ihi].Values(ds.maxLPar)
+			ds.maxLPar = ds.parameters[ihi].Values(ds.maxLPar)
 		}
 		ds.maxL = math.Max(ds.maxL, lhi)
 		ds.BaseOptimizer.l = lhi
 		_ = inlo
 		if !ds.Quiet && ds.i%ds.repPeriod == 0 {
 			log.Printf("%d: L=%f (%f)", ds.i, lhi, lhi-llo)
-			ds.PrintLine(ds.allparameters[ihi], lhi)
+			ds.PrintLine(ds.parameters[ihi], lhi)
 			/*
 				for i, parameters := range ds.allparameters {
 					ds.PrintLine(parameters, ds.l[i])
@@ -140,18 +152,12 @@ Iter:
 		rtol := 2 * math.Abs(ds.l[ihi]-ds.l[ilo]) / (math.Abs(ds.l[ilo]) + math.Abs(ds.l[ihi]) + TINY)
 		if rtol < ds.ftol {
 			if ds.repeat && math.Abs(ds.oldL-lhi) < 2*TINY {
-				ds.l[0], ds.l[ihi] = ds.l[ihi], ds.l[0]
-				ds.points[0], ds.points[ihi] = ds.points[ihi], ds.points[0]
-				ds.allparameters[0], ds.allparameters[ihi] = ds.allparameters[ihi], ds.allparameters[0]
-				ds.Optimizable = ds.points[0].Copy()
 				break Iter
 			} else {
 				ds.repeat = true
 				ds.oldL = lhi
-				ds.Optimizable = ds.points[ihi]
-				ds.parameters = ds.allparameters[ihi]
-				println(ds.parameters.ValuesString())
-				ds.createSimplex(ds.delta)
+				println(ds.parameters[ihi].ValuesString())
+				ds.createSimplex(ds.points[ihi], ds.delta)
 				log.Printf("converged. retrying")
 				continue
 			}
@@ -166,8 +172,8 @@ Iter:
 			if l <= lsave {
 				for i, point := range ds.points {
 					if i != ihi {
-						for j := range ds.parameters {
-							ds.allparameters[i][j].Set(0.5 * (ds.allparameters[i][j].Get() + ds.allparameters[ihi][j].Get()))
+						for j := range ds.parameters[i] {
+							ds.parameters[i][j].Set(0.5 * (ds.parameters[i][j].Get() + ds.parameters[ihi][j].Get()))
 						}
 						ds.l[i] = point.Likelihood()
 					}
@@ -187,10 +193,10 @@ Iter:
 	}
 	if !ds.Quiet {
 		log.Print("Finished downhill simplex")
-		log.Printf("Maximum likelihood: %v", ds.maxL)
-		log.Printf("Parameter  names: %v", ds.parameters.NamesString())
-		log.Printf("Parameter values: %v", ds.GetMaxLParameters())
-		ds.PrintFinal()
+		log.Printf("Likelihood: %v", lhi)
+		log.Printf("Parameter  names: %v", ds.parameters[ihi].NamesString())
+		log.Printf("Parameter values: %v", ds.parameters[ihi].ValuesString())
+		ds.PrintFinal(ds.parameters[ihi])
 	}
 
 }

@@ -24,20 +24,13 @@ type Optimizer interface {
 }
 
 type BaseOptimizer struct {
-	Optimizable
-	parameters FloatParameters
-	i          int
-	l          float64
-	maxL       float64
-	maxLPar    []float64
-	repPeriod  int
-	sig        chan os.Signal
-	Quiet      bool
-}
-
-func (o *BaseOptimizer) SetOptimizable(opt Optimizable) {
-	o.Optimizable = opt
-	o.parameters = opt.GetFloatParameters()
+	i         int
+	l         float64
+	maxL      float64
+	maxLPar   []float64
+	repPeriod int
+	sig       chan os.Signal
+	Quiet     bool
 }
 
 func (o *BaseOptimizer) WatchSignals(sigs ...os.Signal) {
@@ -49,9 +42,9 @@ func (o *BaseOptimizer) SetReportPeriod(period int) {
 	o.repPeriod = period
 }
 
-func (o *BaseOptimizer) PrintHeader() {
+func (o *BaseOptimizer) PrintHeader(par FloatParameters) {
 	if !o.Quiet {
-		fmt.Printf("iteration\tlikelihood\t%s\n", o.parameters.NamesString())
+		fmt.Printf("iteration\tlikelihood\t%s\n", par.NamesString())
 	}
 }
 
@@ -61,9 +54,9 @@ func (o *BaseOptimizer) PrintLine(par FloatParameters, l float64) {
 	}
 }
 
-func (o *BaseOptimizer) PrintFinal() {
+func (o *BaseOptimizer) PrintFinal(parameters FloatParameters) {
 	if !o.Quiet {
-		for _, par := range o.parameters {
+		for _, par := range parameters {
 			log.Printf("%s=%v", par.Name(), par.Get())
 		}
 	}

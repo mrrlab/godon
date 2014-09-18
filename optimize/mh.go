@@ -8,6 +8,8 @@ import (
 
 type MH struct {
 	BaseOptimizer
+	parameters FloatParameters
+	Optimizable
 	AccPeriod int
 	annealing bool
 	SD        float64
@@ -25,11 +27,16 @@ func NewMH(annealing bool) (mcmc *MH) {
 	return
 }
 
+func (m *MH) SetOptimizable(opt Optimizable) {
+	m.Optimizable = opt
+	m.parameters = opt.GetFloatParameters()
+}
+
 func (m *MH) Run(iterations int) {
 	m.l = m.Likelihood()
 	m.maxL = m.l
 	m.maxLPar = m.parameters.Values(m.maxLPar)
-	m.PrintHeader()
+	m.PrintHeader(m.parameters)
 	accepted := 0
 Iter:
 	for m.i = 0; m.i < iterations; m.i++ {
@@ -79,5 +86,5 @@ Iter:
 		log.Printf("Parameter  names: %v", m.parameters.NamesString())
 		log.Printf("Parameter values: %v", m.GetMaxLParameters())
 	}
-	m.PrintFinal()
+	m.PrintFinal(m.parameters)
 }
