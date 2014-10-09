@@ -68,23 +68,12 @@ func main() {
 		fmt.Println("you should specify tree and alignment")
 		return
 	}
-	treeFile, err := os.Open(flag.Args()[0])
+
+	fastaFile, err := os.Open(flag.Args()[0])
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer treeFile.Close()
-
-	t, err := tree.ParseNewick(treeFile)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	log.Print(t.FullString())
-
-	fastaFile, err := os.Open(flag.Args()[1])
-	if err != nil {
-		log.Fatal(err)
-	}
+	defer fastaFile.Close()
 
 	ali, err := bio.ParseFasta(fastaFile)
 	if err != nil {
@@ -97,6 +86,21 @@ func main() {
 	}
 
 	log.Printf("Read alignment of %d codons, %d fixed positions", len(cali[0].Sequence), cali.NFixed())
+
+	treeFile, err := os.Open(flag.Args()[1])
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer treeFile.Close()
+
+	t, err := tree.ParseNewick(treeFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Printf("intree=%s", t)
+	log.Printf("brtree=%s", t.StringBr())
+	log.Print(t.FullString())
 
 	var cf cmodel.CodonFrequency
 
@@ -202,6 +206,10 @@ func main() {
 	opt.WatchSignals(os.Interrupt, syscall.SIGUSR2)
 	opt.Run(*iterations)
 
+	if !*noOptBrLen {
+		log.Printf("outtree=%s", t)
+	}
 	endTime := time.Now()
+
 	log.Printf("Runing time: %v", endTime.Sub(startTime))
 }

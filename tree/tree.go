@@ -197,7 +197,43 @@ func (node *Node) AddChild(subNode *Node) {
 	node.childNodes = append(node.childNodes, subNode)
 }
 
+func (node *Node) StringBr() (s string) {
+	if node.IsTerminal() {
+		return fmt.Sprintf("%s#br%d", node.Name, node.Id)
+	}
+	s += "("
+	for i, child := range node.childNodes {
+		s += child.StringBr()
+		if i != len(node.childNodes)-1 {
+			s += ","
+		}
+	}
+	s += fmt.Sprintf(")#br%d", node.Id)
+	if node.IsRoot() {
+		s += ";"
+	}
+	return s
+}
+
 func (node *Node) String() (s string) {
+	if node.IsTerminal() {
+		return fmt.Sprintf("%s:%0.6f", node.Name, node.BranchLength)
+	}
+	s += "("
+	for i, child := range node.childNodes {
+		s += child.String()
+		if i != len(node.childNodes)-1 {
+			s += ","
+		}
+	}
+	s += fmt.Sprintf("):%0.6f", node.BranchLength)
+	if node.IsRoot() {
+		s += ";"
+	}
+	return s
+}
+
+func (node *Node) LongString() (s string) {
 	s = "<"
 	if node.Parent == nil {
 		s += "root, "
@@ -221,7 +257,7 @@ func (node *Node) FullString() string {
 }
 
 func (node *Node) prefixString(prefix string) (s string) {
-	s = prefix + node.String() + "\n"
+	s = prefix + node.LongString() + "\n"
 	for _, node := range node.childNodes {
 		s += node.prefixString(prefix + "    ")
 	}
