@@ -199,7 +199,7 @@ func (node *Node) AddChild(subNode *Node) {
 
 func (node *Node) StringBr() (s string) {
 	if node.IsTerminal() {
-		return fmt.Sprintf("%s#br%d", node.Name, node.Id)
+		return fmt.Sprintf("%s*%d", node.Name, node.Id)
 	}
 	s += "("
 	for i, child := range node.childNodes {
@@ -208,7 +208,7 @@ func (node *Node) StringBr() (s string) {
 			s += ","
 		}
 	}
-	s += fmt.Sprintf(")#br%d", node.Id)
+	s += fmt.Sprintf(")*%d", node.Id)
 	if node.IsRoot() {
 		s += ";"
 	}
