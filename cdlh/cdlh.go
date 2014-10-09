@@ -85,7 +85,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	log.Printf("Read alignment of %d codons, %d fixed positions", len(cali[0].Sequence), cali.NFixed())
+	log.Printf("Read alignment of %d codons, %d fixed positions, %d ambiguous positions", len(cali[0].Sequence), cali.NFixed(), cali.NAmbiguous())
 
 	treeFile, err := os.Open(flag.Args()[1])
 	if err != nil {

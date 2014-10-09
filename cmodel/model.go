@@ -276,8 +276,9 @@ func (m *Model) fullSubL(class, pos int, plh [][]float64) (res float64) {
 	}
 
 	for node := range m.tree.Terminals() {
+		codon := m.cali[node.LeafId].Sequence[pos]
 		for l := byte(0); l < byte(nCodon); l++ {
-			if l == m.cali[node.LeafId].Sequence[pos] {
+			if codon == NOCODON || l == codon {
 				plh[node.Id][l] = 1
 			} else {
 				plh[node.Id][l] = 0

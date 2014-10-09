@@ -16,6 +16,10 @@ var (
 	nCodon    int
 )
 
+const (
+	NOCODON = 255
+)
+
 type CodonSequence struct {
 	Name     string
 	Sequence []byte
@@ -48,6 +52,18 @@ func (seqs CodonSequences) String() (s string) {
 	return s[:len(s)-1]
 }
 
+func (seqs CodonSequences) NAmbiguous() (count int) {
+	for i := range seqs[0].Sequence {
+		for _, seq := range seqs {
+			if seq.Sequence[i] == NOCODON {
+				count++
+				break
+			}
+		}
+	}
+	return
+}
+
 func ToCodonSequences(seqs bio.Sequences) (cs CodonSequences, err error) {
 	cs = make(CodonSequences, 0, len(seqs))
 	for _, seq := range seqs {
@@ -58,7 +74,11 @@ func ToCodonSequences(seqs bio.Sequences) (cs CodonSequences, err error) {
 		cseq.Name = seq.Name
 		cseq.Sequence = make([]byte, 0, len(seq.Sequence)/3)
 		for i := 0; i < len(seq.Sequence); i += 3 {
-			cseq.Sequence = append(cseq.Sequence, codonNum[seq.Sequence[i:i+3]])
+			cnum, ok := codonNum[seq.Sequence[i:i+3]]
+			if !ok {
+				cnum = NOCODON
+			}
+			cseq.Sequence = append(cseq.Sequence, cnum)
 		}
 		cs = append(cs, cseq)
 	}

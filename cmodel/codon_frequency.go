@@ -90,6 +90,9 @@ func F3X4(cali CodonSequences) (cf CodonFrequency) {
 
 	for _, cs := range cali {
 		for _, codon := range cs.Sequence {
+			if codon == NOCODON {
+				continue
+			}
 			cs := numCodon[byte(codon)]
 			poscf[0][rAlphabet[cs[0]]]++
 			poscf[1][rAlphabet[cs[1]]]++
