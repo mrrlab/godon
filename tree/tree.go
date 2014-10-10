@@ -197,13 +197,13 @@ func (node *Node) AddChild(subNode *Node) {
 	node.childNodes = append(node.childNodes, subNode)
 }
 
-func (node *Node) StringBr() (s string) {
+func (node *Node) BrString() (s string) {
 	if node.IsTerminal() {
 		return fmt.Sprintf("%s*%d", node.Name, node.Id)
 	}
 	s += "("
 	for i, child := range node.childNodes {
-		s += child.StringBr()
+		s += child.BrString()
 		if i != len(node.childNodes)-1 {
 			s += ","
 		}

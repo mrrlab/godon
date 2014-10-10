@@ -99,7 +99,7 @@ func main() {
 	}
 
 	log.Printf("intree=%s", t)
-	log.Printf("brtree=%s", t.StringBr())
+	log.Printf("brtree=%s", t.BrString())
 	log.Print(t.FullString())
 
 	var cf cmodel.CodonFrequency
