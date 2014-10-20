@@ -24,7 +24,6 @@ type Tree struct {
 	nNodes    int
 	nodes     []*Node
 	nodeOrder []*Node
-	oldRoot   int
 }
 
 func (tree *Tree) ClearCache() {
@@ -213,6 +212,11 @@ func (tree *Tree) Unroot() (int, error) {
 		newRoot.Class = 0
 	}
 
+	// update cached parameters
+	tree.nNodes -= 1
+	tree.nodes = nil
+	tree.nodeOrder = nil
+
 	return noRoot.Id, nil
 }
 
@@ -256,8 +260,12 @@ func (tree *Tree) Root(branchId int) error {
 	newRoot.childNodes[0].Parent = newRoot
 	newRoot.childNodes[1].Parent = newRoot
 
-	return nil
+	// update cached parameters
+	tree.nNodes += 1
+	tree.nodes = nil
+	tree.nodeOrder = nil
 
+	return nil
 }
 
 type Node struct {
