@@ -60,7 +60,13 @@ Iter:
 		par.Propose()
 		newL := m.Likelihood()
 
-		a := math.Exp((par.Prior() - par.OldPrior() + newL - m.l) / T)
+		var a float64
+		if m.annealing {
+			a = math.Exp((newL - m.l) / T)
+		} else {
+			a = math.Exp((par.Prior() - par.OldPrior() + newL - m.l))
+		}
+
 		if a > 1 || rand.Float64() < a {
 			m.l = newL
 			par.Accept(m.i)
