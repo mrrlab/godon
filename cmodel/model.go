@@ -77,8 +77,8 @@ func (m *Model) setParameters() {
 		m.parameters = make(optimize.FloatParameters, 0, m.tree.NNodes())
 		for _, node := range m.tree.Nodes() {
 			nodeId := node.Id
-			// Branch 0 is not optimized
-			if nodeId == 0 {
+			// Root branch is not optimized
+			if node.IsRoot() {
 				continue
 			}
 			if m.as == nil {
