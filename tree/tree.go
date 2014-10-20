@@ -24,6 +24,7 @@ type Tree struct {
 	nNodes    int
 	nodes     []*Node
 	nodeOrder []*Node
+	oldRoot   int
 }
 
 func (tree *Tree) ClearCache() {
@@ -165,6 +166,100 @@ func (tree *Tree) NodeOrder() []*Node {
 	return tree.nodeOrder
 }
 
+func (tree *Tree) Unroot() (int, error) {
+	if tree.NLeaves() < 3 {
+		return 0, errors.New("Unrooting works only for trees with >= 2 leaves")
+	}
+	if len(tree.Node.childNodes) != 2 {
+		// tree is probably unrooted already
+		return 0, nil
+	}
+
+	reverse := false
+
+	var newRoot, noRoot *Node
+	switch {
+	case !tree.Node.childNodes[0].IsTerminal():
+		newRoot = tree.Node.childNodes[0]
+		noRoot = tree.Node.childNodes[1]
+	case !tree.Node.childNodes[1].IsTerminal():
+		newRoot = tree.Node.childNodes[1]
+		noRoot = tree.Node.childNodes[0]
+		reverse = true
+	default:
+		// This probably shouldn't happen
+		return 0, errors.New("Unexpected tree topology while unrooting")
+	}
+
+	if newRoot.Class != 0 && noRoot.Class != 0 && newRoot.Class != noRoot.Class {
+		return 0, errors.New("Root branches have different non-zero classes")
+	}
+
+	tree.Node = newRoot
+	noRoot.BranchLength += newRoot.BranchLength
+	newRoot.BranchLength = 0
+	if !reverse {
+		newRoot.childNodes = append(newRoot.childNodes, noRoot)
+	} else {
+		newRoot.childNodes = append(newRoot.childNodes, nil)
+		copy(newRoot.childNodes[1:], newRoot.childNodes)
+		newRoot.childNodes[0] = noRoot
+	}
+	// rewire parents
+	newRoot.Parent = nil
+	noRoot.Parent = newRoot
+	if newRoot.Class != 0 {
+		noRoot.Class = newRoot.Class
+		newRoot.Class = 0
+	}
+
+	return noRoot.Id, nil
+}
+
+func (tree *Tree) Root(branchId int) error {
+	if len(tree.Node.childNodes) == 2 {
+		// no need to change
+		return nil
+	}
+
+	reverse := false
+
+	j := -1
+
+	for i, node := range tree.Node.childNodes {
+		if node.Id == branchId {
+			j = i
+			break
+		}
+	}
+	if j < 0 {
+		return errors.New("Rooting branch not found at the root node")
+	}
+
+	if j == 0 {
+		reverse = true
+	}
+
+	newRoot := &Node{}
+	if !reverse {
+		newRoot.childNodes = append(newRoot.childNodes, tree.Node, tree.Node.childNodes[j])
+	} else {
+		newRoot.childNodes = append(newRoot.childNodes, tree.Node.childNodes[j], tree.Node)
+	}
+
+	tree.Node.BranchLength = tree.Node.childNodes[j].BranchLength / 2
+	tree.Node.childNodes[j].BranchLength = tree.Node.BranchLength
+	tree.Node.Class = tree.Node.childNodes[j].Class
+	tree.Node.childNodes = append(tree.Node.childNodes[:j], tree.Node.childNodes[j+1:]...)
+	tree.Node = newRoot
+
+	newRoot.childNodes[0].Parent = newRoot
+	newRoot.childNodes[1].Parent = newRoot
+
+	return nil
+
+}
+
 type Node struct {
 	Name         string
 	BranchLength float64
@@ -209,6 +304,32 @@ func (node *Node) BrString() (s string) {
 		}
 	}
 	s += fmt.Sprintf(")*%d", node.Id)
+	if node.IsRoot() {
+		s += ";"
+	}
+	return s
+}
+
+func (node *Node) ClassString() (s string) {
+	if node.IsTerminal() {
+		if node.Class == 0 {
+			return fmt.Sprintf("%s:%0.6f", node.Name, node.BranchLength)
+		} else {
+			return fmt.Sprintf("%s#%d:%0.6f", node.Name, node.Class, node.BranchLength)
+		}
+	}
+	s += "("
+	for i, child := range node.childNodes {
+		s += child.ClassString()
+		if i != len(node.childNodes)-1 {
+			s += ","
+		}
+	}
+	s += ")"
+	if node.Class != 0 {
+		s += fmt.Sprintf("#%d", node.Class)
+	}
+	s += fmt.Sprintf(":%0.6f", node.BranchLength)
 	if node.IsRoot() {
 		s += ";"
 	}
