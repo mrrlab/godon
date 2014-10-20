@@ -211,5 +211,5 @@ func main() {
 	}
 	endTime := time.Now()
 
-	log.Printf("Runing time: %v", endTime.Sub(startTime))
+	log.Printf("Running time: %v", endTime.Sub(startTime))
 }
