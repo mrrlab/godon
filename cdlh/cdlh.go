@@ -51,7 +51,19 @@ func main() {
 	seed := flag.Int64("seed", -1, "random generator seed, default time based")
 	cpuProfile := flag.String("cpuprofile", "", "write cpu profile to file")
 
+	// output
+	outLogF := flag.String("log", "", "write log to a file")
+
 	flag.Parse()
+
+	if *outLogF != "" {
+		f, err := os.OpenFile(*outLogF, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0)
+		if err != nil {
+			log.Fatal("Error opening log file:", err)
+		}
+		defer f.Close()
+		log.SetOutput(f)
+	}
 
 	if *seed == -1 {
 		*seed = time.Now().UnixNano()
