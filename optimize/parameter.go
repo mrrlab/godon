@@ -1,6 +1,7 @@
 package optimize
 
 import (
+	"errors"
 	"math"
 	"math/rand"
 	"strconv"
@@ -54,6 +55,28 @@ func (p *FloatParameters) Values(iv []float64) (v []float64) {
 		v[i] = par.Get()
 	}
 	return
+}
+
+func (p *FloatParameters) SetValues(v []float64) error {
+	if len(v) != len(*p) {
+		errors.New("Incorrect number of parameters")
+	}
+	for i, par := range *p {
+		par.Set(v[i])
+	}
+	return nil
+}
+
+func (par *FloatParameters) ReadLine(l string) error {
+	v, err := ReadFloats(l)
+	if err != nil {
+		return err
+	}
+	err = par.SetValues(v[2:])
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (p *FloatParameters) Update(pSrc *FloatParameters) {

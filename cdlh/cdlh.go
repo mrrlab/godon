@@ -2,6 +2,7 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
 	"log"
@@ -17,6 +18,21 @@ import (
 	"bitbucket.com/Davydov/golh/optimize"
 	"bitbucket.com/Davydov/golh/tree"
 )
+
+func lastLine(fn string) (line string) {
+	f, err := os.Open(fn)
+	if err != nil {
+		log.Fatal("Error opening file:", err)
+	}
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		line = scanner.Text()
+	}
+	if err := scanner.Err(); err != nil {
+		log.Fatal("Error scanning last line:", err)
+	}
+	return
+}
 
 func main() {
 	startTime := time.Now()
@@ -51,10 +67,11 @@ func main() {
 	seed := flag.Int64("seed", -1, "random generator seed, default time based")
 	cpuProfile := flag.String("cpuprofile", "", "write cpu profile to file")
 
-	// output
+	// input/output
 	outLogF := flag.String("log", "", "write log to a file")
 	outF := flag.String("out", "", "write optimization trajectory to a file")
 	outTreeF := flag.String("tree", "", "write tree to a file")
+	startF := flag.String("start", "", "read start position from the trajectory file")
 
 	flag.Parse()
 
@@ -244,6 +261,15 @@ func main() {
 		defer f.Close()
 		opt.SetOutput(f)
 	}
+	if *startF != "" {
+		l := lastLine(*startF)
+		par := m.GetFloatParameters()
+		err := par.ReadLine(l)
+		if err != nil {
+			log.Fatal("Error reading start position:", err)
+		}
+	}
+
 	opt.Run(*iterations)
 
 	if !*noOptBrLen {
