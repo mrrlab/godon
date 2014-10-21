@@ -38,6 +38,7 @@ func (m *MH) Run(iterations int) {
 	m.maxLPar = m.parameters.Values(m.maxLPar)
 	m.PrintHeader(m.parameters)
 	accepted := 0
+	lastReported := -1
 Iter:
 	for m.i = 0; m.i < iterations; m.i++ {
 		var T float64
@@ -58,6 +59,7 @@ Iter:
 				log.Printf("%d: L=%f", m.i, m.l)
 			}
 			m.PrintLine(m.parameters, m.l)
+			lastReported = m.i
 		}
 		p := rand.Intn(len(m.parameters))
 		par := m.parameters[p]
@@ -90,6 +92,11 @@ Iter:
 		default:
 		}
 	}
+
+	if m.i != lastReported {
+		m.PrintLine(m.parameters, m.l)
+	}
+
 	if !m.Quiet {
 		log.Print("Finished MCMC")
 		log.Printf("Maximum likelihood: %v", m.maxL)
