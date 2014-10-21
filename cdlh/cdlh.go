@@ -53,11 +53,12 @@ func main() {
 
 	// output
 	outLogF := flag.String("log", "", "write log to a file")
+	outTreeF := flag.String("tree", "", "write tree to a file")
 
 	flag.Parse()
 
 	if *outLogF != "" {
-		f, err := os.OpenFile(*outLogF, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0)
+		f, err := os.Create(*outLogF)
 		if err != nil {
 			log.Fatal("Error opening log file:", err)
 		}
@@ -245,6 +246,16 @@ func main() {
 			}
 		}
 		log.Printf("outtree=%s", t)
+	}
+
+	if *outTreeF != "" {
+		f, err := os.Create(*outTreeF)
+		if err != nil {
+			log.Print("Error opening tree output file:", err)
+		} else {
+			f.WriteString(t.String() + "\n")
+			f.Close()
+		}
 	}
 
 	endTime := time.Now()
