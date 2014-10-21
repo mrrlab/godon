@@ -2,6 +2,7 @@ package optimize
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"os/signal"
@@ -17,6 +18,7 @@ type Optimizer interface {
 	SetOptimizable(Optimizable)
 	WatchSignals(...os.Signal)
 	SetReportPeriod(period int)
+	SetOutput(io.Writer)
 	Run(iterations int)
 	GetL() float64
 	GetMaxL() float64
@@ -30,6 +32,7 @@ type BaseOptimizer struct {
 	maxLPar   []float64
 	repPeriod int
 	sig       chan os.Signal
+	output    io.Writer
 	Quiet     bool
 }
 
@@ -42,6 +45,10 @@ func (o *BaseOptimizer) SetReportPeriod(period int) {
 	o.repPeriod = period
 }
 
+func (o *BaseOptimizer) SetOutput(output io.Writer) {
+	o.output = output
+}
+
 func (o *BaseOptimizer) PrintHeader(par FloatParameters) {
 	if !o.Quiet {
 		fmt.Printf("iteration\tlikelihood\t%s\n", par.NamesString())
@@ -50,7 +57,10 @@ func (o *BaseOptimizer) PrintHeader(par FloatParameters) {
 
 func (o *BaseOptimizer) PrintLine(par FloatParameters, l float64) {
 	if !o.Quiet {
-		fmt.Printf("%d\t%f\t%s\n", o.i, l, par.ValuesString())
+		if o.output == nil {
+			o.output = os.Stdout
+		}
+		fmt.Fprintf(o.output, "%d\t%f\t%s\n", o.i, l, par.ValuesString())
 	}
 }
 

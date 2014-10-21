@@ -53,6 +53,7 @@ func main() {
 
 	// output
 	outLogF := flag.String("log", "", "write log to a file")
+	outF := flag.String("out", "", "write optimization trajectory to a file")
 	outTreeF := flag.String("tree", "", "write tree to a file")
 
 	flag.Parse()
@@ -60,7 +61,7 @@ func main() {
 	if *outLogF != "" {
 		f, err := os.Create(*outLogF)
 		if err != nil {
-			log.Fatal("Error opening log file:", err)
+			log.Fatal("Error creating log file:", err)
 		}
 		defer f.Close()
 		log.SetOutput(f)
@@ -235,6 +236,14 @@ func main() {
 	opt.SetOptimizable(m)
 	opt.SetReportPeriod(*report)
 	opt.WatchSignals(os.Interrupt, syscall.SIGUSR2)
+	if *outF != "" {
+		f, err := os.Create(*outF)
+		if err != nil {
+			log.Fatal("Error creating trajectory file:", err)
+		}
+		defer f.Close()
+		opt.SetOutput(f)
+	}
 	opt.Run(*iterations)
 
 	if !*noOptBrLen {
@@ -251,7 +260,7 @@ func main() {
 	if *outTreeF != "" {
 		f, err := os.Create(*outTreeF)
 		if err != nil {
-			log.Print("Error opening tree output file:", err)
+			log.Print("Error creating tree output file:", err)
 		} else {
 			f.WriteString(t.String() + "\n")
 			f.Close()
