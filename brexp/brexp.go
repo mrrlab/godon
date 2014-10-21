@@ -69,8 +69,10 @@ func main() {
 	}
 	switch *mode {
 	case "brlen":
-		for _, node := range t.Nodes() {
-			fmt.Printf("br%d=%f\n", node.Id, node.BranchLength)
+		for _, node := range t.NodeIdArray() {
+			if node != nil {
+				fmt.Printf("br%d=%f\n", node.Id, node.BranchLength)
+			}
 		}
 	case "brtree":
 		fmt.Println(t.BrString())

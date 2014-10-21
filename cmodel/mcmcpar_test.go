@@ -16,10 +16,11 @@ func TestBranchSiteReprM0D1(tst *testing.T) {
 	cf := F3X4(cali)
 
 	m0 := NewM0(cali, t, cf, false)
-	chain := optimize.NewMH(m0)
+	chain := optimize.NewMH(false)
+	chain.SetOptimizable(m0)
 	chain.Quiet = true
 	chain.Run(10)
-	L := chain.L
+	L := m0.Likelihood()
 
 	// Now reproduce
 	k, w := m0.GetParameters()
@@ -50,10 +51,11 @@ func TestBranchSiteReprM0D2(tst *testing.T) {
 	m0 := NewM0(cali, t, cf, false)
 	as := optimize.NewAdaptiveSettings()
 	m0.SetAdaptive(as)
-	chain := optimize.NewMH(m0)
+	chain := optimize.NewMH(false)
+	chain.SetOptimizable(m0)
 	chain.Quiet = true
 	chain.Run(10)
-	L := chain.L
+	L := m0.Likelihood()
 
 	// Now reproduce
 	k, w := m0.GetParameters()
@@ -82,10 +84,11 @@ func TestBranchSiteReprM0D3(tst *testing.T) {
 	cf := F3X4(cali)
 
 	m0 := NewM0(cali, t, cf, true)
-	chain := optimize.NewMH(m0)
+	chain := optimize.NewMH(false)
+	chain.SetOptimizable(m0)
 	chain.Quiet = true
 	chain.Run(20)
-	L := chain.L
+	L := m0.Likelihood()
 
 	// Now reproduce
 	k, w := m0.GetParameters()
@@ -118,10 +121,11 @@ func TestBranchSiteReprBSD1(tst *testing.T) {
 	cf := F3X4(cali)
 
 	h1 := NewBranchSite(cali, t, cf, false)
-	chain := optimize.NewMH(h1)
+	chain := optimize.NewMH(false)
+	chain.SetOptimizable(h1)
 	chain.Quiet = true
 	chain.Run(10)
-	L := chain.L
+	L := h1.Likelihood()
 
 	// Now reproduce
 	k, w0, w2, p0, p1 := h1.GetParameters()
@@ -154,10 +158,11 @@ func TestBranchSiteReprBSD2(tst *testing.T) {
 	cf := F0()
 
 	h1 := NewBranchSite(cali, t, cf, false)
-	chain := optimize.NewMH(h1)
+	chain := optimize.NewMH(false)
+	chain.SetOptimizable(h1)
 	chain.Quiet = true
 	chain.Run(10)
-	L := chain.L
+	L := h1.Likelihood()
 
 	// Now reproduce
 	k, w0, w2, p0, p1 := h1.GetParameters()
@@ -193,10 +198,11 @@ func TestBranchSiteReprBSD3(tst *testing.T) {
 	h1 := NewBranchSite(cali, t, cf, true)
 	as := optimize.NewAdaptiveSettings()
 	h1.SetAdaptive(as)
-	chain := optimize.NewMH(h1)
+	chain := optimize.NewMH(false)
+	chain.SetOptimizable(h1)
 	chain.Quiet = true
 	chain.Run(10)
-	L := chain.L
+	L := h1.Likelihood()
 
 	// Now reproduce
 	k, w0, w2, p0, p1 := h1.GetParameters()

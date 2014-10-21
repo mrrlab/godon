@@ -183,7 +183,10 @@ func (m *BranchSite) SetDefaults() {
 
 func (m *BranchSite) SetBranchMatrices() {
 	for i := 0; i < len(m.qs); i++ {
-		for _, node := range m.tree.Nodes() {
+		for _, node := range m.tree.NodeIdArray() {
+			if node == nil {
+				continue
+			}
 			switch i {
 			case 0:
 				m.qs[i][node.Id] = m.q0
@@ -214,7 +217,10 @@ func (m *BranchSite) UpdateProportions() {
 	m.prop[2] = (1 - p0 - p1) * p0 / (p0 + p1)
 	m.prop[3] = (1 - p0 - p1) * p1 / (p0 + p1)
 
-	for _, node := range m.tree.Nodes() {
+	for _, node := range m.tree.NodeIdArray() {
+		if node == nil {
+			continue
+		}
 		if node.Class == 0 {
 			m.scale[node.Id] = (m.prop[0]+m.prop[2])*m.q0.Scale + (m.prop[1]+m.prop[3])*m.q1.Scale
 		} else {

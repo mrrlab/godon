@@ -57,13 +57,13 @@ func NewModel(cali CodonSequences, t *tree.Tree, cf CodonFrequency, nclass int, 
 		optBranch: optBranch,
 		cf:        cf,
 		qs:        make([][]*EMatrix, nclass),
-		scale:     make([]float64, t.NNodes()),
-		expBr:     make([]bool, t.NNodes()),
+		scale:     make([]float64, t.MaxNodeId()+1),
+		expBr:     make([]bool, t.MaxNodeId()+1),
 		prop:      make([]float64, nclass),
 		nclass:    nclass,
 	}
 	for i := 0; i < nclass; i++ {
-		m.qs[i] = make([]*EMatrix, t.NNodes())
+		m.qs[i] = make([]*EMatrix, t.MaxNodeId()+1)
 	}
 	t.NodeOrder()
 	m.ReorderAlignment()
@@ -75,7 +75,10 @@ func NewModel(cali CodonSequences, t *tree.Tree, cf CodonFrequency, nclass int, 
 func (m *Model) setParameters() {
 	if m.optBranch {
 		m.parameters = make(optimize.FloatParameters, 0, m.tree.NNodes())
-		for _, node := range m.tree.Nodes() {
+		for _, node := range m.tree.NodeIdArray() {
+			if node == nil {
+				continue
+			}
 			nodeId := node.Id
 			// Root branch is not optimized
 			if node.IsRoot() {
@@ -133,7 +136,7 @@ type expTask struct {
 
 // Exponentiate a signle branch. This uses eigen decomposed matrices.
 func (m *Model) ExpBranch(br int) {
-	node := m.tree.Nodes()[br]
+	node := m.tree.NodeIdArray()[br]
 	cD := matrix.Zeros(nCodon, nCodon)
 	for class, _ := range m.qs {
 		var oclass int
@@ -159,7 +162,7 @@ func (m *Model) ExpBranches() {
 	if m.eQts == nil {
 		m.eQts = make([][][]float64, len(m.qs))
 		for class, _ := range m.qs {
-			m.eQts[class] = make([][]float64, m.tree.NNodes())
+			m.eQts[class] = make([][]float64, m.tree.MaxNodeId()+1)
 		}
 	} else {
 		for class, _ := range m.eQts {
@@ -189,7 +192,10 @@ func (m *Model) ExpBranches() {
 	}
 
 	for class, _ := range m.qs {
-		for _, node := range m.tree.Nodes() {
+		for _, node := range m.tree.NodeIdArray() {
+			if node == nil {
+				continue
+			}
 			var oclass int
 			for oclass = class - 1; oclass >= 0; oclass-- {
 				if m.qs[class][node.Id] == m.qs[oclass][node.Id] {
@@ -215,8 +221,8 @@ func (m *Model) Likelihood() (lnL float64) {
 	if !m.expAllBr {
 		m.ExpBranches()
 	} else {
-		for _, node := range m.tree.Nodes() {
-			if !m.expBr[node.Id] {
+		for _, node := range m.tree.NodeIdArray() {
+			if !m.expBr[node.Id] && node != nil {
 				m.ExpBranch(node.Id)
 			}
 		}
@@ -232,8 +238,9 @@ func (m *Model) Likelihood() (lnL float64) {
 
 	for i := 0; i < runtime.GOMAXPROCS(0); i++ {
 		go func() {
-			plh := make([][]float64, m.tree.NNodes())
-			for i := 0; i < m.tree.NNodes(); i++ {
+			nni := m.tree.MaxNodeId() + 1
+			plh := make([][]float64, nni)
+			for i := 0; i < nni; i++ {
 				plh[i] = make([]float64, nCodon+1)
 			}
 			for pos := range tasks {
@@ -271,7 +278,7 @@ func (m *Model) Likelihood() (lnL float64) {
 
 // fullSubL calculates likelihood for given site class and position.
 func (m *Model) fullSubL(class, pos int, plh [][]float64) (res float64) {
-	for i := 0; i < m.tree.NNodes(); i++ {
+	for i := 0; i < m.tree.MaxNodeId()+1; i++ {
 		plh[i][0] = math.NaN()
 	}
 
@@ -400,7 +407,7 @@ func (m *Model) observedSubL(class, pos int, plh [][]float64) (res float64) {
 // fixedSubL calculates likelihood for given site class and position
 // if the site is fixed.
 func (m *Model) fixedSubL(class, pos int, plh [][]float64) (res float64) {
-	for i := 0; i < m.tree.NNodes(); i++ {
+	for i := 0; i < m.tree.MaxNodeId()+1; i++ {
 		plh[i][0] = math.NaN()
 	}
 

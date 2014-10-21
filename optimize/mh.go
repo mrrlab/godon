@@ -52,7 +52,11 @@ Iter:
 		}
 
 		if !m.Quiet && m.i%m.repPeriod == 0 {
-			log.Printf("%d: L=%f, T=%f", m.i, m.l, T)
+			if m.annealing {
+				log.Printf("%d: L=%f, T=%f", m.i, m.l, T)
+			} else {
+				log.Printf("%d: L=%f", m.i, m.l)
+			}
 			m.PrintLine(m.parameters, m.l)
 		}
 		p := rand.Intn(len(m.parameters))

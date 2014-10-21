@@ -100,6 +100,21 @@ func main() {
 
 	log.Printf("intree=%s", t)
 	log.Printf("brtree=%s", t.BrString())
+
+	// Root the tree in the end
+	var root = false
+	var rootId = 0
+
+	if t.IsRooted() {
+		log.Print("Tree is rooted. Will unroot.")
+		root = true
+		rootId, err = t.Unroot()
+		if err != nil {
+			log.Fatal("Error unrooting tree:", err)
+		}
+	}
+
+	log.Printf("intree_unroot=%s", t)
 	log.Print(t.FullString())
 
 	var cf cmodel.CodonFrequency
@@ -128,7 +143,10 @@ func main() {
 	log.Print(cf)
 
 	if *fgBranch >= 0 {
-		for _, node := range t.Nodes() {
+		for _, node := range t.NodeIdArray() {
+			if node == nil {
+				continue
+			}
 			if node.Id == *fgBranch {
 				node.Class = 1
 			} else {
@@ -207,8 +225,16 @@ func main() {
 	opt.Run(*iterations)
 
 	if !*noOptBrLen {
+		if root {
+			log.Printf("unrooted_outtree=%s", t)
+			err = t.Root(rootId)
+			if err != nil {
+				log.Print("Error rooting tree:", err)
+			}
+		}
 		log.Printf("outtree=%s", t)
 	}
+
 	endTime := time.Now()
 
 	log.Printf("Running time: %v", endTime.Sub(startTime))

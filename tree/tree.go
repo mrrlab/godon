@@ -21,15 +21,16 @@ const (
 
 type Tree struct {
 	*Node
-	nNodes    int
-	nodes     []*Node
-	nodeOrder []*Node
+	nNodes      int
+	maxNodeId   int
+	nodeIdArray []*Node
+	nodeOrder   []*Node
 }
 
 func (tree *Tree) ClearCache() {
 	tree.nNodes = 0
 	// can we use something like append here? do we need to bother?
-	tree.nodes = nil
+	tree.nodeIdArray = nil
 	tree.nodeOrder = nil
 }
 
@@ -40,16 +41,29 @@ func (tree *Tree) NNodes() int {
 	return tree.nNodes
 }
 
-func (tree *Tree) Nodes() []*Node {
-	if tree.nodes == nil {
-		tree.nodes = make([]*Node, tree.NNodes())
+func (tree *Tree) MaxNodeId() (maxId int) {
+	if tree.maxNodeId > 0 {
+		return tree.maxNodeId
+	}
+	for node := range tree.Walker(nil) {
+		if maxId < node.Id {
+			maxId = node.Id
+		}
+	}
+	tree.maxNodeId = maxId
+	return
+}
+
+func (tree *Tree) NodeIdArray() []*Node {
+	if tree.nodeIdArray == nil {
+		tree.nodeIdArray = make([]*Node, tree.MaxNodeId()+1)
 		i := 0
 		for node := range tree.Walker(nil) {
-			tree.nodes[node.Id] = node
+			tree.nodeIdArray[node.Id] = node
 			i++
 		}
 	}
-	return tree.nodes
+	return tree.nodeIdArray
 }
 
 func (tree *Tree) Terminals() <-chan *Node {
@@ -96,35 +110,37 @@ func (tree *Tree) Walker(filter func(*Node) bool) <-chan *Node {
 func (tree *Tree) Copy() (newTree *Tree) {
 	nNodes := tree.NNodes()
 	newTree = &Tree{
-		nNodes:    nNodes,
-		nodes:     make([]*Node, nNodes),
-		nodeOrder: make([]*Node, len(tree.NodeOrder())),
+		nNodes:      nNodes,
+		nodeIdArray: make([]*Node, len(tree.NodeIdArray())),
+		nodeOrder:   make([]*Node, len(tree.NodeOrder())),
 	}
 
 	// Create node list.
-	for i, node := range tree.Nodes() {
-		if i != node.Id {
-			panic("node id mismatch")
+	for _, node := range tree.NodeIdArray() {
+		if node != nil {
+			newTree.nodeIdArray[node.Id] = node.Copy()
 		}
-		newTree.nodes[i] = node.Copy()
 	}
 
 	// Rewire node/parent connections.
-	for i, node := range tree.Nodes() {
-		newNode := newTree.nodes[i]
+	for i, node := range tree.NodeIdArray() {
+		if node == nil {
+			continue
+		}
+		newNode := newTree.nodeIdArray[i]
 		for _, child := range node.childNodes {
-			newChild := newTree.nodes[child.Id]
+			newChild := newTree.nodeIdArray[child.Id]
 			newNode.AddChild(newChild)
 		}
 	}
 
 	// Set nodeOrder
 	for i, node := range tree.NodeOrder() {
-		newTree.nodeOrder[i] = newTree.nodes[node.Id]
+		newTree.nodeOrder[i] = newTree.nodeIdArray[node.Id]
 	}
 
 	// Set root node.
-	newTree.Node = newTree.nodes[0]
+	newTree.Node = newTree.nodeIdArray[tree.Node.Id]
 
 	return
 }
@@ -163,6 +179,13 @@ func (tree *Tree) NodeOrder() []*Node {
 		}
 	}
 	return tree.nodeOrder
+}
+
+func (tree *Tree) IsRooted() bool {
+	if len(tree.Node.childNodes) == 2 {
+		return true
+	}
+	return false
 }
 
 func (tree *Tree) Unroot() (int, error) {
@@ -214,7 +237,7 @@ func (tree *Tree) Unroot() (int, error) {
 
 	// update cached parameters
 	tree.nNodes -= 1
-	tree.nodes = nil
+	tree.nodeIdArray = nil
 	tree.nodeOrder = nil
 
 	return noRoot.Id, nil
@@ -262,7 +285,7 @@ func (tree *Tree) Root(branchId int) error {
 
 	// update cached parameters
 	tree.nNodes += 1
-	tree.nodes = nil
+	tree.nodeIdArray = nil
 	tree.nodeOrder = nil
 
 	return nil
