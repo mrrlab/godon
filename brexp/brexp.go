@@ -13,22 +13,20 @@ import (
 func SelectomeBrString(t *tree.Tree) (s string) {
 	s = SelectomeNodeStringBr(t.Node)
 	n := 1
-	repfunc := func(string) string {
+	repfunc := func(sym string) string {
 		s := fmt.Sprintf("*%d", n)
 		n++
 		return s
 	}
-	es := regexp.MustCompile(`\*`)
+	es := regexp.MustCompile(`\*|!`)
 	s = es.ReplaceAllStringFunc(s, repfunc)
-	ee := regexp.MustCompile(`!`)
-	s = ee.ReplaceAllStringFunc(s, repfunc)
 	return
 
 }
 
 func SelectomeNodeStringBr(node *tree.Node) (s string) {
 	if node.IsTerminal() {
-		return fmt.Sprintf("%s!", node.Name)
+		return fmt.Sprintf("%s", node.Name)
 	}
 	s += "("
 	for i, child := range node.ChildNodes() {
@@ -37,9 +35,11 @@ func SelectomeNodeStringBr(node *tree.Node) (s string) {
 			s += ","
 		}
 	}
-	s += ")*"
+	s += ")"
 	if node.IsRoot() {
 		s += ";"
+	} else {
+		s += "*"
 	}
 	return s
 }
