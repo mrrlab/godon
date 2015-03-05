@@ -9,19 +9,20 @@
 * ``optimize`` is the MCMC & downhill simplex implementation
 * ``tree`` is tree manipulation library
 * ``tlh`` is a simple tree likelihood calculation (JC69)
-* ``cdlh`` is MCMC sampler for branchsite model
+* ``godon`` is MCMC sampler/maximum likelihood for M0 and branchsite model
 * ``norm`` sampler for multiple normal distribution model
 
-## cdlh ##
+## cmodel ##
 * ``M0.go`` — M0 model
 * ``branch_site.go`` — branch site model
-* ``cdlh.go`` — main file (mcmc sampler itself)
 * ``codon_frequency.go`` — F0, F3X4
 * ``codon_sequences.go`` — codon alignment class
 * ``ematrix.go`` — matrix class which remembers its eigen decomposition
+* ``matrix.go`` — codon transition matrix
 * ``model.go`` — tree + alignment model base class
+* ``tools.go`` — misc helper functions
 
-### cdlh tests ###
+### cmodel tests ###
 * ``likelihood_test.go`` — likelihood test (compare with codeml)
 * ``mcmc_test.go`` — MCMC benchmark
 * ``mcmcpar_test.go`` — test that likelihood is consistent during chain evaluation
@@ -32,3 +33,6 @@
 * ``adaptive.go`` — adaptive parameter class
 * ``prior.go`` — prior functions
 * ``proposal.go`` — proposal functions
+* ``optimizer.go`` — Optimizer and Optimizable intefaces
+* ``simplex.go`` — simplex method
+* ``utils.go`` — helper functions
