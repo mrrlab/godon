@@ -13,10 +13,10 @@ import (
 	"syscall"
 	"time"
 
-	"bitbucket.com/Davydov/golh/bio"
-	"bitbucket.com/Davydov/golh/cmodel"
-	"bitbucket.com/Davydov/golh/optimize"
-	"bitbucket.com/Davydov/golh/tree"
+	"bitbucket.com/Davydov/godon/bio"
+	"bitbucket.com/Davydov/godon/cmodel"
+	"bitbucket.com/Davydov/godon/optimize"
+	"bitbucket.com/Davydov/godon/tree"
 )
 
 func lastLine(fn string) (line string) {

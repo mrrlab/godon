@@ -7,7 +7,7 @@ import (
 	"os"
 	"regexp"
 
-	"bitbucket.com/Davydov/golh/tree"
+	"bitbucket.com/Davydov/godon/tree"
 )
 
 func SelectomeBrString(t *tree.Tree) (s string) {

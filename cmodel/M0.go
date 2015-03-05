@@ -1,8 +1,8 @@
 package cmodel
 
 import (
-	"bitbucket.com/Davydov/golh/optimize"
-	"bitbucket.com/Davydov/golh/tree"
+	"bitbucket.com/Davydov/godon/optimize"
+	"bitbucket.com/Davydov/godon/tree"
 )
 
 type M0 struct {

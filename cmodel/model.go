@@ -9,8 +9,8 @@ import (
 
 	"github.com/skelterjohn/go.matrix"
 
-	"bitbucket.com/Davydov/golh/optimize"
-	"bitbucket.com/Davydov/golh/tree"
+	"bitbucket.com/Davydov/godon/optimize"
+	"bitbucket.com/Davydov/godon/tree"
 )
 
 type TreeOptimizable interface {

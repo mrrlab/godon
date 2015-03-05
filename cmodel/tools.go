@@ -4,8 +4,8 @@ import (
 	"os"
 	"path"
 
-	"bitbucket.com/Davydov/golh/bio"
-	"bitbucket.com/Davydov/golh/tree"
+	"bitbucket.com/Davydov/godon/bio"
+	"bitbucket.com/Davydov/godon/tree"
 )
 
 const (
