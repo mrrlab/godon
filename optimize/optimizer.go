@@ -51,15 +51,15 @@ func (o *BaseOptimizer) SetOutput(output io.Writer) {
 
 func (o *BaseOptimizer) PrintHeader(par FloatParameters) {
 	if !o.Quiet {
-		fmt.Printf("iteration\tlikelihood\t%s\n", par.NamesString())
+		if o.output == nil {
+			o.output = os.Stdout
+		}
+		fmt.Fprintf(o.output, "iteration\tlikelihood\t%s\n", par.NamesString())
 	}
 }
 
 func (o *BaseOptimizer) PrintLine(par FloatParameters, l float64) {
 	if !o.Quiet {
-		if o.output == nil {
-			o.output = os.Stdout
-		}
 		fmt.Fprintf(o.output, "%d\t%f\t%s\n", o.i, l, par.ValuesString())
 	}
 }
