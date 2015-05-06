@@ -141,9 +141,9 @@ func (a *AdaptiveParameter) UpdateMu() {
 	}
 	// Incremental batch mean and variance
 	// index in batch 0 .. a.K-1
-	bi := (a.t - a.Skip) % a.K
+	bi := a.t % a.K
 
-	if (a.t-a.Skip) > 0 && bi == 0 {
+	if a.t > 0 && bi == 0 {
 		gamma := a.RobbinsMonro()
 
 		bvariance := a.bm2 / float64(a.K-1)
