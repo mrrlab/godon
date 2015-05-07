@@ -61,6 +61,11 @@ func (m *EMatrix) Exp(cD *matrix.DenseMatrix, t float64) (*matrix.DenseMatrix, e
 	if m.d.Cols() != m.d.Rows() {
 		return nil, errors.New("D isn't a square matrix")
 	}
+	// This is a dirty hack to allow 0-scale matricies
+	if math.IsInf(t, 1) {
+		t = math.MaxFloat64
+	}
+
 	for i := 0; i < m.d.Rows(); i++ {
 		cD.Set(i, i, math.Exp(m.d.Get(i, i)*t))
 	}
