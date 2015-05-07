@@ -222,6 +222,9 @@ func (m *Model) Likelihood() (lnL float64) {
 		m.ExpBranches()
 	} else {
 		for _, node := range m.tree.NodeIdArray() {
+			if node == nil {
+				continue
+			}
 			if !m.expBr[node.Id] && node != nil {
 				m.ExpBranch(node.Id)
 			}
