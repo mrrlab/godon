@@ -7,11 +7,14 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/gonum/blas/native"
 	"github.com/skelterjohn/go.matrix"
 
 	"bitbucket.com/Davydov/godon/optimize"
 	"bitbucket.com/Davydov/godon/tree"
 )
+
+var impl native.Implementation
 
 type TreeOptimizable interface {
 	optimize.Optimizable
@@ -304,11 +307,7 @@ func (m *Model) fullSubL(class, pos int, plh [][]float64) (res float64) {
 				q := m.eQts[class][child.Id][l1*nCodon:]
 				// get child partial likelhiood
 				cplh := plh[child.Id]
-				s := 0.0
-				for l2 := 0; l2 < nCodon; l2++ {
-					//s += q.Get(l1, l2) * plh[child.Id][l2]
-					s += q[l2] * cplh[l2]
-				}
+				s := impl.Ddot(nCodon, q, 1, cplh, 1)
 				l *= s
 			}
 			plh[node.Id][l1] = l
