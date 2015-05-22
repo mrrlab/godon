@@ -335,8 +335,9 @@ func (m *Model) observedSubL(class, pos int, plh [][]float64) (res float64) {
 	}
 
 	for node := range m.tree.Terminals() {
+		codon := m.cali[node.LeafId].Sequence[pos]
 		for _, l := range lettersF {
-			if l == int(m.cali[node.LeafId].Sequence[pos]) {
+			if l == int(m.cali[node.LeafId].Sequence[pos]) || codon == NOCODON {
 				plh[node.Id][l] = 1
 			} else {
 				plh[node.Id][l] = 0
