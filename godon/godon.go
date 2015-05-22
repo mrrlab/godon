@@ -61,6 +61,7 @@ func main() {
 	// optimizations
 	optFixed := flag.Bool("fixed", false, "optimize fixed position likelihood by limiting markov chain to observed states")
 	optAll := flag.Bool("observed", false, "optimize likelihood computation by limiting markov chain to observed states")
+	printFull := flag.Bool("printfull", false, "print full likelihood in the end of optimization")
 
 	// technical
 	nCPU := flag.Int("cpu", 0, "number of cpu to use")
@@ -292,6 +293,11 @@ func main() {
 			f.WriteString(t.String() + "\n")
 			f.Close()
 		}
+	}
+
+	if *printFull && (*optFixed || *optAll) {
+		m.SetOptimizations(false, false)
+		log.Print("Full likelihood: ", m.Likelihood())
 	}
 
 	endTime := time.Now()
