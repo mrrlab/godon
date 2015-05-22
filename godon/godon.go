@@ -225,6 +225,15 @@ func main() {
 	log.Printf("Optimize likelihood computations. Fixed positions: %t, all positions: %t.", *optFixed, *optAll)
 	m.SetOptimizations(*optFixed, *optAll)
 
+	if *startF != "" {
+		l := lastLine(*startF)
+		par := m.GetFloatParameters()
+		err := par.ReadLine(l)
+		if err != nil {
+			log.Fatal("Error reading start position:", err)
+		}
+	}
+
 	if *adaptive {
 		as := optimize.NewAdaptiveSettings()
 		if *skip < 0 {
@@ -260,14 +269,6 @@ func main() {
 		}
 		defer f.Close()
 		opt.SetOutput(f)
-	}
-	if *startF != "" {
-		l := lastLine(*startF)
-		par := m.GetFloatParameters()
-		err := par.ReadLine(l)
-		if err != nil {
-			log.Fatal("Error reading start position:", err)
-		}
 	}
 
 	opt.Run(*iterations)
