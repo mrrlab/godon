@@ -103,8 +103,8 @@ func (ds *DS) Run(iterations int) {
 	// Lowest (worst), next-lowest and highest points
 	var ilo, inlo, ihi int
 	var llo, lnlo, lhi float64
-	ds.maxL = math.Inf(-1)
 	ds.PrintHeader(ds.parameters[0])
+	ds.maxL = math.Inf(-1)
 Iter:
 	for ds.i = 1; ds.i <= iterations; ds.i++ {
 		if ds.l[0] < ds.l[1] {
