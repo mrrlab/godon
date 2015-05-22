@@ -47,7 +47,7 @@ func (m *EMatrix) Eigen() (err error) {
 	if m.v != nil {
 		return nil
 	}
-	decomp := mat64.Eigen(m.Q, 1E-10)
+	decomp := mat64.Eigen(m.Q, 1E-8)
 	m.v = decomp.V
 	m.d = decomp.D()
 	m.iv, err = mat64.Inverse(m.v)
