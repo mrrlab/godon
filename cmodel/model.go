@@ -8,7 +8,7 @@ import (
 	"sync"
 
 	"github.com/gonum/blas/native"
-	"github.com/skelterjohn/go.matrix"
+	"github.com/gonum/matrix/mat64"
 
 	"bitbucket.com/Davydov/godon/optimize"
 	"bitbucket.com/Davydov/godon/tree"
@@ -140,7 +140,7 @@ type expTask struct {
 // Exponentiate a signle branch. This uses eigen decomposed matrices.
 func (m *Model) ExpBranch(br int) {
 	node := m.tree.NodeIdArray()[br]
-	cD := matrix.Zeros(nCodon, nCodon)
+	cD := mat64.NewDense(nCodon, nCodon, nil)
 	for class, _ := range m.qs {
 		var oclass int
 		for oclass = class - 1; oclass >= 0; oclass-- {
@@ -154,7 +154,7 @@ func (m *Model) ExpBranch(br int) {
 			if err != nil {
 				panic("Error exponentiating")
 			}
-			m.eQts[class][node.Id] = Q.Array()
+			m.eQts[class][node.Id] = Q.RawMatrix().Data
 		}
 	}
 	m.expBr[br] = true
@@ -182,13 +182,13 @@ func (m *Model) ExpBranches() {
 	for i := 0; i < runtime.GOMAXPROCS(0); i++ {
 		wg.Add(1)
 		go func() {
-			cD := matrix.Zeros(nCodon, nCodon)
+			cD := mat64.NewDense(nCodon, nCodon, nil)
 			for s := range tasks {
 				Q, err := m.qs[s.class][s.node.Id].Exp(cD, s.node.BranchLength/m.scale[s.node.Id])
 				if err != nil {
 					panic("error exponentiating matrix")
 				}
-				m.eQts[s.class][s.node.Id] = Q.Array()
+				m.eQts[s.class][s.node.Id] = Q.RawMatrix().Data
 			}
 			wg.Done()
 		}()

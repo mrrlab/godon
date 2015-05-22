@@ -5,25 +5,26 @@ import (
 	"math"
 	"sort"
 
-	"github.com/skelterjohn/go.matrix"
+	"github.com/gonum/matrix/mat64"
 
 	"bitbucket.com/Davydov/godon/bio"
 )
 
 // Sum calculates matrix sum.
-func Sum(m *matrix.DenseMatrix) (s float64) {
-	for i := 0; i < m.Rows(); i++ {
-		for j := 0; j < m.Cols(); j++ {
-			s += math.Abs(m.Get(i, j))
+func Sum(m *mat64.Dense) (s float64) {
+	rows, cols := m.Dims()
+	for i := 0; i < rows; i++ {
+		for j := 0; j < cols; j++ {
+			s += math.Abs(m.At(i, j))
 		}
 	}
 	return
 }
 
-func createTransitionMatrix(cf CodonFrequency, kappa, omega float64, m *matrix.DenseMatrix) (*matrix.DenseMatrix, float64) {
+func createTransitionMatrix(cf CodonFrequency, kappa, omega float64, m *mat64.Dense) (*mat64.Dense, float64) {
 	//fmt.Println("kappa=", kappa, ", omega=", omega)
 	if m == nil {
-		m = matrix.Zeros(nCodon, nCodon)
+		m = mat64.NewDense(nCodon, nCodon, nil)
 	}
 	for i1 := 0; i1 < nCodon; i1++ {
 		for i2 := 0; i2 < nCodon; i2++ {
@@ -41,30 +42,30 @@ func createTransitionMatrix(cf CodonFrequency, kappa, omega float64, m *matrix.D
 			}
 			m.Set(i1, i2, cf[i2])
 			if transitions == 1 {
-				m.Set(i1, i2, m.Get(i1, i2)*kappa)
+				m.Set(i1, i2, m.At(i1, i2)*kappa)
 			}
 			if bio.GeneticCode[c1] != bio.GeneticCode[c2] {
-				m.Set(i1, i2, m.Get(i1, i2)*omega)
+				m.Set(i1, i2, m.At(i1, i2)*omega)
 			}
 		}
 	}
 	for i1 := 0; i1 < nCodon; i1++ {
 		rowSum := 0.0
 		for i2 := 0; i2 < nCodon; i2++ {
-			rowSum += m.Get(i1, i2)
+			rowSum += m.At(i1, i2)
 		}
 		m.Set(i1, i1, -rowSum)
 	}
 	scale := 0.0
 	for i := 0; i < nCodon; i++ {
-		scale += -cf[i] * m.Get(i, i)
+		scale += -cf[i] * m.At(i, i)
 	}
 
 	return m, scale
 
 }
 
-func PrintQ(Q *matrix.DenseMatrix) {
+func PrintQ(Q *mat64.Dense) {
 	codons := make([]string, len(codonNum))
 	i := 0
 	for k, _ := range codonNum {
@@ -81,13 +82,13 @@ func PrintQ(Q *matrix.DenseMatrix) {
 	for _, codon1 := range codons {
 		fmt.Print(codon1, "\t")
 		for _, codon2 := range codons {
-			fmt.Printf("%0.4f\t", Q.Get(int(codonNum[codon1]), int(codonNum[codon2])))
+			fmt.Printf("%0.4f\t", Q.At(int(codonNum[codon1]), int(codonNum[codon2])))
 		}
 		fmt.Println()
 	}
 }
 
-func PrintUnQ(Q *matrix.DenseMatrix) {
+func PrintUnQ(Q *mat64.Dense) {
 	fmt.Print("\t")
 	for i := 0; i < nCodon; i++ {
 		fmt.Print(numCodon[byte(i)], "\t")
@@ -96,7 +97,7 @@ func PrintUnQ(Q *matrix.DenseMatrix) {
 	for i1 := 0; i1 < nCodon; i1++ {
 		fmt.Print(numCodon[byte(i1)], "\t")
 		for i2 := 0; i2 < nCodon; i2++ {
-			fmt.Printf("%0.4f\t", Q.Get(i1, i2))
+			fmt.Printf("%0.4f\t", Q.At(i1, i2))
 		}
 		fmt.Println()
 	}

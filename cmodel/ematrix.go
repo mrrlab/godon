@@ -4,18 +4,19 @@ import (
 	"errors"
 	"math"
 
-	"github.com/skelterjohn/go.matrix"
+	"github.com/gonum/matrix/mat64"
 )
 
 type EMatrix struct {
-	Q     *matrix.DenseMatrix
+	Q     *mat64.Dense
 	Scale float64
-	v     *matrix.DenseMatrix
-	d     *matrix.DenseMatrix
-	iv    *matrix.DenseMatrix
+	v     *mat64.Dense
+	d     *mat64.Dense
+	iv    *mat64.Dense
 }
 
-func NewEMatrix(Q *matrix.DenseMatrix, scale float64) *EMatrix {
+func NewEMatrix(Q *mat64.Dense, scale float64) *EMatrix {
+	//cols, rows := Q.Dims()
 	return &EMatrix{Q: Q, Scale: scale}
 }
 
@@ -36,7 +37,7 @@ func (m *EMatrix) Copy() (newM *EMatrix) {
 	return
 }
 
-func (m *EMatrix) Set(Q *matrix.DenseMatrix, scale float64) {
+func (m *EMatrix) Set(Q *mat64.Dense, scale float64) {
 	m.Q = Q
 	m.Scale = scale
 	m.v = nil
@@ -46,19 +47,19 @@ func (m *EMatrix) Eigen() (err error) {
 	if m.v != nil {
 		return nil
 	}
-	m.v, m.d, err = m.Q.Eigen()
-	if err != nil {
-		return err
-	}
-	m.iv, err = m.v.Inverse()
+	decomp := mat64.Eigen(m.Q, 1E-10)
+	m.v = decomp.V
+	m.d = decomp.D()
+	m.iv, err = mat64.Inverse(m.v)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (m *EMatrix) Exp(cD *matrix.DenseMatrix, t float64) (*matrix.DenseMatrix, error) {
-	if m.d.Cols() != m.d.Rows() {
+func (m *EMatrix) Exp(cD *mat64.Dense, t float64) (*mat64.Dense, error) {
+	rows, cols := m.Q.Dims()
+	if cols != rows {
 		return nil, errors.New("D isn't a square matrix")
 	}
 	// This is a dirty hack to allow 0-scale matricies
@@ -66,8 +67,11 @@ func (m *EMatrix) Exp(cD *matrix.DenseMatrix, t float64) (*matrix.DenseMatrix, e
 		t = math.MaxFloat64
 	}
 
-	for i := 0; i < m.d.Rows(); i++ {
-		cD.Set(i, i, math.Exp(m.d.Get(i, i)*t))
+	for i := 0; i < rows; i++ {
+		cD.Set(i, i, math.Exp(m.d.At(i, i)*t))
 	}
-	return matrix.Product(m.v, cD, m.iv), nil
+	res := mat64.NewDense(cols, rows, nil)
+	res.Mul(m.v, cD)
+	res.Mul(res, m.iv)
+	return res, nil
 }
