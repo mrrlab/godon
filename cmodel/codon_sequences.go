@@ -124,7 +124,9 @@ func (seqs CodonSequences) Letters() (found [][]int, absent [][]int) {
 		absent[pos] = make([]int, 0, nCodon)
 		pf := make(map[int]bool, nCodon)
 		for i := 0; i < len(seqs); i++ {
-			pf[int(seqs[i].Sequence[pos])] = true
+			if seqs[i].Sequence[pos] != NOCODON {
+				pf[int(seqs[i].Sequence[pos])] = true
+			}
 		}
 		for l := 0; l < nCodon; l++ {
 			if pf[l] {
