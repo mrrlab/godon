@@ -104,6 +104,7 @@ func (ds *DS) Run(iterations int) {
 	var ilo, inlo, ihi int
 	var llo, lnlo, lhi float64
 	ds.maxL = math.Inf(-1)
+	ds.PrintHeader(ds.parameters[0])
 Iter:
 	for ds.i = 1; ds.i <= iterations; ds.i++ {
 		if ds.l[0] < ds.l[1] {
