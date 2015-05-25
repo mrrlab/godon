@@ -35,6 +35,11 @@ func (b *BFGS) Init(*opt.FunctionInfo) error {
 }
 
 func (b *BFGS) Record(l *opt.Location, et opt.EvaluationType, it opt.IterationType, s *opt.Stats) error {
+	if it == opt.MajorIteration {
+		b.i = s.MajorIterations
+		b.parameters.SetValues(l.X)
+		b.PrintLine(b.parameters, -l.F)
+	}
 	select {
 	case s := <-b.sig:
 		log.Printf("Received signal %v, exiting.", s)
@@ -45,8 +50,6 @@ func (b *BFGS) Record(l *opt.Location, et opt.EvaluationType, it opt.IterationTy
 }
 
 func (b *BFGS) Func(x []float64) float64 {
-	b.parameters.SetValues(x)
-	b.PrintLine(b.parameters, b.Likelihood())
 	if !b.parameters.ValuesInRange(x) {
 		return math.Inf(+1)
 	}
@@ -62,11 +65,18 @@ func (b *BFGS) Func(x []float64) float64 {
 }
 
 func (b *BFGS) Grad(x, grad []float64) {
-	b.parameters.SetValues(x)
-	b.PrintLine(b.parameters, b.Likelihood())
 	if !b.parameters.ValuesInRange(x) {
-		for i, _ := range grad {
-			grad[i] = 0
+		for i, par := range b.parameters {
+			switch {
+			case par.ValueInRange(x[i]):
+				grad[i] = 0
+			case x[i] < par.GetMin():
+				grad[i] = -math.Inf(-1)
+			case x[i] > par.GetMax():
+				grad[i] = math.Inf(+1)
+			default:
+				panic("Unknown parameter value")
+			}
 		}
 		return
 	}
@@ -77,14 +87,19 @@ func (b *BFGS) Grad(x, grad []float64) {
 	for i, _ := range x {
 		no2 := no1.Copy()
 		par2 := no2.GetFloatParameters()
-		par2[i].Set(x[i] + b.dH)
-		var l2 float64
-		if !par2.InRange() {
-			l2 = math.Inf(+1)
-		} else {
-			l2 = -no2.Likelihood()
+		v := x[i] + b.dH
+		switch {
+		case par2[i].ValueInRange(v):
+			par2[i].Set(v)
+			l2 := -no2.Likelihood()
+			grad[i] = (l2 - l1) / b.dH
+		case v < par2[i].GetMin():
+			grad[i] = -math.Inf(-1)
+		case v > par2[i].GetMax():
+			grad[i] = -math.Inf(1)
+		default:
+			panic("Unknown parameter value")
 		}
-		grad[i] = (l2 - l1) / b.dH
 	}
 	return
 }
@@ -94,10 +109,14 @@ func (b *BFGS) Run(iterations int) {
 	b.PrintHeader(b.parameters)
 	settings := opt.DefaultSettings()
 	settings.MajorIterations = iterations
+	settings.GradientThreshold = 1e-3
 	settings.Recorder = b
 
 	_, e := opt.Local(b, b.parameters.Values(nil), settings, &opt.BFGS{})
-	log.Print(e)
+
+	if e != nil {
+		log.Print("Optimization error: ", e)
+	}
 
 	if !b.Quiet {
 		log.Print("Finished BFGS")
