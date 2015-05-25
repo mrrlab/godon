@@ -47,11 +47,14 @@ func main() {
 	// optimizer parameters
 	iterations := flag.Int("iter", 10000, "number of iterations")
 	report := flag.Int("report", 10, "report every N iterations")
-	simplex := flag.Bool("simplex", false, "use downhill simplex to optimize parameters")
+	method := flag.String("method", "bfgs", "optimization method to use "+
+		"(bfgs: Broyden–Fletcher–Goldfarb–Shanno, "+
+		"simplex: downhill simplex, "+
+		"annealing: simullated annealing, "+
+		"mcmc: markov chain Monte-Carlo)")
 
 	// mcmc parameters
 	accept := flag.Int("accept", 200, "report acceptance rate every N iterations")
-	anneal := flag.Bool("anneal", false, "use simulated annealing to optimize parameters")
 
 	// adaptive mcmc parameters
 	adaptive := flag.Bool("adaptive", false, "use adaptive MCMC")
@@ -252,14 +255,27 @@ func main() {
 	log.Printf("Model has %d parameters.", len(m.GetFloatParameters()))
 
 	var opt optimize.Optimizer
-	if !*simplex {
-		chain := optimize.NewMH(*anneal)
-		chain.AccPeriod = *accept
-		opt = chain
-	} else {
+	switch *method {
+	case "bfgs":
+		bfgs := optimize.NewBFGS()
+		opt = bfgs
+	case "simplex":
 		ds := optimize.NewDS()
 		opt = ds
+	case "mcmc":
+		chain := optimize.NewMH(false)
+		chain.AccPeriod = *accept
+		opt = chain
+	case "annealing":
+		chain := optimize.NewMH(true)
+		chain.AccPeriod = *accept
+		opt = chain
+	default:
+		log.Fatal("Unknown optimization method")
 	}
+
+	log.Printf("Using %s optimization.", *method)
+
 	opt.SetOptimizable(m)
 	opt.SetReportPeriod(*report)
 	opt.WatchSignals(os.Interrupt, syscall.SIGUSR2)
