@@ -25,6 +25,7 @@ type FloatParameter interface {
 	Get() float64
 	Set(float64)
 	InRange() bool
+	ValueInRange(float64) bool
 }
 
 type FloatParameters []FloatParameter
@@ -55,6 +56,18 @@ func (p *FloatParameters) Values(iv []float64) (v []float64) {
 		v[i] = par.Get()
 	}
 	return
+}
+
+func (p *FloatParameters) ValuesInRange(vals []float64) bool {
+	if len(vals) != len(*p) {
+		panic("Incorrect number of parameters")
+	}
+	for i, par := range *p {
+		if !par.ValueInRange(vals[i]) {
+			return false
+		}
+	}
+	return true
 }
 
 func (p *FloatParameters) SetValues(v []float64) error {
@@ -150,6 +163,10 @@ func (p *BasicFloatParameter) Get() float64 {
 }
 
 func (p *BasicFloatParameter) Set(v float64) {
+	if *p.float64 == v {
+		// do nothing if value has not cnahged
+		return
+	}
 	*p.float64 = v
 	if p.OnChange != nil {
 		p.OnChange()
@@ -164,12 +181,20 @@ func (p *BasicFloatParameter) GetMax() float64 {
 	return p.Max
 }
 
+func (p *BasicFloatParameter) ValueInRange(v float64) bool {
+	if v < p.Min || v > p.Max {
+		return false
+	}
+	return true
+}
+
 func (p *BasicFloatParameter) InRange() bool {
 	if *p.float64 < p.Min || *p.float64 > p.Max {
 		return false
 	}
 	return true
 }
+
 func (p *BasicFloatParameter) Name() string {
 	return p.name
 }
