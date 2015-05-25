@@ -178,7 +178,7 @@ func (m *BranchSite) GetParameters() (kappa float64, omega0, omega2 float64, p0,
 }
 
 func (m *BranchSite) SetDefaults() {
-	m.SetParameters(1, 0.5, 2, 0.5, 0.5)
+	m.SetParameters(1, 0.5, 2, 0.5, 0.25)
 }
 
 func (m *BranchSite) SetBranchMatrices() {
