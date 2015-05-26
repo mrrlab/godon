@@ -61,21 +61,6 @@ func (l *LBFGSB) EvaluateGradient(x []float64) (grad []float64) {
 		l.grad = make([]float64, len(x))
 	}
 	grad = l.grad
-	if !l.parameters.ValuesInRange(x) {
-		for i, par := range l.parameters {
-			switch {
-			case par.ValueInRange(x[i]):
-				grad[i] = 0
-			case x[i] < par.GetMin():
-				grad[i] = -math.Inf(-1)
-			case x[i] > par.GetMax():
-				grad[i] = math.Inf(+1)
-			default:
-				panic("Unknown parameter value")
-			}
-		}
-		return
-	}
 	no1 := l.Optimizable.Copy()
 	par1 := no1.GetFloatParameters()
 	par1.SetValues(x)
@@ -84,18 +69,9 @@ func (l *LBFGSB) EvaluateGradient(x []float64) (grad []float64) {
 		no2 := no1.Copy()
 		par2 := no2.GetFloatParameters()
 		v := x[i] + l.dH
-		switch {
-		case par2[i].ValueInRange(v):
-			par2[i].Set(v)
-			l2 := -no2.Likelihood()
-			grad[i] = (l2 - l1) / l.dH
-		case v < par2[i].GetMin():
-			grad[i] = -math.Inf(-1)
-		case v > par2[i].GetMax():
-			grad[i] = -math.Inf(1)
-		default:
-			panic("Unknown parameter value")
-		}
+		par2[i].Set(v)
+		l2 := -no2.Likelihood()
+		grad[i] = (l2 - l1) / l.dH
 	}
 	return
 }
@@ -106,9 +82,8 @@ func (l *LBFGSB) Run(iterations int) {
 	bounds := make([][2]float64, len(l.parameters))
 
 	for i, par := range l.parameters {
-		//bounds[i] = make([2]float64)
-		bounds[i][0] = par.GetMin()
-		bounds[i][1] = par.GetMax()
+		bounds[i][0] = par.GetMin() + 1e-5
+		bounds[i][1] = par.GetMax() - 1e-5
 	}
 
 	opt := new(lbfgsb.Lbfgsb)
