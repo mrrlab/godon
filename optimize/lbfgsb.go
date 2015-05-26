@@ -36,7 +36,7 @@ func (l *LBFGSB) Logger(info *lbfgsb.OptimizationIterationInformation) {
 	l.PrintLine(l.parameters, -info.F)
 	select {
 	case s := <-l.sig:
-		log.Fatal("Received signal %v, exiting.", s)
+		log.Fatal("Received signal exiting:", s)
 	default:
 	}
 }
@@ -75,6 +75,11 @@ func (l *LBFGSB) EvaluateGradient(x []float64) (grad []float64) {
 		par2[i].Set(v)
 		l2 := -no2.Likelihood()
 		grad[i] = (l2 - l1) / 2 / l.dH
+	}
+	select {
+	case s := <-l.sig:
+		log.Fatal("Received signal exiting:", s)
+	default:
 	}
 	return
 }
