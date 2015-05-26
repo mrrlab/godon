@@ -61,17 +61,20 @@ func (l *LBFGSB) EvaluateGradient(x []float64) (grad []float64) {
 		l.grad = make([]float64, len(x))
 	}
 	grad = l.grad
-	no1 := l.Optimizable.Copy()
-	par1 := no1.GetFloatParameters()
-	par1.SetValues(x)
-	l1 := -no1.Likelihood()
 	for i, _ := range x {
+		no1 := l.Optimizable.Copy()
+		par1 := no1.GetFloatParameters()
+		par1.SetValues(x)
+		v := x[i] - l.dH
+		par1[i].Set(v)
+		l1 := -no1.Likelihood()
+
 		no2 := no1.Copy()
 		par2 := no2.GetFloatParameters()
-		v := x[i] + l.dH
+		v = x[i] + l.dH
 		par2[i].Set(v)
 		l2 := -no2.Likelihood()
-		grad[i] = (l2 - l1) / l.dH
+		grad[i] = (l2 - l1) / 2 / l.dH
 	}
 	return
 }
