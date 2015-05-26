@@ -47,8 +47,9 @@ func main() {
 	// optimizer parameters
 	iterations := flag.Int("iter", 10000, "number of iterations")
 	report := flag.Int("report", 10, "report every N iterations")
-	method := flag.String("method", "bfgs", "optimization method to use "+
+	method := flag.String("method", "simplex", "optimization method to use "+
 		"(bfgs: Broyden–Fletcher–Goldfarb–Shanno, "+
+		"lbfgsb: limited-memory Broyden–Fletcher–Goldfarb–Shanno with bounding constraints, "+
 		"simplex: downhill simplex, "+
 		"annealing: simullated annealing, "+
 		"mcmc: markov chain Monte-Carlo)")
@@ -259,6 +260,9 @@ func main() {
 	case "bfgs":
 		bfgs := optimize.NewBFGS()
 		opt = bfgs
+	case "lbfgsb":
+		lbfgsb := optimize.NewLBFGSB()
+		opt = lbfgsb
 	case "simplex":
 		ds := optimize.NewDS()
 		opt = ds
