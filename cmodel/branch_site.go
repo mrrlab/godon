@@ -12,13 +12,15 @@ type BranchSite struct {
 	omega0, omega2         float64
 	p01sum, p0prop         float64
 	parameters             optimize.FloatParameters
+	fixw2                  bool
 	q0done, q1done, q2done bool
 	propdone               bool
 }
 
-func NewBranchSite(cali CodonSequences, t *tree.Tree, cf CodonFrequency, optBranch bool) (m *BranchSite) {
+func NewBranchSite(cali CodonSequences, t *tree.Tree, cf CodonFrequency, optBranch bool, fixw2 bool) (m *BranchSite) {
 	m = &BranchSite{
 		Model: NewModel(cali, t, cf, 4, optBranch),
+		fixw2: fixw2,
 		q0:    &EMatrix{},
 		q1:    &EMatrix{},
 		q2:    &EMatrix{},
@@ -44,6 +46,7 @@ func (m *BranchSite) Copy() optimize.Optimizable {
 		omega2: m.omega2,
 		p01sum: m.p01sum,
 		p0prop: m.p0prop,
+		fixw2:  m.fixw2,
 	}
 	newM.as = m.as
 	newM.Model.setParameters()
@@ -87,14 +90,16 @@ func (m *BranchSite) addParameters() {
 	omega0.Min = 0
 	m.parameters = append(m.parameters, omega0)
 
-	omega2 := optimize.NewBasicFloatParameter(&m.omega2, "omega2")
-	omega2.OnChange = func() {
-		m.q2done = false
+	if !m.fixw2 {
+		omega2 := optimize.NewBasicFloatParameter(&m.omega2, "omega2")
+		omega2.OnChange = func() {
+			m.q2done = false
+		}
+		omega2.PriorFunc = optimize.GammaPrior(1, 2, false)
+		omega2.ProposalFunc = optimize.NormalProposal(0.01)
+		omega2.Min = 1
+		m.parameters = append(m.parameters, omega2)
 	}
-	omega2.PriorFunc = optimize.GammaPrior(1, 2, false)
-	omega2.ProposalFunc = optimize.NormalProposal(0.01)
-	omega2.Min = 1
-	m.parameters = append(m.parameters, omega2)
 
 	p01sum := optimize.NewBasicFloatParameter(&m.p01sum, "p01sum")
 	p01sum.OnChange = func() {
@@ -137,13 +142,15 @@ func (m *BranchSite) addAdaptiveParameters() {
 	omega0.Min = 0
 	m.parameters = append(m.parameters, omega0)
 
-	omega2 := optimize.NewAdaptiveParameter(&m.omega2, "omega2", m.as)
-	omega2.OnChange = func() {
-		m.q2done = false
+	if !m.fixw2 {
+		omega2 := optimize.NewAdaptiveParameter(&m.omega2, "omega2", m.as)
+		omega2.OnChange = func() {
+			m.q2done = false
+		}
+		omega2.PriorFunc = optimize.GammaPrior(1, 2, false)
+		omega2.Min = 1
+		m.parameters = append(m.parameters, omega2)
 	}
-	omega2.PriorFunc = optimize.GammaPrior(1, 2, false)
-	omega2.Min = 1
-	m.parameters = append(m.parameters, omega2)
 
 	p01sum := optimize.NewAdaptiveParameter(&m.p01sum, "p01sum", m.as)
 	p01sum.OnChange = func() {
@@ -167,7 +174,11 @@ func (m *BranchSite) GetFloatParameters() optimize.FloatParameters {
 func (m *BranchSite) SetParameters(kappa float64, omega0, omega2 float64, p0, p1 float64) {
 	m.kappa = kappa
 	m.omega0 = omega0
-	m.omega2 = omega2
+	if !m.fixw2 {
+		m.omega2 = omega2
+	} else {
+		m.omega2 = 1
+	}
 	m.p01sum = p0 + p1
 	m.p0prop = p0 / (p0 + p1)
 	m.q0done, m.q1done, m.q2done = false, false, false
@@ -178,7 +189,7 @@ func (m *BranchSite) GetParameters() (kappa float64, omega0, omega2 float64, p0,
 }
 
 func (m *BranchSite) SetDefaults() {
-	m.SetParameters(1, 0.5, 2, 0.5, 0.25)
+	m.SetParameters(1, 0.5, 1, 0.5, 0.25)
 }
 
 func (m *BranchSite) SetBranchMatrices() {
