@@ -53,7 +53,7 @@ func main() {
 		"lbfgsb: limited-memory Broyden–Fletcher–Goldfarb–Shanno with bounding constraints, "+
 		"simplex: downhill simplex, "+
 		"annealing: simullated annealing, "+
-		"mcmc: markov chain Monte-Carlo)")
+		"mh: Metropolis-Hastings)")
 
 	// mcmc parameters
 	accept := flag.Int("accept", 200, "report acceptance rate every N iterations")
