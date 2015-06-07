@@ -267,7 +267,7 @@ func main() {
 	case "simplex":
 		ds := optimize.NewDS()
 		opt = ds
-	case "mcmc":
+	case "mh":
 		chain := optimize.NewMH(false)
 		chain.AccPeriod = *accept
 		opt = chain
