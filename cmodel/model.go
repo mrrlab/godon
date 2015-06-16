@@ -343,6 +343,9 @@ func (m *Model) observedSubL(class, pos int, plh [][]float64) (res float64) {
 				plh[node.Id][l] = 0
 			}
 		}
+		if codon == NOCODON {
+			plh[node.Id][nCodon] = 1
+		}
 	}
 
 	for _, node := range m.tree.NodeOrder() {
