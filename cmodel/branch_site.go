@@ -146,6 +146,8 @@ func (m *BranchSite) addAdaptiveParameters() {
 	m.parameters = append(m.parameters, omega2)
 
 	p01sum := optimize.NewAdaptiveParameter(&m.p01sum, "p01sum", m.as)
+	p01sum.Min = 0
+	p01sum.Max = 1
 	p01sum.OnChange = func() {
 		m.propdone = false
 	}
@@ -153,6 +155,8 @@ func (m *BranchSite) addAdaptiveParameters() {
 	m.parameters = append(m.parameters, p01sum)
 
 	p0prop := optimize.NewAdaptiveParameter(&m.p0prop, "p0prop", m.as)
+	p0prop.Min = 0
+	p0prop.Max = 1
 	p0prop.OnChange = func() {
 		m.propdone = false
 	}
