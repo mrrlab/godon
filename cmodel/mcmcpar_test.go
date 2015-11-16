@@ -120,7 +120,7 @@ func TestBranchSiteReprBSD1(tst *testing.T) {
 
 	cf := F3X4(cali)
 
-	h1 := NewBranchSite(cali, t, cf, false)
+	h1 := NewBranchSite(cali, t, cf, false, false)
 	chain := optimize.NewMH(false)
 	chain.SetOptimizable(h1)
 	chain.Quiet = true
@@ -135,7 +135,7 @@ func TestBranchSiteReprBSD1(tst *testing.T) {
 		tst.Error("Error: ", err)
 	}
 	cf = F3X4(cali)
-	h1 = NewBranchSite(cali, t, cf, false)
+	h1 = NewBranchSite(cali, t, cf, false, false)
 	h1.SetParameters(k, w0, w2, p0, p1)
 	newL := h1.Likelihood()
 
@@ -157,7 +157,7 @@ func TestBranchSiteReprBSD2(tst *testing.T) {
 
 	cf := F0()
 
-	h1 := NewBranchSite(cali, t, cf, false)
+	h1 := NewBranchSite(cali, t, cf, false, false)
 	chain := optimize.NewMH(false)
 	chain.SetOptimizable(h1)
 	chain.Quiet = true
@@ -174,7 +174,7 @@ func TestBranchSiteReprBSD2(tst *testing.T) {
 	}
 
 	cf = F0()
-	h1 = NewBranchSite(cali, t, cf, false)
+	h1 = NewBranchSite(cali, t, cf, false, false)
 	h1.SetParameters(k, w0, w2, p0, p1)
 	newL := h1.Likelihood()
 
@@ -195,7 +195,7 @@ func TestBranchSiteReprBSD3(tst *testing.T) {
 
 	cf := F3X4(cali)
 
-	h1 := NewBranchSite(cali, t, cf, true)
+	h1 := NewBranchSite(cali, t, cf, true, false)
 	as := optimize.NewAdaptiveSettings()
 	h1.SetAdaptive(as)
 	chain := optimize.NewMH(false)
@@ -213,7 +213,7 @@ func TestBranchSiteReprBSD3(tst *testing.T) {
 		tst.Error("Error: ", err)
 	}
 	cf = F3X4(cali)
-	h1 = NewBranchSite(cali, t, cf, false)
+	h1 = NewBranchSite(cali, t, cf, false, false)
 	h1.SetParameters(k, w0, w2, p0, p1)
 
 	newL := h1.Likelihood()
