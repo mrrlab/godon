@@ -114,7 +114,7 @@ func TestBranchSiteF0D1(tst *testing.T) {
 	cf := F0()
 	p0, p1 := 0.946800, 0.000098
 
-	h1 := NewBranchSite(cali, t, cf, false)
+	h1 := NewBranchSite(cali, t, cf, false, false)
 	h1.SetParameters(1.909912, 0.020004, 1.000000, p0, p1)
 	L := h1.Likelihood()
 	refL := -2467.931313
@@ -134,7 +134,7 @@ func TestBranchSiteF3X4D1(tst *testing.T) {
 	cf := F3X4(cali)
 	p0, p1 := 0.934681, 0.000000
 
-	h1 := NewBranchSite(cali, t, cf, false)
+	h1 := NewBranchSite(cali, t, cf, false, false)
 	h1.SetParameters(1.572572, 0.015173, 1.000000, p0, p1)
 	L := h1.Likelihood()
 
@@ -154,7 +154,7 @@ func TestBranchSiteF0D2(tst *testing.T) {
 	cf := F0()
 	p0, p1 := 0.899776, 0.041502
 
-	h1 := NewBranchSite(cali, t, cf, false)
+	h1 := NewBranchSite(cali, t, cf, false, false)
 	h1.SetParameters(1.876889, 0.014541, 1.682486, p0, p1)
 	L := h1.Likelihood()
 	refL := -1405.850679
@@ -174,7 +174,7 @@ func TestBranchSiteF3X4D2(tst *testing.T) {
 	cf := F3X4(cali)
 	p0, p1 := 0.932349, 0.005383
 
-	h1 := NewBranchSite(cali, t, cf, false)
+	h1 := NewBranchSite(cali, t, cf, false, false)
 	h1.SetParameters(3.462166, 0.017381, 1.000000, p0, p1)
 	refL := -1428.862660
 	L := h1.Likelihood()
@@ -197,7 +197,7 @@ func TestBranchSiteF0D3(tst *testing.T) {
 	cf := F0()
 	p0, p1 := 0.883725, 0.099870
 
-	h1 := NewBranchSite(cali, t, cf, false)
+	h1 := NewBranchSite(cali, t, cf, false, false)
 	h1.SetParameters(1.94922, 0.072076, 13.936497, p0, p1)
 	L := h1.Likelihood()
 	refL := -48019.677814
@@ -220,7 +220,7 @@ func TestBranchSiteF3X4D3(tst *testing.T) {
 	cf := F3X4(cali)
 	p0, p1 := 0.902686, 0.079667
 
-	h1 := NewBranchSite(cali, t, cf, false)
+	h1 := NewBranchSite(cali, t, cf, false, false)
 	h1.SetParameters(1.868810, 0.064487, 6.972271, p0, p1)
 	refL := -47904.801502
 	L := h1.Likelihood()
@@ -278,7 +278,7 @@ func BenchmarkBranchSiteF0D1(b *testing.B) {
 	cf := F0()
 	p0, p1 := 0.946800, 0.000098
 
-	h1 := NewBranchSite(cali, t, cf, false)
+	h1 := NewBranchSite(cali, t, cf, false, false)
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
@@ -296,7 +296,7 @@ func BenchmarkBranchSiteF0D2(b *testing.B) {
 	cf := F0()
 	p0, p1 := 0.899776, 0.041502
 
-	h1 := NewBranchSite(cali, t, cf, false)
+	h1 := NewBranchSite(cali, t, cf, false, false)
 
 	b.ResetTimer()
 
