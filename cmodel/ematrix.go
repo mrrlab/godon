@@ -47,10 +47,15 @@ func (m *EMatrix) Eigen() (err error) {
 	if m.v != nil {
 		return nil
 	}
+	rows, cols := m.Q.Dims()
+	if m.iv == nil {
+		m.iv = mat64.NewDense(cols, rows, nil)
+	}
+
 	decomp := mat64.Eigen(m.Q, 1E-8)
 	m.v = decomp.V
 	m.d = decomp.D()
-	m.iv, err = mat64.Inverse(m.v)
+	err = m.iv.Inverse(m.v)
 	if err != nil {
 		return err
 	}

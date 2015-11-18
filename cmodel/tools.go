@@ -13,7 +13,7 @@ const (
 	data2 = "ENSGT00550000073950.Euteleostomi.07.001"
 	data3 = "EMGT00050000000025.Drosophila.001"
 
-	smallDiff = 1e-4
+	smallDiff = 1e-3
 )
 
 func getTreeAlignment(data string) (t *tree.Tree, cali CodonSequences, err error) {
