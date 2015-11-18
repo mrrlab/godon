@@ -220,6 +220,9 @@ func main() {
 	case "M0":
 		log.Print("Using M0 model")
 		m = cmodel.NewM0(cali, t, cf, !*noOptBrLen)
+	case "M0vrate":
+		log.Print("Using M0vrate model")
+		m = cmodel.NewM0vrate(cali, t, cf, !*noOptBrLen)
 	case "BS":
 		log.Print("Using branch site model")
 		m = cmodel.NewBranchSite(cali, t, cf, !*noOptBrLen, *fixw2)
