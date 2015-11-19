@@ -65,6 +65,14 @@ func createTransitionMatrix(cf CodonFrequency, kappa, omega float64, m *mat64.De
 
 }
 
+func scaleMatrix(in *mat64.Dense, scale float64, out *mat64.Dense) *mat64.Dense {
+	if out == nil {
+		out = mat64.NewDense(nCodon, nCodon, nil)
+	}
+	out.Scale(scale, in)
+	return out
+}
+
 func PrintQ(Q *mat64.Dense) {
 	codons := make([]string, len(codonNum))
 	i := 0

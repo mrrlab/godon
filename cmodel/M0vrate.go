@@ -179,19 +179,20 @@ func (m *M0vrate) UpdateProportions() {
 		m.qs[0][node.Id] = m.q0
 		m.qs[1][node.Id] = m.q1
 	}
+	m.propdone = true
 	m.expAllBr = false
 }
 
 func (m *M0vrate) UpdateMatrix() {
 	Q0, scale := createTransitionMatrix(m.cf, m.kappa, m.omega, m.q0.Q)
 	m.q0.Set(Q0, scale)
+	Q1 := scaleMatrix(Q0, m.s, m.q1.Q)
+	m.q1.Set(Q1, scale*m.s)
 	err := m.q0.Eigen()
 	if err != nil {
 		panic("error finding eigen")
 	}
 
-	Q1, scale := createTransitionMatrix(m.cf, m.kappa, m.omega, m.q1.Q)
-	m.q1.Set(Q1, scale/m.s)
 	err = m.q1.Eigen()
 	if err != nil {
 		panic("error finding eigen")
@@ -204,6 +205,8 @@ func (m *M0vrate) Likelihood() float64 {
 	if !m.qdone {
 		m.UpdateMatrix()
 	}
-	m.UpdateProportions()
+	if !m.propdone {
+		m.UpdateProportions()
+	}
 	return m.Model.Likelihood()
 }
