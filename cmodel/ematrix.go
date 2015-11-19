@@ -43,6 +43,14 @@ func (m *EMatrix) Set(Q *mat64.Dense, scale float64) {
 	m.v = nil
 }
 
+func (m *EMatrix) ScaleD(scale float64) {
+	if m.d == nil {
+		panic("Scaling a nil matrix")
+	}
+	m.d = scaleMatrix(m.d, scale, nil)
+	m.Scale *= scale
+}
+
 func (m *EMatrix) Eigen() (err error) {
 	if m.v != nil {
 		return nil

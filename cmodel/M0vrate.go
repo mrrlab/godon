@@ -186,17 +186,12 @@ func (m *M0vrate) UpdateProportions() {
 func (m *M0vrate) UpdateMatrix() {
 	Q0, scale := createTransitionMatrix(m.cf, m.kappa, m.omega, m.q0.Q)
 	m.q0.Set(Q0, scale)
-	Q1 := scaleMatrix(Q0, m.s, m.q1.Q)
-	m.q1.Set(Q1, scale*m.s)
 	err := m.q0.Eigen()
 	if err != nil {
 		panic("error finding eigen")
 	}
-
-	err = m.q1.Eigen()
-	if err != nil {
-		panic("error finding eigen")
-	}
+	m.q1 = m.q0.Copy()
+	m.q1.ScaleD(m.s)
 
 	m.UpdateProportions()
 }
