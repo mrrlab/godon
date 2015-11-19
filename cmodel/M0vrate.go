@@ -13,6 +13,7 @@ type M0vrate struct {
 	s            float64 // scale-factor
 	parameters   optimize.FloatParameters
 	qdone        bool
+	propdone     bool
 }
 
 func NewM0vrate(cali CodonSequences, t *tree.Tree, cf CodonFrequency, optBranch bool) (m *M0vrate) {
@@ -78,12 +79,19 @@ func (m *M0vrate) addParameters() {
 	kappa.Max = 20
 
 	p := optimize.NewBasicFloatParameter(&m.p, "p")
+	p.OnChange = func() {
+		m.propdone = false
+	}
 	p.PriorFunc = optimize.UniformPrior(0, 1, true, true)
 	p.ProposalFunc = optimize.NormalProposal(0.01)
 	p.Min = 0
 	p.Max = 1
 
 	s := optimize.NewBasicFloatParameter(&m.s, "s")
+	s.OnChange = func() {
+		m.qdone = false
+		m.expAllBr = false
+	}
 	s.PriorFunc = optimize.ExponentialPrior(1, false)
 	s.ProposalFunc = optimize.NormalProposal(0.01)
 	s.Min = 1. / 100
@@ -115,6 +123,9 @@ func (m *M0vrate) addAdaptiveParameters() {
 	kappa.Max = 20
 
 	p := optimize.NewAdaptiveParameter(&m.p, "p", m.as)
+	p.OnChange = func() {
+		m.propdone = false
+	}
 	p.PriorFunc = optimize.UniformPrior(0, 1, true, true)
 	p.ProposalFunc = optimize.NormalProposal(0.01)
 	p.Min = 0
@@ -122,6 +133,7 @@ func (m *M0vrate) addAdaptiveParameters() {
 
 	s := optimize.NewAdaptiveParameter(&m.s, "s", m.as)
 	s.OnChange = func() {
+		m.qdone = false
 		m.expAllBr = false
 	}
 	s.PriorFunc = optimize.ExponentialPrior(1, false)
