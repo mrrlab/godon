@@ -36,7 +36,6 @@ func (m *M0vrate) Copy() optimize.Optimizable {
 		q1:    &EMatrix{},
 		omega: m.omega,
 		kappa: m.kappa,
-		p:     m.p,
 		s:     m.s,
 	}
 	newM.as = m.as
@@ -78,15 +77,6 @@ func (m *M0vrate) addParameters() {
 	kappa.Min = 0
 	kappa.Max = 20
 
-	p := optimize.NewBasicFloatParameter(&m.p, "p")
-	p.OnChange = func() {
-		m.propdone = false
-	}
-	p.PriorFunc = optimize.UniformPrior(0, 1, true, true)
-	p.ProposalFunc = optimize.NormalProposal(0.01)
-	p.Min = 0
-	p.Max = 1
-
 	s := optimize.NewBasicFloatParameter(&m.s, "s")
 	s.OnChange = func() {
 		m.qdone = false
@@ -94,12 +84,11 @@ func (m *M0vrate) addParameters() {
 	}
 	s.PriorFunc = optimize.ExponentialPrior(1, false)
 	s.ProposalFunc = optimize.NormalProposal(0.01)
-	s.Min = 1. / 100
+	s.Min = 1. / 1000
 	s.Max = 100
 
 	m.parameters.Append(omega)
 	m.parameters.Append(kappa)
-	m.parameters.Append(p)
 	m.parameters.Append(s)
 }
 
@@ -122,15 +111,6 @@ func (m *M0vrate) addAdaptiveParameters() {
 	kappa.Min = 0
 	kappa.Max = 20
 
-	p := optimize.NewAdaptiveParameter(&m.p, "p", m.as)
-	p.OnChange = func() {
-		m.propdone = false
-	}
-	p.PriorFunc = optimize.UniformPrior(0, 1, true, true)
-	p.ProposalFunc = optimize.NormalProposal(0.01)
-	p.Min = 0
-	p.Max = 1
-
 	s := optimize.NewAdaptiveParameter(&m.s, "s", m.as)
 	s.OnChange = func() {
 		m.qdone = false
@@ -143,7 +123,6 @@ func (m *M0vrate) addAdaptiveParameters() {
 
 	m.parameters.Append(omega)
 	m.parameters.Append(kappa)
-	m.parameters.Append(p)
 	m.parameters.Append(s)
 }
 
@@ -155,21 +134,20 @@ func (m *M0vrate) GetParameters() (kappa, omega float64) {
 	return m.kappa, m.omega
 }
 
-func (m *M0vrate) SetParameters(kappa, omega, p, s float64) {
+func (m *M0vrate) SetParameters(kappa, omega, s float64) {
 	m.kappa = kappa
 	m.omega = omega
-	m.p = p
 	m.s = s
 	m.qdone = false
 }
 
 func (m *M0vrate) SetDefaults() {
-	m.SetParameters(1, 1, 0.5, 2)
+	m.SetParameters(1, 1, 2)
 }
 
 func (m *M0vrate) UpdateProportions() {
-	m.prop[0] = m.p
-	m.prop[1] = 1 - m.p
+	m.prop[0] = 1 / m.s
+	m.prop[1] = 1 - m.prop[0]
 
 	for _, node := range m.tree.NodeIdArray() {
 		if node == nil {
