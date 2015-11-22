@@ -38,7 +38,7 @@ func ExponentialPrior(rate float64, inczero bool) func(float64) float64 {
 		panic("exponential rate should be > 0")
 	}
 	return func(x float64) float64 {
-		if x < 0 || x == 0 || !inczero {
+		if x < 0 || (x == 0 && !inczero) {
 			return math.Inf(-1)
 		}
 		return math.Log(rate) - rate*x
