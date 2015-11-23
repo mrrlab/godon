@@ -239,6 +239,8 @@ func main() {
 		}
 	}
 
+	// iteration to skip before annealing, for adaptive mcmc
+	annealingSkip := 0
 	if *adaptive {
 		as := optimize.NewAdaptiveSettings()
 		if *skip < 0 {
@@ -247,6 +249,7 @@ func main() {
 		if *maxAdapt < 0 {
 			*maxAdapt = *iterations / 5
 		}
+		annealingSkip = *maxAdapt
 		log.Printf("Setting adaptive parameters, skip=%v, maxAdapt=%v", *skip, *maxAdapt)
 		as.Skip = *skip
 		as.MaxAdapt = *maxAdapt
@@ -264,11 +267,11 @@ func main() {
 		ds := optimize.NewDS()
 		opt = ds
 	case "mh":
-		chain := optimize.NewMH(false)
+		chain := optimize.NewMH(false, 0)
 		chain.AccPeriod = *accept
 		opt = chain
 	case "annealing":
-		chain := optimize.NewMH(true)
+		chain := optimize.NewMH(true, annealingSkip)
 		chain.AccPeriod = *accept
 		opt = chain
 	default:
