@@ -12,17 +12,20 @@ type MH struct {
 	Optimizable
 	AccPeriod int
 	annealing bool
-	SD        float64
+	// iteration to skip before annealing
+	annealingSkip int
+	SD            float64
 }
 
-func NewMH(annealing bool) (mcmc *MH) {
+func NewMH(annealing bool, annealingSkip int) (mcmc *MH) {
 	mcmc = &MH{
 		BaseOptimizer: BaseOptimizer{
 			repPeriod: 10,
 		},
-		AccPeriod: 10,
-		SD:        1e-2,
-		annealing: annealing,
+		AccPeriod:     10,
+		SD:            1e-2,
+		annealing:     annealing,
+		annealingSkip: annealingSkip,
 	}
 	return
 }
@@ -42,8 +45,8 @@ func (m *MH) Run(iterations int) {
 Iter:
 	for m.i = 0; m.i < iterations; m.i++ {
 		var T float64
-		if m.annealing {
-			T = math.Pow(0.9, float64(m.i)/float64(iterations)*100)
+		if m.annealing && m.i >= m.annealingSkip {
+			T = math.Pow(0.9, float64(m.i-m.annealingSkip)/float64(iterations-m.annealingSkip)*100)
 		} else {
 			T = 1
 		}
