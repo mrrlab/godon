@@ -197,7 +197,7 @@ Iter:
 	}
 	if !ds.Quiet {
 		log.Print("Finished downhill simplex")
-		log.Printf("Likelihood: %v", lhi)
+		log.Printf("Maximum likelihood: %v", lhi)
 		log.Printf("Parameter  names: %v", ds.parameters[ihi].NamesString())
 		log.Printf("Parameter values: %v", ds.parameters[ihi].ValuesString())
 		ds.PrintFinal(ds.parameters[ihi])
