@@ -16,7 +16,7 @@ func TestBranchSiteReprM0D1(tst *testing.T) {
 	cf := F3X4(cali)
 
 	m0 := NewM0(cali, t, cf, false)
-	chain := optimize.NewMH(false)
+	chain := optimize.NewMH(false, 0)
 	chain.SetOptimizable(m0)
 	chain.Quiet = true
 	chain.Run(10)
@@ -51,7 +51,7 @@ func TestBranchSiteReprM0D2(tst *testing.T) {
 	m0 := NewM0(cali, t, cf, false)
 	as := optimize.NewAdaptiveSettings()
 	m0.SetAdaptive(as)
-	chain := optimize.NewMH(false)
+	chain := optimize.NewMH(false, 0)
 	chain.SetOptimizable(m0)
 	chain.Quiet = true
 	chain.Run(10)
@@ -84,7 +84,7 @@ func TestBranchSiteReprM0D3(tst *testing.T) {
 	cf := F3X4(cali)
 
 	m0 := NewM0(cali, t, cf, true)
-	chain := optimize.NewMH(false)
+	chain := optimize.NewMH(false, 0)
 	chain.SetOptimizable(m0)
 	chain.Quiet = true
 	chain.Run(20)
@@ -121,7 +121,7 @@ func TestBranchSiteReprBSD1(tst *testing.T) {
 	cf := F3X4(cali)
 
 	h1 := NewBranchSite(cali, t, cf, false, false)
-	chain := optimize.NewMH(false)
+	chain := optimize.NewMH(false, 0)
 	chain.SetOptimizable(h1)
 	chain.Quiet = true
 	chain.Run(10)
@@ -158,7 +158,7 @@ func TestBranchSiteReprBSD2(tst *testing.T) {
 	cf := F0()
 
 	h1 := NewBranchSite(cali, t, cf, false, false)
-	chain := optimize.NewMH(false)
+	chain := optimize.NewMH(false, 0)
 	chain.SetOptimizable(h1)
 	chain.Quiet = true
 	chain.Run(10)
@@ -198,7 +198,7 @@ func TestBranchSiteReprBSD3(tst *testing.T) {
 	h1 := NewBranchSite(cali, t, cf, true, false)
 	as := optimize.NewAdaptiveSettings()
 	h1.SetAdaptive(as)
-	chain := optimize.NewMH(false)
+	chain := optimize.NewMH(false, 0)
 	chain.SetOptimizable(h1)
 	chain.Quiet = true
 	chain.Run(10)
