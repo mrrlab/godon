@@ -19,7 +19,7 @@ func BenchmarkMCMCD1(b *testing.B) {
 	b.ResetTimer()
 
 	m0.SetDefaults()
-	chain := optimize.NewMH(false)
+	chain := optimize.NewMH(false, 0)
 	chain.SetOptimizable(m0)
 	chain.Quiet = true
 	chain.Run(100)
