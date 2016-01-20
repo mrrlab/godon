@@ -1,6 +1,9 @@
 package cmodel
 
 import (
+	"math"
+	"math/rand"
+
 	"bitbucket.com/Davydov/godon/optimize"
 	"bitbucket.com/Davydov/godon/tree"
 )
@@ -193,7 +196,15 @@ func (m *BranchSite) GetParameters() (kappa float64, omega0, omega2 float64, p0,
 }
 
 func (m *BranchSite) SetDefaults() {
-	m.SetParameters(1, 0.5, 1, 0.5, 0.25)
+	// these parameters come from codeml
+	kappa := 1.0
+	omega0 := 0.2 + 0.1*rand.Float64()
+	omega2 := 3.1 + rand.Float64()
+	x0 := 1.0 + 0.5*rand.Float64()
+	x1 := 0.2 * rand.Float64()
+	p0 := math.Exp(x0) / (1 + math.Exp(x0) + math.Exp(x1))
+	p1 := math.Exp(x1) / (1 + math.Exp(x0) + math.Exp(x1))
+	m.SetParameters(kappa, omega0, omega2, p0, p1)
 }
 
 func (m *BranchSite) SetBranchMatrices() {
