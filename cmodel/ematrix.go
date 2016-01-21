@@ -20,21 +20,15 @@ func NewEMatrix(Q *mat64.Dense, scale float64) *EMatrix {
 	return &EMatrix{Q: Q, Scale: scale}
 }
 
-func (m *EMatrix) Copy() (newM *EMatrix) {
-	newM = &EMatrix{Scale: m.Scale}
-	if m.Q != nil {
-		newM.Q = m.Q
+func (m *EMatrix) Copy(recv *EMatrix) *EMatrix {
+	if recv == nil {
+		recv = &EMatrix{}
 	}
-	if m.v != nil {
-		newM.v = m.v
-	}
-	if m.d != nil {
-		newM.d = m.d
-	}
-	if m.iv != nil {
-		newM.iv = m.iv
-	}
-	return
+	recv.Q = m.Q
+	recv.v = m.v
+	recv.d = m.d
+	recv.iv = m.iv
+	return recv
 }
 
 func (m *EMatrix) Set(Q *mat64.Dense, scale float64) {

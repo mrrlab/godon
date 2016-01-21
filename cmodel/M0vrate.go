@@ -168,7 +168,7 @@ func (m *M0vrate) UpdateMatrix() {
 	if err != nil {
 		panic("error finding eigen")
 	}
-	m.q1 = m.q0.Copy()
+	m.q1 = m.q0.Copy(nil)
 	m.q1.ScaleD(m.s)
 
 	m.UpdateProportions()
