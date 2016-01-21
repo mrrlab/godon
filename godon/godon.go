@@ -226,6 +226,9 @@ func main() {
 	case "BSC":
 		log.Print("Using branch site C model")
 		m = cmodel.NewBranchSiteC(cali, t, cf, !*noOptBrLen)
+	case "BSG":
+		log.Print("Using branch site gamma model")
+		m = cmodel.NewBranchSiteGamma(cali, t, cf, 4, !*noOptBrLen, *fixw2)
 	case "BS":
 		log.Print("Using branch site model")
 		m = cmodel.NewBranchSite(cali, t, cf, !*noOptBrLen, *fixw2)
