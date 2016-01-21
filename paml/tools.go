@@ -241,7 +241,7 @@ l50:
 	return
 }
 
-func DiscreteGamma(alpha, beta float64, K int, UseMedian bool) (freqK, rK []float64) {
+func DiscreteGamma(alpha, beta float64, K int, UseMedian bool, freqK, rK []float64) []float64 {
 	/*
 	   discretization of G(alpha, beta) with equal proportions in each category.
 	*/
@@ -249,8 +249,12 @@ func DiscreteGamma(alpha, beta float64, K int, UseMedian bool) (freqK, rK []floa
 	t := 0.0
 	mean := alpha / beta
 
-	rK = make([]float64, K)
-	freqK = make([]float64, K)
+	if rK == nil {
+		rK = make([]float64, K)
+	}
+	if freqK == nil {
+		freqK = make([]float64, K)
+	}
 
 	if UseMedian { /* median */
 		for i = 0; i < K; i++ {
@@ -277,9 +281,5 @@ func DiscreteGamma(alpha, beta float64, K int, UseMedian bool) (freqK, rK []floa
 		rK[K-1] = (1 - freqK[K-2]) * mean * float64(K)
 	}
 
-	for i = 0; i < K; i++ {
-		freqK[i] = 1.0 / float64(K)
-	}
-
-	return
+	return rK
 }

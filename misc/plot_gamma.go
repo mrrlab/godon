@@ -18,9 +18,8 @@ func main() {
 	useMedian := flag.Bool("median", false, "Use median instead of mean")
 	flag.Parse()
 
-	a, b := paml.DiscreteGamma(*alpha, *alpha, *k, *useMedian)
-	fmt.Println(a)
-	fmt.Println(b)
+	r := paml.DiscreteGamma(*alpha, *alpha, *k, *useMedian, nil, nil)
+	fmt.Println(r)
 	p, err := plot.New()
 	if err != nil {
 		panic(err)
@@ -28,7 +27,7 @@ func main() {
 
 	pts := make(plotter.XYs, *k)
 	x := 0.0
-	for i, v := range b {
+	for i, v := range r {
 		pts[i].X = v
 		pts[i].Y = x
 		x += 1. / float64(*k)
