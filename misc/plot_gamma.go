@@ -14,11 +14,12 @@ import (
 
 func main() {
 	alpha := flag.Float64("alpha", 1, "alpha")
+	beta := flag.Float64("beta", 1, "beta")
 	k := flag.Int("k", 4, "k")
 	useMedian := flag.Bool("median", false, "Use median instead of mean")
 	flag.Parse()
 
-	r := paml.DiscreteGamma(*alpha, *alpha, *k, *useMedian, nil, nil)
+	r := paml.DiscreteGamma(*alpha, *beta, *k, *useMedian, nil, nil)
 	fmt.Println(r)
 	p, err := plot.New()
 	if err != nil {
