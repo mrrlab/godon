@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"bitbucket.com/Davydov/godon/bio"
+	"bitbucket.org/Davydov/godon/bio"
 )
 
 var (

@@ -1,8 +1,8 @@
 package cmodel
 
 import (
-	"bitbucket.com/Davydov/godon/optimize"
-	"bitbucket.com/Davydov/godon/tree"
+	"bitbucket.org/Davydov/godon/optimize"
+	"bitbucket.org/Davydov/godon/tree"
 )
 
 type M0vrate struct {

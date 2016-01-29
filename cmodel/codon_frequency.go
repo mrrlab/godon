@@ -6,7 +6,7 @@ import (
 	"io"
 	"strconv"
 
-	"bitbucket.com/Davydov/godon/bio"
+	"bitbucket.org/Davydov/godon/bio"
 )
 
 func init() {

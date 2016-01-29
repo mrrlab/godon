@@ -10,8 +10,8 @@ import (
 	"github.com/gonum/blas/native"
 	"github.com/gonum/matrix/mat64"
 
-	"bitbucket.com/Davydov/godon/optimize"
-	"bitbucket.com/Davydov/godon/tree"
+	"bitbucket.org/Davydov/godon/optimize"
+	"bitbucket.org/Davydov/godon/tree"
 )
 
 var impl native.Implementation

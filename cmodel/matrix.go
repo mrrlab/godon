@@ -7,7 +7,7 @@ import (
 
 	"github.com/gonum/matrix/mat64"
 
-	"bitbucket.com/Davydov/godon/bio"
+	"bitbucket.org/Davydov/godon/bio"
 )
 
 // Sum calculates matrix sum.

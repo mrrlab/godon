@@ -4,9 +4,9 @@ import (
 	"math"
 	"math/rand"
 
-	"bitbucket.com/Davydov/godon/optimize"
-	"bitbucket.com/Davydov/godon/paml"
-	"bitbucket.com/Davydov/godon/tree"
+	"bitbucket.org/Davydov/godon/optimize"
+	"bitbucket.org/Davydov/godon/paml"
+	"bitbucket.org/Davydov/godon/tree"
 )
 
 type BranchSiteGamma struct {

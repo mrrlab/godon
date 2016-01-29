@@ -9,7 +9,7 @@ import (
 	"github.com/gonum/plot/plotutil"
 	"github.com/gonum/plot/vg"
 
-	"bitbucket.com/Davydov/godon/paml"
+	"bitbucket.org/Davydov/godon/paml"
 )
 
 func main() {

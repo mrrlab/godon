@@ -10,7 +10,7 @@ import (
 	"syscall"
 	"time"
 
-	"bitbucket.com/Davydov/godon/optimize"
+	"bitbucket.org/Davydov/godon/optimize"
 )
 
 const (

@@ -6,7 +6,7 @@ import (
 	"log"
 	"os"
 
-	"bitbucket.com/Davydov/godon/tree"
+	"bitbucket.org/Davydov/godon/tree"
 )
 
 func main() {
