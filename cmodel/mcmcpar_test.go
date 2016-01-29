@@ -4,7 +4,7 @@ import (
 	"math"
 	"testing"
 
-	"bitbucket.com/Davydov/godon/optimize"
+	"bitbucket.org/Davydov/godon/optimize"
 )
 
 func TestBranchSiteReprM0D1(tst *testing.T) {

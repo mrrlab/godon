@@ -7,7 +7,7 @@ import (
 
 	"github.com/skelterjohn/go.matrix"
 
-	"bitbucket.com/Davydov/godon/bio"
+	"bitbucket.org/Davydov/godon/bio"
 )
 
 // Sum calculates matrix sum.

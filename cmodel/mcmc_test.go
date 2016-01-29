@@ -3,7 +3,7 @@ package cmodel
 import (
 	"testing"
 
-	"bitbucket.com/Davydov/godon/optimize"
+	"bitbucket.org/Davydov/godon/optimize"
 )
 
 func BenchmarkMCMCD1(b *testing.B) {
