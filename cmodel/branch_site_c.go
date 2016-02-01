@@ -152,9 +152,16 @@ func (m *BranchSiteC) SetParameters(kappa float64, omega0, omega2 float64, p0 fl
 	m.kappa = kappa
 	m.omega0 = omega0
 
-	m.omega2 = 1
+	m.omega2 = omega2
 
-	m.p0prop = p0
+	p2 := 1 / omega2
+
+	m.p0prop = p0 / (1 - p2)
+
+	if m.p0prop >= 1 {
+		m.p0prop = 1 - 1e-6
+	}
+
 	m.q0done, m.q1done, m.q2done = false, false, false
 }
 
