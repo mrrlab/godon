@@ -196,7 +196,7 @@ func (m *BranchSiteC) SetBranchMatrices() {
 }
 
 func (m *BranchSiteC) UpdateProportions() {
-	p2 := 1000 / m.omega2
+	p2 := m.omega2 / 1000
 	m.prop[0] = m.p0prop * (1 - p2)
 	m.prop[1] = (1 - m.p0prop) * (1 - p2)
 	m.prop[2] = m.p0prop * p2
