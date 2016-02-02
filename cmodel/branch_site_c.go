@@ -154,7 +154,7 @@ func (m *BranchSiteC) SetParameters(kappa float64, omega0, omega2 float64, p0 fl
 
 	m.omega2 = omega2
 
-	p2 := 1 / omega2
+	p2 := omega2 / 1000
 
 	m.p0prop = p0 / (1 - p2)
 
@@ -202,10 +202,11 @@ func (m *BranchSiteC) SetBranchMatrices() {
 }
 
 func (m *BranchSiteC) UpdateProportions() {
-	m.prop[0] = m.p0prop / m.omega2
-	m.prop[1] = (1 - m.p0prop) / m.omega2
-	m.prop[2] = m.p0prop * (1 - 1/m.omega2)
-	m.prop[3] = (1 - m.p0prop) * (1 - 1/m.omega2)
+	p2 := 1000 / m.omega2
+	m.prop[0] = m.p0prop * (1 - p2)
+	m.prop[1] = (1 - m.p0prop) * (1 - p2)
+	m.prop[2] = m.p0prop * p2
+	m.prop[3] = (1 - m.p0prop) * p2
 
 	for _, node := range m.tree.NodeIdArray() {
 		if node == nil {
