@@ -148,19 +148,13 @@ func (m *BranchSiteC) GetFloatParameters() optimize.FloatParameters {
 	return m.parameters
 }
 
-func (m *BranchSiteC) SetParameters(kappa float64, omega0, omega2 float64, p0 float64) {
+func (m *BranchSiteC) SetParameters(kappa float64, omega0, omega2 float64, p0prop float64) {
 	m.kappa = kappa
 	m.omega0 = omega0
 
 	m.omega2 = omega2
 
-	p2 := omega2 / 1000
-
-	m.p0prop = p0 / (1 - p2)
-
-	if m.p0prop >= 1 {
-		m.p0prop = 1 - 1e-6
-	}
+	m.p0prop = p0prop
 
 	m.q0done, m.q1done, m.q2done = false, false, false
 }
@@ -170,7 +164,7 @@ func (m *BranchSiteC) GetParameters() (kappa float64, omega0, omega2 float64, p0
 }
 
 func (m *BranchSiteC) SetDefaults() {
-	m.SetParameters(1, 0.5, 1, 0.5)
+	m.SetParameters(1, 0.5, 2, 0.5)
 }
 
 func (m *BranchSiteC) SetBranchMatrices() {
