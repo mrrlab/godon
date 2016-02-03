@@ -54,9 +54,20 @@ func (m *EMatrix) Eigen() (err error) {
 		m.iv = mat64.NewDense(cols, rows, nil)
 	}
 
-	decomp := mat64.Eigen(m.Q, 1E-8)
-	m.v = decomp.V
-	m.d = decomp.D()
+	decomp := mat64.Eigen{}
+
+	status := decomp.Factorize(m.Q, true)
+
+	if !status {
+		panic("Error decompozing Q")
+	}
+	m.v = decomp.Vectors()
+	d := decomp.Values(nil)
+	m.d = mat64.NewDense(cols, rows, nil)
+
+	for i, v := range d {
+		m.d.Set(i, i, real(v))
+	}
 	err = m.iv.Inverse(m.v)
 	if err != nil {
 		return err
