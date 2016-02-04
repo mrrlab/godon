@@ -1,3 +1,5 @@
+[![Build Status](https://drone.io/bitbucket.org/Davydov/godon/status.png)](https://drone.io/bitbucket.org/Davydov/godon/latest?branch=master)
+
 **Warning**: Repository and package names are subject to change.
 
 **Warning**: This is heavily work in progress.
