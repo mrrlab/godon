@@ -100,6 +100,9 @@ func (l *LBFGSB) Run(iterations int) {
 	}
 
 	opt := new(lbfgsb.Lbfgsb)
+	opt.SetApproximationSize(10)
+	opt.SetFTolerance(1e-9)
+	opt.SetGTolerance(1e-9)
 
 	opt.SetBounds(bounds)
 	opt.SetLogger(l.Logger)
