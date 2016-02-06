@@ -119,7 +119,7 @@ func (m *BranchSiteGamma) addParameters() {
 	omega0.PriorFunc = optimize.GammaPrior(1, 2, false)
 	omega0.ProposalFunc = optimize.NormalProposal(0.01)
 	omega0.Min = 0
-	omega0.Max = 0
+	omega0.Max = 1
 	m.parameters = append(m.parameters, omega0)
 
 	if !m.fixw2 {
