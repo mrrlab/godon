@@ -159,7 +159,7 @@ func (m *BranchSiteGamma) addParameters() {
 	}
 	alpha.PriorFunc = optimize.GammaPrior(1, 2, false)
 	alpha.Min = 0
-	alpha.Max = 100
+	alpha.Max = 1000
 	alpha.ProposalFunc = optimize.NormalProposal(0.01)
 	m.parameters = append(m.parameters, alpha)
 }
@@ -219,7 +219,7 @@ func (m *BranchSiteGamma) addAdaptiveParameters() {
 	}
 	alpha.PriorFunc = optimize.GammaPrior(1, 2, false)
 	alpha.Min = 0
-	alpha.Max = 100
+	alpha.Max = 1000
 	m.parameters = append(m.parameters, alpha)
 }
 
