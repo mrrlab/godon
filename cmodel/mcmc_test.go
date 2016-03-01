@@ -14,7 +14,7 @@ func BenchmarkMCMCD1(b *testing.B) {
 
 	cf := F0()
 
-	m0 := NewM0(cali, t, cf, false)
+	m0 := NewM0(cali, t, cf)
 
 	b.ResetTimer()
 
