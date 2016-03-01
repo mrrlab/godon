@@ -14,22 +14,20 @@ type BranchSite struct {
 	kappa                  float64
 	omega0, omega2         float64
 	p01sum, p0prop         float64
-	parameters             optimize.FloatParameters
 	fixw2                  bool
 	q0done, q1done, q2done bool
 	propdone               bool
 }
 
-func NewBranchSite(cali CodonSequences, t *tree.Tree, cf CodonFrequency, optBranch bool, fixw2 bool) (m *BranchSite) {
+func NewBranchSite(cali CodonSequences, t *tree.Tree, cf CodonFrequency, fixw2 bool) (m *BranchSite) {
 	m = &BranchSite{
-		Model: NewModel(cali, t, cf, 4, optBranch),
+		Model: NewModel(cali, t, cf, 4),
 		fixw2: fixw2,
 		q0:    &EMatrix{},
 		q1:    &EMatrix{},
 		q2:    &EMatrix{},
 	}
 
-	m.parameters = m.Model.parameters
 	m.addParameters()
 	m.SetBranchMatrices()
 	m.SetDefaults()
@@ -40,7 +38,7 @@ func NewBranchSite(cali CodonSequences, t *tree.Tree, cf CodonFrequency, optBran
 
 func (m *BranchSite) Copy() optimize.Optimizable {
 	newM := &BranchSite{
-		Model:  NewModel(m.cali, m.tree.Copy(), m.cf, 4, m.optBranch),
+		Model:  NewModel(m.cali, m.tree.Copy(), m.cf, 4),
 		q0:     &EMatrix{},
 		q1:     &EMatrix{},
 		q2:     &EMatrix{},
@@ -52,26 +50,35 @@ func (m *BranchSite) Copy() optimize.Optimizable {
 		fixw2:  m.fixw2,
 	}
 	newM.as = m.as
-	newM.Model.setParameters()
-	newM.parameters = newM.Model.parameters
+	newM.optBranch = m.optBranch
 
-	if m.as != nil {
-		newM.addAdaptiveParameters()
-	} else {
-		newM.addParameters()
-	}
+	newM.addParameters()
 	newM.SetBranchMatrices()
 	return newM
 }
 
 func (m *BranchSite) SetAdaptive(as *optimize.AdaptiveSettings) {
 	m.as = as
-	m.Model.setParameters()
-	m.parameters = m.Model.parameters
-	m.addAdaptiveParameters()
+	m.addParameters()
+}
+
+func (m *BranchSite) SetOptimizeBranchLengths() {
+	m.optBranch = true
+	m.addParameters()
 }
 
 func (m *BranchSite) addParameters() {
+	m.parameters = nil
+	m.Model.addParameters()
+	if m.as != nil {
+		m.addAdaptiveParameters()
+	} else {
+		m.addNormalParameters()
+	}
+}
+
+func (m *BranchSite) addNormalParameters() {
+	m.Model.addParameters()
 	kappa := optimize.NewBasicFloatParameter(&m.kappa, "kappa")
 	kappa.OnChange = func() {
 		m.q0done = false
@@ -127,6 +134,7 @@ func (m *BranchSite) addParameters() {
 }
 
 func (m *BranchSite) addAdaptiveParameters() {
+	m.Model.addParameters()
 	kappa := optimize.NewAdaptiveParameter(&m.kappa, "kappa", m.as)
 	kappa.OnChange = func() {
 		m.q0done = false

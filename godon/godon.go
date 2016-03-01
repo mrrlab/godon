@@ -208,23 +208,24 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
-	if !*noOptBrLen {
-		log.Print("Will optimize branch lengths")
-	} else {
-		log.Print("Will not optimize branch lengths")
-	}
-
 	var m cmodel.TreeOptimizable
 
 	switch *model {
 	case "M0":
 		log.Print("Using M0 model")
-		m = cmodel.NewM0(cali, t, cf, !*noOptBrLen)
+		m = cmodel.NewM0(cali, t, cf)
 	case "BS":
 		log.Print("Using branch site model")
-		m = cmodel.NewBranchSite(cali, t, cf, !*noOptBrLen, *fixw2)
+		m = cmodel.NewBranchSite(cali, t, cf, *fixw2)
 	default:
 		log.Fatal("Unknown model specification")
+	}
+
+	if !*noOptBrLen {
+		log.Print("Will optimize branch lengths")
+		m.SetOptimizeBranchLengths()
+	} else {
+		log.Print("Will not optimize branch lengths")
 	}
 
 	log.Printf("Optimize likelihood computations. Fixed positions: %t, all positions: %t.", *optFixed, *optAll)

@@ -9,17 +9,15 @@ type M0 struct {
 	*Model
 	q            *EMatrix
 	omega, kappa float64
-	parameters   optimize.FloatParameters
 	qdone        bool
 }
 
-func NewM0(cali CodonSequences, t *tree.Tree, cf CodonFrequency, optBranch bool) (m *M0) {
+func NewM0(cali CodonSequences, t *tree.Tree, cf CodonFrequency) (m *M0) {
 	m = &M0{
-		Model: NewModel(cali, t, cf, 1, optBranch),
+		Model: NewModel(cali, t, cf, 1),
 		q:     &EMatrix{},
 	}
 	m.prop[0] = 1
-	m.parameters = m.Model.parameters
 
 	m.addParameters()
 	m.SetDefaults()
@@ -28,32 +26,41 @@ func NewM0(cali CodonSequences, t *tree.Tree, cf CodonFrequency, optBranch bool)
 
 func (m *M0) Copy() optimize.Optimizable {
 	newM := &M0{
-		Model: NewModel(m.cali, m.tree.Copy(), m.cf, 1, m.optBranch),
+		Model: NewModel(m.cali, m.tree.Copy(), m.cf, 1),
 		q:     &EMatrix{},
 		omega: m.omega,
 		kappa: m.kappa,
 	}
 	newM.prop[0] = 1
 	newM.as = m.as
-	newM.Model.setParameters()
-	newM.parameters = newM.Model.parameters
+	newM.optBranch = m.optBranch
 
-	if m.as != nil {
-		newM.addAdaptiveParameters()
-	} else {
-		newM.addParameters()
-	}
+	newM.addParameters()
 	return newM
 }
 
 func (m *M0) SetAdaptive(as *optimize.AdaptiveSettings) {
 	m.as = as
-	m.Model.setParameters()
-	m.parameters = m.Model.parameters
-	m.addAdaptiveParameters()
+	m.addParameters()
+}
+
+func (m *M0) SetOptimizeBranchLengths() {
+	m.optBranch = true
+	m.addParameters()
 }
 
 func (m *M0) addParameters() {
+	m.parameters = nil
+	m.Model.addParameters()
+	if m.as != nil {
+		m.addAdaptiveParameters()
+	} else {
+		m.addNormalParameters()
+	}
+}
+
+func (m *M0) addNormalParameters() {
+	m.Model.addParameters()
 	omega := optimize.NewBasicFloatParameter(&m.omega, "omega")
 	omega.OnChange = func() {
 		m.qdone = false
@@ -78,6 +85,7 @@ func (m *M0) addParameters() {
 }
 
 func (m *M0) addAdaptiveParameters() {
+	m.Model.addParameters()
 	omega := optimize.NewAdaptiveParameter(&m.omega, "omega", m.as)
 	omega.OnChange = func() {
 		m.qdone = false

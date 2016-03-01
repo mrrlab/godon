@@ -15,6 +15,7 @@ import (
 
 type TreeOptimizable interface {
 	optimize.Optimizable
+	SetOptimizeBranchLengths()
 	SetAdaptive(*optimize.AdaptiveSettings)
 	// It's a bit confusing name. Here we
 	// enable program optimizations.
@@ -48,33 +49,30 @@ type Model struct {
 }
 
 // Creates a new base Model.
-func NewModel(cali CodonSequences, t *tree.Tree, cf CodonFrequency, nclass int, optBranch bool) (m *Model) {
+func NewModel(cali CodonSequences, t *tree.Tree, cf CodonFrequency, nclass int) (m *Model) {
 	f, a := cali.Letters()
 	m = &Model{cali: cali,
-		lettersF:  f,
-		lettersA:  a,
-		tree:      t,
-		optBranch: optBranch,
-		cf:        cf,
-		qs:        make([][]*EMatrix, nclass),
-		scale:     make([]float64, t.MaxNodeId()+1),
-		expBr:     make([]bool, t.MaxNodeId()+1),
-		prop:      make([]float64, nclass),
-		nclass:    nclass,
+		lettersF: f,
+		lettersA: a,
+		tree:     t,
+		cf:       cf,
+		qs:       make([][]*EMatrix, nclass),
+		scale:    make([]float64, t.MaxNodeId()+1),
+		expBr:    make([]bool, t.MaxNodeId()+1),
+		prop:     make([]float64, nclass),
+		nclass:   nclass,
 	}
 	for i := 0; i < nclass; i++ {
 		m.qs[i] = make([]*EMatrix, t.MaxNodeId()+1)
 	}
 	t.NodeOrder()
 	m.ReorderAlignment()
-	m.setParameters()
 	return
 }
 
 // Make branch length parameters adaptive.
-func (m *Model) setParameters() {
+func (m *Model) addParameters() {
 	if m.optBranch {
-		m.parameters = make(optimize.FloatParameters, 0, m.tree.NNodes())
 		for _, node := range m.tree.NodeIdArray() {
 			if node == nil {
 				continue
