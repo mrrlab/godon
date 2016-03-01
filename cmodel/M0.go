@@ -60,7 +60,6 @@ func (m *M0) addParameters() {
 }
 
 func (m *M0) addNormalParameters() {
-	m.Model.addParameters()
 	omega := optimize.NewBasicFloatParameter(&m.omega, "omega")
 	omega.OnChange = func() {
 		m.qdone = false
@@ -85,7 +84,6 @@ func (m *M0) addNormalParameters() {
 }
 
 func (m *M0) addAdaptiveParameters() {
-	m.Model.addParameters()
 	omega := optimize.NewAdaptiveParameter(&m.omega, "omega", m.as)
 	omega.OnChange = func() {
 		m.qdone = false
