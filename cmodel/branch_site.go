@@ -78,7 +78,6 @@ func (m *BranchSite) addParameters() {
 }
 
 func (m *BranchSite) addNormalParameters() {
-	m.Model.addParameters()
 	kappa := optimize.NewBasicFloatParameter(&m.kappa, "kappa")
 	kappa.OnChange = func() {
 		m.q0done = false
@@ -134,7 +133,6 @@ func (m *BranchSite) addNormalParameters() {
 }
 
 func (m *BranchSite) addAdaptiveParameters() {
-	m.Model.addParameters()
 	kappa := optimize.NewAdaptiveParameter(&m.kappa, "kappa", m.as)
 	kappa.OnChange = func() {
 		m.q0done = false

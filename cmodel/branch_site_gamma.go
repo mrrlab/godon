@@ -28,9 +28,9 @@ type BranchSiteGamma struct {
 	ratesdone              bool
 }
 
-func NewBranchSiteGamma(cali CodonSequences, t *tree.Tree, cf CodonFrequency, ncat int, optBranch bool, fixw2 bool) (m *BranchSiteGamma) {
+func NewBranchSiteGamma(cali CodonSequences, t *tree.Tree, cf CodonFrequency, ncat int, fixw2 bool) (m *BranchSiteGamma) {
 	m = &BranchSiteGamma{
-		Model: NewModel(cali, t, cf, 4*ncat, optBranch),
+		Model: NewModel(cali, t, cf, 4*ncat),
 		fixw2: fixw2,
 		ncat:  ncat,
 		q0:    &EMatrix{},
@@ -46,7 +46,6 @@ func NewBranchSiteGamma(cali CodonSequences, t *tree.Tree, cf CodonFrequency, nc
 		m.q2s[i] = &EMatrix{}
 	}
 
-	m.parameters = m.Model.parameters
 	m.addParameters()
 	m.SetBranchMatrices()
 	m.SetDefaults()
@@ -57,7 +56,7 @@ func NewBranchSiteGamma(cali CodonSequences, t *tree.Tree, cf CodonFrequency, nc
 
 func (m *BranchSiteGamma) Copy() optimize.Optimizable {
 	newM := &BranchSiteGamma{
-		Model:  NewModel(m.cali, m.tree.Copy(), m.cf, m.ncat*4, m.optBranch),
+		Model:  NewModel(m.cali, m.tree.Copy(), m.cf, m.ncat*4),
 		q0:     &EMatrix{},
 		q1:     &EMatrix{},
 		q2:     &EMatrix{},
@@ -80,26 +79,33 @@ func (m *BranchSiteGamma) Copy() optimize.Optimizable {
 	}
 
 	newM.as = m.as
-	newM.Model.setParameters()
-	newM.parameters = newM.Model.parameters
-
-	if m.as != nil {
-		newM.addAdaptiveParameters()
-	} else {
-		newM.addParameters()
-	}
+	newM.optBranch = m.optBranch
+	newM.addParameters()
 	newM.SetBranchMatrices()
 	return newM
 }
 
 func (m *BranchSiteGamma) SetAdaptive(as *optimize.AdaptiveSettings) {
 	m.as = as
-	m.Model.setParameters()
-	m.parameters = m.Model.parameters
-	m.addAdaptiveParameters()
+	m.addParameters()
+}
+
+func (m *BranchSiteGamma) SetOptimizeBranchLengths() {
+	m.optBranch = true
+	m.addParameters()
 }
 
 func (m *BranchSiteGamma) addParameters() {
+	m.parameters = nil
+	m.Model.addParameters()
+	if m.as != nil {
+		m.addAdaptiveParameters()
+	} else {
+		m.addNormalParameters()
+	}
+}
+
+func (m *BranchSiteGamma) addNormalParameters() {
 	kappa := optimize.NewBasicFloatParameter(&m.kappa, "kappa")
 	kappa.OnChange = func() {
 		m.q0done = false

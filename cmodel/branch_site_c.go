@@ -11,20 +11,18 @@ type BranchSiteC struct {
 	kappa                  float64
 	omega0, omega2         float64
 	p0prop                 float64
-	parameters             optimize.FloatParameters
 	q0done, q1done, q2done bool
 	propdone               bool
 }
 
-func NewBranchSiteC(cali CodonSequences, t *tree.Tree, cf CodonFrequency, optBranch bool) (m *BranchSiteC) {
+func NewBranchSiteC(cali CodonSequences, t *tree.Tree, cf CodonFrequency) (m *BranchSiteC) {
 	m = &BranchSiteC{
-		Model: NewModel(cali, t, cf, 4, optBranch),
+		Model: NewModel(cali, t, cf, 4),
 		q0:    &EMatrix{},
 		q1:    &EMatrix{},
 		q2:    &EMatrix{},
 	}
 
-	m.parameters = m.Model.parameters
 	m.addParameters()
 	m.SetBranchMatrices()
 	m.SetDefaults()
@@ -35,7 +33,7 @@ func NewBranchSiteC(cali CodonSequences, t *tree.Tree, cf CodonFrequency, optBra
 
 func (m *BranchSiteC) Copy() optimize.Optimizable {
 	newM := &BranchSiteC{
-		Model:  NewModel(m.cali, m.tree.Copy(), m.cf, 4, m.optBranch),
+		Model:  NewModel(m.cali, m.tree.Copy(), m.cf, 4),
 		q0:     &EMatrix{},
 		q1:     &EMatrix{},
 		q2:     &EMatrix{},
@@ -45,26 +43,33 @@ func (m *BranchSiteC) Copy() optimize.Optimizable {
 		p0prop: m.p0prop,
 	}
 	newM.as = m.as
-	newM.Model.setParameters()
-	newM.parameters = newM.Model.parameters
-
-	if m.as != nil {
-		newM.addAdaptiveParameters()
-	} else {
-		newM.addParameters()
-	}
+	newM.optBranch = m.optBranch
+	newM.addParameters()
 	newM.SetBranchMatrices()
 	return newM
 }
 
 func (m *BranchSiteC) SetAdaptive(as *optimize.AdaptiveSettings) {
 	m.as = as
-	m.Model.setParameters()
-	m.parameters = m.Model.parameters
-	m.addAdaptiveParameters()
+	m.addParameters()
+}
+
+func (m *BranchSiteC) SetOptimizeBranchLengths() {
+	m.optBranch = true
+	m.addParameters()
 }
 
 func (m *BranchSiteC) addParameters() {
+	m.parameters = nil
+	m.Model.addParameters()
+	if m.as != nil {
+		m.addAdaptiveParameters()
+	} else {
+		m.addNormalParameters()
+	}
+}
+
+func (m *BranchSiteC) addNormalParameters() {
 	kappa := optimize.NewBasicFloatParameter(&m.kappa, "kappa")
 	kappa.OnChange = func() {
 		m.q0done = false

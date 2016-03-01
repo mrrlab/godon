@@ -11,18 +11,16 @@ type M0vrate struct {
 	omega, kappa float64
 	p            float64 // proportion of non-scaled
 	s            float64 // scale-factor
-	parameters   optimize.FloatParameters
 	qdone        bool
 	propdone     bool
 }
 
-func NewM0vrate(cali CodonSequences, t *tree.Tree, cf CodonFrequency, optBranch bool) (m *M0vrate) {
+func NewM0vrate(cali CodonSequences, t *tree.Tree, cf CodonFrequency) (m *M0vrate) {
 	m = &M0vrate{
-		Model: NewModel(cali, t, cf, 2, optBranch),
+		Model: NewModel(cali, t, cf, 2),
 		q0:    &EMatrix{},
 		q1:    &EMatrix{},
 	}
-	m.parameters = m.Model.parameters
 
 	m.addParameters()
 	m.SetDefaults()
@@ -31,7 +29,7 @@ func NewM0vrate(cali CodonSequences, t *tree.Tree, cf CodonFrequency, optBranch 
 
 func (m *M0vrate) Copy() optimize.Optimizable {
 	newM := &M0vrate{
-		Model: NewModel(m.cali, m.tree.Copy(), m.cf, 2, m.optBranch),
+		Model: NewModel(m.cali, m.tree.Copy(), m.cf, 2),
 		q0:    &EMatrix{},
 		q1:    &EMatrix{},
 		omega: m.omega,
@@ -39,25 +37,32 @@ func (m *M0vrate) Copy() optimize.Optimizable {
 		s:     m.s,
 	}
 	newM.as = m.as
-	newM.Model.setParameters()
-	newM.parameters = newM.Model.parameters
-
-	if m.as != nil {
-		newM.addAdaptiveParameters()
-	} else {
-		newM.addParameters()
-	}
+	newM.optBranch = m.optBranch
+	newM.addParameters()
 	return newM
 }
 
 func (m *M0vrate) SetAdaptive(as *optimize.AdaptiveSettings) {
 	m.as = as
-	m.Model.setParameters()
-	m.parameters = m.Model.parameters
-	m.addAdaptiveParameters()
+	m.addParameters()
+}
+
+func (m *M0vrate) SetOptimizeBranchLengths() {
+	m.optBranch = true
+	m.addParameters()
 }
 
 func (m *M0vrate) addParameters() {
+	m.parameters = nil
+	m.Model.addParameters()
+	if m.as != nil {
+		m.addAdaptiveParameters()
+	} else {
+		m.addNormalParameters()
+	}
+}
+
+func (m *M0vrate) addNormalParameters() {
 	omega := optimize.NewBasicFloatParameter(&m.omega, "omega")
 	omega.OnChange = func() {
 		m.qdone = false
