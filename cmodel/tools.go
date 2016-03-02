@@ -16,7 +16,7 @@ const (
 	smallDiff = 1e-3
 )
 
-func getTreeAlignment(data string) (t *tree.Tree, cali CodonSequences, err error) {
+func GetTreeAlignment(data string) (t *tree.Tree, cali CodonSequences, err error) {
 	tf, err := os.Open(path.Join("testdata", data+".nwk"))
 	if err != nil {
 		return
