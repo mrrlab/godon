@@ -30,7 +30,7 @@ func NewBranchSite(cali CodonSequences, t *tree.Tree, cf CodonFrequency, fixw2 b
 	m.BaseModel = NewBaseModel(cali, t, cf, m)
 
 	m.setupParameters()
-	m.SetBranchMatrices()
+	m.setBranchMatrices()
 	m.SetDefaults()
 
 	return
@@ -56,7 +56,7 @@ func (m *BranchSite) Copy() optimize.Optimizable {
 	}
 	newM.BaseModel.Model = newM
 	newM.setupParameters()
-	newM.SetBranchMatrices()
+	newM.setBranchMatrices()
 	return newM
 }
 
@@ -194,7 +194,7 @@ func (m *BranchSite) SetDefaults() {
 	m.SetParameters(kappa, omega0, omega2, p0, p1)
 }
 
-func (m *BranchSite) SetBranchMatrices() {
+func (m *BranchSite) setBranchMatrices() {
 	for i := 0; i < len(m.qs); i++ {
 		for _, node := range m.tree.NodeIdArray() {
 			if node == nil {
@@ -222,7 +222,7 @@ func (m *BranchSite) SetBranchMatrices() {
 	}
 }
 
-func (m *BranchSite) UpdateProportions() {
+func (m *BranchSite) updateProportions() {
 	p0 := m.p0prop * m.p01sum
 	p1 := m.p01sum - p0
 	m.prop[0] = p0
@@ -244,7 +244,7 @@ func (m *BranchSite) UpdateProportions() {
 	m.expAllBr = false
 }
 
-func (m *BranchSite) UpdateMatrices() {
+func (m *BranchSite) updateMatrices() {
 	if !m.q0done {
 		Q0, s0 := createTransitionMatrix(m.cf, m.kappa, m.omega0, m.q0.Q)
 		m.q0.Set(Q0, s0)
@@ -275,16 +275,16 @@ func (m *BranchSite) UpdateMatrices() {
 		m.q2done = true
 	}
 
-	m.UpdateProportions()
+	m.updateProportions()
 	m.expAllBr = false
 }
 
 func (m *BranchSite) Likelihood() float64 {
 	if !m.q0done || !m.q1done || !m.q2done {
-		m.UpdateMatrices()
+		m.updateMatrices()
 	}
 	if !m.propdone {
-		m.UpdateProportions()
+		m.updateProportions()
 	}
 	return m.BaseModel.Likelihood()
 }
