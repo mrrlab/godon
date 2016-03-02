@@ -64,7 +64,7 @@ func (m *BranchSiteC) addParameters() {
 	kappa.ProposalFunc = optimize.NormalProposal(0.01)
 	kappa.Min = 0
 	kappa.Max = 20
-	m.parameters = append(m.parameters, kappa)
+	m.parameters.Append(kappa)
 
 	omega0 := optimize.NewBasicFloatParameter(&m.omega0, "omega0")
 	omega0.OnChange = func() {
@@ -73,7 +73,7 @@ func (m *BranchSiteC) addParameters() {
 	omega0.PriorFunc = optimize.GammaPrior(1, 2, false)
 	omega0.ProposalFunc = optimize.NormalProposal(0.01)
 	omega0.Min = 0
-	m.parameters = append(m.parameters, omega0)
+	m.parameters.Append(omega0)
 
 	omega2 := optimize.NewBasicFloatParameter(&m.omega2, "omega2")
 	omega2.OnChange = func() {
@@ -82,7 +82,7 @@ func (m *BranchSiteC) addParameters() {
 	omega2.PriorFunc = optimize.GammaPrior(1, 2, false)
 	omega2.ProposalFunc = optimize.NormalProposal(0.01)
 	omega2.Min = 1
-	m.parameters = append(m.parameters, omega2)
+	m.parameters.Append(omega2)
 
 	p0prop := optimize.NewBasicFloatParameter(&m.p0prop, "p0prop")
 	p0prop.OnChange = func() {
@@ -92,7 +92,7 @@ func (m *BranchSiteC) addParameters() {
 	p0prop.Min = 0
 	p0prop.Max = 1
 	p0prop.ProposalFunc = optimize.NormalProposal(0.01)
-	m.parameters = append(m.parameters, p0prop)
+	m.parameters.Append(p0prop)
 }
 
 func (m *BranchSiteC) addAdaptiveParameters() {
@@ -105,7 +105,7 @@ func (m *BranchSiteC) addAdaptiveParameters() {
 	kappa.PriorFunc = optimize.UniformPrior(0, 20, false, true)
 	kappa.Min = 0
 	kappa.Max = 20
-	m.parameters = append(m.parameters, kappa)
+	m.parameters.Append(kappa)
 
 	omega0 := optimize.NewAdaptiveParameter(&m.omega0, "omega0", m.as)
 	omega0.OnChange = func() {
@@ -113,7 +113,7 @@ func (m *BranchSiteC) addAdaptiveParameters() {
 	}
 	omega0.PriorFunc = optimize.GammaPrior(1, 2, false)
 	omega0.Min = 0
-	m.parameters = append(m.parameters, omega0)
+	m.parameters.Append(omega0)
 
 	omega2 := optimize.NewAdaptiveParameter(&m.omega2, "omega2", m.as)
 	omega2.OnChange = func() {
@@ -121,7 +121,7 @@ func (m *BranchSiteC) addAdaptiveParameters() {
 	}
 	omega2.PriorFunc = optimize.GammaPrior(1, 2, false)
 	omega2.Min = 1
-	m.parameters = append(m.parameters, omega2)
+	m.parameters.Append(omega2)
 
 	p0prop := optimize.NewAdaptiveParameter(&m.p0prop, "p0prop", m.as)
 	p0prop.Min = 0
@@ -130,7 +130,7 @@ func (m *BranchSiteC) addAdaptiveParameters() {
 		m.propdone = false
 	}
 	p0prop.PriorFunc = optimize.UniformPrior(0, 1, false, false)
-	m.parameters = append(m.parameters, p0prop)
+	m.parameters.Append(p0prop)
 }
 
 func (m *BranchSiteC) SetParameters(kappa float64, omega0, omega2 float64, p0prop float64) {

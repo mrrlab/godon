@@ -136,7 +136,7 @@ func (m *BaseModel) addBranchParameters() {
 				par.PriorFunc = optimize.GammaPrior(1, 2, false)
 				par.Min = 0
 				par.ProposalFunc = optimize.NormalProposal(0.01)
-				m.parameters = append(m.parameters, par)
+				m.parameters.Append(par)
 			} else {
 				par := optimize.NewAdaptiveParameter(&node.BranchLength, "br"+strconv.Itoa(node.Id), m.as)
 				par.OnChange = func() {
@@ -145,7 +145,7 @@ func (m *BaseModel) addBranchParameters() {
 				par.PriorFunc = optimize.GammaPrior(1, 2, false)
 				par.Min = 0
 				par.ProposalFunc = optimize.NormalProposal(0.01)
-				m.parameters = append(m.parameters, par)
+				m.parameters.Append(par)
 			}
 
 		}
