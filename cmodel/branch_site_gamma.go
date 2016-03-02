@@ -21,7 +21,6 @@ type BranchSiteGamma struct {
 	alpha                  float64
 	rates                  []float64
 	ncat                   int
-	parameters             optimize.FloatParameters
 	fixw2                  bool
 	q0done, q1done, q2done bool
 	propdone               bool
