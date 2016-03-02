@@ -20,13 +20,20 @@ type FloatParameter interface {
 	Accept(int)
 	Reject()
 	String() string
+	SetMin(float64)
+	SetMax(float64)
 	GetMin() float64
 	GetMax() float64
+	SetOnChange(func())
+	SetProposalFunc(func(float64) float64)
+	SetPriorFunc(func(float64) float64)
 	Get() float64
 	Set(float64)
 	InRange() bool
 	ValueInRange(float64) bool
 }
+
+type NewFloatParameter func(*float64, string) FloatParameter
 
 type FloatParameters []FloatParameter
 
@@ -140,22 +147,46 @@ type BasicFloatParameter struct {
 	*float64
 	old          float64
 	name         string
-	PriorFunc    func(float64) float64
-	ProposalFunc func(float64) float64
-	Min          float64
-	Max          float64
-	OnChange     func()
+	priorFunc    func(float64) float64
+	proposalFunc func(float64) float64
+	min          float64
+	max          float64
+	onChange     func()
 }
 
 func NewBasicFloatParameter(par *float64, name string) *BasicFloatParameter {
 	return &BasicFloatParameter{
 		float64:      par,
 		name:         name,
-		PriorFunc:    UniformPrior(-1, 1, true, true),
-		ProposalFunc: NormalProposal(1),
-		Min:          math.Inf(-1),
-		Max:          math.Inf(+1),
+		priorFunc:    UniformPrior(-1, 1, true, true),
+		proposalFunc: NormalProposal(1),
+		min:          math.Inf(-1),
+		max:          math.Inf(+1),
 	}
+}
+
+func NewFloatParameterBasic(par *float64, name string) FloatParameter {
+	return NewBasicFloatParameter(par, name)
+}
+
+func (p *BasicFloatParameter) SetMin(min float64) {
+	p.min = min
+}
+
+func (p *BasicFloatParameter) SetMax(max float64) {
+	p.max = max
+}
+
+func (p *BasicFloatParameter) SetPriorFunc(f func(float64) float64) {
+	p.priorFunc = f
+}
+
+func (p *BasicFloatParameter) SetProposalFunc(f func(float64) float64) {
+	p.proposalFunc = f
+}
+
+func (p *BasicFloatParameter) SetOnChange(f func()) {
+	p.onChange = f
 }
 
 func (p *BasicFloatParameter) Get() float64 {
@@ -168,28 +199,28 @@ func (p *BasicFloatParameter) Set(v float64) {
 		return
 	}
 	*p.float64 = v
-	if p.OnChange != nil {
-		p.OnChange()
+	if p.onChange != nil {
+		p.onChange()
 	}
 }
 
 func (p *BasicFloatParameter) GetMin() float64 {
-	return p.Min
+	return p.min
 }
 
 func (p *BasicFloatParameter) GetMax() float64 {
-	return p.Max
+	return p.max
 }
 
 func (p *BasicFloatParameter) ValueInRange(v float64) bool {
-	if v < p.Min || v > p.Max {
+	if v < p.min || v > p.max {
 		return false
 	}
 	return true
 }
 
 func (p *BasicFloatParameter) InRange() bool {
-	if *p.float64 < p.Min || *p.float64 > p.Max {
+	if *p.float64 < p.min || *p.float64 > p.max {
 		return false
 	}
 	return true
@@ -200,36 +231,36 @@ func (p *BasicFloatParameter) Name() string {
 }
 
 func (p *BasicFloatParameter) Prior() float64 {
-	return p.PriorFunc(*p.float64)
+	return p.priorFunc(*p.float64)
 }
 
 func (p *BasicFloatParameter) OldPrior() float64 {
-	return p.PriorFunc(p.old)
+	return p.priorFunc(p.old)
 }
 
 func (p *BasicFloatParameter) reflect() {
-	for *p.float64 < p.Min || *p.float64 > p.Max {
-		if *p.float64 < p.Min {
-			*p.float64 = p.Min + (p.Min - *p.float64)
+	for *p.float64 < p.min || *p.float64 > p.max {
+		if *p.float64 < p.min {
+			*p.float64 = p.min + (p.min - *p.float64)
 		}
-		if *p.float64 > p.Max {
-			*p.float64 = p.Max - (*p.float64 - p.Max)
+		if *p.float64 > p.max {
+			*p.float64 = p.max - (*p.float64 - p.max)
 		}
 	}
 }
 
 func (p *BasicFloatParameter) Propose() {
-	p.old, *p.float64 = *p.float64, p.ProposalFunc(*p.float64)
+	p.old, *p.float64 = *p.float64, p.proposalFunc(*p.float64)
 	p.reflect()
-	if p.OnChange != nil {
-		p.OnChange()
+	if p.onChange != nil {
+		p.onChange()
 	}
 }
 
 func (p *BasicFloatParameter) Reject() {
 	*p.float64, p.old = p.old, *p.float64
-	if p.OnChange != nil {
-		p.OnChange()
+	if p.onChange != nil {
+		p.onChange()
 	}
 }
 
