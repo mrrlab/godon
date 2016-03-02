@@ -8,7 +8,7 @@ import (
 )
 
 func TestBranchSiteReprM0D1(tst *testing.T) {
-	t, cali, err := getTreeAlignment(data1)
+	t, cali, err := GetTreeAlignment(data1)
 	if err != nil {
 		tst.Error("Error: ", err)
 	}
@@ -25,7 +25,7 @@ func TestBranchSiteReprM0D1(tst *testing.T) {
 	// Now reproduce
 	k, w := m0.GetParameters()
 
-	t, cali, err = getTreeAlignment(data1)
+	t, cali, err = GetTreeAlignment(data1)
 	if err != nil {
 		tst.Error("Error: ", err)
 	}
@@ -41,7 +41,7 @@ func TestBranchSiteReprM0D1(tst *testing.T) {
 }
 
 func TestBranchSiteReprM0D2(tst *testing.T) {
-	t, cali, err := getTreeAlignment(data2)
+	t, cali, err := GetTreeAlignment(data2)
 	if err != nil {
 		tst.Error("Error: ", err)
 	}
@@ -60,7 +60,7 @@ func TestBranchSiteReprM0D2(tst *testing.T) {
 	// Now reproduce
 	k, w := m0.GetParameters()
 
-	t, cali, err = getTreeAlignment(data2)
+	t, cali, err = GetTreeAlignment(data2)
 	if err != nil {
 		tst.Error("Error: ", err)
 	}
@@ -76,7 +76,7 @@ func TestBranchSiteReprM0D2(tst *testing.T) {
 }
 
 func TestBranchSiteReprM0D3(tst *testing.T) {
-	t, cali, err := getTreeAlignment(data1)
+	t, cali, err := GetTreeAlignment(data1)
 	if err != nil {
 		tst.Error("Error: ", err)
 	}
@@ -93,7 +93,7 @@ func TestBranchSiteReprM0D3(tst *testing.T) {
 	// Now reproduce
 	k, w := m0.GetParameters()
 
-	_, cali, err = getTreeAlignment(data1)
+	_, cali, err = GetTreeAlignment(data1)
 	if err != nil {
 		tst.Error("Error: ", err)
 	}
@@ -113,7 +113,7 @@ func TestBranchSiteReprBSD1(tst *testing.T) {
 		tst.Skip("skipping test in short mode.")
 	}
 
-	t, cali, err := getTreeAlignment(data1)
+	t, cali, err := GetTreeAlignment(data1)
 	if err != nil {
 		tst.Error("Error: ", err)
 	}
@@ -130,7 +130,7 @@ func TestBranchSiteReprBSD1(tst *testing.T) {
 	// Now reproduce
 	k, w0, w2, p0, p1 := h1.GetParameters()
 
-	t, cali, err = getTreeAlignment(data1)
+	t, cali, err = GetTreeAlignment(data1)
 	if err != nil {
 		tst.Error("Error: ", err)
 	}
@@ -150,7 +150,7 @@ func TestBranchSiteReprBSD2(tst *testing.T) {
 		tst.Skip("skipping test in short mode.")
 	}
 
-	t, cali, err := getTreeAlignment(data2)
+	t, cali, err := GetTreeAlignment(data2)
 	if err != nil {
 		tst.Error("Error: ", err)
 	}
@@ -168,7 +168,7 @@ func TestBranchSiteReprBSD2(tst *testing.T) {
 	k, w0, w2, p0, p1 := h1.GetParameters()
 	tst.Log("par=", k, w0, w2, p0, p1)
 
-	t, cali, err = getTreeAlignment(data2)
+	t, cali, err = GetTreeAlignment(data2)
 	if err != nil {
 		tst.Error("Error: ", err)
 	}
@@ -188,7 +188,7 @@ func TestBranchSiteReprBSD3(tst *testing.T) {
 		tst.Skip("skipping test in short mode.")
 	}
 
-	t, cali, err := getTreeAlignment(data3)
+	t, cali, err := GetTreeAlignment(data3)
 	if err != nil {
 		tst.Error("Error: ", err)
 	}
@@ -208,7 +208,7 @@ func TestBranchSiteReprBSD3(tst *testing.T) {
 	k, w0, w2, p0, p1 := h1.GetParameters()
 	tst.Log("par=", k, w0, w2, p0, p1)
 
-	_, cali, err = getTreeAlignment(data3)
+	_, cali, err = GetTreeAlignment(data3)
 	if err != nil {
 		tst.Error("Error: ", err)
 	}

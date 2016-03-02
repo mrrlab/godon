@@ -7,7 +7,7 @@ import (
 )
 
 func BenchmarkMCMCD1(b *testing.B) {
-	t, cali, err := getTreeAlignment(data1)
+	t, cali, err := GetTreeAlignment(data1)
 	if err != nil {
 		b.Error("Error: ", err)
 	}
