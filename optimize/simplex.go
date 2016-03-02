@@ -30,6 +30,7 @@ func NewDS() (ds *DS) {
 		delta: 1,
 		ftol:  TINY,
 	}
+	ds.repPeriod = 10
 	return
 }
 
