@@ -24,6 +24,8 @@ type TreeOptimizable interface {
 
 type Model interface {
 	GetNClass() int
+	addParameters()
+	addAdaptiveParameters()
 }
 
 // Model stores tree and alignment. Matrices and site classes are stored and cached as well.
@@ -87,8 +89,28 @@ func (m *BaseModel) Copy() (newM *BaseModel) {
 	return
 }
 
+func (m *BaseModel) SetAdaptive(as *optimize.AdaptiveSettings) {
+	m.as = as
+	m.setupParameters()
+}
+
+func (m *BaseModel) SetOptimizeBranchLengths() {
+	m.optBranch = true
+	m.setupParameters()
+}
+
+func (m *BaseModel) setupParameters() {
+	m.parameters = nil
+	m.addBranchParameters()
+	if m.as != nil {
+		m.Model.addAdaptiveParameters()
+	} else {
+		m.Model.addParameters()
+	}
+}
+
 // Make branch length parameters adaptive.
-func (m *BaseModel) addParameters() {
+func (m *BaseModel) addBranchParameters() {
 	if m.optBranch {
 		for _, node := range m.tree.NodeIdArray() {
 			if node == nil {

@@ -19,7 +19,7 @@ func NewM0(cali CodonSequences, t *tree.Tree, cf CodonFrequency) (m *M0) {
 	m.BaseModel = NewBaseModel(cali, t, cf, (Model)(m))
 	m.prop[0] = 1
 
-	m.addParameters()
+	m.setupParameters()
 	m.SetDefaults()
 	return
 }
@@ -36,31 +36,11 @@ func (m *M0) Copy() optimize.Optimizable {
 		kappa:     m.kappa,
 	}
 	newM.BaseModel.Model = newM
-	newM.addParameters()
+	newM.setupParameters()
 	return newM
 }
 
-func (m *M0) SetAdaptive(as *optimize.AdaptiveSettings) {
-	m.as = as
-	m.addParameters()
-}
-
-func (m *M0) SetOptimizeBranchLengths() {
-	m.optBranch = true
-	m.addParameters()
-}
-
 func (m *M0) addParameters() {
-	m.parameters = nil
-	m.BaseModel.addParameters()
-	if m.as != nil {
-		m.addAdaptiveParameters()
-	} else {
-		m.addNormalParameters()
-	}
-}
-
-func (m *M0) addNormalParameters() {
 	omega := optimize.NewBasicFloatParameter(&m.omega, "omega")
 	omega.OnChange = func() {
 		m.qdone = false

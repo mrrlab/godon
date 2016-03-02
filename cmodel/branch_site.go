@@ -29,7 +29,7 @@ func NewBranchSite(cali CodonSequences, t *tree.Tree, cf CodonFrequency, fixw2 b
 
 	m.BaseModel = NewBaseModel(cali, t, cf, m)
 
-	m.addParameters()
+	m.setupParameters()
 	m.SetBranchMatrices()
 	m.SetDefaults()
 
@@ -55,32 +55,12 @@ func (m *BranchSite) Copy() optimize.Optimizable {
 		fixw2:     m.fixw2,
 	}
 	newM.BaseModel.Model = newM
-	newM.addParameters()
+	newM.setupParameters()
 	newM.SetBranchMatrices()
 	return newM
 }
 
-func (m *BranchSite) SetAdaptive(as *optimize.AdaptiveSettings) {
-	m.as = as
-	m.addParameters()
-}
-
-func (m *BranchSite) SetOptimizeBranchLengths() {
-	m.optBranch = true
-	m.addParameters()
-}
-
 func (m *BranchSite) addParameters() {
-	m.parameters = nil
-	m.BaseModel.addParameters()
-	if m.as != nil {
-		m.addAdaptiveParameters()
-	} else {
-		m.addNormalParameters()
-	}
-}
-
-func (m *BranchSite) addNormalParameters() {
 	kappa := optimize.NewBasicFloatParameter(&m.kappa, "kappa")
 	kappa.OnChange = func() {
 		m.q0done = false
