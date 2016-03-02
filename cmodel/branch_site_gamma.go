@@ -48,7 +48,7 @@ func NewBranchSiteGamma(cali CodonSequences, t *tree.Tree, cf CodonFrequency, nc
 	}
 
 	m.setupParameters()
-	m.SetBranchMatrices()
+	m.setBranchMatrices()
 	m.SetDefaults()
 
 	return
@@ -86,7 +86,7 @@ func (m *BranchSiteGamma) Copy() optimize.Optimizable {
 	}
 
 	newM.setupParameters()
-	newM.SetBranchMatrices()
+	newM.setBranchMatrices()
 	return newM
 }
 
@@ -245,7 +245,7 @@ func (m *BranchSiteGamma) SetDefaults() {
 	m.SetParameters(kappa, omega0, omega2, p0, p1, alpha)
 }
 
-func (m *BranchSiteGamma) SetBranchMatrices() {
+func (m *BranchSiteGamma) setBranchMatrices() {
 	for i := 0; i < m.ncat; i++ {
 		for j := 0; j < 4; j++ {
 			for _, node := range m.tree.NodeIdArray() {
