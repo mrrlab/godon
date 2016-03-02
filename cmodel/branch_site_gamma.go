@@ -47,7 +47,7 @@ func NewBranchSiteGamma(cali CodonSequences, t *tree.Tree, cf CodonFrequency, nc
 		m.q2s[i] = &EMatrix{}
 	}
 
-	m.addParameters()
+	m.setupParameters()
 	m.SetBranchMatrices()
 	m.SetDefaults()
 
