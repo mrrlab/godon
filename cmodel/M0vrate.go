@@ -29,15 +29,13 @@ func NewM0vrate(cali CodonSequences, t *tree.Tree, cf CodonFrequency) (m *M0vrat
 
 func (m *M0vrate) Copy() optimize.Optimizable {
 	newM := &M0vrate{
-		BaseModel: NewBaseModel(m.cali, m.tree.Copy(), m.cf, 2),
+		BaseModel: m.BaseModel.Copy(),
 		q0:        &EMatrix{},
 		q1:        &EMatrix{},
 		omega:     m.omega,
 		kappa:     m.kappa,
 		s:         m.s,
 	}
-	newM.as = m.as
-	newM.optBranch = m.optBranch
 	newM.addParameters()
 	return newM
 }
