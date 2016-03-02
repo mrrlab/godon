@@ -23,7 +23,7 @@ type TreeOptimizable interface {
 }
 
 // Model stores tree and alignment. Matrices and site classes are stored and cached as well.
-type Model struct {
+type BaseModel struct {
 	tree       *tree.Tree
 	optBranch  bool
 	cali       CodonSequences
@@ -49,9 +49,9 @@ type Model struct {
 }
 
 // Creates a new base Model.
-func NewModel(cali CodonSequences, t *tree.Tree, cf CodonFrequency, nclass int) (m *Model) {
+func NewBaseModel(cali CodonSequences, t *tree.Tree, cf CodonFrequency, nclass int) (m *BaseModel) {
 	f, a := cali.Letters()
-	m = &Model{cali: cali,
+	m = &BaseModel{cali: cali,
 		lettersF: f,
 		lettersA: a,
 		tree:     t,
@@ -71,7 +71,7 @@ func NewModel(cali CodonSequences, t *tree.Tree, cf CodonFrequency, nclass int) 
 }
 
 // Make branch length parameters adaptive.
-func (m *Model) addParameters() {
+func (m *BaseModel) addParameters() {
 	if m.optBranch {
 		for _, node := range m.tree.NodeIdArray() {
 			if node == nil {
@@ -106,14 +106,14 @@ func (m *Model) addParameters() {
 	}
 }
 
-func (m *Model) SetOptimizations(fixed, all bool) {
+func (m *BaseModel) SetOptimizations(fixed, all bool) {
 	m.optFixed = fixed
 	m.optAll = all
 }
 
 // Reorder codon alignment so order of nodes and sequences are the same.
 // This allows faster access to sequences by their index in the array.
-func (m *Model) ReorderAlignment() {
+func (m *BaseModel) ReorderAlignment() {
 	nm2id := make(map[string]int)
 	for i, s := range m.cali {
 		nm2id[s.Name] = i
@@ -133,7 +133,7 @@ type expTask struct {
 }
 
 // Exponentiate a signle branch. This uses eigen decomposed matrices.
-func (m *Model) ExpBranch(br int) {
+func (m *BaseModel) ExpBranch(br int) {
 	node := m.tree.NodeIdArray()[br]
 	cD := matrix.Zeros(nCodon, nCodon)
 	for class, _ := range m.qs {
@@ -156,7 +156,7 @@ func (m *Model) ExpBranch(br int) {
 }
 
 // Exponentiate all branches in the tree.
-func (m *Model) ExpBranches() {
+func (m *BaseModel) ExpBranches() {
 	if m.eQts == nil {
 		m.eQts = make([][][]float64, len(m.qs))
 		for class, _ := range m.qs {
@@ -215,7 +215,7 @@ func (m *Model) ExpBranches() {
 }
 
 // Calculate tree likelihood.
-func (m *Model) Likelihood() (lnL float64) {
+func (m *BaseModel) Likelihood() (lnL float64) {
 	if !m.expAllBr {
 		m.ExpBranches()
 	} else {
@@ -278,7 +278,7 @@ func (m *Model) Likelihood() (lnL float64) {
 }
 
 // fullSubL calculates likelihood for given site class and position.
-func (m *Model) fullSubL(class, pos int, plh [][]float64) (res float64) {
+func (m *BaseModel) fullSubL(class, pos int, plh [][]float64) (res float64) {
 	for i := 0; i < m.tree.MaxNodeId()+1; i++ {
 		plh[i][0] = math.NaN()
 	}
@@ -325,7 +325,7 @@ func (m *Model) fullSubL(class, pos int, plh [][]float64) (res float64) {
 
 // observedSubL calculates likelihood for given site class and position
 // taking into account only visible states.
-func (m *Model) observedSubL(class, pos int, plh [][]float64) (res float64) {
+func (m *BaseModel) observedSubL(class, pos int, plh [][]float64) (res float64) {
 	lettersF := m.lettersF[pos]
 	lettersA := m.lettersA[pos]
 	fabs := 0.0
@@ -411,7 +411,7 @@ func (m *Model) observedSubL(class, pos int, plh [][]float64) (res float64) {
 
 // fixedSubL calculates likelihood for given site class and position
 // if the site is fixed.
-func (m *Model) fixedSubL(class, pos int, plh [][]float64) (res float64) {
+func (m *BaseModel) fixedSubL(class, pos int, plh [][]float64) (res float64) {
 	for i := 0; i < m.tree.MaxNodeId()+1; i++ {
 		plh[i][0] = math.NaN()
 	}

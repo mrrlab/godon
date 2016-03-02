@@ -9,7 +9,7 @@ import (
 )
 
 type BranchSite struct {
-	*Model
+	*BaseModel
 	q0, q1, q2             *EMatrix
 	kappa                  float64
 	omega0, omega2         float64
@@ -21,11 +21,11 @@ type BranchSite struct {
 
 func NewBranchSite(cali CodonSequences, t *tree.Tree, cf CodonFrequency, fixw2 bool) (m *BranchSite) {
 	m = &BranchSite{
-		Model: NewModel(cali, t, cf, 4),
-		fixw2: fixw2,
-		q0:    &EMatrix{},
-		q1:    &EMatrix{},
-		q2:    &EMatrix{},
+		BaseModel: NewBaseModel(cali, t, cf, 4),
+		fixw2:     fixw2,
+		q0:        &EMatrix{},
+		q1:        &EMatrix{},
+		q2:        &EMatrix{},
 	}
 
 	m.addParameters()
@@ -38,16 +38,16 @@ func NewBranchSite(cali CodonSequences, t *tree.Tree, cf CodonFrequency, fixw2 b
 
 func (m *BranchSite) Copy() optimize.Optimizable {
 	newM := &BranchSite{
-		Model:  NewModel(m.cali, m.tree.Copy(), m.cf, 4),
-		q0:     &EMatrix{},
-		q1:     &EMatrix{},
-		q2:     &EMatrix{},
-		kappa:  m.kappa,
-		omega0: m.omega0,
-		omega2: m.omega2,
-		p01sum: m.p01sum,
-		p0prop: m.p0prop,
-		fixw2:  m.fixw2,
+		BaseModel: NewBaseModel(m.cali, m.tree.Copy(), m.cf, 4),
+		q0:        &EMatrix{},
+		q1:        &EMatrix{},
+		q2:        &EMatrix{},
+		kappa:     m.kappa,
+		omega0:    m.omega0,
+		omega2:    m.omega2,
+		p01sum:    m.p01sum,
+		p0prop:    m.p0prop,
+		fixw2:     m.fixw2,
 	}
 	newM.as = m.as
 	newM.optBranch = m.optBranch
@@ -69,7 +69,7 @@ func (m *BranchSite) SetOptimizeBranchLengths() {
 
 func (m *BranchSite) addParameters() {
 	m.parameters = nil
-	m.Model.addParameters()
+	m.BaseModel.addParameters()
 	if m.as != nil {
 		m.addAdaptiveParameters()
 	} else {
@@ -307,5 +307,5 @@ func (m *BranchSite) Likelihood() float64 {
 	if !m.propdone {
 		m.UpdateProportions()
 	}
-	return m.Model.Likelihood()
+	return m.BaseModel.Likelihood()
 }
