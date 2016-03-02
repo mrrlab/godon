@@ -22,13 +22,25 @@ func TestSimplex(tst *testing.T) {
 	cf := cmodel.F3X4(cali)
 	m0 := cmodel.NewM0(cali, t, cf)
 	m0.SetParameters(2, 0.5)
+	m := optimize.Optimizable(m0).Copy()
 	npar := len(m0.GetFloatParameters())
 	if npar != 2 {
 		tst.Error("Wrong number of parameters for M0:", npar)
 	}
 
 	ds := optimize.NewDS()
-	ds.SetOptimizable(m0)
+	ds.SetOptimizable(m)
+	ds.Run(5)
+
+	m = m.Copy()
+	npar1 := len(m0.GetFloatParameters())
+	npar2 := len(m.GetFloatParameters())
+	if npar1 != npar2 {
+		tst.Error("Parameter number mismatch after copy:", npar1, npar2)
+	}
+
+	ds = optimize.NewDS()
+	ds.SetOptimizable(m)
 	ds.Run(5)
 }
 
@@ -41,9 +53,20 @@ func TestMH(tst *testing.T) {
 	cf := cmodel.F0()
 	bs := cmodel.NewBranchSite(cali, t, cf, false)
 
-	ds := optimize.NewMH(false, 0)
-	ds.SetOptimizable(bs)
-	ds.Run(5)
+	mh := optimize.NewMH(false, 0)
+	mh.SetOptimizable(bs)
+	mh.Run(5)
+
+	m := bs.Copy()
+	npar1 := len(bs.GetFloatParameters())
+	npar2 := len(m.GetFloatParameters())
+	if npar1 != npar2 {
+		tst.Error("Parameter number mismatch after copy:", npar1, npar2)
+	}
+
+	mh = optimize.NewMH(false, 0)
+	mh.SetOptimizable(m)
+	mh.Run(5)
 }
 
 func TestAnnealing(tst *testing.T) {
@@ -67,9 +90,20 @@ func TestAnnealing(tst *testing.T) {
 
 	m0.SetParameters(2, 0.5)
 
-	ds := optimize.NewMH(true, 0)
-	ds.SetOptimizable(m0)
-	ds.Run(5)
+	an := optimize.NewMH(true, 0)
+	an.SetOptimizable(m0)
+	an.Run(5)
+
+	m := m0.Copy()
+	npar1 := len(m0.GetFloatParameters())
+	npar2 := len(m.GetFloatParameters())
+	if npar1 != npar2 {
+		tst.Error("Parameter number mismatch after copy:", npar1, npar2)
+	}
+	an = optimize.NewMH(false, 0)
+	an.SetOptimizable(m)
+	an.Run(5)
+
 }
 
 func TestLBFGSB(tst *testing.T) {
@@ -82,7 +116,18 @@ func TestLBFGSB(tst *testing.T) {
 	m0 := cmodel.NewM0(cali, t, cf)
 	m0.SetParameters(2, 0.5)
 
-	ds := optimize.NewLBFGSB()
-	ds.SetOptimizable(m0)
-	ds.Run(5)
+	l := optimize.NewLBFGSB()
+	l.SetOptimizable(m0)
+	l.Run(5)
+
+	m := m0.Copy()
+	npar1 := len(m0.GetFloatParameters())
+	npar2 := len(m.GetFloatParameters())
+	if npar1 != npar2 {
+		tst.Error("Parameter number mismatch after copy:", npar1, npar2)
+	}
+
+	l = optimize.NewLBFGSB()
+	l.SetOptimizable(m)
+	l.Run(5)
 }
