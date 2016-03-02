@@ -17,18 +17,22 @@ type BranchSiteC struct {
 
 func NewBranchSiteC(cali CodonSequences, t *tree.Tree, cf CodonFrequency) (m *BranchSiteC) {
 	m = &BranchSiteC{
-		BaseModel: NewBaseModel(cali, t, cf, 4),
-		q0:        &EMatrix{},
-		q1:        &EMatrix{},
-		q2:        &EMatrix{},
+		q0: &EMatrix{},
+		q1: &EMatrix{},
+		q2: &EMatrix{},
 	}
+
+	m.BaseModel = NewBaseModel(cali, t, cf, m)
 
 	m.addParameters()
 	m.SetBranchMatrices()
 	m.SetDefaults()
 
 	return
+}
 
+func (m *BranchSiteC) GetNClass() int {
+	return 4
 }
 
 func (m *BranchSiteC) Copy() optimize.Optimizable {
@@ -42,6 +46,8 @@ func (m *BranchSiteC) Copy() optimize.Optimizable {
 		omega2:    m.omega2,
 		p0prop:    m.p0prop,
 	}
+	newM.BaseModel.Model = newM
+
 	newM.addParameters()
 	newM.SetBranchMatrices()
 	return newM

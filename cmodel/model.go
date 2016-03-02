@@ -25,8 +25,14 @@ type TreeOptimizable interface {
 	SetOptimizations(fixed, all bool)
 }
 
+type Model interface {
+	GetNClass() int
+}
+
 // Model stores tree and alignment. Matrices and site classes are stored and cached as well.
 type BaseModel struct {
+	Model
+
 	tree       *tree.Tree
 	optBranch  bool
 	cali       CodonSequences
@@ -52,9 +58,12 @@ type BaseModel struct {
 }
 
 // Creates a new base Model.
-func NewBaseModel(cali CodonSequences, t *tree.Tree, cf CodonFrequency, nclass int) (m *BaseModel) {
+func NewBaseModel(cali CodonSequences, t *tree.Tree, cf CodonFrequency, model Model) (bm *BaseModel) {
 	f, a := cali.Letters()
-	m = &BaseModel{cali: cali,
+	nclass := model.GetNClass()
+	bm = &BaseModel{
+		Model:    model,
+		cali:     cali,
 		lettersF: f,
 		lettersA: a,
 		tree:     t,
@@ -66,15 +75,15 @@ func NewBaseModel(cali CodonSequences, t *tree.Tree, cf CodonFrequency, nclass i
 		nclass:   nclass,
 	}
 	for i := 0; i < nclass; i++ {
-		m.qs[i] = make([]*EMatrix, t.MaxNodeId()+1)
+		bm.qs[i] = make([]*EMatrix, t.MaxNodeId()+1)
 	}
 	t.NodeOrder()
-	m.ReorderAlignment()
+	bm.ReorderAlignment()
 	return
 }
 
 func (m *BaseModel) Copy() (newM *BaseModel) {
-	newM = NewBaseModel(m.cali, m.tree.Copy(), m.cf, m.nclass)
+	newM = NewBaseModel(m.cali, m.tree.Copy(), m.cf, m.Model)
 	copy(newM.prop, m.prop)
 	newM.as = m.as
 	newM.optBranch = m.optBranch

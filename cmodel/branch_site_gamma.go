@@ -30,16 +30,17 @@ type BranchSiteGamma struct {
 
 func NewBranchSiteGamma(cali CodonSequences, t *tree.Tree, cf CodonFrequency, ncat int, fixw2 bool) (m *BranchSiteGamma) {
 	m = &BranchSiteGamma{
-		BaseModel: NewBaseModel(cali, t, cf, 4*ncat),
-		fixw2:     fixw2,
-		ncat:      ncat,
-		q0:        &EMatrix{},
-		q1:        &EMatrix{},
-		q2:        &EMatrix{},
-		q0s:       make([]*EMatrix, ncat),
-		q1s:       make([]*EMatrix, ncat),
-		q2s:       make([]*EMatrix, ncat),
+		fixw2: fixw2,
+		ncat:  ncat,
+		q0:    &EMatrix{},
+		q1:    &EMatrix{},
+		q2:    &EMatrix{},
+		q0s:   make([]*EMatrix, ncat),
+		q1s:   make([]*EMatrix, ncat),
+		q2s:   make([]*EMatrix, ncat),
 	}
+	m.BaseModel = NewBaseModel(cali, t, cf, m)
+
 	for i := 0; i < ncat; i++ {
 		m.q0s[i] = &EMatrix{}
 		m.q1s[i] = &EMatrix{}
@@ -52,6 +53,10 @@ func NewBranchSiteGamma(cali CodonSequences, t *tree.Tree, cf CodonFrequency, nc
 
 	return
 
+}
+
+func (m *BranchSiteGamma) GetNClass() int {
+	return 4 * m.ncat
 }
 
 func (m *BranchSiteGamma) Copy() optimize.Optimizable {
@@ -72,6 +77,8 @@ func (m *BranchSiteGamma) Copy() optimize.Optimizable {
 		ncat:      m.ncat,
 		fixw2:     m.fixw2,
 	}
+	newM.BaseModel.Model = newM
+
 	for i := 0; i < m.ncat; i++ {
 		newM.q0s[i] = &EMatrix{}
 		newM.q1s[i] = &EMatrix{}
