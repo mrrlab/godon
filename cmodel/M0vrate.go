@@ -131,7 +131,7 @@ func (m *M0vrate) SetDefaults() {
 	m.SetParameters(1, 1, 2)
 }
 
-func (m *M0vrate) UpdateProportions() {
+func (m *M0vrate) updateProportions() {
 	m.prop[0] = 1 / m.s
 	m.prop[1] = 1 - m.prop[0]
 
@@ -147,7 +147,7 @@ func (m *M0vrate) UpdateProportions() {
 	m.expAllBr = false
 }
 
-func (m *M0vrate) UpdateMatrix() {
+func (m *M0vrate) updateMatrix() {
 	Q0, scale := createTransitionMatrix(m.cf, m.kappa, m.omega, m.q0.Q)
 	m.q0.Set(Q0, scale)
 	err := m.q0.Eigen()
@@ -157,15 +157,15 @@ func (m *M0vrate) UpdateMatrix() {
 	m.q1 = m.q0.Copy(nil)
 	m.q1.ScaleD(m.s)
 
-	m.UpdateProportions()
+	m.updateProportions()
 }
 
 func (m *M0vrate) Likelihood() float64 {
 	if !m.qdone {
-		m.UpdateMatrix()
+		m.updateMatrix()
 	}
 	if !m.propdone {
-		m.UpdateProportions()
+		m.updateProportions()
 	}
 	return m.BaseModel.Likelihood()
 }

@@ -180,7 +180,7 @@ func (m *BranchSiteC) SetBranchMatrices() {
 	}
 }
 
-func (m *BranchSiteC) UpdateProportions() {
+func (m *BranchSiteC) updateProportions() {
 	p2 := m.omega2 / 1000
 	m.prop[0] = m.p0prop * (1 - p2)
 	m.prop[1] = (1 - m.p0prop) * (1 - p2)
@@ -201,7 +201,7 @@ func (m *BranchSiteC) UpdateProportions() {
 	m.expAllBr = false
 }
 
-func (m *BranchSiteC) UpdateMatrices() {
+func (m *BranchSiteC) updateMatrices() {
 	if !m.q0done {
 		Q0, s0 := createTransitionMatrix(m.cf, m.kappa, m.omega0, m.q0.Q)
 		m.q0.Set(Q0, s0)
@@ -232,16 +232,16 @@ func (m *BranchSiteC) UpdateMatrices() {
 		m.q2done = true
 	}
 
-	m.UpdateProportions()
+	m.updateProportions()
 	m.expAllBr = false
 }
 
 func (m *BranchSiteC) Likelihood() float64 {
 	if !m.q0done || !m.q1done || !m.q2done {
-		m.UpdateMatrices()
+		m.updateMatrices()
 	}
 	if !m.propdone {
-		m.UpdateProportions()
+		m.updateProportions()
 	}
 	return m.BaseModel.Likelihood()
 }

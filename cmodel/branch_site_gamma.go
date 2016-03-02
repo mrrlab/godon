@@ -275,7 +275,7 @@ func (m *BranchSiteGamma) SetBranchMatrices() {
 	}
 }
 
-func (m *BranchSiteGamma) UpdateProportions() {
+func (m *BranchSiteGamma) updateProportions() {
 	p0 := m.p0prop * m.p01sum
 	p1 := m.p01sum - p0
 	for i := 0; i < m.ncat; i++ {
@@ -299,7 +299,7 @@ func (m *BranchSiteGamma) UpdateProportions() {
 	m.expAllBr = false
 }
 
-func (m *BranchSiteGamma) UpdateMatrices() {
+func (m *BranchSiteGamma) updateMatrices() {
 	if !m.q0done {
 		Q0, s0 := createTransitionMatrix(m.cf, m.kappa, m.omega0, m.q0.Q)
 		m.q0.Set(Q0, s0)
@@ -342,11 +342,11 @@ func (m *BranchSiteGamma) UpdateMatrices() {
 		m.q2done = true
 	}
 
-	m.UpdateProportions()
+	m.updateProportions()
 	m.expAllBr = false
 }
 
-func (m *BranchSiteGamma) UpdateRates() {
+func (m *BranchSiteGamma) updateRates() {
 	m.rates = paml.DiscreteGamma(m.alpha, m.alpha, m.ncat, false, nil, m.rates)
 	m.q0done = false
 	m.q1done = false
@@ -356,13 +356,13 @@ func (m *BranchSiteGamma) UpdateRates() {
 
 func (m *BranchSiteGamma) Likelihood() float64 {
 	if !m.ratesdone {
-		m.UpdateRates()
+		m.updateRates()
 	}
 	if !m.q0done || !m.q1done || !m.q2done {
-		m.UpdateMatrices()
+		m.updateMatrices()
 	}
 	if !m.propdone {
-		m.UpdateProportions()
+		m.updateProportions()
 	}
 	return m.BaseModel.Likelihood()
 }
