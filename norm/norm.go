@@ -198,7 +198,7 @@ func main() {
 
 	var opt optimize.Optimizer
 	if !*simplex {
-		chain := optimize.NewMH()
+		chain := optimize.NewMH(false, 0)
 		chain.AccPeriod = 200
 		opt = chain
 	} else {
