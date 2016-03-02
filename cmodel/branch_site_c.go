@@ -24,7 +24,7 @@ func NewBranchSiteC(cali CodonSequences, t *tree.Tree, cf CodonFrequency) (m *Br
 
 	m.BaseModel = NewBaseModel(cali, t, cf, m)
 
-	m.addParameters()
+	m.setupParameters()
 	m.SetBranchMatrices()
 	m.SetDefaults()
 
@@ -53,83 +53,45 @@ func (m *BranchSiteC) Copy() optimize.Optimizable {
 	return newM
 }
 
-func (m *BranchSiteC) addParameters() {
-	kappa := optimize.NewBasicFloatParameter(&m.kappa, "kappa")
-	kappa.OnChange = func() {
+func (m *BranchSiteC) addParameters(nfp optimize.NewFloatParameter) {
+	kappa := nfp(&m.kappa, "kappa")
+	kappa.SetOnChange(func() {
 		m.q0done = false
 		m.q1done = false
 		m.q2done = false
-	}
-	kappa.PriorFunc = optimize.UniformPrior(0, 20, false, true)
-	kappa.ProposalFunc = optimize.NormalProposal(0.01)
-	kappa.Min = 0
-	kappa.Max = 20
+	})
+	kappa.SetPriorFunc(optimize.UniformPrior(0, 20, false, true))
+	kappa.SetProposalFunc(optimize.NormalProposal(0.01))
+	kappa.SetMin(0)
+	kappa.SetMax(20)
 	m.parameters.Append(kappa)
 
-	omega0 := optimize.NewBasicFloatParameter(&m.omega0, "omega0")
-	omega0.OnChange = func() {
+	omega0 := nfp(&m.omega0, "omega0")
+	omega0.SetOnChange(func() {
 		m.q0done = false
-	}
-	omega0.PriorFunc = optimize.GammaPrior(1, 2, false)
-	omega0.ProposalFunc = optimize.NormalProposal(0.01)
-	omega0.Min = 0
+	})
+	omega0.SetPriorFunc(optimize.GammaPrior(1, 2, false))
+	omega0.SetProposalFunc(optimize.NormalProposal(0.01))
+	omega0.SetMin(0)
 	m.parameters.Append(omega0)
 
-	omega2 := optimize.NewBasicFloatParameter(&m.omega2, "omega2")
-	omega2.OnChange = func() {
+	omega2 := nfp(&m.omega2, "omega2")
+	omega2.SetOnChange(func() {
 		m.q2done = false
-	}
-	omega2.PriorFunc = optimize.GammaPrior(1, 2, false)
-	omega2.ProposalFunc = optimize.NormalProposal(0.01)
-	omega2.Min = 1
+	})
+	omega2.SetPriorFunc(optimize.GammaPrior(1, 2, false))
+	omega2.SetProposalFunc(optimize.NormalProposal(0.01))
+	omega2.SetMin(1)
 	m.parameters.Append(omega2)
 
-	p0prop := optimize.NewBasicFloatParameter(&m.p0prop, "p0prop")
-	p0prop.OnChange = func() {
+	p0prop := nfp(&m.p0prop, "p0prop")
+	p0prop.SetOnChange(func() {
 		m.propdone = false
-	}
-	p0prop.PriorFunc = optimize.UniformPrior(0, 1, false, false)
-	p0prop.Min = 0
-	p0prop.Max = 1
-	p0prop.ProposalFunc = optimize.NormalProposal(0.01)
-	m.parameters.Append(p0prop)
-}
-
-func (m *BranchSiteC) addAdaptiveParameters() {
-	kappa := optimize.NewAdaptiveParameter(&m.kappa, "kappa", m.as)
-	kappa.OnChange = func() {
-		m.q0done = false
-		m.q1done = false
-		m.q2done = false
-	}
-	kappa.PriorFunc = optimize.UniformPrior(0, 20, false, true)
-	kappa.Min = 0
-	kappa.Max = 20
-	m.parameters.Append(kappa)
-
-	omega0 := optimize.NewAdaptiveParameter(&m.omega0, "omega0", m.as)
-	omega0.OnChange = func() {
-		m.q0done = false
-	}
-	omega0.PriorFunc = optimize.GammaPrior(1, 2, false)
-	omega0.Min = 0
-	m.parameters.Append(omega0)
-
-	omega2 := optimize.NewAdaptiveParameter(&m.omega2, "omega2", m.as)
-	omega2.OnChange = func() {
-		m.q2done = false
-	}
-	omega2.PriorFunc = optimize.GammaPrior(1, 2, false)
-	omega2.Min = 1
-	m.parameters.Append(omega2)
-
-	p0prop := optimize.NewAdaptiveParameter(&m.p0prop, "p0prop", m.as)
-	p0prop.Min = 0
-	p0prop.Max = 1
-	p0prop.OnChange = func() {
-		m.propdone = false
-	}
-	p0prop.PriorFunc = optimize.UniformPrior(0, 1, false, false)
+	})
+	p0prop.SetPriorFunc(optimize.UniformPrior(0, 1, false, false))
+	p0prop.SetMin(0)
+	p0prop.SetMax(1)
+	p0prop.SetProposalFunc(optimize.NormalProposal(0.01))
 	m.parameters.Append(p0prop)
 }
 

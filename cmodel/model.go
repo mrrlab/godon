@@ -27,8 +27,7 @@ type TreeOptimizable interface {
 
 type Model interface {
 	GetNClass() int
-	addParameters()
-	addAdaptiveParameters()
+	addParameters(optimize.NewFloatParameter)
 }
 
 // Model stores tree and alignment. Matrices and site classes are stored and cached as well.
@@ -108,16 +107,18 @@ func (m *BaseModel) GetFloatParameters() optimize.FloatParameters {
 
 func (m *BaseModel) setupParameters() {
 	m.parameters = nil
-	m.addBranchParameters()
+	var nfp optimize.NewFloatParameter
 	if m.as != nil {
-		m.Model.addAdaptiveParameters()
+		nfp = m.as.NewParameter
 	} else {
-		m.Model.addParameters()
+		nfp = optimize.NewFloatParameterBasic
 	}
+	m.addBranchParameters(nfp)
+	m.Model.addParameters(nfp)
 }
 
 // Make branch length parameters adaptive.
-func (m *BaseModel) addBranchParameters() {
+func (m *BaseModel) addBranchParameters(nfp optimize.NewFloatParameter) {
 	if m.optBranch {
 		for _, node := range m.tree.NodeIdArray() {
 			if node == nil {
@@ -128,25 +129,14 @@ func (m *BaseModel) addBranchParameters() {
 			if node.IsRoot() {
 				continue
 			}
-			if m.as == nil {
-				par := optimize.NewBasicFloatParameter(&node.BranchLength, "br"+strconv.Itoa(node.Id))
-				par.OnChange = func() {
-					m.expBr[nodeId] = false
-				}
-				par.PriorFunc = optimize.GammaPrior(1, 2, false)
-				par.Min = 0
-				par.ProposalFunc = optimize.NormalProposal(0.01)
-				m.parameters.Append(par)
-			} else {
-				par := optimize.NewAdaptiveParameter(&node.BranchLength, "br"+strconv.Itoa(node.Id), m.as)
-				par.OnChange = func() {
-					m.expBr[nodeId] = false
-				}
-				par.PriorFunc = optimize.GammaPrior(1, 2, false)
-				par.Min = 0
-				par.ProposalFunc = optimize.NormalProposal(0.01)
-				m.parameters.Append(par)
-			}
+			par := nfp(&node.BranchLength, "br"+strconv.Itoa(node.Id))
+			par.SetOnChange(func() {
+				m.expBr[nodeId] = false
+			})
+			par.SetPriorFunc(optimize.GammaPrior(1, 2, false))
+			par.SetMin(0)
+			par.SetProposalFunc(optimize.NormalProposal(0.01))
+			m.parameters.Append(par)
 
 		}
 	}

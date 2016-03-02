@@ -63,6 +63,10 @@ func NewAdaptiveSettings() *AdaptiveSettings {
 	}
 }
 
+func (as *AdaptiveSettings) NewParameter(par *float64, name string) FloatParameter {
+	return NewAdaptiveParameter(par, name, as)
+}
+
 func NewAdaptiveParameter(par *float64, name string, ap *AdaptiveSettings) (a *AdaptiveParameter) {
 	a = &AdaptiveParameter{
 		BasicFloatParameter: NewBasicFloatParameter(par, name),
@@ -78,7 +82,7 @@ func NewAdaptiveParameter(par *float64, name string, ap *AdaptiveSettings) (a *A
 	}
 	a.variance = square(a.SD)
 
-	a.ProposalFunc = a.AdaptiveProposal()
+	a.proposalFunc = a.AdaptiveProposal()
 
 	return
 }

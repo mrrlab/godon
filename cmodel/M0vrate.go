@@ -47,69 +47,35 @@ func (m *M0vrate) Copy() optimize.Optimizable {
 	return newM
 }
 
-func (m *M0vrate) addParameters() {
-	omega := optimize.NewBasicFloatParameter(&m.omega, "omega")
-	omega.OnChange = func() {
+func (m *M0vrate) addParameters(nfp optimize.NewFloatParameter) {
+	omega := nfp(&m.omega, "omega")
+	omega.SetOnChange(func() {
 		m.qdone = false
 		m.expAllBr = false
-	}
-	omega.PriorFunc = optimize.GammaPrior(1, 2, false)
-	omega.ProposalFunc = optimize.NormalProposal(0.01)
-	omega.Min = 0
+	})
+	omega.SetPriorFunc(optimize.GammaPrior(1, 2, false))
+	omega.SetProposalFunc(optimize.NormalProposal(0.01))
+	omega.SetMin(0)
 
-	kappa := optimize.NewBasicFloatParameter(&m.kappa, "kappa")
-	kappa.OnChange = func() {
+	kappa := nfp(&m.kappa, "kappa")
+	kappa.SetOnChange(func() {
 		m.qdone = false
 		m.expAllBr = false
-	}
-	kappa.PriorFunc = optimize.UniformPrior(0, 20, false, true)
-	kappa.ProposalFunc = optimize.NormalProposal(0.01)
-	kappa.Min = 0
-	kappa.Max = 20
+	})
+	kappa.SetPriorFunc(optimize.UniformPrior(0, 20, false, true))
+	kappa.SetProposalFunc(optimize.NormalProposal(0.01))
+	kappa.SetMin(0)
+	kappa.SetMax(20)
 
-	s := optimize.NewBasicFloatParameter(&m.s, "s")
-	s.OnChange = func() {
+	s := nfp(&m.s, "s")
+	s.SetOnChange(func() {
 		m.qdone = false
 		m.expAllBr = false
-	}
-	s.PriorFunc = optimize.ExponentialPrior(1, false)
-	s.ProposalFunc = optimize.NormalProposal(0.01)
-	s.Min = 1. / 1000
-	s.Max = 100
-
-	m.parameters.Append(omega)
-	m.parameters.Append(kappa)
-	m.parameters.Append(s)
-}
-
-func (m *M0vrate) addAdaptiveParameters() {
-	omega := optimize.NewAdaptiveParameter(&m.omega, "omega", m.as)
-	omega.OnChange = func() {
-		m.qdone = false
-		m.expAllBr = false
-	}
-	omega.PriorFunc = optimize.GammaPrior(1, 2, false)
-	omega.Min = 0
-
-	kappa := optimize.NewAdaptiveParameter(&m.kappa, "kappa", m.as)
-	kappa.OnChange = func() {
-		m.qdone = false
-		m.expAllBr = false
-	}
-	kappa.PriorFunc = optimize.UniformPrior(0, 20, false, true)
-	kappa.ProposalFunc = optimize.NormalProposal(0.01)
-	kappa.Min = 0
-	kappa.Max = 20
-
-	s := optimize.NewAdaptiveParameter(&m.s, "s", m.as)
-	s.OnChange = func() {
-		m.qdone = false
-		m.expAllBr = false
-	}
-	s.PriorFunc = optimize.ExponentialPrior(1, false)
-	s.ProposalFunc = optimize.NormalProposal(0.01)
-	s.Min = 1. / 100
-	s.Max = 100
+	})
+	s.SetPriorFunc(optimize.ExponentialPrior(1, false))
+	s.SetProposalFunc(optimize.NormalProposal(0.01))
+	s.SetMin(1. / 1000)
+	s.SetMax(100)
 
 	m.parameters.Append(omega)
 	m.parameters.Append(kappa)

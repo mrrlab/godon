@@ -89,127 +89,68 @@ func (m *BranchSiteGamma) Copy() optimize.Optimizable {
 	return newM
 }
 
-func (m *BranchSiteGamma) addParameters() {
-	kappa := optimize.NewBasicFloatParameter(&m.kappa, "kappa")
-	kappa.OnChange = func() {
+func (m *BranchSiteGamma) addParameters(nfp optimize.NewFloatParameter) {
+	kappa := nfp(&m.kappa, "kappa")
+	kappa.SetOnChange(func() {
 		m.q0done = false
 		m.q1done = false
 		m.q2done = false
-	}
-	kappa.PriorFunc = optimize.UniformPrior(0, 20, false, true)
-	kappa.ProposalFunc = optimize.NormalProposal(0.01)
-	kappa.Min = 0
-	kappa.Max = 20
+	})
+	kappa.SetPriorFunc(optimize.UniformPrior(0, 20, false, true))
+	kappa.SetProposalFunc(optimize.NormalProposal(0.01))
+	kappa.SetMin(0)
+	kappa.SetMax(20)
 	m.parameters.Append(kappa)
 
-	omega0 := optimize.NewBasicFloatParameter(&m.omega0, "omega0")
-	omega0.OnChange = func() {
+	omega0 := nfp(&m.omega0, "omega0")
+	omega0.SetOnChange(func() {
 		m.q0done = false
-	}
-	omega0.PriorFunc = optimize.GammaPrior(1, 2, false)
-	omega0.ProposalFunc = optimize.NormalProposal(0.01)
-	omega0.Min = 0
-	omega0.Max = 1
+	})
+	omega0.SetPriorFunc(optimize.GammaPrior(1, 2, false))
+	omega0.SetProposalFunc(optimize.NormalProposal(0.01))
+	omega0.SetMin(0)
+	omega0.SetMax(1)
 	m.parameters.Append(omega0)
 
 	if !m.fixw2 {
-		omega2 := optimize.NewBasicFloatParameter(&m.omega2, "omega2")
-		omega2.OnChange = func() {
+		omega2 := nfp(&m.omega2, "omega2")
+		omega2.SetOnChange(func() {
 			m.q2done = false
-		}
-		omega2.PriorFunc = optimize.GammaPrior(1, 2, false)
-		omega2.ProposalFunc = optimize.NormalProposal(0.01)
-		omega2.Min = 1
+		})
+		omega2.SetPriorFunc(optimize.GammaPrior(1, 2, false))
+		omega2.SetProposalFunc(optimize.NormalProposal(0.01))
+		omega2.SetMin(1)
 		m.parameters.Append(omega2)
 	}
 
-	p01sum := optimize.NewBasicFloatParameter(&m.p01sum, "p01sum")
-	p01sum.OnChange = func() {
+	p01sum := nfp(&m.p01sum, "p01sum")
+	p01sum.SetOnChange(func() {
 		m.propdone = false
-	}
-	p01sum.PriorFunc = optimize.UniformPrior(0, 1, false, false)
-	p01sum.Min = 0
-	p01sum.Max = 1
-	p01sum.ProposalFunc = optimize.NormalProposal(0.01)
+	})
+	p01sum.SetPriorFunc(optimize.UniformPrior(0, 1, false, false))
+	p01sum.SetMin(0)
+	p01sum.SetMax(1)
+	p01sum.SetProposalFunc(optimize.NormalProposal(0.01))
 	m.parameters.Append(p01sum)
 
-	p0prop := optimize.NewBasicFloatParameter(&m.p0prop, "p0prop")
-	p0prop.OnChange = func() {
+	p0prop := nfp(&m.p0prop, "p0prop")
+	p0prop.SetOnChange(func() {
 		m.propdone = false
-	}
-	p0prop.PriorFunc = optimize.UniformPrior(0, 1, false, false)
-	p0prop.Min = 0
-	p0prop.Max = 1
-	p0prop.ProposalFunc = optimize.NormalProposal(0.01)
+	})
+	p0prop.SetPriorFunc(optimize.UniformPrior(0, 1, false, false))
+	p0prop.SetMin(0)
+	p0prop.SetMax(1)
+	p0prop.SetProposalFunc(optimize.NormalProposal(0.01))
 	m.parameters.Append(p0prop)
 
-	alpha := optimize.NewBasicFloatParameter(&m.alpha, "alpha")
-	alpha.OnChange = func() {
+	alpha := nfp(&m.alpha, "alpha")
+	alpha.SetOnChange(func() {
 		m.ratesdone = false
-	}
-	alpha.PriorFunc = optimize.GammaPrior(1, 2, false)
-	alpha.Min = 0
-	alpha.Max = 1000
-	alpha.ProposalFunc = optimize.NormalProposal(0.01)
-	m.parameters.Append(alpha)
-}
-
-func (m *BranchSiteGamma) addAdaptiveParameters() {
-	kappa := optimize.NewAdaptiveParameter(&m.kappa, "kappa", m.as)
-	kappa.OnChange = func() {
-		m.q0done = false
-		m.q1done = false
-		m.q2done = false
-	}
-	kappa.PriorFunc = optimize.UniformPrior(0, 20, false, true)
-	kappa.Min = 0
-	kappa.Max = 20
-	m.parameters.Append(kappa)
-
-	omega0 := optimize.NewAdaptiveParameter(&m.omega0, "omega0", m.as)
-	omega0.OnChange = func() {
-		m.q0done = false
-	}
-	omega0.PriorFunc = optimize.GammaPrior(1, 2, false)
-	omega0.Min = 0
-	omega0.Max = 1
-	m.parameters.Append(omega0)
-
-	if !m.fixw2 {
-		omega2 := optimize.NewAdaptiveParameter(&m.omega2, "omega2", m.as)
-		omega2.OnChange = func() {
-			m.q2done = false
-		}
-		omega2.PriorFunc = optimize.GammaPrior(1, 2, false)
-		omega2.Min = 1
-		m.parameters.Append(omega2)
-	}
-
-	p01sum := optimize.NewAdaptiveParameter(&m.p01sum, "p01sum", m.as)
-	p01sum.Min = 0
-	p01sum.Max = 1
-	p01sum.OnChange = func() {
-		m.propdone = false
-	}
-	p01sum.PriorFunc = optimize.UniformPrior(0, 1, false, false)
-	m.parameters.Append(p01sum)
-
-	p0prop := optimize.NewAdaptiveParameter(&m.p0prop, "p0prop", m.as)
-	p0prop.Min = 0
-	p0prop.Max = 1
-	p0prop.OnChange = func() {
-		m.propdone = false
-	}
-	p0prop.PriorFunc = optimize.UniformPrior(0, 1, false, false)
-	m.parameters.Append(p0prop)
-
-	alpha := optimize.NewAdaptiveParameter(&m.alpha, "alpha", m.as)
-	alpha.OnChange = func() {
-		m.ratesdone = false
-	}
-	alpha.PriorFunc = optimize.GammaPrior(1, 2, false)
-	alpha.Min = 0
-	alpha.Max = 1000
+	})
+	alpha.SetPriorFunc(optimize.GammaPrior(1, 2, false))
+	alpha.SetMin(0)
+	alpha.SetMax(1000)
+	alpha.SetProposalFunc(optimize.NormalProposal(0.01))
 	m.parameters.Append(alpha)
 }
 
