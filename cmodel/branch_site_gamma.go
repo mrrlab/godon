@@ -85,32 +85,12 @@ func (m *BranchSiteGamma) Copy() optimize.Optimizable {
 		newM.q2s[i] = &EMatrix{}
 	}
 
-	newM.addParameters()
+	newM.setupParameters()
 	newM.SetBranchMatrices()
 	return newM
 }
 
-func (m *BranchSiteGamma) SetAdaptive(as *optimize.AdaptiveSettings) {
-	m.as = as
-	m.addParameters()
-}
-
-func (m *BranchSiteGamma) SetOptimizeBranchLengths() {
-	m.optBranch = true
-	m.addParameters()
-}
-
 func (m *BranchSiteGamma) addParameters() {
-	m.parameters = nil
-	m.BaseModel.addParameters()
-	if m.as != nil {
-		m.addAdaptiveParameters()
-	} else {
-		m.addNormalParameters()
-	}
-}
-
-func (m *BranchSiteGamma) addNormalParameters() {
 	kappa := optimize.NewBasicFloatParameter(&m.kappa, "kappa")
 	kappa.OnChange = func() {
 		m.q0done = false

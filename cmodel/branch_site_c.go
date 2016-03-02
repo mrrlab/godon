@@ -48,32 +48,12 @@ func (m *BranchSiteC) Copy() optimize.Optimizable {
 	}
 	newM.BaseModel.Model = newM
 
-	newM.addParameters()
+	newM.setupParameters()
 	newM.SetBranchMatrices()
 	return newM
 }
 
-func (m *BranchSiteC) SetAdaptive(as *optimize.AdaptiveSettings) {
-	m.as = as
-	m.addParameters()
-}
-
-func (m *BranchSiteC) SetOptimizeBranchLengths() {
-	m.optBranch = true
-	m.addParameters()
-}
-
 func (m *BranchSiteC) addParameters() {
-	m.parameters = nil
-	m.BaseModel.addParameters()
-	if m.as != nil {
-		m.addAdaptiveParameters()
-	} else {
-		m.addNormalParameters()
-	}
-}
-
-func (m *BranchSiteC) addNormalParameters() {
 	kappa := optimize.NewBasicFloatParameter(&m.kappa, "kappa")
 	kappa.OnChange = func() {
 		m.q0done = false

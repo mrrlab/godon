@@ -23,7 +23,7 @@ func NewM0vrate(cali CodonSequences, t *tree.Tree, cf CodonFrequency) (m *M0vrat
 
 	m.BaseModel = NewBaseModel(cali, t, cf, m)
 
-	m.addParameters()
+	m.setupParameters()
 	m.SetDefaults()
 	return
 }
@@ -43,31 +43,11 @@ func (m *M0vrate) Copy() optimize.Optimizable {
 	}
 	newM.BaseModel.Model = newM
 
-	newM.addParameters()
+	newM.setupParameters()
 	return newM
 }
 
-func (m *M0vrate) SetAdaptive(as *optimize.AdaptiveSettings) {
-	m.as = as
-	m.addParameters()
-}
-
-func (m *M0vrate) SetOptimizeBranchLengths() {
-	m.optBranch = true
-	m.addParameters()
-}
-
 func (m *M0vrate) addParameters() {
-	m.parameters = nil
-	m.BaseModel.addParameters()
-	if m.as != nil {
-		m.addAdaptiveParameters()
-	} else {
-		m.addNormalParameters()
-	}
-}
-
-func (m *M0vrate) addNormalParameters() {
 	omega := optimize.NewBasicFloatParameter(&m.omega, "omega")
 	omega.OnChange = func() {
 		m.qdone = false
