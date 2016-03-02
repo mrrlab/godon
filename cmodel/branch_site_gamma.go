@@ -10,7 +10,7 @@ import (
 )
 
 type BranchSiteGamma struct {
-	*Model
+	*BaseModel
 	q0, q1, q2             *EMatrix
 	q0s                    []*EMatrix
 	q1s                    []*EMatrix
@@ -30,15 +30,15 @@ type BranchSiteGamma struct {
 
 func NewBranchSiteGamma(cali CodonSequences, t *tree.Tree, cf CodonFrequency, ncat int, fixw2 bool) (m *BranchSiteGamma) {
 	m = &BranchSiteGamma{
-		Model: NewModel(cali, t, cf, 4*ncat),
-		fixw2: fixw2,
-		ncat:  ncat,
-		q0:    &EMatrix{},
-		q1:    &EMatrix{},
-		q2:    &EMatrix{},
-		q0s:   make([]*EMatrix, ncat),
-		q1s:   make([]*EMatrix, ncat),
-		q2s:   make([]*EMatrix, ncat),
+		BaseModel: NewBaseModel(cali, t, cf, 4*ncat),
+		fixw2:     fixw2,
+		ncat:      ncat,
+		q0:        &EMatrix{},
+		q1:        &EMatrix{},
+		q2:        &EMatrix{},
+		q0s:       make([]*EMatrix, ncat),
+		q1s:       make([]*EMatrix, ncat),
+		q2s:       make([]*EMatrix, ncat),
 	}
 	for i := 0; i < ncat; i++ {
 		m.q0s[i] = &EMatrix{}
@@ -56,21 +56,21 @@ func NewBranchSiteGamma(cali CodonSequences, t *tree.Tree, cf CodonFrequency, nc
 
 func (m *BranchSiteGamma) Copy() optimize.Optimizable {
 	newM := &BranchSiteGamma{
-		Model:  NewModel(m.cali, m.tree.Copy(), m.cf, m.ncat*4),
-		q0:     &EMatrix{},
-		q1:     &EMatrix{},
-		q2:     &EMatrix{},
-		q0s:    make([]*EMatrix, m.ncat),
-		q1s:    make([]*EMatrix, m.ncat),
-		q2s:    make([]*EMatrix, m.ncat),
-		kappa:  m.kappa,
-		omega0: m.omega0,
-		omega2: m.omega2,
-		p01sum: m.p01sum,
-		p0prop: m.p0prop,
-		alpha:  m.alpha,
-		ncat:   m.ncat,
-		fixw2:  m.fixw2,
+		BaseModel: NewBaseModel(m.cali, m.tree.Copy(), m.cf, m.ncat*4),
+		q0:        &EMatrix{},
+		q1:        &EMatrix{},
+		q2:        &EMatrix{},
+		q0s:       make([]*EMatrix, m.ncat),
+		q1s:       make([]*EMatrix, m.ncat),
+		q2s:       make([]*EMatrix, m.ncat),
+		kappa:     m.kappa,
+		omega0:    m.omega0,
+		omega2:    m.omega2,
+		p01sum:    m.p01sum,
+		p0prop:    m.p0prop,
+		alpha:     m.alpha,
+		ncat:      m.ncat,
+		fixw2:     m.fixw2,
 	}
 	for i := 0; i < m.ncat; i++ {
 		newM.q0s[i] = &EMatrix{}
@@ -97,7 +97,7 @@ func (m *BranchSiteGamma) SetOptimizeBranchLengths() {
 
 func (m *BranchSiteGamma) addParameters() {
 	m.parameters = nil
-	m.Model.addParameters()
+	m.BaseModel.addParameters()
 	if m.as != nil {
 		m.addAdaptiveParameters()
 	} else {
@@ -383,5 +383,5 @@ func (m *BranchSiteGamma) Likelihood() float64 {
 	if !m.propdone {
 		m.UpdateProportions()
 	}
-	return m.Model.Likelihood()
+	return m.BaseModel.Likelihood()
 }

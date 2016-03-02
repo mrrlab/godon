@@ -6,7 +6,7 @@ import (
 )
 
 type M0 struct {
-	*Model
+	*BaseModel
 	q            *EMatrix
 	omega, kappa float64
 	qdone        bool
@@ -14,8 +14,8 @@ type M0 struct {
 
 func NewM0(cali CodonSequences, t *tree.Tree, cf CodonFrequency) (m *M0) {
 	m = &M0{
-		Model: NewModel(cali, t, cf, 1),
-		q:     &EMatrix{},
+		BaseModel: NewBaseModel(cali, t, cf, 1),
+		q:         &EMatrix{},
 	}
 	m.prop[0] = 1
 
@@ -26,10 +26,10 @@ func NewM0(cali CodonSequences, t *tree.Tree, cf CodonFrequency) (m *M0) {
 
 func (m *M0) Copy() optimize.Optimizable {
 	newM := &M0{
-		Model: NewModel(m.cali, m.tree.Copy(), m.cf, 1),
-		q:     &EMatrix{},
-		omega: m.omega,
-		kappa: m.kappa,
+		BaseModel: NewBaseModel(m.cali, m.tree.Copy(), m.cf, 1),
+		q:         &EMatrix{},
+		omega:     m.omega,
+		kappa:     m.kappa,
 	}
 	newM.prop[0] = 1
 	newM.as = m.as
@@ -51,7 +51,7 @@ func (m *M0) SetOptimizeBranchLengths() {
 
 func (m *M0) addParameters() {
 	m.parameters = nil
-	m.Model.addParameters()
+	m.BaseModel.addParameters()
 	if m.as != nil {
 		m.addAdaptiveParameters()
 	} else {
@@ -143,5 +143,5 @@ func (m *M0) Likelihood() float64 {
 	if !m.qdone {
 		m.UpdateMatrix()
 	}
-	return m.Model.Likelihood()
+	return m.BaseModel.Likelihood()
 }

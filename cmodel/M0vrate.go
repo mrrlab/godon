@@ -6,7 +6,7 @@ import (
 )
 
 type M0vrate struct {
-	*Model
+	*BaseModel
 	q0, q1       *EMatrix
 	omega, kappa float64
 	p            float64 // proportion of non-scaled
@@ -17,9 +17,9 @@ type M0vrate struct {
 
 func NewM0vrate(cali CodonSequences, t *tree.Tree, cf CodonFrequency) (m *M0vrate) {
 	m = &M0vrate{
-		Model: NewModel(cali, t, cf, 2),
-		q0:    &EMatrix{},
-		q1:    &EMatrix{},
+		BaseModel: NewBaseModel(cali, t, cf, 2),
+		q0:        &EMatrix{},
+		q1:        &EMatrix{},
 	}
 
 	m.addParameters()
@@ -29,12 +29,12 @@ func NewM0vrate(cali CodonSequences, t *tree.Tree, cf CodonFrequency) (m *M0vrat
 
 func (m *M0vrate) Copy() optimize.Optimizable {
 	newM := &M0vrate{
-		Model: NewModel(m.cali, m.tree.Copy(), m.cf, 2),
-		q0:    &EMatrix{},
-		q1:    &EMatrix{},
-		omega: m.omega,
-		kappa: m.kappa,
-		s:     m.s,
+		BaseModel: NewBaseModel(m.cali, m.tree.Copy(), m.cf, 2),
+		q0:        &EMatrix{},
+		q1:        &EMatrix{},
+		omega:     m.omega,
+		kappa:     m.kappa,
+		s:         m.s,
 	}
 	newM.as = m.as
 	newM.optBranch = m.optBranch
@@ -54,7 +54,7 @@ func (m *M0vrate) SetOptimizeBranchLengths() {
 
 func (m *M0vrate) addParameters() {
 	m.parameters = nil
-	m.Model.addParameters()
+	m.BaseModel.addParameters()
 	if m.as != nil {
 		m.addAdaptiveParameters()
 	} else {
@@ -186,5 +186,5 @@ func (m *M0vrate) Likelihood() float64 {
 	if !m.propdone {
 		m.UpdateProportions()
 	}
-	return m.Model.Likelihood()
+	return m.BaseModel.Likelihood()
 }
