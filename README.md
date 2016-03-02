@@ -45,7 +45,6 @@ $ godon -method mh -model M0 ali.fst tree.nwk
   (not used currently)
 * ``optimize`` is the MCMC & downhill simplex implementation
 * ``tree`` is tree manipulation library
-* ``tlh`` is a simple tree likelihood calculation (JC69)
 * ``godon`` is MCMC sampler/maximum likelihood for M0 and branchsite
   model
 * ``norm`` sampler for multiple normal distribution model
