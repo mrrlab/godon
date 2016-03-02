@@ -102,6 +102,10 @@ func (m *BaseModel) SetOptimizeBranchLengths() {
 	m.setupParameters()
 }
 
+func (m *BaseModel) GetFloatParameters() optimize.FloatParameters {
+	return m.parameters
+}
+
 func (m *BaseModel) setupParameters() {
 	m.parameters = nil
 	m.addBranchParameters()

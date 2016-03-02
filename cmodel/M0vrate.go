@@ -116,10 +116,6 @@ func (m *M0vrate) addAdaptiveParameters() {
 	m.parameters.Append(s)
 }
 
-func (m *M0vrate) GetFloatParameters() optimize.FloatParameters {
-	return m.parameters
-}
-
 func (m *M0vrate) GetParameters() (kappa, omega float64) {
 	return m.kappa, m.omega
 }

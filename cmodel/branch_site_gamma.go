@@ -214,10 +214,6 @@ func (m *BranchSiteGamma) addAdaptiveParameters() {
 	m.parameters = append(m.parameters, alpha)
 }
 
-func (m *BranchSiteGamma) GetFloatParameters() optimize.FloatParameters {
-	return m.parameters
-}
-
 func (m *BranchSiteGamma) SetParameters(kappa float64, omega0, omega2 float64, p0, p1 float64, alpha float64) {
 	m.kappa = kappa
 	m.omega0 = omega0

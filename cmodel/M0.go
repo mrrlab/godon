@@ -87,10 +87,6 @@ func (m *M0) addAdaptiveParameters() {
 	m.parameters.Append(kappa)
 }
 
-func (m *M0) GetFloatParameters() optimize.FloatParameters {
-	return m.parameters
-}
-
 func (m *M0) GetParameters() (kappa, omega float64) {
 	return m.kappa, m.omega
 }

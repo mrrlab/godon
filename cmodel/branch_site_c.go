@@ -133,10 +133,6 @@ func (m *BranchSiteC) addAdaptiveParameters() {
 	m.parameters = append(m.parameters, p0prop)
 }
 
-func (m *BranchSiteC) GetFloatParameters() optimize.FloatParameters {
-	return m.parameters
-}
-
 func (m *BranchSiteC) SetParameters(kappa float64, omega0, omega2 float64, p0prop float64) {
 	m.kappa = kappa
 	m.omega0 = omega0
