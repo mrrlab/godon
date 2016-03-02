@@ -38,7 +38,7 @@ func NewBranchSite(cali CodonSequences, t *tree.Tree, cf CodonFrequency, fixw2 b
 
 func (m *BranchSite) Copy() optimize.Optimizable {
 	newM := &BranchSite{
-		BaseModel: NewBaseModel(m.cali, m.tree.Copy(), m.cf, 4),
+		BaseModel: m.BaseModel.Copy(),
 		q0:        &EMatrix{},
 		q1:        &EMatrix{},
 		q2:        &EMatrix{},
@@ -49,9 +49,6 @@ func (m *BranchSite) Copy() optimize.Optimizable {
 		p0prop:    m.p0prop,
 		fixw2:     m.fixw2,
 	}
-	newM.as = m.as
-	newM.optBranch = m.optBranch
-
 	newM.addParameters()
 	newM.SetBranchMatrices()
 	return newM

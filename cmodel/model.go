@@ -70,6 +70,14 @@ func NewBaseModel(cali CodonSequences, t *tree.Tree, cf CodonFrequency, nclass i
 	return
 }
 
+func (m *BaseModel) Copy() (newM *BaseModel) {
+	newM = NewBaseModel(m.cali, m.tree.Copy(), m.cf, m.nclass)
+	copy(newM.prop, m.prop)
+	newM.as = m.as
+	newM.optBranch = m.optBranch
+	return
+}
+
 // Make branch length parameters adaptive.
 func (m *BaseModel) addParameters() {
 	if m.optBranch {
