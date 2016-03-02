@@ -14,14 +14,18 @@ type M0 struct {
 
 func NewM0(cali CodonSequences, t *tree.Tree, cf CodonFrequency) (m *M0) {
 	m = &M0{
-		BaseModel: NewBaseModel(cali, t, cf, 1),
-		q:         &EMatrix{},
+		q: &EMatrix{},
 	}
+	m.BaseModel = NewBaseModel(cali, t, cf, (Model)(m))
 	m.prop[0] = 1
 
 	m.addParameters()
 	m.SetDefaults()
 	return
+}
+
+func (m *M0) GetNClass() int {
+	return 1
 }
 
 func (m *M0) Copy() optimize.Optimizable {
@@ -31,7 +35,7 @@ func (m *M0) Copy() optimize.Optimizable {
 		omega:     m.omega,
 		kappa:     m.kappa,
 	}
-
+	newM.BaseModel.Model = newM
 	newM.addParameters()
 	return newM
 }
