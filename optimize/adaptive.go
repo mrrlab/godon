@@ -63,7 +63,7 @@ func NewAdaptiveSettings() *AdaptiveSettings {
 	}
 }
 
-func (as *AdaptiveSettings) NewParameter(par *float64, name string) FloatParameter {
+func (as *AdaptiveSettings) ParameterGenerator(par *float64, name string) FloatParameter {
 	return NewAdaptiveParameter(par, name, as)
 }
 
