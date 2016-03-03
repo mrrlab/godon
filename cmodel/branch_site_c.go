@@ -53,8 +53,8 @@ func (m *BranchSiteC) Copy() optimize.Optimizable {
 	return newM
 }
 
-func (m *BranchSiteC) addParameters(nfp optimize.NewFloatParameter) {
-	kappa := nfp(&m.kappa, "kappa")
+func (m *BranchSiteC) addParameters(fpg optimize.FloatParameterGenerator) {
+	kappa := fpg(&m.kappa, "kappa")
 	kappa.SetOnChange(func() {
 		m.q0done = false
 		m.q1done = false
@@ -66,7 +66,7 @@ func (m *BranchSiteC) addParameters(nfp optimize.NewFloatParameter) {
 	kappa.SetMax(20)
 	m.parameters.Append(kappa)
 
-	omega0 := nfp(&m.omega0, "omega0")
+	omega0 := fpg(&m.omega0, "omega0")
 	omega0.SetOnChange(func() {
 		m.q0done = false
 	})
@@ -75,7 +75,7 @@ func (m *BranchSiteC) addParameters(nfp optimize.NewFloatParameter) {
 	omega0.SetMin(0)
 	m.parameters.Append(omega0)
 
-	omega2 := nfp(&m.omega2, "omega2")
+	omega2 := fpg(&m.omega2, "omega2")
 	omega2.SetOnChange(func() {
 		m.q2done = false
 	})
@@ -84,7 +84,7 @@ func (m *BranchSiteC) addParameters(nfp optimize.NewFloatParameter) {
 	omega2.SetMin(1)
 	m.parameters.Append(omega2)
 
-	p0prop := nfp(&m.p0prop, "p0prop")
+	p0prop := fpg(&m.p0prop, "p0prop")
 	p0prop.SetOnChange(func() {
 		m.propdone = false
 	})

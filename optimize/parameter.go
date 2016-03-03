@@ -33,7 +33,7 @@ type FloatParameter interface {
 	ValueInRange(float64) bool
 }
 
-type NewFloatParameter func(*float64, string) FloatParameter
+type FloatParameterGenerator func(*float64, string) FloatParameter
 
 type FloatParameters []FloatParameter
 
@@ -165,7 +165,7 @@ func NewBasicFloatParameter(par *float64, name string) *BasicFloatParameter {
 	}
 }
 
-func NewFloatParameterBasic(par *float64, name string) FloatParameter {
+func BasicFloatParameterGenerator(par *float64, name string) FloatParameter {
 	return NewBasicFloatParameter(par, name)
 }
 

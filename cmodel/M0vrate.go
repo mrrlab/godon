@@ -47,8 +47,8 @@ func (m *M0vrate) Copy() optimize.Optimizable {
 	return newM
 }
 
-func (m *M0vrate) addParameters(nfp optimize.NewFloatParameter) {
-	omega := nfp(&m.omega, "omega")
+func (m *M0vrate) addParameters(fpg optimize.FloatParameterGenerator) {
+	omega := fpg(&m.omega, "omega")
 	omega.SetOnChange(func() {
 		m.qdone = false
 		m.expAllBr = false
@@ -57,7 +57,7 @@ func (m *M0vrate) addParameters(nfp optimize.NewFloatParameter) {
 	omega.SetProposalFunc(optimize.NormalProposal(0.01))
 	omega.SetMin(0)
 
-	kappa := nfp(&m.kappa, "kappa")
+	kappa := fpg(&m.kappa, "kappa")
 	kappa.SetOnChange(func() {
 		m.qdone = false
 		m.expAllBr = false
@@ -67,7 +67,7 @@ func (m *M0vrate) addParameters(nfp optimize.NewFloatParameter) {
 	kappa.SetMin(0)
 	kappa.SetMax(20)
 
-	s := nfp(&m.s, "s")
+	s := fpg(&m.s, "s")
 	s.SetOnChange(func() {
 		m.qdone = false
 		m.expAllBr = false

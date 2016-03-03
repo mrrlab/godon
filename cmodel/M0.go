@@ -40,8 +40,8 @@ func (m *M0) Copy() optimize.Optimizable {
 	return newM
 }
 
-func (m *M0) addParameters(nfp optimize.NewFloatParameter) {
-	omega := nfp(&m.omega, "omega")
+func (m *M0) addParameters(fpg optimize.FloatParameterGenerator) {
+	omega := fpg(&m.omega, "omega")
 	omega.SetOnChange(func() {
 		m.qdone = false
 		m.expAllBr = false
@@ -50,7 +50,7 @@ func (m *M0) addParameters(nfp optimize.NewFloatParameter) {
 	omega.SetProposalFunc(optimize.NormalProposal(0.01))
 	omega.SetMin(0)
 
-	kappa := nfp(&m.kappa, "kappa")
+	kappa := fpg(&m.kappa, "kappa")
 	kappa.SetOnChange(func() {
 		m.qdone = false
 		m.expAllBr = false
@@ -63,6 +63,7 @@ func (m *M0) addParameters(nfp optimize.NewFloatParameter) {
 	m.parameters.Append(omega)
 	m.parameters.Append(kappa)
 }
+
 func (m *M0) GetParameters() (kappa, omega float64) {
 	return m.kappa, m.omega
 }

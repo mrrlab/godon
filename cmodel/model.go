@@ -27,7 +27,7 @@ type TreeOptimizable interface {
 
 type Model interface {
 	GetNClass() int
-	addParameters(optimize.NewFloatParameter)
+	addParameters(optimize.FloatParameterGenerator)
 }
 
 // Model stores tree and alignment. Matrices and site classes are stored and cached as well.
@@ -107,18 +107,18 @@ func (m *BaseModel) GetFloatParameters() optimize.FloatParameters {
 
 func (m *BaseModel) setupParameters() {
 	m.parameters = nil
-	var nfp optimize.NewFloatParameter
+	var fpg optimize.FloatParameterGenerator
 	if m.as != nil {
-		nfp = m.as.NewParameter
+		fpg = m.as.ParameterGenerator
 	} else {
-		nfp = optimize.NewFloatParameterBasic
+		fpg = optimize.BasicFloatParameterGenerator
 	}
-	m.addBranchParameters(nfp)
-	m.Model.addParameters(nfp)
+	m.addBranchParameters(fpg)
+	m.Model.addParameters(fpg)
 }
 
 // Make branch length parameters adaptive.
-func (m *BaseModel) addBranchParameters(nfp optimize.NewFloatParameter) {
+func (m *BaseModel) addBranchParameters(fpg optimize.FloatParameterGenerator) {
 	if m.optBranch {
 		for _, node := range m.tree.NodeIdArray() {
 			if node == nil {
@@ -129,7 +129,7 @@ func (m *BaseModel) addBranchParameters(nfp optimize.NewFloatParameter) {
 			if node.IsRoot() {
 				continue
 			}
-			par := nfp(&node.BranchLength, "br"+strconv.Itoa(node.Id))
+			par := fpg(&node.BranchLength, "br"+strconv.Itoa(node.Id))
 			par.SetOnChange(func() {
 				m.expBr[nodeId] = false
 			})
