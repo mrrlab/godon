@@ -21,12 +21,12 @@ const (
 )
 
 type MNormModel struct {
-	data       [][]float64
-	mean       []float64
-	sd         []float64
-	n          int
-	adaptive   bool
-	parameters optimize.FloatParameters
+	data             [][]float64
+	mean             []float64
+	sd               []float64
+	n                int
+	adaptiveSettings *optimize.AdaptiveSettings
+	parameters       optimize.FloatParameters
 }
 
 func square(x float64) float64 {
@@ -45,13 +45,15 @@ func NewMNormModel(data [][]float64, adaptive bool) (m *MNormModel) {
 		sd:         sd,
 		n:          len(data),
 		parameters: parameters,
-		adaptive:   adaptive,
 	}
+	var nfp optimize.NewFloatParameter
 	if adaptive {
-		m.AddAdaptiveParameters()
+		m.adaptiveSettings = optimize.NewAdaptiveSettings()
+		nfp = m.adaptiveSettings.NewParameter
 	} else {
-		m.AddParameters()
+		nfp = optimize.NewFloatParameterBasic
 	}
+	m.AddParameters(nfp)
 	return
 }
 
@@ -61,57 +63,39 @@ func (m *MNormModel) Copy() optimize.Optimizable {
 	sd := make([]float64, m.n)
 	copy(sd, m.sd)
 	parameters := make(optimize.FloatParameters, 0, m.n*2)
-	adaptive := m.adaptive
 	newM := &MNormModel{data: m.data,
-		mean:       mean,
-		sd:         sd,
-		n:          m.n,
-		parameters: parameters,
-		adaptive:   adaptive,
+		mean:             mean,
+		sd:               sd,
+		n:                m.n,
+		parameters:       parameters,
+		adaptiveSettings: m.adaptiveSettings,
 	}
-	if adaptive {
-		newM.AddAdaptiveParameters()
+	var nfp optimize.NewFloatParameter
+	if newM.adaptiveSettings != nil {
+		nfp = m.adaptiveSettings.NewParameter
 	} else {
-		newM.AddParameters()
+		nfp = optimize.NewFloatParameterBasic
 	}
+	newM.AddParameters(nfp)
 	return newM
 }
 
-func (m *MNormModel) AddParameters() {
+func (m *MNormModel) AddParameters(nfp optimize.NewFloatParameter) {
 	for i := 0; i < m.n; i++ {
 		name := "sd" + strconv.Itoa(i)
-		par := optimize.NewBasicFloatParameter(&m.sd[i], name)
-		par.Min = 0
-		par.Max = 100
-		par.PriorFunc = optimize.UniformPrior(0, 100, false, false)
-		par.ProposalFunc = optimize.NormalProposal(0.1)
+		par := nfp(&m.sd[i], name)
+		par.SetMin(0)
+		par.SetMax(100)
+		par.SetPriorFunc(optimize.UniformPrior(0, 100, false, false))
+		par.SetProposalFunc(optimize.NormalProposal(0.1))
 		m.parameters.Append(par)
 
 		name = "mean" + strconv.Itoa(i)
-		par = optimize.NewBasicFloatParameter(&m.mean[i], name)
-		par.Min = -100
-		par.Max = 100
-		par.PriorFunc = optimize.UniformPrior(-100, 100, false, false)
-		par.ProposalFunc = optimize.NormalProposal(0.1)
-		m.parameters.Append(par)
-	}
-}
-
-func (m *MNormModel) AddAdaptiveParameters() {
-	for i := 0; i < m.n; i++ {
-		name := "sd" + strconv.Itoa(i)
-		s := optimize.NewAdaptiveSettings()
-		par := optimize.NewAdaptiveParameter(&m.sd[i], name, s)
-		par.Min = 0
-		par.Max = 100
-		par.PriorFunc = optimize.UniformPrior(0, 100, false, false)
-		m.parameters.Append(par)
-
-		name = "mean" + strconv.Itoa(i)
-		par = optimize.NewAdaptiveParameter(&m.mean[i], name, s)
-		par.Min = -100
-		par.Max = 100
-		par.PriorFunc = optimize.UniformPrior(-100, 100, false, false)
+		par = nfp(&m.mean[i], name)
+		par.SetMin(-100)
+		par.SetMax(100)
+		par.SetPriorFunc(optimize.UniformPrior(-100, 100, false, false))
+		par.SetProposalFunc(optimize.NormalProposal(0.1))
 		m.parameters.Append(par)
 	}
 }
