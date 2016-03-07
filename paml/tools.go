@@ -244,50 +244,46 @@ l50:
 	return
 }
 
-func DiscreteGamma(alpha, beta float64, K int, UseMedian bool, freqK, rK []float64) []float64 {
+func DiscreteGamma(alpha, beta float64, K int, UseMedian bool, tmp, res []float64) []float64 {
 	/*
 	   discretization of G(alpha, beta) with equal proportions in each category.
 	*/
 	t := 0.0
 	mean := alpha / beta
 
-	if rK == nil {
-		rK = make([]float64, K)
+	if res == nil {
+		res = make([]float64, K)
 	}
-	if freqK == nil {
-		freqK = make([]float64, K)
+	if tmp == nil {
+		tmp = make([]float64, K)
 	}
 
 	if UseMedian { /* median */
 		for i := 0; i < K; i++ {
-			rK[i] = QuantileGamma((float64(i)*2.+1)/(2.*float64(K)), alpha, beta)
+			res[i] = QuantileGamma((float64(i)*2.+1)/(2.*float64(K)), alpha, beta)
 		}
 		for i := 0; i < K; i++ {
-			t += rK[i]
+			t += res[i]
 		}
 		for i := 0; i < K; i++ {
-			rK[i] *= mean * float64(K) / t /* rescale so that the mean is alpha/beta. */
+			res[i] *= mean * float64(K) / t /* rescale so that the mean is alpha/beta. */
 		}
 	} else { /* mean */
 		lnga1, _ := math.Lgamma(alpha + 1)
 		for i := 0; i < K-1; i++ { /* cutting points, Eq. 9 */
-			freqK[i] = QuantileGamma((float64(i)+1.0)/float64(K), alpha, beta)
+			tmp[i] = QuantileGamma((float64(i)+1.0)/float64(K), alpha, beta)
 		}
 		for i := 0; i < K-1; i++ { /* Eq. 10 */
-			freqK[i] = IncompleteGamma(freqK[i]*beta, alpha+1, lnga1)
+			tmp[i] = IncompleteGamma(tmp[i]*beta, alpha+1, lnga1)
 		}
-		rK[0] = freqK[0] * mean * float64(K)
+		res[0] = tmp[0] * mean * float64(K)
 		for i := 1; i < K-1; i++ {
-			rK[i] = (freqK[i] - freqK[i-1]) * mean * float64(K)
+			res[i] = (tmp[i] - tmp[i-1]) * mean * float64(K)
 		}
-		rK[K-1] = (1 - freqK[K-2]) * mean * float64(K)
+		res[K-1] = (1 - tmp[K-2]) * mean * float64(K)
 	}
 
-	for i := 0; i < K; i++ {
-		freqK[i] = 1.0 / float64(K)
-	}
-
-	return rK
+	return res
 }
 
 func LnBeta(p, q float64) float64 {
@@ -575,52 +571,49 @@ L_converged:
 	return xinbta
 }
 
-func DiscreteBeta(alpha, beta float64, K int, UseMedian bool, freqK, rK []float64) []float64 {
+func DiscreteBeta(alpha, beta float64, K int, UseMedian bool, tmp, res []float64) []float64 {
 	/*
 	   discretization of beta(p, q), with equal proportions in each category.
 	*/
 	mean := alpha / (alpha + beta)
 	t := 0.0
 
-	if rK == nil {
-		rK = make([]float64, K)
+	if res == nil {
+		res = make([]float64, K)
 	}
-	if freqK == nil {
-		freqK = make([]float64, K)
+	if tmp == nil {
+		tmp = make([]float64, K)
 	}
 
 	lnbeta := LnBeta(alpha, beta)
 	if UseMedian { /* median */
 		for i := 0; i < K; i++ {
-			rK[i] = QuantileBeta((float64(i)+0.5)/float64(K), alpha, beta, lnbeta)
-			t += rK[i]
+			res[i] = QuantileBeta((float64(i)+0.5)/float64(K), alpha, beta, lnbeta)
+			t += res[i]
 		}
 		for i := 0; i < K; i++ {
-			rK[i] *= mean * float64(K) / t
+			res[i] *= mean * float64(K) / t
 		}
 	} else { /* mean */
 		for i := 0; i < K-1; i++ /* cutting points */ {
-			freqK[i] = QuantileBeta((float64(i)+1.0)/float64(K), alpha, beta, lnbeta)
+			tmp[i] = QuantileBeta((float64(i)+1.0)/float64(K), alpha, beta, lnbeta)
 		}
-		freqK[K-1] = 1
+		tmp[K-1] = 1
 
 		lnbeta1 := lnbeta - math.Log(1+beta/alpha)
 		for i := 0; i < K-1; i++ { /* CDF */
-			freqK[i] = CDFBeta(freqK[i], alpha+1, beta, lnbeta1)
+			tmp[i] = CDFBeta(tmp[i], alpha+1, beta, lnbeta1)
 		}
-		rK[0] = freqK[0] * mean * float64(K)
+		res[0] = tmp[0] * mean * float64(K)
 		for i := 1; i < K-1; i++ {
-			rK[i] = (freqK[i] - freqK[i-1]) * mean * float64(K)
+			res[i] = (tmp[i] - tmp[i-1]) * mean * float64(K)
 		}
-		rK[K-1] = (1 - freqK[K-2]) * mean * float64(K)
+		res[K-1] = (1 - tmp[K-2]) * mean * float64(K)
 
 		for i := 0; i < K; i++ {
-			t += rK[i] / float64(K)
+			t += res[i] / float64(K)
 		}
 	}
 
-	for i := 0; i < K; i++ {
-		freqK[i] = 1.0 / float64(K)
-	}
-	return rK
+	return res
 }

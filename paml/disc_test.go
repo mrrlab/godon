@@ -70,9 +70,6 @@ func TestBeta(tst *testing.T) {
 	for i, s := range settings {
 		freq := make([]float64, s.n)
 		r := DiscreteBeta(s.a, s.b, s.n, s.median, freq, nil)
-		if !alleq(freq) {
-			tst.Error("Frequencies are wrong:", freq)
-		}
 		if !cmp(r, results[i]) {
 			tst.Error("Results missmatch:", r, results[i])
 		}
@@ -96,9 +93,6 @@ func TestGamma(tst *testing.T) {
 	for i, s := range settings {
 		freq := make([]float64, s.n)
 		r := DiscreteGamma(s.a, s.b, s.n, s.median, freq, nil)
-		if !alleq(freq) {
-			tst.Error("Frequencies are wrong:", freq)
-		}
 		if !cmp(r, results[i]) {
 			tst.Error("Results missmatch:", r, results[i])
 		}
