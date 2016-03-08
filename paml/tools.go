@@ -317,10 +317,9 @@ func CDFBeta(x, pin, qin, lnbeta float64) float64 {
 
 	if x < small {
 		return 0
-	} else {
-		if x > 1-small {
-			return 1
-		}
+	}
+	if x > 1-small {
+		return 1
 	}
 
 	if pin <= 0 || qin <= 0 {
@@ -381,23 +380,23 @@ func CDFBeta(x, pin, qin, lnbeta float64) float64 {
 				ans = ans + term/(p+xi)
 			}
 		}
-	}
 
-	/* evaluate the finite sum. */
-	if q > 1 {
-		xb = p*math.Log(y) + q*math.Log(1-y) - lnbeta - math.Log(q)
-		ib = (int)(xb / alnsml)
-		if ib < 0 {
-			ib = 0
-		}
-		term = math.Exp(xb - float64(ib)*alnsml)
-		c = 1 / (1 - y)
-		p1 = q * c / (p + q - 1)
+		/* evaluate the finite sum. */
+		if q > 1 {
+			xb = p*math.Log(y) + q*math.Log(1-y) - lnbeta - math.Log(q)
+			ib = (int)(xb / alnsml)
+			if ib < 0 {
+				ib = 0
+			}
+			term = math.Exp(xb - float64(ib)*alnsml)
+			c = 1 / (1 - y)
+			p1 = q * c / (p + q - 1)
 
-		finsum = 0
-		n = int(q)
-		if q == float64(n) {
-			n = n - 1
+			finsum = 0
+			n = int(q)
+			if q == float64(n) {
+				n = n - 1
+			}
 			for i := 1; i <= n; i++ {
 				if p1 <= 1 && term/eps <= finsum {
 					break
@@ -536,8 +535,7 @@ func QuantileBeta(prob, p, q, lnbeta float64) float64 {
 
 	for i_pb = 0; i_pb < niterations; i_pb++ {
 		y = CDFBeta(xinbta, pp, qq, lnbeta)
-		y = (y - a) *
-			math.Exp(lnbeta+r*math.Log(xinbta)+t*math.Log(1.-xinbta))
+		y = (y - a) * math.Exp(lnbeta+r*math.Log(xinbta)+t*math.Log(1.-xinbta))
 		if y*yprev <= 0 {
 			prev = math.Max(math.Abs(adj), fpu)
 		}
