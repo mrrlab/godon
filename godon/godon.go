@@ -217,6 +217,9 @@ func main() {
 	case "M0vrate":
 		log.Print("Using M0vrate model")
 		m = cmodel.NewM0vrate(cali, t, cf)
+	case "M8":
+		log.Print("Using M8 model")
+		m = cmodel.NewM8(cali, t, cf, 4)
 	case "BSC":
 		log.Print("Using branch site C model")
 		m = cmodel.NewBranchSiteC(cali, t, cf)
