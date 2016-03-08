@@ -2,7 +2,6 @@
 #include <math.h>
 #include <float.h>
 #include <stdbool.h>
-#include "tools.c"
 #define N 100
 
 typedef struct Btest {
