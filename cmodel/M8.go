@@ -1,7 +1,6 @@
 package cmodel
 
 import (
-	//	"fmt"
 	"bitbucket.org/Davydov/godon/optimize"
 	"bitbucket.org/Davydov/godon/paml"
 	"bitbucket.org/Davydov/godon/tree"
@@ -164,7 +163,6 @@ func (m *M8) updateQ() {
 func (m *M8) updateQb() {
 	// first get omega values
 	m.omegab = paml.DiscreteBeta(m.p, m.q, m.ncat, false, m.tmp, m.omegab)
-	//fmt.Println(m.p, m.q, m.omegab)
 
 	for i, omega := range m.omegab {
 		Q, s := createTransitionMatrix(m.cf, m.kappa, omega, m.qb[i].Q)
