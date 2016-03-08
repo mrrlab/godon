@@ -17,6 +17,8 @@ Btest btests[] = {
   {4, 0.5, 10, true},
   {8, 2, .1, false},
   {7, 15, 1, true},
+  {4, 1.16, 3.54, false},
+  {4, 1.16, 3.54, true},
 };
 
 void parr(double *a, int n) {
