@@ -571,11 +571,11 @@ L_converged:
 	return xinbta
 }
 
-func DiscreteBeta(alpha, beta float64, K int, UseMedian bool, tmp, res []float64) []float64 {
+func DiscreteBeta(p, q float64, K int, UseMedian bool, tmp, res []float64) []float64 {
 	/*
 	   discretization of beta(p, q), with equal proportions in each category.
 	*/
-	mean := alpha / (alpha + beta)
+	mean := p / (p + q)
 	t := 0.0
 
 	if res == nil {
@@ -585,10 +585,10 @@ func DiscreteBeta(alpha, beta float64, K int, UseMedian bool, tmp, res []float64
 		tmp = make([]float64, K)
 	}
 
-	lnbeta := LnBeta(alpha, beta)
+	lnbeta := LnBeta(p, q)
 	if UseMedian { /* median */
 		for i := 0; i < K; i++ {
-			res[i] = QuantileBeta((float64(i)+0.5)/float64(K), alpha, beta, lnbeta)
+			res[i] = QuantileBeta((float64(i)+0.5)/float64(K), p, q, lnbeta)
 			t += res[i]
 		}
 		for i := 0; i < K; i++ {
@@ -596,13 +596,13 @@ func DiscreteBeta(alpha, beta float64, K int, UseMedian bool, tmp, res []float64
 		}
 	} else { /* mean */
 		for i := 0; i < K-1; i++ /* cutting points */ {
-			tmp[i] = QuantileBeta((float64(i)+1.0)/float64(K), alpha, beta, lnbeta)
+			tmp[i] = QuantileBeta((float64(i)+1.0)/float64(K), p, q, lnbeta)
 		}
 		tmp[K-1] = 1
 
-		lnbeta1 := lnbeta - math.Log(1+beta/alpha)
+		lnbeta1 := lnbeta - math.Log(1+q/p)
 		for i := 0; i < K-1; i++ { /* CDF */
-			tmp[i] = CDFBeta(tmp[i], alpha+1, beta, lnbeta1)
+			tmp[i] = CDFBeta(tmp[i], p+1, q, lnbeta1)
 		}
 		res[0] = tmp[0] * mean * float64(K)
 		for i := 1; i < K-1; i++ {
