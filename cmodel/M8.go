@@ -16,15 +16,21 @@ type M8 struct {
 	// omega values for beta distribution
 	omegab []float64
 	// temporary array for beta computations
-	tmp      []float64
+	tmp []float64
+	// only allow extra omega if addw is true
+	addw bool
+	// fix omega=1
+	fixw     bool
 	ncat     int
 	q0done   bool
 	qbdone   bool
 	propdone bool
 }
 
-func NewM8(cali CodonSequences, t *tree.Tree, cf CodonFrequency, ncat int) (m *M8) {
+func NewM8(cali CodonSequences, t *tree.Tree, cf CodonFrequency, addw, fixw bool, ncat int) (m *M8) {
 	m = &M8{
+		addw: addw,
+		fixw: fixw,
 		ncat: ncat,
 		qb:   make([]*EMatrix, ncat),
 		q0:   &EMatrix{},
@@ -43,7 +49,10 @@ func NewM8(cali CodonSequences, t *tree.Tree, cf CodonFrequency, ncat int) (m *M
 }
 
 func (m *M8) GetNClass() int {
-	return m.ncat + 1
+	if m.addw {
+		return m.ncat + 1
+	}
+	return m.ncat
 }
 
 func (m *M8) Copy() optimize.Optimizable {
@@ -51,6 +60,8 @@ func (m *M8) Copy() optimize.Optimizable {
 		BaseModel: m.BaseModel.Copy(),
 		qb:        make([]*EMatrix, m.ncat),
 		tmp:       make([]float64, m.ncat),
+		addw:      m.addw,
+		fixw:      m.fixw,
 		ncat:      m.ncat,
 		q0:        &EMatrix{},
 		p0:        m.p0,
@@ -70,15 +81,17 @@ func (m *M8) Copy() optimize.Optimizable {
 }
 
 func (m *M8) addParameters(fpg optimize.FloatParameterGenerator) {
-	p0 := fpg(&m.p0, "p0")
-	p0.SetOnChange(func() {
-		m.propdone = false
-	})
-	p0.SetPriorFunc(optimize.UniformPrior(0, 1, false, false))
-	p0.SetMin(0)
-	p0.SetMax(1)
-	p0.SetProposalFunc(optimize.NormalProposal(0.01))
-	m.parameters.Append(p0)
+	if m.addw {
+		p0 := fpg(&m.p0, "p0")
+		p0.SetOnChange(func() {
+			m.propdone = false
+		})
+		p0.SetPriorFunc(optimize.UniformPrior(0, 1, false, false))
+		p0.SetMin(0)
+		p0.SetMax(1)
+		p0.SetProposalFunc(optimize.NormalProposal(0.01))
+		m.parameters.Append(p0)
+	}
 
 	p := fpg(&m.p, "p")
 	p.SetOnChange(func() {
@@ -111,15 +124,17 @@ func (m *M8) addParameters(fpg optimize.FloatParameterGenerator) {
 	kappa.SetMax(20)
 	m.parameters.Append(kappa)
 
-	omega := fpg(&m.omega, "omega")
-	omega.SetOnChange(func() {
-		m.q0done = false
-	})
-	omega.SetPriorFunc(optimize.GammaPrior(1, 2, false))
-	omega.SetProposalFunc(optimize.NormalProposal(0.01))
-	omega.SetMin(1)
-	omega.SetMax(1000)
-	m.parameters.Append(omega)
+	if m.addw && !m.fixw {
+		omega := fpg(&m.omega, "omega")
+		omega.SetOnChange(func() {
+			m.q0done = false
+		})
+		omega.SetPriorFunc(optimize.GammaPrior(1, 2, false))
+		omega.SetProposalFunc(optimize.NormalProposal(0.01))
+		omega.SetMin(1)
+		omega.SetMax(1000)
+		m.parameters.Append(omega)
+	}
 
 }
 
@@ -128,11 +143,19 @@ func (m *M8) GetParameters() (p0, p, q, kappa, omega float64) {
 }
 
 func (m *M8) SetParameters(p0, p, q, kappa, omega float64) {
-	m.p0 = p0
+	if m.addw {
+		m.p0 = p0
+	} else {
+		m.p0 = 1
+	}
 	m.p = p
 	m.q = q
 	m.kappa = kappa
-	m.omega = omega
+	if m.addw && !m.fixw {
+		m.omega = omega
+	} else {
+		m.omega = 1
+	}
 	m.qbdone = false
 	m.q0done = false
 }
@@ -185,12 +208,18 @@ func (m *M8) updateQb() {
 }
 
 func (m *M8) updateProportions() {
-	scale := m.q0.Scale * (1 - m.p0)
-	m.prop[m.ncat] = 1 - m.p0
+	scale := 0.0
+
 	pqi := m.p0 / float64(m.ncat)
+
 	for i, q := range m.qb {
 		m.prop[i] = pqi
 		scale += q.Scale * pqi
+	}
+
+	if m.addw {
+		scale += m.q0.Scale * (1 - m.p0)
+		m.prop[m.ncat] = 1 - m.p0
 	}
 
 	for _, node := range m.tree.NodeIdArray() {
@@ -208,7 +237,7 @@ func (m *M8) Likelihood() float64 {
 	if !m.qbdone {
 		m.updateQb()
 	}
-	if !m.q0done {
+	if m.addw && !m.q0done {
 		m.updateQ()
 	}
 	if !m.propdone {

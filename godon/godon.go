@@ -43,7 +43,7 @@ func main() {
 	noOptBrLen := flag.Bool("nobrlen", false, "don't optimize branch lengths")
 	cFreq := flag.String("cfreq", "F3X4", "codon frequecny (F0 or F3X4)")
 	cFreqFileName := flag.String("cfreqfn", "", "codon frequencies file (overrides -cfreq)")
-	fixw := flag.Bool("fixw", false, "fix omega=1 (for branch-site model)")
+	fixw := flag.Bool("fixw", false, "fix omega=1 (for the branch-site and M8 models)")
 
 	// optimizer parameters
 	iterations := flag.Int("iter", 10000, "number of iterations")
@@ -217,9 +217,12 @@ func main() {
 	case "M0vrate":
 		log.Print("Using M0vrate model")
 		m = cmodel.NewM0vrate(cali, t, cf)
+	case "M7":
+		log.Print("Using M7 model")
+		m = cmodel.NewM8(cali, t, cf, false, false, 4)
 	case "M8":
 		log.Print("Using M8 model")
-		m = cmodel.NewM8(cali, t, cf, 4)
+		m = cmodel.NewM8(cali, t, cf, true, *fixw, 4)
 	case "BSC":
 		log.Print("Using branch site C model")
 		m = cmodel.NewBranchSiteC(cali, t, cf)
