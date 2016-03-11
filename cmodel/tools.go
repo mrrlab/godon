@@ -46,3 +46,10 @@ func GetTreeAlignment(data string) (t *tree.Tree, cali CodonSequences, err error
 
 	return
 }
+
+func maxInt(a, b int) int {
+	if b > a {
+		return b
+	}
+	return a
+}

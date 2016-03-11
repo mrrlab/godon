@@ -25,6 +25,11 @@ type TreeOptimizable interface {
 	SetOptimizations(fixed, all bool)
 }
 
+type TreeOptimizableSiteClass interface {
+	TreeOptimizable
+	GetNClass() int
+}
+
 type Model interface {
 	GetNClass() int
 	addParameters(optimize.FloatParameterGenerator)

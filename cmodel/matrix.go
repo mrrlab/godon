@@ -22,6 +22,10 @@ func Sum(m *mat64.Dense) (s float64) {
 }
 
 func createTransitionMatrix(cf CodonFrequency, kappa, omega float64, m *mat64.Dense) (*mat64.Dense, float64) {
+	return createRateTransitionMatrix(cf, kappa, omega, []float64{1, 1, 1}, m)
+}
+
+func createRateTransitionMatrix(cf CodonFrequency, kappa, omega float64, rates []float64, m *mat64.Dense) (*mat64.Dense, float64) {
 	//fmt.Println("kappa=", kappa, ", omega=", omega)
 	if m == nil {
 		m = mat64.NewDense(nCodon, nCodon, nil)
@@ -34,13 +38,14 @@ func createTransitionMatrix(cf CodonFrequency, kappa, omega float64, m *mat64.De
 			}
 			c1 := numCodon[byte(i1)]
 			c2 := numCodon[byte(i2)]
-			dist, transitions := codonDistance(c1, c2)
+			dist, transitions, pos := codonDistance(c1, c2)
 
 			if dist > 1 {
 				m.Set(i1, i2, 0)
 				continue
 			}
-			m.Set(i1, i2, cf[i2])
+			m.Set(i1, i2, rates[pos])
+			m.Set(i1, i2, m.At(i1, i2)*cf[i2])
 			if transitions == 1 {
 				m.Set(i1, i2, m.At(i1, i2)*kappa)
 			}
@@ -111,11 +116,13 @@ func PrintUnQ(Q *mat64.Dense) {
 	}
 }
 
-func codonDistance(c1, c2 string) (dist, transitions int) {
+func codonDistance(c1, c2 string) (dist, transitions, pos int) {
+	pos = -1
 	for i := 0; i < len(c1); i++ {
 		s1 := c1[i]
 		s2 := c2[i]
 		if s1 != s2 {
+			pos = i
 			dist++
 			if ((s1 == 'A' || s1 == 'G') && (s2 == 'A' || s2 == 'G')) ||
 				((s1 == 'T' || s1 == 'C') && (s2 == 'T' || s2 == 'C')) {

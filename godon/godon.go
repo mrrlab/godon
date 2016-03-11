@@ -44,6 +44,7 @@ func main() {
 	cFreq := flag.String("cfreq", "F3X4", "codon frequecny (F0 or F3X4)")
 	cFreqFileName := flag.String("cfreqfn", "", "codon frequencies file (overrides -cfreq)")
 	fixw := flag.Bool("fixw", false, "fix omega=1 (for the branch-site and M8 models)")
+	ncatig := flag.Int("ncatig", 1, "number of categories for the intercodon gamma rate variation (no variation by default)")
 
 	// optimizer parameters
 	iterations := flag.Int("iter", 10000, "number of iterations")
@@ -208,7 +209,7 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
-	var m cmodel.TreeOptimizable
+	var m cmodel.TreeOptimizableSiteClass
 
 	switch *model {
 	case "M0":
@@ -219,10 +220,10 @@ func main() {
 		m = cmodel.NewM0vrate(cali, t, cf)
 	case "M7":
 		log.Print("Using M7 model")
-		m = cmodel.NewM8(cali, t, cf, false, false, 4)
+		m = cmodel.NewM8(cali, t, cf, false, false, 4, *ncatig)
 	case "M8":
 		log.Print("Using M8 model")
-		m = cmodel.NewM8(cali, t, cf, true, *fixw, 4)
+		m = cmodel.NewM8(cali, t, cf, true, *fixw, 4, *ncatig)
 	case "BSC":
 		log.Print("Using branch site C model")
 		m = cmodel.NewBranchSiteC(cali, t, cf)
@@ -235,6 +236,8 @@ func main() {
 	default:
 		log.Fatal("Unknown model specification")
 	}
+
+	log.Printf("Model has %d site class(es)", m.GetNClass())
 
 	if !*noOptBrLen {
 		log.Print("Will optimize branch lengths")
