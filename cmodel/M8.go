@@ -163,8 +163,7 @@ func (m *M8) addParameters(fpg optimize.FloatParameterGenerator) {
 	if m.ncatig > 1 {
 		alphai := fpg(&m.alphai, "alphai")
 		alphai.SetOnChange(func() {
-			m.q0done = false
-			m.qbdone = false
+			m.gammaidone = false
 		})
 		alphai.SetPriorFunc(optimize.GammaPrior(1, 2, false))
 		alphai.SetMin(0)
