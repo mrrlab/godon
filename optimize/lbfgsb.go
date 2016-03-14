@@ -119,7 +119,16 @@ func (l *LBFGSB) Run(iterations int) {
 
 	_, exitStatus := opt.Minimize(l, l.parameters.Values(nil))
 
-	log.Info("Exit status: ", exitStatus)
+	switch exitStatus.Code {
+	case lbfgsb.SUCCESS:
+		fallthrough
+	case lbfgsb.APPROXIMATE:
+		log.Info("LBFGSB status:", exitStatus)
+	case lbfgsb.WARNING:
+		log.Warning("Warning, LBFGSB status:", exitStatus)
+	default:
+		log.Error("Error during LBFGSB:", exitStatus)
+	}
 
 	if !l.Quiet {
 		log.Info("Finished LBFGSB")
