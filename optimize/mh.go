@@ -1,7 +1,6 @@
 package optimize
 
 import (
-	"log"
 	"math"
 	"math/rand"
 )
@@ -51,15 +50,15 @@ Iter:
 			T = 1
 		}
 		if !m.Quiet && m.i > 0 && m.i%m.AccPeriod == 0 {
-			log.Printf("Acceptance rate %.2f%%", 100*float64(accepted)/float64(m.AccPeriod))
+			log.Infof("Acceptance rate %.2f%%", 100*float64(accepted)/float64(m.AccPeriod))
 			accepted = 0
 		}
 
 		if !m.Quiet && m.i%m.repPeriod == 0 {
 			if m.annealing {
-				log.Printf("%d: L=%f, T=%f", m.i, m.l, T)
+				log.Debugf("%d: L=%f, T=%f", m.i, m.l, T)
 			} else {
-				log.Printf("%d: L=%f", m.i, m.l)
+				log.Debugf("%d: L=%f", m.i, m.l)
 			}
 			m.PrintLine(m.parameters, m.l)
 			lastReported = m.i
@@ -90,7 +89,7 @@ Iter:
 
 		select {
 		case s := <-m.sig:
-			log.Printf("Received signal %v, exiting.", s)
+			log.Warningf("Received signal %v, exiting.", s)
 			break Iter
 		default:
 		}
@@ -101,10 +100,10 @@ Iter:
 	}
 
 	if !m.Quiet {
-		log.Print("Finished MCMC")
-		log.Printf("Maximum likelihood: %v", m.maxL)
-		log.Printf("Parameter  names: %v", m.parameters.NamesString())
-		log.Printf("Parameter values: %v", m.GetMaxLParameters())
+		log.Info("Finished MCMC")
+		log.Noticef("Maximum likelihood: %v", m.maxL)
+		log.Infof("Parameter  names: %v", m.parameters.NamesString())
+		log.Infof("Parameter values: %v", m.GetMaxLParameters())
 	}
 	m.PrintFinal(m.parameters)
 }

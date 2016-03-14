@@ -3,10 +3,13 @@ package optimize
 import (
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"os/signal"
+
+	"github.com/op/go-logging"
 )
+
+var log = logging.MustGetLogger("optimize")
 
 type Optimizable interface {
 	GetFloatParameters() FloatParameters
@@ -67,7 +70,7 @@ func (o *BaseOptimizer) PrintLine(par FloatParameters, l float64) {
 func (o *BaseOptimizer) PrintFinal(parameters FloatParameters) {
 	if !o.Quiet {
 		for _, par := range parameters {
-			log.Printf("%s=%v", par.Name(), par.Get())
+			log.Noticef("%s=%v", par.Name(), par.Get())
 		}
 	}
 }

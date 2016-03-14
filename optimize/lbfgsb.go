@@ -1,7 +1,6 @@
 package optimize
 
 import (
-	"log"
 	"math"
 
 	lbfgsb "github.com/afbarnard/go-lbfgsb"
@@ -120,14 +119,14 @@ func (l *LBFGSB) Run(iterations int) {
 
 	_, exitStatus := opt.Minimize(l, l.parameters.Values(nil))
 
-	log.Print("Exit status: ", exitStatus)
+	log.Info("Exit status: ", exitStatus)
 
 	if !l.Quiet {
-		log.Print("Finished LBFGSB")
-		log.Printf("Maximum likelihood: %v", l.maxL)
-		log.Printf("Likelihood function calls: %v", l.calls)
-		log.Printf("Parameter  names: %v", l.parameters.NamesString())
-		log.Printf("Parameter values: %v", l.GetMaxLParameters())
+		log.Info("Finished LBFGSB")
+		log.Noticef("Maximum likelihood: %v", l.maxL)
+		log.Infof("Likelihood function calls: %v", l.calls)
+		log.Infof("Parameter  names: %v", l.parameters.NamesString())
+		log.Infof("Parameter values: %v", l.GetMaxLParameters())
 	}
 	l.PrintFinal(l.parameters)
 }
