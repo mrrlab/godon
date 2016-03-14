@@ -229,7 +229,7 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
-	var m cmodel.TreeOptimizable
+	var m cmodel.TreeOptimizableSiteClass
 
 	switch *model {
 	case "M0":
@@ -241,6 +241,8 @@ func main() {
 	default:
 		log.Fatal("Unknown model specification")
 	}
+
+	log.Infof("Model has %d site class(es)", m.GetNClass())
 
 	if !*noOptBrLen {
 		log.Info("Will optimize branch lengths")
