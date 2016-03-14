@@ -48,6 +48,7 @@ func main() {
 	cFreqFileName := flag.String("cfreqfn", "", "codon frequencies file (overrides -cfreq)")
 	fixw := flag.Bool("fixw", false, "fix omega=1 (for the branch-site and M8 models)")
 	ncatig := flag.Int("ncatig", 1, "number of categories for the intercodon gamma rate variation (no variation by default)")
+	ncatb := flag.Int("ncatb", 4, "number of the categories for the beta distribution (models M7&M8)")
 
 	// optimizer parameters
 	iterations := flag.Int("iter", 10000, "number of iterations")
@@ -241,10 +242,12 @@ func main() {
 		m = cmodel.NewM0vrate(cali, t, cf)
 	case "M7":
 		log.Info("Using M7 model")
-		m = cmodel.NewM8(cali, t, cf, false, false, 4, *ncatig)
+		log.Infof("%d beta categories, %d internal gamma categories", *ncatb, *ncatig)
+		m = cmodel.NewM8(cali, t, cf, false, false, *ncatb, *ncatig)
 	case "M8":
 		log.Info("Using M8 model")
-		m = cmodel.NewM8(cali, t, cf, true, *fixw, 4, *ncatig)
+		log.Infof("%d beta categories, %d internal gamma categories", *ncatb, *ncatig)
+		m = cmodel.NewM8(cali, t, cf, true, *fixw, *ncatb, *ncatig)
 	case "BSC":
 		log.Info("Using branch site C model")
 		m = cmodel.NewBranchSiteC(cali, t, cf)
