@@ -3,7 +3,6 @@
 package optimize
 
 import (
-	"log"
 	"math"
 	"math/rand"
 )
@@ -131,7 +130,7 @@ func (a *AdaptiveParameter) CheckConvergenceMu() {
 			default:
 				reason = "unknown"
 			}
-			log.Printf("%s converged, reason: %s", a.Name(), reason)
+			log.Infof("%s converged, reason: %s", a.Name(), reason)
 		}
 	}
 }

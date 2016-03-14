@@ -4,8 +4,6 @@ package main
 import (
 	"bufio"
 	"flag"
-	"fmt"
-	"log"
 	"math/rand"
 	"os"
 	"runtime"
@@ -13,11 +11,16 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/op/go-logging"
+
 	"bitbucket.org/Davydov/godon/bio"
 	"bitbucket.org/Davydov/godon/cmodel"
 	"bitbucket.org/Davydov/godon/optimize"
 	"bitbucket.org/Davydov/godon/tree"
 )
+
+var log = logging.MustGetLogger("godon")
+var formatter = logging.MustStringFormatter(`%{message}`)
 
 func lastLine(fn string) (line string) {
 	f, err := os.Open(fn)
@@ -77,31 +80,49 @@ func main() {
 	outF := flag.String("out", "", "write optimization trajectory to a file")
 	outTreeF := flag.String("tree", "", "write tree to a file")
 	startF := flag.String("start", "", "read start position from the trajectory file")
+	logLevel := flag.String("loglevel", "notice", "loglevel ('critical', 'error', 'warning', 'notice', 'info', 'debug')")
 
 	flag.Parse()
 
+	// logging
+	logging.SetFormatter(formatter)
+
+	var backend *logging.LogBackend
 	if *outLogF != "" {
 		f, err := os.Create(*outLogF)
 		if err != nil {
 			log.Fatal("Error creating log file:", err)
 		}
 		defer f.Close()
-		log.SetOutput(f)
+		backend = logging.NewLogBackend(f, "", 0)
+	} else {
+		backend = logging.NewLogBackend(os.Stderr, "", 0)
 	}
+	logging.SetBackend(backend)
+
+	level, err := logging.LogLevel(*logLevel)
+	if err != nil {
+		log.Fatal(err)
+	}
+	logging.SetLevel(level, "godon")
+	logging.SetLevel(level, "optimize")
+
+	// print commandline
+	log.Info("Command line:", os.Args)
 
 	if *seed == -1 {
 		*seed = time.Now().UnixNano()
-		log.Println("Random seed from time")
+		log.Debug("Random seed from time")
 	}
-	log.Printf("Random seed=%v", *seed)
+	log.Infof("Random seed=%v", *seed)
 
 	rand.Seed(*seed)
 	runtime.GOMAXPROCS(*nCPU)
 
-	log.Printf("Using CPUs: %d.\n", runtime.GOMAXPROCS(0))
+	log.Infof("Using CPUs: %d.\n", runtime.GOMAXPROCS(0))
 
 	if len(flag.Args()) < 2 {
-		fmt.Println("you should specify tree and alignment")
+		log.Fatal("you should specify tree and alignment")
 		return
 	}
 
@@ -121,7 +142,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	log.Printf("Read alignment of %d codons, %d fixed positions, %d ambiguous positions", len(cali[0].Sequence), cali.NFixed(), cali.NAmbiguous())
+	log.Infof("Read alignment of %d codons, %d fixed positions, %d ambiguous positions", len(cali[0].Sequence), cali.NFixed(), cali.NAmbiguous())
 
 	treeFile, err := os.Open(flag.Args()[1])
 	if err != nil {
@@ -134,15 +155,15 @@ func main() {
 		log.Fatal(err)
 	}
 
-	log.Printf("intree=%s", t)
-	log.Printf("brtree=%s", t.BrString())
+	log.Debugf("intree=%s", t)
+	log.Debugf("brtree=%s", t.BrString())
 
 	// Root the tree in the end
 	var root = false
 	var rootId = 0
 
 	if t.IsRooted() {
-		log.Print("Tree is rooted. Will unroot.")
+		log.Warning("Tree is rooted. Will unroot.")
 		root = true
 		rootId, err = t.Unroot()
 		if err != nil {
@@ -150,8 +171,8 @@ func main() {
 		}
 	}
 
-	log.Printf("intree_unroot=%s", t)
-	log.Print(t.FullString())
+	log.Infof("intree_unroot=%s", t)
+	log.Debug(t.FullString())
 
 	var cf cmodel.CodonFrequency
 
@@ -167,16 +188,16 @@ func main() {
 	} else {
 		switch *cFreq {
 		case "F0":
-			log.Print("F0 frequency")
+			log.Info("F0 frequency")
 			cf = cmodel.F0()
 		case "F3X4":
-			log.Print("F3X4 frequency")
+			log.Info("F3X4 frequency")
 			cf = cmodel.F3X4(cali)
 		default:
 			log.Fatal("Unknow codon freuquency specification")
 		}
 	}
-	log.Print(cf)
+	log.Debug(cf)
 
 	if *fgBranch >= 0 {
 		for _, node := range t.NodeIdArray() {
@@ -195,7 +216,7 @@ func main() {
 			class1++
 		}
 		if class1 == 0 {
-			log.Print("Warning: no class=1 nodes")
+			log.Warning("Warning: no class=1 nodes")
 		}
 	}
 
@@ -212,23 +233,23 @@ func main() {
 
 	switch *model {
 	case "M0":
-		log.Print("Using M0 model")
+		log.Info("Using M0 model")
 		m = cmodel.NewM0(cali, t, cf)
 	case "BS":
-		log.Print("Using branch site model")
+		log.Info("Using branch site model")
 		m = cmodel.NewBranchSite(cali, t, cf, *fixw)
 	default:
 		log.Fatal("Unknown model specification")
 	}
 
 	if !*noOptBrLen {
-		log.Print("Will optimize branch lengths")
+		log.Info("Will optimize branch lengths")
 		m.SetOptimizeBranchLengths()
 	} else {
-		log.Print("Will not optimize branch lengths")
+		log.Info("Will not optimize branch lengths")
 	}
 
-	log.Printf("Optimize likelihood computations. Fixed positions: %t, all positions: %t.", *optFixed, *optAll)
+	log.Infof("Optimize likelihood computations. Fixed positions: %t, all positions: %t.", *optFixed, *optAll)
 	m.SetOptimizations(*optFixed, *optAll)
 
 	if *startF != "" {
@@ -251,13 +272,13 @@ func main() {
 			*maxAdapt = *iterations / 5
 		}
 		annealingSkip = *maxAdapt
-		log.Printf("Setting adaptive parameters, skip=%v, maxAdapt=%v", *skip, *maxAdapt)
+		log.Infof("Setting adaptive parameters, skip=%v, maxAdapt=%v", *skip, *maxAdapt)
 		as.Skip = *skip
 		as.MaxAdapt = *maxAdapt
 		m.SetAdaptive(as)
 	}
 
-	log.Printf("Model has %d parameters.", len(m.GetFloatParameters()))
+	log.Infof("Model has %d parameters.", len(m.GetFloatParameters()))
 
 	var opt optimize.Optimizer
 	switch *method {
@@ -279,7 +300,7 @@ func main() {
 		log.Fatal("Unknown optimization method")
 	}
 
-	log.Printf("Using %s optimization.", *method)
+	log.Infof("Using %s optimization.", *method)
 
 	opt.SetOptimizable(m)
 	opt.SetReportPeriod(*report)
@@ -297,19 +318,19 @@ func main() {
 
 	if !*noOptBrLen {
 		if root {
-			log.Printf("unrooted_outtree=%s", t)
+			log.Infof("unrooted_outtree=%s", t)
 			err = t.Root(rootId)
 			if err != nil {
-				log.Print("Error rooting tree:", err)
+				log.Error("Error rooting tree:", err)
 			}
 		}
-		log.Printf("outtree=%s", t)
+		log.Infof("outtree=%s", t)
 	}
 
 	if *outTreeF != "" {
 		f, err := os.Create(*outTreeF)
 		if err != nil {
-			log.Print("Error creating tree output file:", err)
+			log.Error("Error creating tree output file:", err)
 		} else {
 			f.WriteString(t.String() + "\n")
 			f.Close()
@@ -318,10 +339,10 @@ func main() {
 
 	if *printFull && (*optFixed || *optAll) {
 		m.SetOptimizations(false, false)
-		log.Print("Full likelihood: ", m.Likelihood())
+		log.Notice("Full likelihood: ", m.Likelihood())
 	}
 
 	endTime := time.Now()
 
-	log.Printf("Running time: %v", endTime.Sub(startTime))
+	log.Noticef("Running time: %v", endTime.Sub(startTime))
 }
