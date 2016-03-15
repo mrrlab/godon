@@ -278,7 +278,7 @@ func (m *M8) updateQ() {
 					e.Copy(m.q0[catid])
 					m.q0[catid].ScaleD(rate)
 
-					class := m.ncatb*gcat*m.ncatsg + catid
+					class := m.ncatb*gcat*m.ncatcg + catid
 					for _, node := range m.tree.NodeIdArray() {
 						if node == nil {
 							continue
