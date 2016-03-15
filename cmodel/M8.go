@@ -13,12 +13,12 @@ type M8 struct {
 	p0           float64
 	p, q         float64
 	omega, kappa float64
-	// incodon gamma alpha parameter
-	alphai float64
-	gammai []float64
-	// per codon gamma alpha parameter
-	alphae float64
-	gammae []float64
+	// site gamma alpha parameter
+	alphas float64
+	gammas []float64
+	// codon gamma alpha parameter
+	alphac float64
+	gammac []float64
 	// omega values for beta distribution
 	omegab []float64
 	// temporary array for beta computations
@@ -28,18 +28,18 @@ type M8 struct {
 	// fix omega=1
 	fixw       bool
 	ncatb      int
-	ncatig     int
-	ncateg     int
+	ncatsg     int
+	ncatcg     int
 	q0done     bool
 	qbdone     bool
 	propdone   bool
-	gammaidone bool
-	gammaedone bool
+	gammasdone bool
+	gammacdone bool
 }
 
-func NewM8(cali CodonSequences, t *tree.Tree, cf CodonFrequency, addw, fixw bool, ncatb, ncatig, ncateg int) (m *M8) {
-	// n inner gamma categories, ncatb * n^3 matrices
-	gcat := ncatig * ncatig * ncatig
+func NewM8(cali CodonSequences, t *tree.Tree, cf CodonFrequency, addw, fixw bool, ncatb, ncatsg, ncatcg int) (m *M8) {
+	// n site gamma categories, ncatb * n^3 matrices
+	gcat := ncatsg * ncatsg * ncatsg
 	if ncatb < 2 {
 		panic("M8 requires at least two categories")
 	}
@@ -47,19 +47,19 @@ func NewM8(cali CodonSequences, t *tree.Tree, cf CodonFrequency, addw, fixw bool
 		addw:   addw,
 		fixw:   fixw,
 		ncatb:  ncatb,
-		ncatig: ncatig,
-		ncateg: ncateg,
-		qb:     make([]*EMatrix, ncatb*gcat*ncateg),
-		q0:     make([]*EMatrix, gcat*ncateg),
-		gammai: make([]float64, ncatig),
-		gammae: make([]float64, ncateg),
-		tmp:    make([]float64, maxInt(ncatb, ncatig, ncateg)),
+		ncatsg: ncatsg,
+		ncatcg: ncatcg,
+		qb:     make([]*EMatrix, ncatb*gcat*ncatcg),
+		q0:     make([]*EMatrix, gcat*ncatcg),
+		gammas: make([]float64, ncatsg),
+		gammac: make([]float64, ncatcg),
+		tmp:    make([]float64, maxInt(ncatb, ncatsg, ncatcg)),
 	}
 
-	for i := 0; i < gcat*ncateg; i++ {
+	for i := 0; i < gcat*ncatcg; i++ {
 		m.q0[i] = &EMatrix{}
 	}
-	for i := 0; i < gcat*ncateg*ncatb; i++ {
+	for i := 0; i < gcat*ncatcg*ncatb; i++ {
 		m.qb[i] = &EMatrix{}
 	}
 
@@ -71,26 +71,26 @@ func NewM8(cali CodonSequences, t *tree.Tree, cf CodonFrequency, addw, fixw bool
 }
 
 func (m *M8) GetNClass() int {
-	gcat := m.ncatig * m.ncatig * m.ncatig
+	gcat := m.ncatsg * m.ncatsg * m.ncatsg
 	if m.addw {
-		return (gcat * (m.ncatb + 1)) * m.ncateg
+		return (gcat * (m.ncatb + 1)) * m.ncatcg
 	}
-	return gcat * m.ncatb * m.ncateg
+	return gcat * m.ncatb * m.ncatcg
 }
 
 func (m *M8) Copy() optimize.Optimizable {
 	// n inner gamma categories, ncatb * n^3 matrices
-	gcat := m.ncatig * m.ncatig * m.ncatig
+	gcat := m.ncatsg * m.ncatsg * m.ncatsg
 	newM := &M8{
 		BaseModel: m.BaseModel.Copy(),
-		qb:        make([]*EMatrix, m.ncatb*gcat*m.ncateg),
-		q0:        make([]*EMatrix, gcat*m.ncateg),
-		tmp:       make([]float64, maxInt(m.ncatb, m.ncatig, m.ncateg)),
+		qb:        make([]*EMatrix, m.ncatb*gcat*m.ncatcg),
+		q0:        make([]*EMatrix, gcat*m.ncatcg),
+		tmp:       make([]float64, maxInt(m.ncatb, m.ncatsg, m.ncatcg)),
 		ncatb:     m.ncatb,
-		ncatig:    m.ncatig,
-		ncateg:    m.ncateg,
-		gammai:    make([]float64, m.ncatig),
-		gammae:    make([]float64, m.ncateg),
+		ncatsg:    m.ncatsg,
+		ncatcg:    m.ncatcg,
+		gammas:    make([]float64, m.ncatsg),
+		gammac:    make([]float64, m.ncatcg),
 		addw:      m.addw,
 		fixw:      m.fixw,
 		p0:        m.p0,
@@ -98,14 +98,14 @@ func (m *M8) Copy() optimize.Optimizable {
 		q:         m.q,
 		omega:     m.omega,
 		kappa:     m.kappa,
-		alphai:    m.alphai,
-		alphae:    m.alphae,
+		alphas:    m.alphas,
+		alphac:    m.alphac,
 	}
 
-	for i := 0; i < gcat*m.ncateg; i++ {
+	for i := 0; i < gcat*m.ncatcg; i++ {
 		newM.q0[i] = &EMatrix{}
 	}
-	for i := 0; i < gcat*m.ncatb*m.ncateg; i++ {
+	for i := 0; i < gcat*m.ncatb*m.ncatcg; i++ {
 		newM.qb[i] = &EMatrix{}
 	}
 
@@ -170,36 +170,36 @@ func (m *M8) addParameters(fpg optimize.FloatParameterGenerator) {
 		m.parameters.Append(omega)
 	}
 
-	if m.ncatig > 1 {
-		alphai := fpg(&m.alphai, "alphai")
-		alphai.SetOnChange(func() {
-			m.gammaidone = false
+	if m.ncatsg > 1 {
+		alphas := fpg(&m.alphas, "alphas")
+		alphas.SetOnChange(func() {
+			m.gammasdone = false
 		})
-		alphai.SetPriorFunc(optimize.GammaPrior(1, 2, false))
-		alphai.SetMin(0)
-		alphai.SetMax(1000)
-		alphai.SetProposalFunc(optimize.NormalProposal(0.01))
-		m.parameters.Append(alphai)
+		alphas.SetPriorFunc(optimize.GammaPrior(1, 2, false))
+		alphas.SetMin(0)
+		alphas.SetMax(1000)
+		alphas.SetProposalFunc(optimize.NormalProposal(0.01))
+		m.parameters.Append(alphas)
 	}
 
-	if m.ncateg > 1 {
-		alphae := fpg(&m.alphae, "alphae")
-		alphae.SetOnChange(func() {
-			m.gammaedone = false
+	if m.ncatcg > 1 {
+		alphac := fpg(&m.alphac, "alphac")
+		alphac.SetOnChange(func() {
+			m.gammacdone = false
 		})
-		alphae.SetPriorFunc(optimize.GammaPrior(1, 2, false))
-		alphae.SetMin(0)
-		alphae.SetMax(1000)
-		alphae.SetProposalFunc(optimize.NormalProposal(0.01))
-		m.parameters.Append(alphae)
+		alphac.SetPriorFunc(optimize.GammaPrior(1, 2, false))
+		alphac.SetMin(0)
+		alphac.SetMax(1000)
+		alphac.SetProposalFunc(optimize.NormalProposal(0.01))
+		m.parameters.Append(alphac)
 	}
 }
 
-func (m *M8) GetParameters() (p0, p, q, kappa, omega, alphai, alphae float64) {
-	return m.p0, m.p, m.q, m.kappa, m.omega, m.alphai, m.alphae
+func (m *M8) GetParameters() (p0, p, q, kappa, omega, alphas, alphac float64) {
+	return m.p0, m.p, m.q, m.kappa, m.omega, m.alphas, m.alphac
 }
 
-func (m *M8) SetParameters(p0, p, q, kappa, omega, alphai, alphae float64) {
+func (m *M8) SetParameters(p0, p, q, kappa, omega, alphas, alphac float64) {
 	if m.addw {
 		m.p0 = p0
 	} else {
@@ -213,9 +213,9 @@ func (m *M8) SetParameters(p0, p, q, kappa, omega, alphai, alphae float64) {
 	} else {
 		m.omega = 1
 	}
-	m.alphai = alphai
-	m.alphae = alphae
-	m.gammaidone = false
+	m.alphas = alphas
+	m.alphac = alphac
+	m.gammasdone = false
 	m.qbdone = false
 	m.q0done = false
 }
@@ -228,40 +228,40 @@ func (m *M8) SetDefaults() {
 // Beta cat 1, internal gamma cat 1, external gamma cat 1
 // Beta cat 1, internal gamma cat 1, external gamma cat 2
 // ...
-// Beta cat 1, internal gamma cat 1, external gamma ncateg
+// Beta cat 1, internal gamma cat 1, external gamma ncatcg
 // ...
-// Beta cat 1, internal gamma cat ncatig^3, external gamma cat 1
+// Beta cat 1, internal gamma cat ncatsg^3, external gamma cat 1
 // ...
-// Beta cat 1, internal gamma cat ncatig^3, external gamma ncateg
+// Beta cat 1, internal gamma cat ncatsg^3, external gamma ncatcg
 // Beta cat 2, internal gamma cat 1, external gamma cat 1
 // ...
-// Beta cat 2, internal gamma cat ncatig^3, external gamma cat ncateg
+// Beta cat 2, internal gamma cat ncatsg^3, external gamma cat ncatcg
 // ...
 // ...
 // Beta cat ncatb, internal gamma cat 1, external gamma cat 1
 // ...
-// Beta cat ncatb, internal gamma cat ncatig^3, external gamma cat ncateg
-// (total: ncatb * ncatig^3 * ncateg)
+// Beta cat ncatb, internal gamma cat ncatsg^3, external gamma cat ncatcg
+// (total: ncatb * ncatsg^3 * ncatcg)
 // if m.addw == true [
 //   w2, internal gamma cat 1, external gamma cat 1
 //   ...
-//   w2, internal gamma cat 1, external gamma cat ncateg
+//   w2, internal gamma cat 1, external gamma cat ncatcg
 //   w2, internal gamma cat 2, external gamma cat 1
 //   ...
 //   ...
-//   w2, internal gamma cat ncatig^3, external gamma cat ncateg
-//   (total: (ncatb + 1) * ncatig^3) * ncateg
+//   w2, internal gamma cat ncatsg^3, external gamma cat ncatcg
+//   (total: (ncatb + 1) * ncatsg^3) * ncatcg
 // ]
 
 func (m *M8) updateQ() {
-	gcat := m.ncatig * m.ncatig * m.ncatig
+	gcat := m.ncatsg * m.ncatsg * m.ncatsg
 
-	for c1 := 0; c1 < m.ncatig; c1++ {
-		m.tmp[0] = m.gammai[c1]
-		for c2 := 0; c2 < m.ncatig; c2++ {
-			m.tmp[1] = m.gammai[c2]
-			for c3 := 0; c3 < m.ncatig; c3++ {
-				m.tmp[2] = m.gammai[c3]
+	for c1 := 0; c1 < m.ncatsg; c1++ {
+		m.tmp[0] = m.gammas[c1]
+		for c2 := 0; c2 < m.ncatsg; c2++ {
+			m.tmp[1] = m.gammas[c2]
+			for c3 := 0; c3 < m.ncatsg; c3++ {
+				m.tmp[2] = m.gammas[c3]
 
 				e := &EMatrix{}
 
@@ -272,13 +272,13 @@ func (m *M8) updateQ() {
 					panic("error finding eigen")
 				}
 
-				for ecl, rate := range m.gammae {
-					catid := (((c1*m.ncatig)+c2)*m.ncatig+c3)*m.ncateg + ecl
+				for ecl, rate := range m.gammac {
+					catid := (((c1*m.ncatsg)+c2)*m.ncatsg+c3)*m.ncatcg + ecl
 
 					e.Copy(m.q0[catid])
 					m.q0[catid].ScaleD(rate)
 
-					class := m.ncatb*gcat*m.ncatig + catid
+					class := m.ncatb*gcat*m.ncatsg + catid
 					for _, node := range m.tree.NodeIdArray() {
 						if node == nil {
 							continue
@@ -295,17 +295,17 @@ func (m *M8) updateQ() {
 }
 
 func (m *M8) updateQb() {
-	gcat := m.ncatig * m.ncatig * m.ncatig
+	gcat := m.ncatsg * m.ncatsg * m.ncatsg
 
 	// get omega values
 	m.omegab = paml.DiscreteBeta(m.p, m.q, m.ncatb, false, m.tmp, m.omegab)
 
-	for c1 := 0; c1 < m.ncatig; c1++ {
-		m.tmp[0] = m.gammai[c1]
-		for c2 := 0; c2 < m.ncatig; c2++ {
-			m.tmp[1] = m.gammai[c2]
-			for c3 := 0; c3 < m.ncatig; c3++ {
-				m.tmp[2] = m.gammai[c3]
+	for c1 := 0; c1 < m.ncatsg; c1++ {
+		m.tmp[0] = m.gammas[c1]
+		for c2 := 0; c2 < m.ncatsg; c2++ {
+			m.tmp[1] = m.gammas[c2]
+			for c3 := 0; c3 < m.ncatsg; c3++ {
+				m.tmp[2] = m.gammas[c3]
 
 				for icl, omega := range m.omegab {
 					e := &EMatrix{}
@@ -316,8 +316,8 @@ func (m *M8) updateQb() {
 						panic("error finding eigen")
 					}
 
-					for ecl, rate := range m.gammae {
-						catid := (icl*gcat+((c1*m.ncatig)+c2)*m.ncatig+c3)*m.ncateg + ecl
+					for ecl, rate := range m.gammac {
+						catid := (icl*gcat+((c1*m.ncatsg)+c2)*m.ncatsg+c3)*m.ncatcg + ecl
 
 						e.Copy(m.qb[catid])
 						m.qb[catid].ScaleD(rate)
@@ -340,11 +340,11 @@ func (m *M8) updateQb() {
 func (m *M8) updateProportions() {
 	scale := 0.0
 
-	gcat := m.ncatig * m.ncatig * m.ncatig
+	gcat := m.ncatsg * m.ncatsg * m.ncatsg
 
-	pqi := m.p0 / float64(m.ncatb*gcat*m.ncateg)
+	pqi := m.p0 / float64(m.ncatb*gcat*m.ncatcg)
 
-	if len(m.qb) != m.ncatb*gcat*m.ncateg {
+	if len(m.qb) != m.ncatb*gcat*m.ncatcg {
 		panic("wrong number of categories")
 	}
 
@@ -357,13 +357,13 @@ func (m *M8) updateProportions() {
 
 	if m.addw {
 		i++
-		pqi := (1 - m.p0) / float64(gcat*m.ncateg)
+		pqi := (1 - m.p0) / float64(gcat*m.ncatcg)
 		for _, q = range m.q0 {
 			scale += q.Scale * pqi
 			m.prop[i] = pqi
 			i++
 		}
-		if i != gcat*(m.ncatb+1)*m.ncateg {
+		if i != gcat*(m.ncatb+1)*m.ncatcg {
 			panic("wrong number of catigories (addw=true)")
 		}
 	}
@@ -380,25 +380,25 @@ func (m *M8) updateProportions() {
 }
 
 func (m *M8) Likelihood() float64 {
-	if !m.gammaidone {
-		if m.ncatig > 1 {
-			m.gammai = paml.DiscreteGamma(m.alphai, m.alphai, m.ncatig, false, m.tmp, m.gammai)
+	if !m.gammasdone {
+		if m.ncatsg > 1 {
+			m.gammas = paml.DiscreteGamma(m.alphas, m.alphas, m.ncatsg, false, m.tmp, m.gammas)
 			m.q0done = false
 			m.qbdone = false
 		} else {
-			m.gammai[0] = 1
+			m.gammas[0] = 1
 		}
-		m.gammaidone = true
+		m.gammasdone = true
 	}
-	if !m.gammaedone {
-		if m.ncateg > 1 {
-			m.gammae = paml.DiscreteGamma(m.alphae, m.alphae, m.ncateg, false, m.tmp, m.gammae)
+	if !m.gammacdone {
+		if m.ncatcg > 1 {
+			m.gammac = paml.DiscreteGamma(m.alphac, m.alphac, m.ncatcg, false, m.tmp, m.gammac)
 			m.q0done = false
 			m.qbdone = false
 		} else {
-			m.gammae[0] = 1
+			m.gammac[0] = 1
 		}
-		m.gammaedone = true
+		m.gammacdone = true
 	}
 	if !m.qbdone {
 		m.updateQb()
