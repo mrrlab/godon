@@ -47,7 +47,8 @@ func main() {
 	cFreq := flag.String("cfreq", "F3X4", "codon frequecny (F0 or F3X4)")
 	cFreqFileName := flag.String("cfreqfn", "", "codon frequencies file (overrides -cfreq)")
 	fixw := flag.Bool("fixw", false, "fix omega=1 (for the branch-site and M8 models)")
-	ncatig := flag.Int("ncatig", 1, "number of categories for the intercodon gamma rate variation (no variation by default)")
+	ncatsg := flag.Int("ncatsg", 1, "number of categories for the site gamma rate variation (no variation by default)")
+	ncatcg := flag.Int("ncatcg", 1, "number of categories for the codon gamma rate variation (no variation by default)")
 	ncatb := flag.Int("ncatb", 4, "number of the categories for the beta distribution (models M7&M8)")
 
 	// optimizer parameters
@@ -108,6 +109,7 @@ func main() {
 	}
 	logging.SetLevel(level, "godon")
 	logging.SetLevel(level, "optimize")
+	logging.SetLevel(level, "cmodel")
 
 	// print commandline
 	log.Info("Command line:", os.Args)
@@ -242,12 +244,12 @@ func main() {
 		m = cmodel.NewM0vrate(cali, t, cf)
 	case "M7":
 		log.Info("Using M7 model")
-		log.Infof("%d beta categories, %d internal gamma categories", *ncatb, *ncatig)
-		m = cmodel.NewM8(cali, t, cf, false, false, *ncatb, *ncatig)
+		log.Infof("%d beta categories, %d site gamma categories, %d codon gama categories", *ncatb, *ncatsg, *ncatcg)
+		m = cmodel.NewM8(cali, t, cf, false, false, *ncatb, *ncatsg, *ncatcg)
 	case "M8":
 		log.Info("Using M8 model")
-		log.Infof("%d beta categories, %d internal gamma categories", *ncatb, *ncatig)
-		m = cmodel.NewM8(cali, t, cf, true, *fixw, *ncatb, *ncatig)
+		log.Infof("%d beta categories, %d site gamma categories, %d codon gama categories", *ncatb, *ncatsg, *ncatcg)
+		m = cmodel.NewM8(cali, t, cf, true, *fixw, *ncatb, *ncatsg, *ncatcg)
 	case "BSC":
 		log.Info("Using branch site C model")
 		m = cmodel.NewBranchSiteC(cali, t, cf)

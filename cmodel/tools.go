@@ -4,6 +4,8 @@ import (
 	"os"
 	"path"
 
+	"github.com/op/go-logging"
+
 	"bitbucket.org/Davydov/godon/bio"
 	"bitbucket.org/Davydov/godon/tree"
 )
@@ -15,6 +17,8 @@ const (
 
 	smallDiff = 1e-3
 )
+
+var log = logging.MustGetLogger("cmodel")
 
 func GetTreeAlignment(data string) (t *tree.Tree, cali CodonSequences, err error) {
 	tf, err := os.Open(path.Join("testdata", data+".nwk"))
@@ -47,9 +51,11 @@ func GetTreeAlignment(data string) (t *tree.Tree, cali CodonSequences, err error
 	return
 }
 
-func maxInt(a, b int) int {
-	if b > a {
-		return b
+func maxInt(a int, b ...int) int {
+	for _, v := range b {
+		if v > a {
+			a = v
+		}
 	}
 	return a
 }

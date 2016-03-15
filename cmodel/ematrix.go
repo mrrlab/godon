@@ -28,6 +28,7 @@ func (m *EMatrix) Copy(recv *EMatrix) *EMatrix {
 	recv.v = m.v
 	recv.d = m.d
 	recv.iv = m.iv
+	recv.Scale = m.Scale
 	return recv
 }
 
