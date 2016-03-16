@@ -4,6 +4,7 @@ package main
 import (
 	"bufio"
 	"flag"
+	"fmt"
 	"math/rand"
 	"os"
 	"runtime"
@@ -18,6 +19,11 @@ import (
 	"bitbucket.org/Davydov/godon/optimize"
 	"bitbucket.org/Davydov/godon/tree"
 )
+
+var githash = ""
+var gitbranch = ""
+var buildstamp = ""
+var version = fmt.Sprintf("branch: %s, revision: %s, build time: %s", gitbranch, githash, buildstamp)
 
 var log = logging.MustGetLogger("godon")
 var formatter = logging.MustStringFormatter(`%{message}`)
@@ -39,6 +45,12 @@ func lastLine(fn string) (line string) {
 
 func main() {
 	startTime := time.Now()
+
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, "Godon %s\n", version)
+		fmt.Fprintf(os.Stderr, "Usage:\n")
+		flag.PrintDefaults()
+	}
 
 	// model
 	model := flag.String("model", "M0", "todel type (M0 or BS for branch site)")
@@ -110,6 +122,9 @@ func main() {
 	logging.SetLevel(level, "godon")
 	logging.SetLevel(level, "optimize")
 	logging.SetLevel(level, "cmodel")
+
+	// print revision
+	log.Info(version)
 
 	// print commandline
 	log.Info("Command line:", os.Args)
