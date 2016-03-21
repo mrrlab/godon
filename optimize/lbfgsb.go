@@ -79,7 +79,7 @@ func (l *LBFGSB) EvaluateGradient(x []float64) (grad []float64) {
 		}
 
 		l.parameters[i].Set(v)
-		l2 := l.Likelihood()
+		l2 := -l.Likelihood()
 		l.calls += 1
 
 		grad[i] = (l2 - l1) / l.dH
