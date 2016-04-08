@@ -39,6 +39,10 @@ func (m *EMatrix) Set(Q *mat64.Dense, scale float64) {
 }
 
 func (m *EMatrix) ScaleD(scale float64) {
+	if m.Scale < smallScale {
+		// no need to scale almost zero matrix
+		return
+	}
 	if m.d == nil {
 		panic("Scaling a nil matrix")
 	}
