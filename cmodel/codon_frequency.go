@@ -9,19 +9,6 @@ import (
 	"bitbucket.org/Davydov/godon/bio"
 )
 
-func init() {
-	i := byte(0)
-	for codon := range getCodons() {
-		if bio.IsStopCodon(codon) {
-			continue
-		}
-		codonNum[codon] = i
-		numCodon[i] = codon
-		i++
-	}
-	nCodon = int(i)
-}
-
 type CodonFrequency []float64
 
 // getCodons returns a channel with every codon (64).

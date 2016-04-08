@@ -13,8 +13,8 @@ import (
 const smallScale = 1e-30
 
 var (
-	zeroQ     = mat64.NewDense(nCodon, nCodon, nil)
-	identityP = createIdentityMatrix(nCodon)
+	zeroQ     *mat64.Dense
+	identityP *mat64.Dense
 )
 
 func createIdentityMatrix(size int) (m *mat64.Dense) {
