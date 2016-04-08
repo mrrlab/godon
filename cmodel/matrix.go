@@ -10,6 +10,21 @@ import (
 	"bitbucket.org/Davydov/godon/bio"
 )
 
+const smallScale = 1e-30
+
+var (
+	zeroQ     = mat64.NewDense(nCodon, nCodon, nil)
+	identityP = createIdentityMatrix(nCodon)
+)
+
+func createIdentityMatrix(size int) (m *mat64.Dense) {
+	m = mat64.NewDense(size, size, nil)
+	for i := 0; i < size; i++ {
+		m.Set(i, i, 1)
+	}
+	return
+}
+
 // Sum calculates matrix sum.
 func Sum(m *mat64.Dense) (s float64) {
 	rows, cols := m.Dims()
@@ -66,6 +81,9 @@ func createRateTransitionMatrix(cf CodonFrequency, kappa, omega float64, rates [
 		scale += -cf[i] * m.At(i, i)
 	}
 
+	if scale < smallScale {
+		return zeroQ, 0
+	}
 	return m, scale
 
 }

@@ -50,6 +50,10 @@ func (m *EMatrix) Eigen() (err error) {
 	if m.v != nil {
 		return nil
 	}
+	if m.Scale < smallScale {
+		// No need to eigen 0-matrix
+		return nil
+	}
 	rows, cols := m.Q.Dims()
 	if m.iv == nil {
 		m.iv = mat64.NewDense(cols, rows, nil)
@@ -80,6 +84,9 @@ func (m *EMatrix) Exp(cD *mat64.Dense, t float64) (*mat64.Dense, error) {
 	rows, cols := m.Q.Dims()
 	if cols != rows {
 		return nil, errors.New("D isn't a square matrix")
+	}
+	if m.Scale < smallScale {
+		return identityP, nil
 	}
 	// This is a dirty hack to allow 0-scale matricies
 	if math.IsInf(t, 1) {
