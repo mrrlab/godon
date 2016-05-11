@@ -1,6 +1,8 @@
 package cmodel
 
 import (
+	"math/rand"
+
 	"bitbucket.org/Davydov/godon/optimize"
 	"bitbucket.org/Davydov/godon/paml"
 	"bitbucket.org/Davydov/godon/tree"
@@ -221,7 +223,14 @@ func (m *M8) SetParameters(p0, p, q, kappa, omega, alphas, alphac float64) {
 }
 
 func (m *M8) SetDefaults() {
-	m.SetParameters(0.5, 2, 2, 2, 0.2, 1, 1)
+	p0 := 0.69 + rand.Float64()*0.3
+	p := 1e-3 + rand.Float64()*10
+	q := 1e-3 + rand.Float64()*50
+	kappa := 1e-3 + rand.Float64()*10
+	omega := 1.001 + rand.Float64()*10
+	alphas := 1e-3 + rand.Float64()*10
+	alphac := 1e-3 + rand.Float64()*10
+	m.SetParameters(p0, p, q, kappa, omega, alphas, alphac)
 }
 
 // Organization of the class categories.
