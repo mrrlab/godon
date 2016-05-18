@@ -313,6 +313,9 @@ func main() {
 		chain := optimize.NewMH(true, annealingSkip)
 		chain.AccPeriod = *accept
 		opt = chain
+	case "nlopt":
+		nlopt := optimize.NewNLOPT()
+		opt = nlopt
 	default:
 		log.Fatal("Unknown optimization method")
 	}
