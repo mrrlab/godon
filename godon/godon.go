@@ -314,7 +314,7 @@ func main() {
 		chain.AccPeriod = *accept
 		opt = chain
 	case "nlopt":
-		nlopt := optimize.NewNLOPT()
+		nlopt := optimize.NewNLOPT(*seed)
 		opt = nlopt
 	default:
 		log.Fatal("Unknown optimization method")
