@@ -133,12 +133,11 @@ func (l *LBFGSB) Run(iterations int) {
 		log.Error("Error during LBFGSB:", exitStatus)
 	}
 
-	if !l.Quiet {
-		log.Info("Finished LBFGSB")
-		log.Noticef("Maximum likelihood: %v", l.maxL)
-		log.Infof("Likelihood function calls: %v", l.calls)
-		log.Infof("Parameter  names: %v", l.parameters.NamesString())
-		log.Infof("Parameter values: %v", l.GetMaxLParameters())
-	}
+	log.Info("Finished LBFGSB")
+	log.Noticef("Maximum likelihood: %v", l.maxL)
+	log.Infof("Likelihood function calls: %v", l.calls)
+	log.Infof("Parameter  names: %v", l.parameters.NamesString())
+	log.Infof("Parameter values: %v", l.GetMaxLParameters())
+
 	l.PrintFinal(l.parameters)
 }

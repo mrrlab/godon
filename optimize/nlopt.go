@@ -90,11 +90,4 @@ func (n *NLOPT) Run(iterations int) {
 	opt.suppressHeader = true
 	opt.Run(iterations)
 
-	// if !n.Quiet {
-	// 	log.Info("Finished NLOPT")
-	// 	log.Noticef("Maximum likelihood: %v", maxf)
-	// 	log.Infof("Parameter  names: %v", n.parameters.NamesString())
-	// 	log.Infof("Parameter values: %v", n.GetMaxLParameters())
-	// }
-	// n.PrintFinal(n.parameters)
 }
