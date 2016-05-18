@@ -49,6 +49,7 @@ func (m *M0) addParameters(fpg optimize.FloatParameterGenerator) {
 	omega.SetPriorFunc(optimize.GammaPrior(1, 2, false))
 	omega.SetProposalFunc(optimize.NormalProposal(0.01))
 	omega.SetMin(0)
+	omega.SetMax(100)
 
 	kappa := fpg(&m.kappa, "kappa")
 	kappa.SetOnChange(func() {

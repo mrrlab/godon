@@ -10,9 +10,10 @@ type LBFGSB struct {
 	BaseOptimizer
 	parameters FloatParameters
 	Optimizable
-	dH    float64
-	grad  []float64
-	calls int // likelihood calls
+	dH             float64
+	grad           []float64
+	calls          int // likelihood calls
+	suppressHeader bool
 }
 
 func NewLBFGSB() (lbfgsb *LBFGSB) {
@@ -31,7 +32,7 @@ func (l *LBFGSB) SetOptimizable(opt Optimizable) {
 }
 
 func (l *LBFGSB) Logger(info *lbfgsb.OptimizationIterationInformation) {
-	l.i = info.Iteration
+	l.i += 1
 	l.parameters.SetValues(info.X)
 	l.PrintLine(l.parameters, -info.F)
 	select {
@@ -101,7 +102,9 @@ func (l *LBFGSB) EvaluateGradient(x []float64) (grad []float64) {
 
 func (l *LBFGSB) Run(iterations int) {
 	l.maxL = math.Inf(-1)
-	l.PrintHeader(l.parameters)
+	if !l.suppressHeader {
+		l.PrintHeader(l.parameters)
+	}
 	bounds := make([][2]float64, len(l.parameters))
 
 	for i, par := range l.parameters {

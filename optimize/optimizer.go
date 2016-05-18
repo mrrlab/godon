@@ -63,6 +63,9 @@ func (o *BaseOptimizer) PrintHeader(par FloatParameters) {
 
 func (o *BaseOptimizer) PrintLine(par FloatParameters, l float64) {
 	if !o.Quiet {
+		if o.output == nil {
+			o.output = os.Stdout
+		}
 		fmt.Fprintf(o.output, "%d\t%f\t%s\n", o.i, l, par.ValuesString())
 	}
 }
