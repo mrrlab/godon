@@ -1,6 +1,6 @@
 package optimize
 
-// #cgo LDFLAGS: -lnlopt
+// #cgo LDFLAGS: -lnlopt -lm
 /*
 #include <nlopt.h>
 
