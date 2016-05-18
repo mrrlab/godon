@@ -26,15 +26,17 @@ type NLOPT struct {
 	dH          float64
 	stop        bool
 	finishLBFGS bool
+	seed        int64
 }
 
-func NewNLOPT() (nlopt *NLOPT) {
+func NewNLOPT(seed int64) (nlopt *NLOPT) {
 	nlopt = &NLOPT{
 		BaseOptimizer: BaseOptimizer{
 			repPeriod: 10,
 		},
 		dH:          1e-6,
 		finishLBFGS: true,
+		seed:        seed,
 	}
 	return
 }
@@ -72,6 +74,10 @@ func (n *NLOPT) Run(iterations int) {
 	C.nlopt_set_ftol_rel(n.gopt, 1e-4)
 
 	var maxf C.double
+
+	if n.seed > 0 {
+		C.nlopt_srand((C.ulong)(n.seed))
+	}
 
 	res := C.nlopt_optimize(n.gopt, (*C.double)(unsafe.Pointer(&x[0])), &maxf)
 	if res < 0 {
