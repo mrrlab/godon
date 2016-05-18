@@ -141,7 +141,7 @@ Iter:
 		ds.maxL = math.Max(ds.maxL, lhi)
 		ds.BaseOptimizer.l = lhi
 		_ = inlo
-		if !ds.Quiet && ds.i%ds.repPeriod == 0 {
+		if ds.i%ds.repPeriod == 0 {
 			log.Debugf("%d: L=%f (%f)", ds.i, lhi, lhi-llo)
 			ds.PrintLine(ds.parameters[ihi], lhi)
 			/*
@@ -192,15 +192,14 @@ Iter:
 		default:
 		}
 	}
-	if !ds.Quiet && ds.i == iterations {
+	if ds.i == iterations {
 		log.Warningf("Iterations exceeded (%d)", iterations)
 	}
-	if !ds.Quiet {
-		log.Info("Finished downhill simplex")
-		log.Noticef("Maximum likelihood: %v", lhi)
-		log.Infof("Parameter  names: %v", ds.parameters[ihi].NamesString())
-		log.Infof("Parameter values: %v", ds.parameters[ihi].ValuesString())
-		ds.PrintFinal(ds.parameters[ihi])
-	}
+
+	log.Info("Finished downhill simplex")
+	log.Noticef("Maximum likelihood: %v", lhi)
+	log.Infof("Parameter  names: %v", ds.parameters[ihi].NamesString())
+	log.Infof("Parameter values: %v", ds.parameters[ihi].ValuesString())
+	ds.PrintFinal(ds.parameters[ihi])
 
 }
