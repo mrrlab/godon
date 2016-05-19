@@ -137,6 +137,7 @@ func (m *BaseModel) addBranchParameters(fpg optimize.FloatParameterGenerator) {
 			})
 			par.SetPriorFunc(optimize.GammaPrior(1, 2, false))
 			par.SetMin(0)
+			par.SetMax(100)
 			par.SetProposalFunc(optimize.NormalProposal(0.01))
 			m.parameters.Append(par)
 
