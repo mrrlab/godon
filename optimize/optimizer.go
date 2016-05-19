@@ -27,6 +27,9 @@ type Optimizer interface {
 	GetL() float64
 	GetMaxL() float64
 	GetMaxLParameters() string
+	GetNCalls() int
+	GetNIter() int
+	LoadFromOptimizer(Optimizer)
 	PrintFinal()
 }
 
@@ -51,6 +54,12 @@ func (o *BaseOptimizer) SetOptimizable(opt Optimizable) {
 
 func (o *BaseOptimizer) GetOptimizable() Optimizable {
 	return o.Optimizable
+}
+
+func (o *BaseOptimizer) LoadFromOptimizer(opt Optimizer) {
+	o.i = opt.GetNIter()
+	o.calls = opt.GetNCalls()
+	o.SetOptimizable(opt.GetOptimizable())
 }
 
 func (o *BaseOptimizer) WatchSignals(sigs ...os.Signal) {
@@ -82,6 +91,14 @@ func (o *BaseOptimizer) PrintLine(par FloatParameters, l float64) {
 		}
 		fmt.Fprintf(o.output, "%d\t%f\t%s\n", o.i, l, par.ValuesString())
 	}
+}
+
+func (o *BaseOptimizer) GetNCalls() int {
+	return o.calls
+}
+
+func (o *BaseOptimizer) GetNIter() int {
+	return o.i
 }
 
 func (o *BaseOptimizer) PrintFinal() {
