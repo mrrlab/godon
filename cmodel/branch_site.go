@@ -69,7 +69,7 @@ func (m *BranchSite) addParameters(fpg optimize.FloatParameterGenerator) {
 	})
 	kappa.SetPriorFunc(optimize.UniformPrior(0, 20, false, true))
 	kappa.SetProposalFunc(optimize.NormalProposal(0.01))
-	kappa.SetMin(0)
+	kappa.SetMin(0.1)
 	kappa.SetMax(20)
 	m.parameters.Append(kappa)
 
