@@ -67,8 +67,12 @@ func main() {
 		"(lbfgsb: limited-memory Broyden–Fletcher–Goldfarb–Shanno with bounding constraints, "+
 		"simplex: downhill simplex, "+
 		"annealing: simullated annealing, "+
-		"mh: Metropolis-Hastings)")
-
+		"mh: Metropolis-Hastings, "+
+		"n_lbfgs: LBFGS from nlopt, "+
+		"n_simplex: downhill simplex from nlopt, "+
+		"n_cobyla: COBYLA from nlopt, "+
+		"n_bobyqa: BOBYQA from nlopt, "+
+		"n_sqp: SQP from nlopt)")
 	// mcmc parameters
 	accept := flag.Int("accept", 200, "report acceptance rate every N iterations")
 
@@ -313,8 +317,20 @@ func main() {
 		chain := optimize.NewMH(true, annealingSkip)
 		chain.AccPeriod = *accept
 		opt = chain
-	case "nlopt":
-		nlopt := optimize.NewNLOPT(*seed)
+	case "n_lbfgs":
+		nlopt := optimize.NewNLOPT(optimize.NLOPT_LBFGS, *seed)
+		opt = nlopt
+	case "n_simplex":
+		nlopt := optimize.NewNLOPT(optimize.NLOPT_SIMPLEX, *seed)
+		opt = nlopt
+	case "n_cobyla":
+		nlopt := optimize.NewNLOPT(optimize.NLOPT_COBYLA, *seed)
+		opt = nlopt
+	case "n_bobyqa":
+		nlopt := optimize.NewNLOPT(optimize.NLOPT_BOBYQA, *seed)
+		opt = nlopt
+	case "n_sqp":
+		nlopt := optimize.NewNLOPT(optimize.NLOPT_SQP, *seed)
 		opt = nlopt
 	default:
 		log.Fatal("Unknown optimization method")
