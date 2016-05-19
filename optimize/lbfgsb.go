@@ -64,30 +64,30 @@ func (l *LBFGSB) EvaluateGradient(x []float64) (grad []float64) {
 	grad = l.grad
 	// we assume that values are in range
 	l.parameters.SetValues(x)
+
 	l1 := -l.Likelihood()
 	l.calls++
 	for i, _ := range x {
-
-		no2 := l.Optimizable.Copy()
-		par2 := no2.GetFloatParameters()
 		inv := false
 		v := x[i] + l.dH
 
 		// this shouldn't happen with current boundaries
 		// but to be safe
-		if v >= par2[i].GetMax() {
+		if v >= l.parameters[i].GetMax() {
 			v = x[i] - l.dH
 			inv = true
 		}
 
-		par2[i].Set(v)
-		l2 := -no2.Likelihood()
+		l.parameters[i].Set(v)
+		l2 := -l.Likelihood()
 		l.calls++
 
 		grad[i] = (l2 - l1) / l.dH
 		if inv {
 			grad[i] = -grad[i]
 		}
+
+		l.parameters[i].Set(x[i])
 
 		select {
 		case s := <-l.sig:
