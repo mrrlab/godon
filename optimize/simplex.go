@@ -52,6 +52,7 @@ func (ds *DS) createSimplex(opt Optimizable, delta float64) {
 	for i := range ds.points {
 		if ds.parameters[i].InRange() {
 			ds.l[i] = ds.points[i].Likelihood()
+			ds.calls++
 		} else {
 			ds.l[i] = math.Inf(-1)
 		}
@@ -75,6 +76,7 @@ func (ds *DS) amotry(ilo int, fac float64) float64 {
 	var l float64
 	if ds.newPar.InRange() {
 		l = ds.newOpt.Likelihood()
+		ds.calls++
 	} else {
 		l = math.Inf(-1)
 	}
@@ -177,6 +179,7 @@ Iter:
 						}
 						if ds.parameters[i].InRange() {
 							ds.l[i] = point.Likelihood()
+							ds.calls++
 						} else {
 							ds.l[i] = math.Inf(-1)
 						}
@@ -196,10 +199,6 @@ Iter:
 		log.Warningf("Iterations exceeded (%d)", iterations)
 	}
 
-	log.Info("Finished downhill simplex")
-	log.Noticef("Maximum likelihood: %v", lhi)
-	log.Infof("Parameter  names: %v", ds.parameters[ihi].NamesString())
-	log.Infof("Parameter values: %v", ds.parameters[ihi].ValuesString())
 	ds.PrintFinal(ds.parameters[ihi])
 
 }

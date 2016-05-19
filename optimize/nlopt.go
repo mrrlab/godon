@@ -93,6 +93,7 @@ func (n *NLOPT) Run(iterations int) {
 	opt.SetOptimizable(n.Optimizable)
 	opt.sig = n.sig
 	opt.i = n.i
+	opt.calls = n.calls
 	opt.suppressHeader = true
 	opt.Run(iterations)
 

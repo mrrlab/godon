@@ -30,6 +30,7 @@ type Optimizer interface {
 
 type BaseOptimizer struct {
 	i         int
+	calls     int
 	l         float64
 	maxL      float64
 	maxLPar   []float64
@@ -72,6 +73,10 @@ func (o *BaseOptimizer) PrintLine(par FloatParameters, l float64) {
 
 func (o *BaseOptimizer) PrintFinal(parameters FloatParameters) {
 	if !o.Quiet {
+		log.Noticef("Maximum likelihood: %v", o.maxL)
+		log.Infof("Likelihood function calls: %v", o.calls)
+		log.Infof("Parameter  names: %v", parameters.NamesString())
+		log.Infof("Parameter values: %v", o.GetMaxLParameters())
 		for _, par := range parameters {
 			log.Noticef("%s=%v", par.Name(), par.Get())
 		}

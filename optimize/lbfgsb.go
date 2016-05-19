@@ -12,7 +12,6 @@ type LBFGSB struct {
 	Optimizable
 	dH             float64
 	grad           []float64
-	calls          int // likelihood calls
 	suppressHeader bool
 }
 
@@ -50,7 +49,7 @@ func (l *LBFGSB) EvaluateFunction(x []float64) float64 {
 	l.parameters.SetValues(x)
 
 	L := l.Likelihood()
-	l.calls += 1
+	l.calls++
 	if L > l.maxL {
 		l.maxL = L
 		l.maxLPar = l.parameters.Values(l.maxLPar)
@@ -67,7 +66,7 @@ func (l *LBFGSB) EvaluateGradient(x []float64) (grad []float64) {
 	l.parameters.SetValues(x)
 
 	l1 := -l.Likelihood()
-	l.calls += 1
+	l.calls++
 	for i, _ := range x {
 		inv := false
 		v := x[i] + l.dH
@@ -81,7 +80,7 @@ func (l *LBFGSB) EvaluateGradient(x []float64) (grad []float64) {
 
 		l.parameters[i].Set(v)
 		l2 := -l.Likelihood()
-		l.calls += 1
+		l.calls++
 
 		grad[i] = (l2 - l1) / l.dH
 		if inv {
@@ -132,12 +131,6 @@ func (l *LBFGSB) Run(iterations int) {
 	default:
 		log.Error("Error during LBFGSB:", exitStatus)
 	}
-
-	log.Info("Finished LBFGSB")
-	log.Noticef("Maximum likelihood: %v", l.maxL)
-	log.Infof("Likelihood function calls: %v", l.calls)
-	log.Infof("Parameter  names: %v", l.parameters.NamesString())
-	log.Infof("Parameter values: %v", l.GetMaxLParameters())
 
 	l.PrintFinal(l.parameters)
 }

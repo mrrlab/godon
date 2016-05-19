@@ -33,6 +33,7 @@ func nlopt_callback(n uint, x *C.double, grad *C.double, f_data unsafe.Pointer) 
 		nlopt.parameters[i].Set((float64)(xsl[i]))
 	}
 	l1 := nlopt.Likelihood()
+	nlopt.calls++
 	if grad != nil {
 		gradsl := (*[1 << 30]C.double)(unsafe.Pointer(grad))[:n:n]
 	g:
@@ -49,6 +50,7 @@ func nlopt_callback(n uint, x *C.double, grad *C.double, f_data unsafe.Pointer) 
 
 			nlopt.parameters[i].Set(v)
 			l2 := nlopt.Likelihood()
+			nlopt.calls++
 
 			gradsl[i] = (C.double)((l2 - l1) / nlopt.dH)
 			if inv {
