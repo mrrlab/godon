@@ -27,8 +27,6 @@ const (
 
 type NLOPT struct {
 	BaseOptimizer
-	parameters FloatParameters
-	Optimizable
 	gopt C.nlopt_opt
 	//lopt C.nlopt_opt
 	dH          float64
@@ -67,11 +65,6 @@ func NewNLOPT(algorithm int, seed int64) (nlopt *NLOPT) {
 	}
 	log.Infof("NLopt algorithm: %v.", C.GoString(C.nlopt_algorithm_name(nlopt.algorithm)))
 	return
-}
-
-func (n *NLOPT) SetOptimizable(opt Optimizable) {
-	n.Optimizable = opt
-	n.parameters = opt.GetFloatParameters()
 }
 
 func (n *NLOPT) Run(iterations int) {
@@ -118,7 +111,4 @@ func (n *NLOPT) Run(iterations int) {
 
 	n.maxL = (float64)(maxf)
 	n.maxLPar = n.parameters.Values(n.maxLPar)
-
-	n.PrintFinal(n.parameters)
-
 }

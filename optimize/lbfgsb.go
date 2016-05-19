@@ -8,8 +8,6 @@ import (
 
 type LBFGSB struct {
 	BaseOptimizer
-	parameters FloatParameters
-	Optimizable
 	dH             float64
 	grad           []float64
 	suppressHeader bool
@@ -23,11 +21,6 @@ func NewLBFGSB() (lbfgsb *LBFGSB) {
 		dH: 1e-6,
 	}
 	return
-}
-
-func (l *LBFGSB) SetOptimizable(opt Optimizable) {
-	l.Optimizable = opt
-	l.parameters = opt.GetFloatParameters()
 }
 
 func (l *LBFGSB) Logger(info *lbfgsb.OptimizationIterationInformation) {
@@ -131,6 +124,4 @@ func (l *LBFGSB) Run(iterations int) {
 	default:
 		log.Error("Error during LBFGSB:", exitStatus)
 	}
-
-	l.PrintFinal(l.parameters)
 }
