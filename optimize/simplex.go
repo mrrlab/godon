@@ -97,11 +97,10 @@ func (ds *DS) calcPsum() {
 	}
 }
 
-func (ds *DS) SetOptimizable(opt Optimizable) {
-	ds.createSimplex(opt, ds.delta)
-}
-
 func (ds *DS) Run(iterations int) {
+	// first create a simplex
+	ds.createSimplex(ds.Optimizable, ds.delta)
+
 	// Lowest (worst), next-lowest and highest points
 	var ilo, inlo, ihi int
 	var llo, lnlo, lhi float64
@@ -199,6 +198,5 @@ Iter:
 		log.Warningf("Iterations exceeded (%d)", iterations)
 	}
 
-	ds.PrintFinal(ds.parameters[ihi])
-
+	ds.Optimizable = ds.points[ihi]
 }

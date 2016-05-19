@@ -351,6 +351,7 @@ func main() {
 	}
 
 	opt.Run(*iterations)
+	opt.PrintFinal()
 
 	if !*noOptBrLen {
 		if root {

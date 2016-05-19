@@ -7,8 +7,6 @@ import (
 
 type MH struct {
 	BaseOptimizer
-	parameters FloatParameters
-	Optimizable
 	AccPeriod int
 	annealing bool
 	// iteration to skip before annealing
@@ -27,11 +25,6 @@ func NewMH(annealing bool, annealingSkip int) (mcmc *MH) {
 		annealingSkip: annealingSkip,
 	}
 	return
-}
-
-func (m *MH) SetOptimizable(opt Optimizable) {
-	m.Optimizable = opt
-	m.parameters = opt.GetFloatParameters()
 }
 
 func (m *MH) Run(iterations int) {
@@ -100,6 +93,4 @@ Iter:
 	if m.i != lastReported {
 		m.PrintLine(m.parameters, m.l)
 	}
-
-	m.PrintFinal(m.parameters)
 }

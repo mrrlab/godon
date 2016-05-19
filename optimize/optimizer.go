@@ -19,6 +19,7 @@ type Optimizable interface {
 
 type Optimizer interface {
 	SetOptimizable(Optimizable)
+	GetOptimizable() Optimizable
 	WatchSignals(...os.Signal)
 	SetReportPeriod(period int)
 	SetOutput(io.Writer)
@@ -26,18 +27,30 @@ type Optimizer interface {
 	GetL() float64
 	GetMaxL() float64
 	GetMaxLParameters() string
+	PrintFinal()
 }
 
 type BaseOptimizer struct {
-	i         int
-	calls     int
-	l         float64
-	maxL      float64
-	maxLPar   []float64
-	repPeriod int
-	sig       chan os.Signal
-	output    io.Writer
-	Quiet     bool
+	Optimizable
+	i          int
+	calls      int
+	l          float64
+	maxL       float64
+	maxLPar    []float64
+	repPeriod  int
+	sig        chan os.Signal
+	output     io.Writer
+	Quiet      bool
+	parameters FloatParameters
+}
+
+func (o *BaseOptimizer) SetOptimizable(opt Optimizable) {
+	o.Optimizable = opt
+	o.parameters = opt.GetFloatParameters()
+}
+
+func (o *BaseOptimizer) GetOptimizable() Optimizable {
+	return o.Optimizable
 }
 
 func (o *BaseOptimizer) WatchSignals(sigs ...os.Signal) {
@@ -71,13 +84,14 @@ func (o *BaseOptimizer) PrintLine(par FloatParameters, l float64) {
 	}
 }
 
-func (o *BaseOptimizer) PrintFinal(parameters FloatParameters) {
+func (o *BaseOptimizer) PrintFinal() {
 	if !o.Quiet {
+		par := o.Optimizable.GetFloatParameters()
 		log.Noticef("Maximum likelihood: %v", o.maxL)
 		log.Infof("Likelihood function calls: %v", o.calls)
-		log.Infof("Parameter  names: %v", parameters.NamesString())
+		log.Infof("Parameter  names: %v", par.NamesString())
 		log.Infof("Parameter values: %v", o.GetMaxLParameters())
-		for _, par := range parameters {
+		for _, par := range par {
 			log.Noticef("%s=%v", par.Name(), par.Get())
 		}
 	}
