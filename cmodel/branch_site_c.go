@@ -1,6 +1,9 @@
 package cmodel
 
 import (
+	"math"
+	"math/rand"
+
 	"bitbucket.org/Davydov/godon/optimize"
 	"bitbucket.org/Davydov/godon/tree"
 )
