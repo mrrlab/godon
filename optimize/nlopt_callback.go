@@ -17,7 +17,7 @@ func nlopt_callback(n uint, x *C.double, grad *C.double, f_data unsafe.Pointer) 
 
 	select {
 	case s := <-nlopt.sig:
-		log.Warningf("Received signal %v, exiting.", s)
+		log.Warningf("Received signal (%v), exiting.", s)
 		C.nlopt_force_stop(nlopt.gopt)
 		nlopt.stop = true
 	default:
@@ -61,7 +61,7 @@ func nlopt_callback(n uint, x *C.double, grad *C.double, f_data unsafe.Pointer) 
 
 			select {
 			case s := <-nlopt.sig:
-				log.Warningf("Received signal exiting:", s)
+				log.Warningf("Received signal (%v), exiting.", s)
 				C.nlopt_force_stop(nlopt.gopt)
 				nlopt.stop = true
 				break g
