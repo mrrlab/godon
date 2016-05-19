@@ -17,6 +17,14 @@ import (
 	"unsafe"
 )
 
+const (
+	NLOPT_COBYLA = iota
+	NLOPT_BOBYQA
+	NLOPT_SIMPLEX
+	NLOPT_LBFGS
+	NLOPT_SQP
+)
+
 type NLOPT struct {
 	BaseOptimizer
 	parameters FloatParameters
@@ -27,9 +35,12 @@ type NLOPT struct {
 	stop        bool
 	finishLBFGS bool
 	seed        int64
+	xtol_rel    float64
+	ftol_rel    float64
+	algorithm   C.nlopt_algorithm
 }
 
-func NewNLOPT(seed int64) (nlopt *NLOPT) {
+func NewNLOPT(algorithm int, seed int64) (nlopt *NLOPT) {
 	nlopt = &NLOPT{
 		BaseOptimizer: BaseOptimizer{
 			repPeriod: 10,
@@ -37,7 +48,24 @@ func NewNLOPT(seed int64) (nlopt *NLOPT) {
 		dH:          1e-6,
 		finishLBFGS: true,
 		seed:        seed,
+		xtol_rel:    1e-9,
+		ftol_rel:    1e-9,
 	}
+	switch algorithm {
+	case NLOPT_COBYLA:
+		nlopt.algorithm = C.NLOPT_LN_COBYLA
+	case NLOPT_BOBYQA:
+		nlopt.algorithm = C.NLOPT_LN_BOBYQA
+	case NLOPT_SIMPLEX:
+		nlopt.algorithm = C.NLOPT_LN_NELDERMEAD
+	case NLOPT_LBFGS:
+		nlopt.algorithm = C.NLOPT_LD_LBFGS
+	case NLOPT_SQP:
+		nlopt.algorithm = C.NLOPT_LD_SLSQP
+	default:
+		log.Fatalf("Unknown algorithm specified (%d).", algorithm)
+	}
+	log.Infof("NLopt algorithm: %v.", C.GoString(C.nlopt_algorithm_name(nlopt.algorithm)))
 	return
 }
 
@@ -49,7 +77,7 @@ func (n *NLOPT) SetOptimizable(opt Optimizable) {
 func (n *NLOPT) Run(iterations int) {
 	n.PrintHeader(n.parameters)
 
-	n.gopt = C.nlopt_create(C.NLOPT_GN_CRS2_LM, (C.uint)(len(n.parameters)))
+	n.gopt = C.nlopt_create(n.algorithm, (C.uint)(len(n.parameters)))
 	defer C.nlopt_destroy(n.gopt)
 	//n.lopt = C.nlopt_create(C.NLOPT_LD_LBFGS, (C.uint)(len(n.parameters)))
 	//defer C.nlopt_destroy(n.lopt)
@@ -70,8 +98,8 @@ func (n *NLOPT) Run(iterations int) {
 	C.nlopt_set_lower_bounds(n.gopt, &lb[0])
 	C.nlopt_set_upper_bounds(n.gopt, &ub[0])
 
-	C.nlopt_set_xtol_rel(n.gopt, 1e-2)
-	C.nlopt_set_ftol_rel(n.gopt, 1e-4)
+	C.nlopt_set_xtol_rel(n.gopt, (C.double)(n.xtol_rel))
+	C.nlopt_set_ftol_rel(n.gopt, (C.double)(n.ftol_rel))
 
 	var maxf C.double
 
@@ -88,13 +116,9 @@ func (n *NLOPT) Run(iterations int) {
 		par.Set((float64)(x[i]))
 	}
 
-	log.Info("Using LBFGSB to imrpove result")
-	opt := NewLBFGSB()
-	opt.SetOptimizable(n.Optimizable)
-	opt.sig = n.sig
-	opt.i = n.i
-	opt.calls = n.calls
-	opt.suppressHeader = true
-	opt.Run(iterations)
+	n.maxL = (float64)(maxf)
+	n.maxLPar = n.parameters.Values(n.maxLPar)
+
+	n.PrintFinal(n.parameters)
 
 }
