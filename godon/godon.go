@@ -9,6 +9,7 @@ import (
 	"os"
 	"runtime"
 	"runtime/pprof"
+	"strings"
 	"syscall"
 	"time"
 
@@ -72,7 +73,8 @@ func main() {
 		"n_simplex: downhill simplex from nlopt, "+
 		"n_cobyla: COBYLA from nlopt, "+
 		"n_bobyqa: BOBYQA from nlopt, "+
-		"n_sqp: SQP from nlopt)")
+		"n_sqp: SQP from nlopt"+
+		"); you can chain optimizers with a plus sign")
 	// mcmc parameters
 	accept := flag.Int("accept", 200, "report acceptance rate every N iterations")
 
@@ -301,56 +303,68 @@ func main() {
 
 	log.Infof("Model has %d parameters.", len(m.GetFloatParameters()))
 
-	var opt optimize.Optimizer
-	switch *method {
-	case "lbfgsb":
-		lbfgsb := optimize.NewLBFGSB()
-		opt = lbfgsb
-	case "simplex":
-		ds := optimize.NewDS()
-		opt = ds
-	case "mh":
-		chain := optimize.NewMH(false, 0)
-		chain.AccPeriod = *accept
-		opt = chain
-	case "annealing":
-		chain := optimize.NewMH(true, annealingSkip)
-		chain.AccPeriod = *accept
-		opt = chain
-	case "n_lbfgs":
-		nlopt := optimize.NewNLOPT(optimize.NLOPT_LBFGS, *seed)
-		opt = nlopt
-	case "n_simplex":
-		nlopt := optimize.NewNLOPT(optimize.NLOPT_SIMPLEX, *seed)
-		opt = nlopt
-	case "n_cobyla":
-		nlopt := optimize.NewNLOPT(optimize.NLOPT_COBYLA, *seed)
-		opt = nlopt
-	case "n_bobyqa":
-		nlopt := optimize.NewNLOPT(optimize.NLOPT_BOBYQA, *seed)
-		opt = nlopt
-	case "n_sqp":
-		nlopt := optimize.NewNLOPT(optimize.NLOPT_SQP, *seed)
-		opt = nlopt
-	default:
-		log.Fatal("Unknown optimization method")
-	}
+	f := os.Stdout
 
-	log.Infof("Using %s optimization.", *method)
-
-	opt.SetOptimizable(m)
-	opt.SetReportPeriod(*report)
-	opt.WatchSignals(os.Interrupt, syscall.SIGUSR2)
 	if *outF != "" {
 		f, err := os.Create(*outF)
 		if err != nil {
 			log.Fatal("Error creating trajectory file:", err)
 		}
 		defer f.Close()
-		opt.SetOutput(f)
 	}
 
-	opt.Run(*iterations)
+	var opt, oldOpt optimize.Optimizer
+
+	for _, method := range strings.Split(*method, "+") {
+		switch method {
+		case "lbfgsb":
+			lbfgsb := optimize.NewLBFGSB()
+			opt = lbfgsb
+		case "simplex":
+			ds := optimize.NewDS()
+			opt = ds
+		case "mh":
+			chain := optimize.NewMH(false, 0)
+			chain.AccPeriod = *accept
+			opt = chain
+		case "annealing":
+			chain := optimize.NewMH(true, annealingSkip)
+			chain.AccPeriod = *accept
+			opt = chain
+		case "n_lbfgs":
+			nlopt := optimize.NewNLOPT(optimize.NLOPT_LBFGS, *seed)
+			opt = nlopt
+		case "n_simplex":
+			nlopt := optimize.NewNLOPT(optimize.NLOPT_SIMPLEX, *seed)
+			opt = nlopt
+		case "n_cobyla":
+			nlopt := optimize.NewNLOPT(optimize.NLOPT_COBYLA, *seed)
+			opt = nlopt
+		case "n_bobyqa":
+			nlopt := optimize.NewNLOPT(optimize.NLOPT_BOBYQA, *seed)
+			opt = nlopt
+		case "n_sqp":
+			nlopt := optimize.NewNLOPT(optimize.NLOPT_SQP, *seed)
+			opt = nlopt
+		default:
+			log.Fatal("Unknown optimization method")
+		}
+
+		log.Infof("Using %s optimization.", method)
+
+		opt.SetOutput(f)
+		if oldOpt != nil {
+			opt.LoadFromOptimizer(oldOpt)
+		} else {
+			opt.SetOptimizable(m)
+		}
+		opt.SetReportPeriod(*report)
+		opt.WatchSignals(os.Interrupt, syscall.SIGUSR2)
+
+		opt.Run(*iterations)
+		oldOpt = opt
+		println(oldOpt)
+	}
 	opt.PrintFinal()
 
 	if !*noOptBrLen {
