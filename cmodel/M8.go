@@ -156,7 +156,7 @@ func (m *M8) addParameters(fpg optimize.FloatParameterGenerator) {
 	})
 	kappa.SetPriorFunc(optimize.UniformPrior(0, 20, false, true))
 	kappa.SetProposalFunc(optimize.NormalProposal(0.01))
-	kappa.SetMin(0.1)
+	kappa.SetMin(1e-2)
 	kappa.SetMax(20)
 	m.parameters.Append(kappa)
 
@@ -226,7 +226,7 @@ func (m *M8) SetDefaults() {
 	p0 := 0.69 + rand.Float64()*0.3
 	p := 1e-3 + rand.Float64()*10
 	q := 1e-3 + rand.Float64()*50
-	kappa := 1e-3 + rand.Float64()*10
+	kappa := 1e-2 + rand.Float64()*10
 	omega := 1.001 + rand.Float64()*10
 	alphas := 1e-3 + rand.Float64()*10
 	alphac := 1e-3 + rand.Float64()*10

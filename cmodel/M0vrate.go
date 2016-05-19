@@ -55,7 +55,8 @@ func (m *M0vrate) addParameters(fpg optimize.FloatParameterGenerator) {
 	})
 	omega.SetPriorFunc(optimize.GammaPrior(1, 2, false))
 	omega.SetProposalFunc(optimize.NormalProposal(0.01))
-	omega.SetMin(0)
+	omega.SetMin(1)
+	omega.SetMax(1000)
 
 	kappa := fpg(&m.kappa, "kappa")
 	kappa.SetOnChange(func() {
@@ -64,7 +65,7 @@ func (m *M0vrate) addParameters(fpg optimize.FloatParameterGenerator) {
 	})
 	kappa.SetPriorFunc(optimize.UniformPrior(0, 20, false, true))
 	kappa.SetProposalFunc(optimize.NormalProposal(0.01))
-	kappa.SetMin(0)
+	kappa.SetMin(1e-2)
 	kappa.SetMax(20)
 
 	s := fpg(&m.s, "s")

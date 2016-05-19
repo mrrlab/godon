@@ -98,7 +98,7 @@ func (m *BranchSiteGamma) addParameters(fpg optimize.FloatParameterGenerator) {
 	})
 	kappa.SetPriorFunc(optimize.UniformPrior(0, 20, false, true))
 	kappa.SetProposalFunc(optimize.NormalProposal(0.01))
-	kappa.SetMin(0)
+	kappa.SetMin(1e-2)
 	kappa.SetMax(20)
 	m.parameters.Append(kappa)
 
@@ -108,7 +108,7 @@ func (m *BranchSiteGamma) addParameters(fpg optimize.FloatParameterGenerator) {
 	})
 	omega0.SetPriorFunc(optimize.GammaPrior(1, 2, false))
 	omega0.SetProposalFunc(optimize.NormalProposal(0.01))
-	omega0.SetMin(0)
+	omega0.SetMin(1e-4)
 	omega0.SetMax(1)
 	m.parameters.Append(omega0)
 
@@ -120,6 +120,7 @@ func (m *BranchSiteGamma) addParameters(fpg optimize.FloatParameterGenerator) {
 		omega2.SetPriorFunc(optimize.GammaPrior(1, 2, false))
 		omega2.SetProposalFunc(optimize.NormalProposal(0.01))
 		omega2.SetMin(1)
+		omega2.SetMax(1000)
 		m.parameters.Append(omega2)
 	}
 
@@ -148,7 +149,7 @@ func (m *BranchSiteGamma) addParameters(fpg optimize.FloatParameterGenerator) {
 		m.ratesdone = false
 	})
 	alpha.SetPriorFunc(optimize.GammaPrior(1, 2, false))
-	alpha.SetMin(0)
+	alpha.SetMin(1e-2)
 	alpha.SetMax(1000)
 	alpha.SetProposalFunc(optimize.NormalProposal(0.01))
 	m.parameters.Append(alpha)
@@ -173,15 +174,15 @@ func (m *BranchSiteGamma) GetParameters() (kappa float64, omega0, omega2 float64
 }
 
 func (m *BranchSiteGamma) SetDefaults() {
-	// these parameters come from codeml
-	kappa := 1.0
+	// these parameters mostly come from codeml
+	kappa := 1e-2 + rand.Float64()*10
 	omega0 := 0.2 + 0.1*rand.Float64()
 	omega2 := 3.1 + rand.Float64()
 	x0 := 1.0 + 0.5*rand.Float64()
 	x1 := 0.2 * rand.Float64()
 	p0 := math.Exp(x0) / (1 + math.Exp(x0) + math.Exp(x1))
 	p1 := math.Exp(x1) / (1 + math.Exp(x0) + math.Exp(x1))
-	alpha := 1.0
+	alpha := 0.5 + rand.Float64()*3
 	m.SetParameters(kappa, omega0, omega2, p0, p1, alpha)
 }
 
