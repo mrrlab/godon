@@ -156,7 +156,7 @@ func (m *M8) addParameters(fpg optimize.FloatParameterGenerator) {
 	})
 	kappa.SetPriorFunc(optimize.UniformPrior(0, 20, false, true))
 	kappa.SetProposalFunc(optimize.NormalProposal(0.01))
-	kappa.SetMin(0)
+	kappa.SetMin(0.1)
 	kappa.SetMax(20)
 	m.parameters.Append(kappa)
 
@@ -178,7 +178,7 @@ func (m *M8) addParameters(fpg optimize.FloatParameterGenerator) {
 			m.gammasdone = false
 		})
 		alphas.SetPriorFunc(optimize.GammaPrior(1, 2, false))
-		alphas.SetMin(0)
+		alphas.SetMin(1e-2)
 		alphas.SetMax(1000)
 		alphas.SetProposalFunc(optimize.NormalProposal(0.01))
 		m.parameters.Append(alphas)
@@ -190,7 +190,7 @@ func (m *M8) addParameters(fpg optimize.FloatParameterGenerator) {
 			m.gammacdone = false
 		})
 		alphac.SetPriorFunc(optimize.GammaPrior(1, 2, false))
-		alphac.SetMin(0)
+		alphac.SetMin(1e-2)
 		alphac.SetMax(1000)
 		alphac.SetProposalFunc(optimize.NormalProposal(0.01))
 		m.parameters.Append(alphac)
