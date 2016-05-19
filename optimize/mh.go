@@ -36,6 +36,7 @@ func (m *MH) SetOptimizable(opt Optimizable) {
 
 func (m *MH) Run(iterations int) {
 	m.l = m.Likelihood()
+	m.calls++
 	m.maxL = m.l
 	m.maxLPar = m.parameters.Values(m.maxLPar)
 	m.PrintHeader(m.parameters)
@@ -67,6 +68,7 @@ Iter:
 		par := m.parameters[p]
 		par.Propose()
 		newL := m.Likelihood()
+		m.calls++
 
 		var a float64
 		if m.annealing {
@@ -98,11 +100,6 @@ Iter:
 	if m.i != lastReported {
 		m.PrintLine(m.parameters, m.l)
 	}
-
-	log.Info("Finished MCMC")
-	log.Noticef("Maximum likelihood: %v", m.maxL)
-	log.Infof("Parameter  names: %v", m.parameters.NamesString())
-	log.Infof("Parameter values: %v", m.GetMaxLParameters())
 
 	m.PrintFinal(m.parameters)
 }
