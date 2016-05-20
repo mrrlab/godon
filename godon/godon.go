@@ -384,7 +384,6 @@ func main() {
 
 		opt.Run(*iterations)
 		oldOpt = opt
-		println(oldOpt)
 	}
 	opt.PrintFinal()
 
