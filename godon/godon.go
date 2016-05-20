@@ -77,6 +77,7 @@ func main() {
 		"n_cobyla: COBYLA from nlopt, "+
 		"n_bobyqa: BOBYQA from nlopt, "+
 		"n_sqp: SQP from nlopt"+
+		"n_mlsl: MLSL from nlopt (BOBYQA local optimizer)"+
 		"); you can chain optimizers with a plus sign")
 	// mcmc parameters
 	accept := flag.Int("accept", 200, "report acceptance rate every N iterations")
@@ -373,6 +374,9 @@ MethodLoop:
 			opt = nlopt
 		case "n_crs":
 			nlopt := optimize.NewNLOPT(optimize.NLOPT_CRS, *seed)
+			opt = nlopt
+		case "n_mlsl":
+			nlopt := optimize.NewNLOPT(optimize.NLOPT_MLSL, *seed)
 			opt = nlopt
 		default:
 			log.Errorf("Unknown optimization method: %s", method)

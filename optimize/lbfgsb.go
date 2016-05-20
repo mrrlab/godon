@@ -8,8 +8,8 @@ import (
 
 type LBFGSB struct {
 	BaseOptimizer
-	dH             float64
-	grad           []float64
+	dH   float64
+	grad []float64
 }
 
 func NewLBFGSB() (lbfgsb *LBFGSB) {
