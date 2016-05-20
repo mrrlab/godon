@@ -18,24 +18,35 @@ import (
 )
 
 const (
+	// local non-gradient
 	NLOPT_COBYLA = iota
 	NLOPT_BOBYQA
 	NLOPT_SIMPLEX
+	// local gradient based
 	NLOPT_LBFGS
 	NLOPT_SQP
+	// global
+	NLOPT_DIRECT
+	NLOPT_CRS
+	NLOPT_MLSL
 )
 
 type NLOPT struct {
 	BaseOptimizer
-	gopt C.nlopt_opt
-	//lopt C.nlopt_opt
-	dH          float64
-	stop        bool
-	finishLBFGS bool
-	seed        int64
-	xtol_rel    float64
-	ftol_rel    float64
-	algorithm   C.nlopt_algorithm
+	gopt          C.nlopt_opt
+	lopt          C.nlopt_opt
+	dH            float64
+	stop          bool
+	finishLBFGS   bool
+	seed          int64
+	ftol_rel      float64
+	ftol_abs      float64
+	xtol_rel      float64
+	algorithm     C.nlopt_algorithm
+	loc_ftol_rel  float64
+	loc_ftol_abs  float64
+	loc_xtol_rel  float64
+	loc_algorithm C.nlopt_algorithm
 }
 
 func NewNLOPT(algorithm int, seed int64) (nlopt *NLOPT) {
@@ -43,11 +54,15 @@ func NewNLOPT(algorithm int, seed int64) (nlopt *NLOPT) {
 		BaseOptimizer: BaseOptimizer{
 			repPeriod: 10,
 		},
-		dH:          1e-6,
-		finishLBFGS: true,
-		seed:        seed,
-		xtol_rel:    1e-9,
-		ftol_rel:    1e-9,
+		dH:           1e-6,
+		finishLBFGS:  true,
+		seed:         seed,
+		ftol_rel:     1e-15,
+		ftol_abs:     1e-10,
+		xtol_rel:     1e-5,
+		loc_ftol_rel: 1e-10,
+		loc_ftol_abs: 1e-4,
+		loc_xtol_rel: 1e-2,
 	}
 	switch algorithm {
 	case NLOPT_COBYLA:
@@ -60,22 +75,45 @@ func NewNLOPT(algorithm int, seed int64) (nlopt *NLOPT) {
 		nlopt.algorithm = C.NLOPT_LD_LBFGS
 	case NLOPT_SQP:
 		nlopt.algorithm = C.NLOPT_LD_SLSQP
+	case NLOPT_DIRECT:
+		nlopt.algorithm = C.NLOPT_GN_DIRECT_L
+		nlopt.ftol_rel = 1e-10
+		nlopt.ftol_abs = 1e-6
+		nlopt.xtol_rel = 1e-4
+	case NLOPT_CRS:
+		nlopt.algorithm = C.NLOPT_GN_CRS2_LM
+		nlopt.ftol_rel = 1e-7
+		nlopt.ftol_abs = 1e-3
+		nlopt.xtol_rel = 1e-4
+	case NLOPT_MLSL:
+		nlopt.algorithm = C.NLOPT_GN_MLSL_LDS
+		nlopt.ftol_rel = 1e-1
+		nlopt.ftol_abs = 1e-1
+		nlopt.xtol_rel = 1e-1
+		nlopt.loc_algorithm = C.NLOPT_LN_BOBYQA
+		nlopt.loc_ftol_rel = 1e-4
+		nlopt.loc_ftol_abs = 1
+		nlopt.loc_xtol_rel = 1e-2
 	default:
 		log.Fatalf("Unknown algorithm specified (%d).", algorithm)
 	}
-	log.Infof("NLopt algorithm: %v.", C.GoString(C.nlopt_algorithm_name(nlopt.algorithm)))
 	return
 }
 
 func (n *NLOPT) Run(iterations int) {
-
+	log.Infof("NLopt algorithm: %v.", C.GoString(C.nlopt_algorithm_name(n.algorithm)))
 	n.gopt = C.nlopt_create(n.algorithm, (C.uint)(len(n.parameters)))
 	defer C.nlopt_destroy(n.gopt)
-	//n.lopt = C.nlopt_create(C.NLOPT_LD_LBFGS, (C.uint)(len(n.parameters)))
-	//defer C.nlopt_destroy(n.lopt)
-	//C.nlopt_set_ftol_rel(n.lopt, 1e-3)
-	//C.nlopt_set_xtol_rel(n.lopt, 1e-5)
-	//C.nlopt_set_local_optimizer(n.gopt, n.lopt)
+	if n.loc_algorithm != 0 {
+		log.Infof("local algorithm: %v.", C.GoString(C.nlopt_algorithm_name(n.loc_algorithm)))
+		n.lopt = C.nlopt_create(n.loc_algorithm, (C.uint)(len(n.parameters)))
+		defer C.nlopt_destroy(n.lopt)
+		C.nlopt_set_population(n.gopt, 1)
+		C.nlopt_set_ftol_rel(n.lopt, (C.double)(n.loc_ftol_rel))
+		C.nlopt_set_ftol_abs(n.lopt, (C.double)(n.loc_ftol_abs))
+		C.nlopt_set_xtol_rel(n.lopt, (C.double)(n.loc_xtol_rel))
+		C.nlopt_set_local_optimizer(n.gopt, n.lopt)
+	}
 
 	C.nlopt_set_max_objective(n.gopt, (C.nlopt_func)(unsafe.Pointer(C.callback_adaptor)), unsafe.Pointer(n))
 
@@ -83,15 +121,19 @@ func (n *NLOPT) Run(iterations int) {
 	ub := make([]C.double, len(n.parameters))
 	x := make([]C.double, len(n.parameters))
 	for i, par := range n.parameters {
-		lb[i] = (C.double)(par.GetMin())
-		ub[i] = (C.double)(par.GetMax())
+		lb[i] = (C.double)(par.GetMin() + 1e-5)
+		ub[i] = (C.double)(par.GetMax() - 1e-5)
 		x[i] = (C.double)(par.Get())
 	}
 	C.nlopt_set_lower_bounds(n.gopt, &lb[0])
 	C.nlopt_set_upper_bounds(n.gopt, &ub[0])
 
-	C.nlopt_set_xtol_rel(n.gopt, (C.double)(n.xtol_rel))
+	log.Infof("Stopping criteria: ftol_rel=%g, ftol_abs=%g, xtol_rel=%g, maxeval=%d",
+		n.ftol_rel, n.ftol_abs, n.xtol_rel, iterations)
 	C.nlopt_set_ftol_rel(n.gopt, (C.double)(n.ftol_rel))
+	C.nlopt_set_ftol_abs(n.gopt, (C.double)(n.ftol_abs))
+	C.nlopt_set_xtol_rel(n.gopt, (C.double)(n.xtol_rel))
+	C.nlopt_set_maxeval(n.gopt, (C.int)(iterations))
 
 	var maxf C.double
 
@@ -103,6 +145,8 @@ func (n *NLOPT) Run(iterations int) {
 	res := C.nlopt_optimize(n.gopt, (*C.double)(unsafe.Pointer(&x[0])), &maxf)
 	if res < 0 {
 		log.Fatalf("nlopt failed with code: %v", res)
+	} else {
+		log.Infof("nlopt success (code: %d)", res)
 	}
 
 	for i, par := range n.parameters {
