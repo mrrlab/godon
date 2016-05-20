@@ -32,7 +32,7 @@ func (m *MH) Run(iterations int) {
 	m.calls++
 	m.maxL = m.l
 	m.maxLPar = m.parameters.Values(m.maxLPar)
-	m.PrintHeader(m.parameters)
+	m.PrintHeader()
 	accepted := 0
 	lastReported := -1
 Iter:

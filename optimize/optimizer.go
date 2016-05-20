@@ -75,11 +75,12 @@ func (o *BaseOptimizer) SetOutput(output io.Writer) {
 	o.output = output
 }
 
-func (o *BaseOptimizer) PrintHeader(par FloatParameters) {
+func (o *BaseOptimizer) PrintHeader() {
 	if !o.Quiet {
 		if o.output == nil {
 			o.output = os.Stdout
 		}
+		par := o.Optimizable.GetFloatParameters()
 		fmt.Fprintf(o.output, "iteration\tlikelihood\t%s\n", par.NamesString())
 	}
 }

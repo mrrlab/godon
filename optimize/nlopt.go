@@ -68,7 +68,6 @@ func NewNLOPT(algorithm int, seed int64) (nlopt *NLOPT) {
 }
 
 func (n *NLOPT) Run(iterations int) {
-	n.PrintHeader(n.parameters)
 
 	n.gopt = C.nlopt_create(n.algorithm, (C.uint)(len(n.parameters)))
 	defer C.nlopt_destroy(n.gopt)
@@ -100,6 +99,7 @@ func (n *NLOPT) Run(iterations int) {
 		C.nlopt_srand((C.ulong)(n.seed))
 	}
 
+	n.PrintHeader()
 	res := C.nlopt_optimize(n.gopt, (*C.double)(unsafe.Pointer(&x[0])), &maxf)
 	if res < 0 {
 		log.Fatalf("nlopt failed with code: %v", res)
