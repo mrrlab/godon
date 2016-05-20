@@ -10,7 +10,6 @@ type LBFGSB struct {
 	BaseOptimizer
 	dH             float64
 	grad           []float64
-	suppressHeader bool
 }
 
 func NewLBFGSB() (lbfgsb *LBFGSB) {
@@ -94,9 +93,9 @@ func (l *LBFGSB) EvaluateGradient(x []float64) (grad []float64) {
 
 func (l *LBFGSB) Run(iterations int) {
 	l.maxL = math.Inf(-1)
-	if !l.suppressHeader {
-		l.PrintHeader(l.parameters)
-	}
+
+	l.PrintHeader()
+
 	bounds := make([][2]float64, len(l.parameters))
 
 	for i, par := range l.parameters {
