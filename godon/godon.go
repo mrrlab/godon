@@ -315,6 +315,7 @@ func main() {
 
 	var opt, oldOpt optimize.Optimizer
 
+MethodLoop:
 	for _, method := range strings.Split(*method, "+") {
 		switch method {
 		case "lbfgsb":
@@ -346,8 +347,20 @@ func main() {
 		case "n_sqp":
 			nlopt := optimize.NewNLOPT(optimize.NLOPT_SQP, *seed)
 			opt = nlopt
+		case "n_direct":
+			nlopt := optimize.NewNLOPT(optimize.NLOPT_DIRECT, *seed)
+			opt = nlopt
+		case "n_crs":
+			nlopt := optimize.NewNLOPT(optimize.NLOPT_CRS, *seed)
+			opt = nlopt
 		default:
-			log.Fatal("Unknown optimization method")
+			log.Errorf("Unknown optimization method: %s", method)
+			if oldOpt == nil {
+				os.Exit(1)
+			} else {
+				continue MethodLoop
+			}
+
 		}
 
 		log.Infof("Using %s optimization.", method)
