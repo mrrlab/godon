@@ -31,6 +31,20 @@ const (
 	NLOPT_MLSL
 )
 
+var returnStatus = map[C.nlopt_result]string{
+	1:  "NLOPT_SUCCESS",
+	2:  "NLOPT_STOPVAL_REACHED",
+	3:  "NLOPT_FTOL_REACHED",
+	4:  "NLOPT_XTOL_REACHED",
+	5:  "NLOPT_MAXEVAL_REACHED",
+	6:  "NLOPT_MAXTIME_REACHED",
+	-1: "NLOPT_FAILURE",
+	-2: "NLOPT_INVALID_ARGS",
+	-3: "NLOPT_OUT_OF_MEMORY",
+	-4: "NLOPT_ROUNDOFF_LIMITED",
+	-5: "NLOPT_FORCED_STOP",
+}
+
 type NLOPT struct {
 	BaseOptimizer
 	gopt          C.nlopt_opt
@@ -144,9 +158,9 @@ func (n *NLOPT) Run(iterations int) {
 	n.PrintHeader()
 	res := C.nlopt_optimize(n.gopt, (*C.double)(unsafe.Pointer(&x[0])), &maxf)
 	if res < 0 {
-		log.Fatalf("nlopt failed with code: %v", res)
+		log.Fatalf("nlopt failed with code: %v (%v)", res, returnStatus[res])
 	} else {
-		log.Infof("nlopt success (code: %d)", res)
+		log.Infof("nlopt success with code: %d (%v)", res, returnStatus[res])
 	}
 
 	for i, par := range n.parameters {
