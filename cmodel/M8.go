@@ -55,7 +55,7 @@ func NewM8(cali CodonSequences, t *tree.Tree, cf CodonFrequency, addw, fixw bool
 		q0:     make([]*EMatrix, gcat*ncatcg),
 		gammas: make([]float64, ncatsg),
 		gammac: make([]float64, ncatcg),
-		tmp:    make([]float64, maxInt(ncatb, ncatsg, ncatcg)),
+		tmp:    make([]float64, maxInt(ncatb, ncatsg, ncatcg, 3)),
 	}
 
 	for i := 0; i < gcat*ncatcg; i++ {
@@ -87,7 +87,7 @@ func (m *M8) Copy() optimize.Optimizable {
 		BaseModel: m.BaseModel.Copy(),
 		qb:        make([]*EMatrix, m.ncatb*gcat*m.ncatcg),
 		q0:        make([]*EMatrix, gcat*m.ncatcg),
-		tmp:       make([]float64, maxInt(m.ncatb, m.ncatsg, m.ncatcg)),
+		tmp:       make([]float64, maxInt(m.ncatb, m.ncatsg, m.ncatcg, 3)),
 		ncatb:     m.ncatb,
 		ncatsg:    m.ncatsg,
 		ncatcg:    m.ncatcg,
