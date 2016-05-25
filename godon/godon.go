@@ -241,7 +241,8 @@ func main() {
 		for _ = range t.ClassNodes(1) {
 			class1++
 		}
-		if class1 == 0 {
+		if class1 == 0 &&
+			(*model == "BS" || *model == "BSC" || *model == "BSG") {
 			log.Warning("Warning: no class=1 nodes")
 		}
 	}
