@@ -71,7 +71,7 @@ func NewNLOPT(algorithm int, seed int64) (nlopt *NLOPT) {
 		dH:           1e-6,
 		finishLBFGS:  true,
 		seed:         seed,
-		ftol_rel:     1e-10,
+		ftol_rel:     1e-9,
 		ftol_abs:     1e-4,
 		xtol_rel:     1e-5,
 		loc_ftol_rel: 1e-8,
@@ -91,8 +91,8 @@ func NewNLOPT(algorithm int, seed int64) (nlopt *NLOPT) {
 		nlopt.algorithm = C.NLOPT_LD_SLSQP
 	case NLOPT_DIRECT:
 		nlopt.algorithm = C.NLOPT_GN_DIRECT_L_RAND
-		nlopt.ftol_rel = 1e-10
-		nlopt.ftol_abs = 1e-6
+		nlopt.ftol_rel = 1e-11
+		nlopt.ftol_abs = 1e-7
 		nlopt.xtol_rel = 1e-4
 	case NLOPT_CRS:
 		nlopt.algorithm = C.NLOPT_GN_CRS2_LM
