@@ -157,16 +157,16 @@ func (m *BranchSite) setBranchMatrices() {
 			case 1:
 				m.qs[i][node.Id] = m.q1
 			case 2:
-				if node.Class == 0 {
-					m.qs[i][node.Id] = m.q0
-				} else {
+				if node.Class == 1 {
 					m.qs[i][node.Id] = m.q2
+				} else {
+					m.qs[i][node.Id] = m.q0
 				}
 			case 3:
-				if node.Class == 0 {
-					m.qs[i][node.Id] = m.q1
-				} else {
+				if node.Class == 1 {
 					m.qs[i][node.Id] = m.q2
+				} else {
+					m.qs[i][node.Id] = m.q1
 				}
 			}
 		}
@@ -185,10 +185,10 @@ func (m *BranchSite) updateProportions() {
 		if node == nil {
 			continue
 		}
-		if node.Class == 0 {
-			m.scale[node.Id] = (m.prop[0]+m.prop[2])*m.q0.Scale + (m.prop[1]+m.prop[3])*m.q1.Scale
-		} else {
+		if node.Class == 1 {
 			m.scale[node.Id] = m.prop[0]*m.q0.Scale + m.prop[1]*m.q1.Scale + (m.prop[2]+m.prop[3])*m.q2.Scale
+		} else {
+			m.scale[node.Id] = (m.prop[0]+m.prop[2])*m.q0.Scale + (m.prop[1]+m.prop[3])*m.q1.Scale
 		}
 	}
 	m.propdone = true
