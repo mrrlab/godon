@@ -11,36 +11,46 @@ import (
 
 type BranchSiteGamma struct {
 	*BaseModel
-	q0, q1, q2             *EMatrix
-	q0s                    []*EMatrix
-	q1s                    []*EMatrix
-	q2s                    []*EMatrix
-	kappa                  float64
-	omega0, omega2         float64
-	p01sum, p0prop         float64
-	alpha                  float64
-	rates                  []float64
-	ncat                   int
+	q0s            []*EMatrix
+	q1s            []*EMatrix
+	q2s            []*EMatrix
+	kappa          float64
+	omega0, omega2 float64
+	p01sum, p0prop float64
+	// site gamma alpha parameter
+	alphas float64
+	gammas []float64
+	// codon gamma alpha parameter
+	alphac float64
+	gammac []float64
+	// temporary array
+	tmp                    []float64
+	ncatcg                 int
+	ncatsg                 int
 	fixw2                  bool
 	q0done, q1done, q2done bool
 	propdone               bool
-	ratesdone              bool
+	gammacdone             bool
+	gammasdone             bool
 }
 
-func NewBranchSiteGamma(cali CodonSequences, t *tree.Tree, cf CodonFrequency, ncat int, fixw2 bool) (m *BranchSiteGamma) {
+func NewBranchSiteGamma(cali CodonSequences, t *tree.Tree, cf CodonFrequency, fixw2 bool, ncatsg, ncatcg int) (m *BranchSiteGamma) {
+	scat := ncatsg * ncatsg * ncatsg
+
 	m = &BranchSiteGamma{
-		fixw2: fixw2,
-		ncat:  ncat,
-		q0:    &EMatrix{},
-		q1:    &EMatrix{},
-		q2:    &EMatrix{},
-		q0s:   make([]*EMatrix, ncat),
-		q1s:   make([]*EMatrix, ncat),
-		q2s:   make([]*EMatrix, ncat),
+		fixw2:  fixw2,
+		ncatsg: ncatsg,
+		ncatcg: ncatcg,
+		q0s:    make([]*EMatrix, scat*ncatcg),
+		q1s:    make([]*EMatrix, scat*ncatcg),
+		q2s:    make([]*EMatrix, scat*ncatcg),
+		gammas: make([]float64, ncatsg),
+		gammac: make([]float64, ncatcg),
+		tmp:    make([]float64, maxInt(ncatcg, ncatsg, 3)),
 	}
 	m.BaseModel = NewBaseModel(cali, t, cf, m)
 
-	for i := 0; i < ncat; i++ {
+	for i := 0; i < scat*ncatcg; i++ {
 		m.q0s[i] = &EMatrix{}
 		m.q1s[i] = &EMatrix{}
 		m.q2s[i] = &EMatrix{}
@@ -55,30 +65,38 @@ func NewBranchSiteGamma(cali CodonSequences, t *tree.Tree, cf CodonFrequency, nc
 }
 
 func (m *BranchSiteGamma) GetNClass() int {
-	return 4 * m.ncat
+	scat := m.ncatsg * m.ncatsg * m.ncatsg
+
+	return 4 * scat * m.ncatcg
 }
 
 func (m *BranchSiteGamma) Copy() optimize.Optimizable {
+	scat := m.ncatsg * m.ncatsg * m.ncatsg
 	newM := &BranchSiteGamma{
 		BaseModel: m.BaseModel.Copy(),
-		q0:        &EMatrix{},
-		q1:        &EMatrix{},
-		q2:        &EMatrix{},
-		q0s:       make([]*EMatrix, m.ncat),
-		q1s:       make([]*EMatrix, m.ncat),
-		q2s:       make([]*EMatrix, m.ncat),
+		q0s:       make([]*EMatrix, scat*m.ncatcg),
+		q1s:       make([]*EMatrix, scat*m.ncatcg),
+		q2s:       make([]*EMatrix, scat*m.ncatcg),
 		kappa:     m.kappa,
 		omega0:    m.omega0,
 		omega2:    m.omega2,
 		p01sum:    m.p01sum,
 		p0prop:    m.p0prop,
-		alpha:     m.alpha,
-		ncat:      m.ncat,
 		fixw2:     m.fixw2,
+
+		ncatsg: m.ncatsg,
+		alphas: m.alphas,
+		gammas: make([]float64, m.ncatsg),
+
+		ncatcg: m.ncatcg,
+		alphac: m.alphac,
+		gammac: make([]float64, m.ncatcg),
+
+		tmp: make([]float64, maxInt(m.ncatcg, m.ncatsg, 3)),
 	}
 	newM.BaseModel.Model = newM
 
-	for i := 0; i < m.ncat; i++ {
+	for i := 0; i < scat*m.ncatcg; i++ {
 		newM.q0s[i] = &EMatrix{}
 		newM.q1s[i] = &EMatrix{}
 		newM.q2s[i] = &EMatrix{}
@@ -144,18 +162,32 @@ func (m *BranchSiteGamma) addParameters(fpg optimize.FloatParameterGenerator) {
 	p0prop.SetProposalFunc(optimize.NormalProposal(0.01))
 	m.parameters.Append(p0prop)
 
-	alpha := fpg(&m.alpha, "alpha")
-	alpha.SetOnChange(func() {
-		m.ratesdone = false
-	})
-	alpha.SetPriorFunc(optimize.GammaPrior(1, 2, false))
-	alpha.SetMin(1e-2)
-	alpha.SetMax(1000)
-	alpha.SetProposalFunc(optimize.NormalProposal(0.01))
-	m.parameters.Append(alpha)
+	if m.ncatsg > 1 {
+		alphas := fpg(&m.alphas, "alphas")
+		alphas.SetOnChange(func() {
+			m.gammasdone = false
+		})
+		alphas.SetPriorFunc(optimize.GammaPrior(1, 2, false))
+		alphas.SetMin(1e-2)
+		alphas.SetMax(1000)
+		alphas.SetProposalFunc(optimize.NormalProposal(0.01))
+		m.parameters.Append(alphas)
+	}
+
+	if m.ncatcg > 1 {
+		alphac := fpg(&m.alphac, "alphac")
+		alphac.SetOnChange(func() {
+			m.gammacdone = false
+		})
+		alphac.SetPriorFunc(optimize.GammaPrior(1, 2, false))
+		alphac.SetMin(1e-2)
+		alphac.SetMax(1000)
+		alphac.SetProposalFunc(optimize.NormalProposal(0.01))
+		m.parameters.Append(alphac)
+	}
 }
 
-func (m *BranchSiteGamma) SetParameters(kappa float64, omega0, omega2 float64, p0, p1 float64, alpha float64) {
+func (m *BranchSiteGamma) SetParameters(kappa float64, omega0, omega2 float64, p0, p1 float64, alphas, alphac float64) {
 	m.kappa = kappa
 	m.omega0 = omega0
 	if !m.fixw2 {
@@ -166,11 +198,12 @@ func (m *BranchSiteGamma) SetParameters(kappa float64, omega0, omega2 float64, p
 	m.p01sum = p0 + p1
 	m.p0prop = p0 / (p0 + p1)
 	m.q0done, m.q1done, m.q2done = false, false, false
-	m.alpha = alpha
+	m.alphas = alphas
+	m.alphac = alphac
 }
 
-func (m *BranchSiteGamma) GetParameters() (kappa float64, omega0, omega2 float64, p0, p1 float64, alpha float64) {
-	return m.kappa, m.omega0, m.omega2, m.p01sum * m.p0prop, m.p01sum * (1 - m.p0prop), m.alpha
+func (m *BranchSiteGamma) GetParameters() (kappa float64, omega0, omega2 float64, p0, p1 float64, alphas, alphac float64) {
+	return m.kappa, m.omega0, m.omega2, m.p01sum * m.p0prop, m.p01sum * (1 - m.p0prop), m.alphas, m.alphac
 }
 
 func (m *BranchSiteGamma) SetDefaults() {
@@ -182,34 +215,46 @@ func (m *BranchSiteGamma) SetDefaults() {
 	x1 := 0.2 * rand.Float64()
 	p0 := math.Exp(x0) / (1 + math.Exp(x0) + math.Exp(x1))
 	p1 := math.Exp(x1) / (1 + math.Exp(x0) + math.Exp(x1))
-	alpha := 0.5 + rand.Float64()*3
-	m.SetParameters(kappa, omega0, omega2, p0, p1, alpha)
+	alphas := 0.5 + rand.Float64()*3
+	alphac := 0.5 + rand.Float64()*3
+	m.SetParameters(kappa, omega0, omega2, p0, p1, alphas, alphac)
 }
 
+// Organization of the class categories.
+// cat 1, internal gamma cat 1, external gamma cat 1
+// cat 1, internal gamma cat 1, external gamma cat 2
+// ...
+// cat 1, internal gamma cat 1, external gamma ncatcg
+// ...
+// cat 1, internal gamma cat ncatsg^3, external gamma cat 1
+// ...
+// cat 1, internal gamma cat ncatsg^3, external gamma ncatcg
+// cat 2, internal gamma cat 1, external gamma cat 1
+// ...
+// cat 2, internal gamma cat ncatsg^3, external gamma cat ncatcg
+// ...
+// ...
+// cat 4, internal gamma cat 1, external gamma cat 1
+// ...
+// cat 4, internal gamma cat ncatsg^3, external gamma cat ncatcg
+// (total: 4 * ncatsg^3 * ncatcg)
+
 func (m *BranchSiteGamma) setBranchMatrices() {
-	for i := 0; i < m.ncat; i++ {
-		for j := 0; j < 4; j++ {
-			for _, node := range m.tree.NodeIdArray() {
-				if node == nil {
-					continue
-				}
-				switch j {
-				case 0:
-					m.qs[i*4+j][node.Id] = m.q0s[i]
-				case 1:
-					m.qs[i*4+j][node.Id] = m.q1s[i]
-				case 2:
-					if node.Class == 0 {
-						m.qs[i*4+j][node.Id] = m.q0s[i]
-					} else {
-						m.qs[i*4+j][node.Id] = m.q2s[i]
-					}
-				case 3:
-					if node.Class == 0 {
-						m.qs[i*4+j][node.Id] = m.q1s[i]
-					} else {
-						m.qs[i*4+j][node.Id] = m.q2s[i]
-					}
+	scat := m.ncatsg * m.ncatsg * m.ncatsg
+	for _, node := range m.tree.NodeIdArray() {
+		if node == nil {
+			continue
+		}
+		for i := 0; i < m.ncatcg; i++ {
+			for j := 0; j < scat; j++ {
+				m.qs[i+j*m.ncatcg+0*scat*m.ncatcg][node.Id] = m.q0s[i+j*m.ncatcg]
+				m.qs[i+j*m.ncatcg+1*scat*m.ncatcg][node.Id] = m.q1s[i+j*m.ncatcg]
+				if node.Class == 1 {
+					m.qs[i+j*m.ncatcg+2*scat*m.ncatcg][node.Id] = m.q2s[i+j*m.ncatcg]
+					m.qs[i+j*m.ncatcg+3*scat*m.ncatcg][node.Id] = m.q2s[i+j*m.ncatcg]
+				} else {
+					m.qs[i+j*m.ncatcg+2*scat*m.ncatcg][node.Id] = m.q0s[i+j*m.ncatcg]
+					m.qs[i+j*m.ncatcg+3*scat*m.ncatcg][node.Id] = m.q1s[i+j*m.ncatcg]
 				}
 			}
 		}
@@ -217,69 +262,72 @@ func (m *BranchSiteGamma) setBranchMatrices() {
 }
 
 func (m *BranchSiteGamma) updateProportions() {
+	scat := m.ncatsg * m.ncatsg * m.ncatsg
 	p0 := m.p0prop * m.p01sum
 	p1 := m.p01sum - p0
-	for i := 0; i < m.ncat; i++ {
-		m.prop[i*4+0] = p0 / float64(m.ncat)
-		m.prop[i*4+1] = p1 / float64(m.ncat)
-		m.prop[i*4+2] = (1 - p0 - p1) * p0 / (p0 + p1) / float64(m.ncat)
-		m.prop[i*4+3] = (1 - p0 - p1) * p1 / (p0 + p1) / float64(m.ncat)
+	bothcat := m.ncatcg * scat
+	for i := 0; i < bothcat; i++ {
+		m.prop[i+bothcat*0] = p0 / float64(bothcat)
+		m.prop[i+bothcat*1] = p1 / float64(bothcat)
+		m.prop[i+bothcat*2] = (1 - p0 - p1) * p0 / (p0 + p1) / float64(bothcat)
+		m.prop[i+bothcat*3] = (1 - p0 - p1) * p1 / (p0 + p1) / float64(bothcat)
 	}
 
 	for _, node := range m.tree.NodeIdArray() {
 		if node == nil {
 			continue
 		}
-		if node.Class == 0 {
-			m.scale[node.Id] = (m.prop[0]+m.prop[2])*float64(m.ncat)*m.q0.Scale + (m.prop[1]+m.prop[3])*float64(m.ncat)*m.q1.Scale
-		} else {
-			m.scale[node.Id] = m.prop[0]*float64(m.ncat)*m.q0.Scale + m.prop[1]*float64(m.ncat)*m.q1.Scale + (m.prop[2]+m.prop[3])*float64(m.ncat)*m.q2.Scale
+		scale := 0.0
+		for i := 0; i < bothcat*4; i++ {
+			scale += m.prop[i] * m.qs[i][node.Id].Scale
 		}
+		m.scale[node.Id] = scale
 	}
 	m.propdone = true
 	m.expAllBr = false
 }
 
+func (m *BranchSiteGamma) fillMatricies(omega float64, dest []*EMatrix) {
+	for c1 := 0; c1 < m.ncatsg; c1++ {
+		m.tmp[0] = m.gammas[c1]
+		for c2 := 0; c2 < m.ncatsg; c2++ {
+			m.tmp[1] = m.gammas[c2]
+			for c3 := 0; c3 < m.ncatsg; c3++ {
+				m.tmp[2] = m.gammas[c3]
+
+				e := &EMatrix{}
+				Q, s := createRateTransitionMatrix(m.cf, m.kappa, omega, m.tmp, e.Q)
+				e.Set(Q, s)
+				err := e.Eigen()
+				if err != nil {
+					panic("error finding eigen")
+				}
+
+				for ecl, rate := range m.gammac {
+					catid := (((c1*m.ncatsg)+c2)*m.ncatsg+c3)*m.ncatcg + ecl
+
+					e.Copy(dest[catid])
+					dest[catid].ScaleD(rate)
+				}
+			}
+		}
+
+	}
+}
+
 func (m *BranchSiteGamma) updateMatrices() {
 	if !m.q0done {
-		Q0, s0 := createTransitionMatrix(m.cf, m.kappa, m.omega0, m.q0.Q)
-		m.q0.Set(Q0, s0)
-		err := m.q0.Eigen()
-		if err != nil {
-			panic("error eigen q0")
-		}
-		for i := 0; i < m.ncat; i++ {
-			m.q0.Copy(m.q0s[i])
-			m.q0s[i].ScaleD(m.rates[i])
-		}
+		m.fillMatricies(m.omega0, m.q0s)
 		m.q0done = true
 	}
 
 	if !m.q1done {
-		Q1, s1 := createTransitionMatrix(m.cf, m.kappa, 1, m.q1.Q)
-		m.q1.Set(Q1, s1)
-		err := m.q1.Eigen()
-		if err != nil {
-			panic("error eigen q1")
-		}
-		for i := 0; i < m.ncat; i++ {
-			m.q1.Copy(m.q1s[i])
-			m.q1s[i].ScaleD(m.rates[i])
-		}
+		m.fillMatricies(1, m.q1s)
 		m.q1done = true
 	}
 
 	if !m.q2done {
-		Q2, s2 := createTransitionMatrix(m.cf, m.kappa, m.omega2, m.q2.Q)
-		m.q2.Set(Q2, s2)
-		err := m.q2.Eigen()
-		if err != nil {
-			panic("error eigen q2")
-		}
-		for i := 0; i < m.ncat; i++ {
-			m.q2.Copy(m.q2s[i])
-			m.q2s[i].ScaleD(m.rates[i])
-		}
+		m.fillMatricies(m.omega2, m.q2s)
 		m.q2done = true
 	}
 
@@ -287,17 +335,28 @@ func (m *BranchSiteGamma) updateMatrices() {
 	m.expAllBr = false
 }
 
-func (m *BranchSiteGamma) updateRates() {
-	m.rates = paml.DiscreteGamma(m.alpha, m.alpha, m.ncat, false, nil, m.rates)
-	m.q0done = false
-	m.q1done = false
-	m.q2done = false
-	m.ratesdone = true
-}
-
 func (m *BranchSiteGamma) Likelihood() float64 {
-	if !m.ratesdone {
-		m.updateRates()
+	if !m.gammasdone {
+		if m.ncatsg > 1 {
+			m.gammas = paml.DiscreteGamma(m.alphas, m.alphas, m.ncatsg, false, m.tmp, m.gammas)
+			m.q0done = false
+			m.q1done = false
+			m.q2done = false
+		} else {
+			m.gammas[0] = 1
+		}
+		m.gammasdone = true
+	}
+	if !m.gammacdone {
+		if m.ncatcg > 1 {
+			m.gammac = paml.DiscreteGamma(m.alphac, m.alphac, m.ncatcg, false, m.tmp, m.gammac)
+			m.q0done = false
+			m.q1done = false
+			m.q2done = false
+		} else {
+			m.gammac[0] = 1
+		}
+		m.gammacdone = true
 	}
 	if !m.q0done || !m.q1done || !m.q2done {
 		m.updateMatrices()

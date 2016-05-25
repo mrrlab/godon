@@ -277,7 +277,8 @@ func main() {
 		m = cmodel.NewBranchSiteC(cali, t, cf)
 	case "BSG":
 		log.Info("Using branch site gamma model")
-		m = cmodel.NewBranchSiteGamma(cali, t, cf, 4, *fixw)
+		log.Infof("%d site gamma categories, %d codon gama categories", *ncatsg, *ncatcg)
+		m = cmodel.NewBranchSiteGamma(cali, t, cf, *fixw, *ncatsg, *ncatcg)
 	case "BS":
 		log.Info("Using branch site model")
 		m = cmodel.NewBranchSite(cali, t, cf, *fixw)
