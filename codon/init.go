@@ -1,4 +1,4 @@
-package cmodel
+package codon
 
 import (
 	"github.com/gonum/matrix/mat64"
@@ -12,12 +12,11 @@ func init() {
 		if bio.IsStopCodon(codon) {
 			continue
 		}
-		codonNum[codon] = i
-		numCodon[i] = codon
+		CodonNum[codon] = i
+		NumCodon[i] = codon
 		i++
 	}
-	nCodon = int(i)
-	zeroQ = mat64.NewDense(nCodon, nCodon, nil)
-	identityP = createIdentityMatrix(nCodon)
-
+	NCodon = int(i)
+	ZeroQ = mat64.NewDense(NCodon, NCodon, nil)
+	IdentityP = createIdentityMatrix(NCodon)
 }

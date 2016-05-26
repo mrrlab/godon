@@ -1,4 +1,4 @@
-package cmodel
+package codon
 
 import (
 	"bufio"
@@ -32,7 +32,7 @@ func getCodons() <-chan string {
 }
 
 func ReadFrequency(rd io.Reader) (CodonFrequency, error) {
-	cf := make(CodonFrequency, nCodon)
+	cf := make(CodonFrequency, NCodon)
 
 	scanner := bufio.NewScanner(rd)
 	scanner.Split(bufio.ScanWords)
@@ -44,7 +44,7 @@ func ReadFrequency(rd io.Reader) (CodonFrequency, error) {
 		if bio.IsStopCodon(codon) {
 			continue
 		}
-		if i >= nCodon {
+		if i >= NCodon {
 			return nil, errors.New("too many frequencies in file")
 		}
 		f, err := strconv.ParseFloat(scanner.Text(), 64)
@@ -54,7 +54,7 @@ func ReadFrequency(rd io.Reader) (CodonFrequency, error) {
 		cf[i] = f
 		i++
 	}
-	if i < nCodon {
+	if i < NCodon {
 		return nil, errors.New("not enough frequencies in file")
 	}
 	return cf, nil
@@ -62,9 +62,9 @@ func ReadFrequency(rd io.Reader) (CodonFrequency, error) {
 }
 
 func F0() CodonFrequency {
-	cf := make(CodonFrequency, nCodon)
-	for i := 0; i < nCodon; i++ {
-		cf[i] = 1 / float64(nCodon)
+	cf := make(CodonFrequency, NCodon)
+	for i := 0; i < NCodon; i++ {
+		cf[i] = 1 / float64(NCodon)
 	}
 	return cf
 }
@@ -80,17 +80,17 @@ func F3X4(cali CodonSequences) (cf CodonFrequency) {
 			if codon == NOCODON {
 				continue
 			}
-			cs := numCodon[byte(codon)]
+			cs := NumCodon[byte(codon)]
 			poscf[0][rAlphabet[cs[0]]]++
 			poscf[1][rAlphabet[cs[1]]]++
 			poscf[2][rAlphabet[cs[2]]]++
 		}
 	}
 
-	cf = make(CodonFrequency, nCodon)
+	cf = make(CodonFrequency, NCodon)
 
 	sum := float64(0)
-	for ci, cs := range numCodon {
+	for ci, cs := range NumCodon {
 		cf[ci] = poscf[0][rAlphabet[cs[0]]] * poscf[1][rAlphabet[cs[1]]] * poscf[2][rAlphabet[cs[2]]]
 		sum += cf[ci]
 	}

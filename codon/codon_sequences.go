@@ -1,4 +1,4 @@
-package cmodel
+package codon
 
 import (
 	"bytes"
@@ -11,13 +11,10 @@ import (
 var (
 	alphabet  = [...]byte{'T', 'C', 'A', 'G'}
 	rAlphabet = map[byte]byte{'T': 0, 'C': 1, 'A': 2, 'G': 3}
-	codonNum  = map[string]byte{}
-	numCodon  = map[byte]string{}
-	nCodon    int
-)
-
-const (
-	NOCODON = 255
+	CodonNum  = map[string]byte{}
+	NumCodon  = map[byte]string{}
+	NCodon    int
+	NOCODON   = byte(255)
 )
 
 type CodonSequence struct {
@@ -30,7 +27,7 @@ type CodonSequences []CodonSequence
 func (cf CodonFrequency) String() (s string) {
 	s = "<CodonFrequency: "
 	for i, f := range cf {
-		s += fmt.Sprintf(" %v: %v,", numCodon[byte(i)], f)
+		s += fmt.Sprintf(" %v: %v,", NumCodon[byte(i)], f)
 	}
 	s = s[:len(s)-1] + ">"
 	return
@@ -39,7 +36,7 @@ func (cf CodonFrequency) String() (s string) {
 func (seq CodonSequence) String() (s string) {
 	var b bytes.Buffer
 	for _, c := range seq.Sequence {
-		b.WriteString(numCodon[c] + " ")
+		b.WriteString(NumCodon[c] + " ")
 	}
 	s = ">" + seq.Name + "\n" + bio.Wrap(b.String(), 80)
 	return
@@ -74,7 +71,7 @@ func ToCodonSequences(seqs bio.Sequences) (cs CodonSequences, err error) {
 		cseq.Name = seq.Name
 		cseq.Sequence = make([]byte, 0, len(seq.Sequence)/3)
 		for i := 0; i < len(seq.Sequence); i += 3 {
-			cnum, ok := codonNum[seq.Sequence[i:i+3]]
+			cnum, ok := CodonNum[seq.Sequence[i:i+3]]
 			if !ok {
 				cnum = NOCODON
 			}
@@ -120,15 +117,15 @@ func (seqs CodonSequences) Letters() (found [][]int, absent [][]int) {
 	found = make([][]int, len(seqs[0].Sequence))
 	absent = make([][]int, len(seqs[0].Sequence))
 	for pos, _ := range seqs[0].Sequence {
-		found[pos] = make([]int, 0, nCodon)
-		absent[pos] = make([]int, 0, nCodon)
-		pf := make(map[int]bool, nCodon)
+		found[pos] = make([]int, 0, NCodon)
+		absent[pos] = make([]int, 0, NCodon)
+		pf := make(map[int]bool, NCodon)
 		for i := 0; i < len(seqs); i++ {
 			if seqs[i].Sequence[pos] != NOCODON {
 				pf[int(seqs[i].Sequence[pos])] = true
 			}
 		}
-		for l := 0; l < nCodon; l++ {
+		for l := 0; l < NCodon; l++ {
 			if pf[l] {
 				found[pos] = append(found[pos], l)
 			} else {
@@ -137,8 +134,8 @@ func (seqs CodonSequences) Letters() (found [][]int, absent [][]int) {
 			}
 		}
 
-		if len(found[pos]) < nCodon {
-			found[pos] = append(found[pos], nCodon)
+		if len(found[pos]) < NCodon {
+			found[pos] = append(found[pos], NCodon)
 		}
 	}
 	return

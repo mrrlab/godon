@@ -4,6 +4,7 @@ import (
 	"math"
 	"math/rand"
 
+	"bitbucket.org/Davydov/godon/codon"
 	"bitbucket.org/Davydov/godon/optimize"
 	"bitbucket.org/Davydov/godon/paml"
 	"bitbucket.org/Davydov/godon/tree"
@@ -11,9 +12,9 @@ import (
 
 type BranchSiteGamma struct {
 	*BaseModel
-	q0s            []*EMatrix
-	q1s            []*EMatrix
-	q2s            []*EMatrix
+	q0s            []*codon.EMatrix
+	q1s            []*codon.EMatrix
+	q2s            []*codon.EMatrix
 	kappa          float64
 	omega0, omega2 float64
 	p01sum, p0prop float64
@@ -34,16 +35,16 @@ type BranchSiteGamma struct {
 	gammasdone             bool
 }
 
-func NewBranchSiteGamma(cali CodonSequences, t *tree.Tree, cf CodonFrequency, fixw2 bool, ncatsg, ncatcg int) (m *BranchSiteGamma) {
+func NewBranchSiteGamma(cali codon.CodonSequences, t *tree.Tree, cf codon.CodonFrequency, fixw2 bool, ncatsg, ncatcg int) (m *BranchSiteGamma) {
 	scat := ncatsg * ncatsg * ncatsg
 
 	m = &BranchSiteGamma{
 		fixw2:  fixw2,
 		ncatsg: ncatsg,
 		ncatcg: ncatcg,
-		q0s:    make([]*EMatrix, scat*ncatcg),
-		q1s:    make([]*EMatrix, scat*ncatcg),
-		q2s:    make([]*EMatrix, scat*ncatcg),
+		q0s:    make([]*codon.EMatrix, scat*ncatcg),
+		q1s:    make([]*codon.EMatrix, scat*ncatcg),
+		q2s:    make([]*codon.EMatrix, scat*ncatcg),
 		gammas: make([]float64, ncatsg),
 		gammac: make([]float64, ncatcg),
 		tmp:    make([]float64, maxInt(ncatcg, ncatsg, 3)),
@@ -51,9 +52,9 @@ func NewBranchSiteGamma(cali CodonSequences, t *tree.Tree, cf CodonFrequency, fi
 	m.BaseModel = NewBaseModel(cali, t, cf, m)
 
 	for i := 0; i < scat*ncatcg; i++ {
-		m.q0s[i] = &EMatrix{}
-		m.q1s[i] = &EMatrix{}
-		m.q2s[i] = &EMatrix{}
+		m.q0s[i] = &codon.EMatrix{}
+		m.q1s[i] = &codon.EMatrix{}
+		m.q2s[i] = &codon.EMatrix{}
 	}
 
 	m.setupParameters()
@@ -74,9 +75,9 @@ func (m *BranchSiteGamma) Copy() optimize.Optimizable {
 	scat := m.ncatsg * m.ncatsg * m.ncatsg
 	newM := &BranchSiteGamma{
 		BaseModel: m.BaseModel.Copy(),
-		q0s:       make([]*EMatrix, scat*m.ncatcg),
-		q1s:       make([]*EMatrix, scat*m.ncatcg),
-		q2s:       make([]*EMatrix, scat*m.ncatcg),
+		q0s:       make([]*codon.EMatrix, scat*m.ncatcg),
+		q1s:       make([]*codon.EMatrix, scat*m.ncatcg),
+		q2s:       make([]*codon.EMatrix, scat*m.ncatcg),
 		kappa:     m.kappa,
 		omega0:    m.omega0,
 		omega2:    m.omega2,
@@ -97,9 +98,9 @@ func (m *BranchSiteGamma) Copy() optimize.Optimizable {
 	newM.BaseModel.Model = newM
 
 	for i := 0; i < scat*m.ncatcg; i++ {
-		newM.q0s[i] = &EMatrix{}
-		newM.q1s[i] = &EMatrix{}
-		newM.q2s[i] = &EMatrix{}
+		newM.q0s[i] = &codon.EMatrix{}
+		newM.q1s[i] = &codon.EMatrix{}
+		newM.q2s[i] = &codon.EMatrix{}
 	}
 
 	newM.setupParameters()
@@ -287,7 +288,7 @@ func (m *BranchSiteGamma) updateProportions() {
 	m.expAllBr = false
 }
 
-func (m *BranchSiteGamma) fillMatricies(omega float64, dest []*EMatrix) {
+func (m *BranchSiteGamma) fillMatricies(omega float64, dest []*codon.EMatrix) {
 	for c1 := 0; c1 < m.ncatsg; c1++ {
 		m.tmp[0] = m.gammas[c1]
 		for c2 := 0; c2 < m.ncatsg; c2++ {
@@ -295,8 +296,8 @@ func (m *BranchSiteGamma) fillMatricies(omega float64, dest []*EMatrix) {
 			for c3 := 0; c3 < m.ncatsg; c3++ {
 				m.tmp[2] = m.gammas[c3]
 
-				e := &EMatrix{}
-				Q, s := createRateTransitionMatrix(m.cf, m.kappa, omega, m.tmp, e.Q)
+				e := &codon.EMatrix{}
+				Q, s := codon.CreateRateTransitionMatrix(m.cf, m.kappa, omega, m.tmp, e.Q)
 				e.Set(Q, s)
 				err := e.Eigen()
 				if err != nil {

@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"bitbucket.org/Davydov/godon/cmodel"
+	"bitbucket.org/Davydov/godon/codon"
 	"bitbucket.org/Davydov/godon/optimize"
 )
 
@@ -19,7 +20,7 @@ func TestSimplex(tst *testing.T) {
 		tst.Error("Error: ", err)
 	}
 
-	cf := cmodel.F3X4(cali)
+	cf := codon.F3X4(cali)
 	m0 := cmodel.NewM0(cali, t, cf)
 	m0.SetParameters(2, 0.5)
 	m := optimize.Optimizable(m0).Copy()
@@ -50,7 +51,7 @@ func TestMH(tst *testing.T) {
 		tst.Error("Error: ", err)
 	}
 
-	cf := cmodel.F0()
+	cf := codon.F0()
 	bs := cmodel.NewBranchSite(cali, t, cf, false)
 
 	mh := optimize.NewMH(false, 0)
@@ -75,7 +76,7 @@ func TestAnnealing(tst *testing.T) {
 		tst.Error("Error: ", err)
 	}
 
-	cf := cmodel.F3X4(cali)
+	cf := codon.F3X4(cali)
 	m0 := cmodel.NewM0(cali, t, cf)
 	npar := len(m0.GetFloatParameters())
 	if npar != 2 {
@@ -112,7 +113,7 @@ func TestLBFGSB(tst *testing.T) {
 		tst.Error("Error: ", err)
 	}
 
-	cf := cmodel.F0()
+	cf := codon.F0()
 	m0 := cmodel.NewM0(cali, t, cf)
 	m0.SetParameters(2, 0.5)
 

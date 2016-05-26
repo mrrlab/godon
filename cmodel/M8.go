@@ -3,6 +3,7 @@ package cmodel
 import (
 	"math/rand"
 
+	"bitbucket.org/Davydov/godon/codon"
 	"bitbucket.org/Davydov/godon/optimize"
 	"bitbucket.org/Davydov/godon/paml"
 	"bitbucket.org/Davydov/godon/tree"
@@ -10,8 +11,8 @@ import (
 
 type M8 struct {
 	*BaseModel
-	qb           []*EMatrix
-	q0           []*EMatrix
+	qb           []*codon.EMatrix
+	q0           []*codon.EMatrix
 	p0           float64
 	p, q         float64
 	omega, kappa float64
@@ -39,7 +40,7 @@ type M8 struct {
 	gammacdone bool
 }
 
-func NewM8(cali CodonSequences, t *tree.Tree, cf CodonFrequency, addw, fixw bool, ncatb, ncatsg, ncatcg int) (m *M8) {
+func NewM8(cali codon.CodonSequences, t *tree.Tree, cf codon.CodonFrequency, addw, fixw bool, ncatb, ncatsg, ncatcg int) (m *M8) {
 	// n site gamma categories, ncatb * n^3 matrices
 	gcat := ncatsg * ncatsg * ncatsg
 	if ncatb < 2 {
@@ -51,18 +52,18 @@ func NewM8(cali CodonSequences, t *tree.Tree, cf CodonFrequency, addw, fixw bool
 		ncatb:  ncatb,
 		ncatsg: ncatsg,
 		ncatcg: ncatcg,
-		qb:     make([]*EMatrix, ncatb*gcat*ncatcg),
-		q0:     make([]*EMatrix, gcat*ncatcg),
+		qb:     make([]*codon.EMatrix, ncatb*gcat*ncatcg),
+		q0:     make([]*codon.EMatrix, gcat*ncatcg),
 		gammas: make([]float64, ncatsg),
 		gammac: make([]float64, ncatcg),
 		tmp:    make([]float64, maxInt(ncatb, ncatsg, ncatcg, 3)),
 	}
 
 	for i := 0; i < gcat*ncatcg; i++ {
-		m.q0[i] = &EMatrix{}
+		m.q0[i] = &codon.EMatrix{}
 	}
 	for i := 0; i < gcat*ncatcg*ncatb; i++ {
-		m.qb[i] = &EMatrix{}
+		m.qb[i] = &codon.EMatrix{}
 	}
 
 	m.BaseModel = NewBaseModel(cali, t, cf, m)
@@ -85,8 +86,8 @@ func (m *M8) Copy() optimize.Optimizable {
 	gcat := m.ncatsg * m.ncatsg * m.ncatsg
 	newM := &M8{
 		BaseModel: m.BaseModel.Copy(),
-		qb:        make([]*EMatrix, m.ncatb*gcat*m.ncatcg),
-		q0:        make([]*EMatrix, gcat*m.ncatcg),
+		qb:        make([]*codon.EMatrix, m.ncatb*gcat*m.ncatcg),
+		q0:        make([]*codon.EMatrix, gcat*m.ncatcg),
 		tmp:       make([]float64, maxInt(m.ncatb, m.ncatsg, m.ncatcg, 3)),
 		ncatb:     m.ncatb,
 		ncatsg:    m.ncatsg,
@@ -105,10 +106,10 @@ func (m *M8) Copy() optimize.Optimizable {
 	}
 
 	for i := 0; i < gcat*m.ncatcg; i++ {
-		newM.q0[i] = &EMatrix{}
+		newM.q0[i] = &codon.EMatrix{}
 	}
 	for i := 0; i < gcat*m.ncatb*m.ncatcg; i++ {
-		newM.qb[i] = &EMatrix{}
+		newM.qb[i] = &codon.EMatrix{}
 	}
 
 	newM.BaseModel.Model = newM
@@ -272,9 +273,9 @@ func (m *M8) updateQ() {
 			for c3 := 0; c3 < m.ncatsg; c3++ {
 				m.tmp[2] = m.gammas[c3]
 
-				e := &EMatrix{}
+				e := &codon.EMatrix{}
 
-				Q, s := createRateTransitionMatrix(m.cf, m.kappa, m.omega, m.tmp, e.Q)
+				Q, s := codon.CreateRateTransitionMatrix(m.cf, m.kappa, m.omega, m.tmp, e.Q)
 				e.Set(Q, s)
 				err := e.Eigen()
 				if err != nil {
@@ -317,8 +318,8 @@ func (m *M8) updateQb() {
 				m.tmp[2] = m.gammas[c3]
 
 				for icl, omega := range m.omegab {
-					e := &EMatrix{}
-					Q, s := createRateTransitionMatrix(m.cf, m.kappa, omega, m.tmp, e.Q)
+					e := &codon.EMatrix{}
+					Q, s := codon.CreateRateTransitionMatrix(m.cf, m.kappa, omega, m.tmp, e.Q)
 					e.Set(Q, s)
 					err := e.Eigen()
 					if err != nil {
@@ -358,7 +359,7 @@ func (m *M8) updateProportions() {
 	}
 
 	i := 0
-	var q *EMatrix
+	var q *codon.EMatrix
 	for i, q = range m.qb {
 		m.prop[i] = pqi
 		scale += q.Scale * pqi

@@ -1,13 +1,14 @@
 package cmodel
 
 import (
+	"bitbucket.org/Davydov/godon/codon"
 	"bitbucket.org/Davydov/godon/optimize"
 	"bitbucket.org/Davydov/godon/tree"
 )
 
 type M0vrate struct {
 	*BaseModel
-	q0, q1       *EMatrix
+	q0, q1       *codon.EMatrix
 	omega, kappa float64
 	p            float64 // proportion of non-scaled
 	s            float64 // scale-factor
@@ -15,10 +16,10 @@ type M0vrate struct {
 	propdone     bool
 }
 
-func NewM0vrate(cali CodonSequences, t *tree.Tree, cf CodonFrequency) (m *M0vrate) {
+func NewM0vrate(cali codon.CodonSequences, t *tree.Tree, cf codon.CodonFrequency) (m *M0vrate) {
 	m = &M0vrate{
-		q0: &EMatrix{},
-		q1: &EMatrix{},
+		q0: &codon.EMatrix{},
+		q1: &codon.EMatrix{},
 	}
 
 	m.BaseModel = NewBaseModel(cali, t, cf, m)
@@ -35,8 +36,8 @@ func (m *M0vrate) GetNClass() int {
 func (m *M0vrate) Copy() optimize.Optimizable {
 	newM := &M0vrate{
 		BaseModel: m.BaseModel.Copy(),
-		q0:        &EMatrix{},
-		q1:        &EMatrix{},
+		q0:        &codon.EMatrix{},
+		q1:        &codon.EMatrix{},
 		omega:     m.omega,
 		kappa:     m.kappa,
 		s:         m.s,
@@ -115,7 +116,7 @@ func (m *M0vrate) updateProportions() {
 }
 
 func (m *M0vrate) updateMatrix() {
-	Q0, scale := createTransitionMatrix(m.cf, m.kappa, m.omega, m.q0.Q)
+	Q0, scale := codon.CreateTransitionMatrix(m.cf, m.kappa, m.omega, m.q0.Q)
 	m.q0.Set(Q0, scale)
 	err := m.q0.Eigen()
 	if err != nil {

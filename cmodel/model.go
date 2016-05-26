@@ -10,6 +10,7 @@ import (
 	"github.com/gonum/blas/native"
 	"github.com/gonum/matrix/mat64"
 
+	"bitbucket.org/Davydov/godon/codon"
 	"bitbucket.org/Davydov/godon/optimize"
 	"bitbucket.org/Davydov/godon/tree"
 )
@@ -41,11 +42,11 @@ type BaseModel struct {
 
 	tree       *tree.Tree
 	optBranch  bool
-	cali       CodonSequences
+	cali       codon.CodonSequences
 	lettersF   [][]int
 	lettersA   [][]int
-	cf         CodonFrequency
-	qs         [][]*EMatrix
+	cf         codon.CodonFrequency
+	qs         [][]*codon.EMatrix
 	scale      []float64
 	prop       []float64
 	nclass     int
@@ -64,7 +65,7 @@ type BaseModel struct {
 }
 
 // Creates a new base Model.
-func NewBaseModel(cali CodonSequences, t *tree.Tree, cf CodonFrequency, model Model) (bm *BaseModel) {
+func NewBaseModel(cali codon.CodonSequences, t *tree.Tree, cf codon.CodonFrequency, model Model) (bm *BaseModel) {
 	f, a := cali.Letters()
 	nclass := model.GetNClass()
 	bm = &BaseModel{
@@ -74,14 +75,14 @@ func NewBaseModel(cali CodonSequences, t *tree.Tree, cf CodonFrequency, model Mo
 		lettersA: a,
 		tree:     t,
 		cf:       cf,
-		qs:       make([][]*EMatrix, nclass),
+		qs:       make([][]*codon.EMatrix, nclass),
 		scale:    make([]float64, t.MaxNodeId()+1),
 		expBr:    make([]bool, t.MaxNodeId()+1),
 		prop:     make([]float64, nclass),
 		nclass:   nclass,
 	}
 	for i := 0; i < nclass; i++ {
-		bm.qs[i] = make([]*EMatrix, t.MaxNodeId()+1)
+		bm.qs[i] = make([]*codon.EMatrix, t.MaxNodeId()+1)
 	}
 	t.NodeOrder()
 	bm.ReorderAlignment()
@@ -161,7 +162,7 @@ func (m *BaseModel) ReorderAlignment() {
 		nm2id[s.Name] = i
 	}
 
-	newCali := make(CodonSequences, m.tree.NLeaves())
+	newCali := make(codon.CodonSequences, m.tree.NLeaves())
 	for node := range m.tree.Terminals() {
 		newCali[node.LeafId] = m.cali[nm2id[node.Name]]
 	}
@@ -177,7 +178,7 @@ type expTask struct {
 // Exponentiate a signle branch. This uses eigen decomposed matrices.
 func (m *BaseModel) ExpBranch(br int) {
 	node := m.tree.NodeIdArray()[br]
-	cD := mat64.NewDense(nCodon, nCodon, nil)
+	cD := mat64.NewDense(codon.NCodon, codon.NCodon, nil)
 	for class, _ := range m.qs {
 		var oclass int
 		for oclass = class - 1; oclass >= 0; oclass-- {
@@ -219,7 +220,7 @@ func (m *BaseModel) ExpBranches() {
 	for i := 0; i < runtime.GOMAXPROCS(0); i++ {
 		wg.Add(1)
 		go func() {
-			cD := mat64.NewDense(nCodon, nCodon, nil)
+			cD := mat64.NewDense(codon.NCodon, codon.NCodon, nil)
 			for s := range tasks {
 				Q, err := m.qs[s.class][s.node.Id].Exp(cD, s.node.BranchLength/m.scale[s.node.Id])
 				if err != nil {
@@ -284,7 +285,7 @@ func (m *BaseModel) Likelihood() (lnL float64) {
 			nni := m.tree.MaxNodeId() + 1
 			plh := make([][]float64, nni)
 			for i := 0; i < nni; i++ {
-				plh[i] = make([]float64, nCodon+1)
+				plh[i] = make([]float64, codon.NCodon+1)
 			}
 			for pos := range tasks {
 				res := 0.0
@@ -326,9 +327,9 @@ func (m *BaseModel) fullSubL(class, pos int, plh [][]float64) (res float64) {
 	}
 
 	for node := range m.tree.Terminals() {
-		codon := m.cali[node.LeafId].Sequence[pos]
-		for l := byte(0); l < byte(nCodon); l++ {
-			if codon == NOCODON || l == codon {
+		cod := m.cali[node.LeafId].Sequence[pos]
+		for l := byte(0); l < byte(codon.NCodon); l++ {
+			if cod == codon.NOCODON || l == cod {
 				plh[node.Id][l] = 1
 			} else {
 				plh[node.Id][l] = 0
@@ -337,21 +338,21 @@ func (m *BaseModel) fullSubL(class, pos int, plh [][]float64) (res float64) {
 	}
 
 	for _, node := range m.tree.NodeOrder() {
-		for l1 := 0; l1 < nCodon; l1++ {
+		for l1 := 0; l1 < codon.NCodon; l1++ {
 			l := 1.0
 			for _, child := range node.ChildNodes() {
 				// get the row
-				q := m.eQts[class][child.Id][l1*nCodon:]
+				q := m.eQts[class][child.Id][l1*codon.NCodon:]
 				// get child partial likelhiood
 				cplh := plh[child.Id]
-				s := impl.Ddot(nCodon, q, 1, cplh, 1)
+				s := impl.Ddot(codon.NCodon, q, 1, cplh, 1)
 				l *= s
 			}
 			plh[node.Id][l1] = l
 		}
 
 		if node.IsRoot() {
-			for l := 0; l < nCodon; l++ {
+			for l := 0; l < codon.NCodon; l++ {
 				res += m.cf[l] * plh[node.Id][l]
 			}
 			break
@@ -372,16 +373,16 @@ func (m *BaseModel) observedSubL(class, pos int, plh [][]float64) (res float64) 
 	}
 
 	for node := range m.tree.Terminals() {
-		codon := m.cali[node.LeafId].Sequence[pos]
+		cod := m.cali[node.LeafId].Sequence[pos]
 		for _, l := range lettersF {
-			if l == int(m.cali[node.LeafId].Sequence[pos]) || codon == NOCODON {
+			if l == int(m.cali[node.LeafId].Sequence[pos]) || cod == codon.NOCODON {
 				plh[node.Id][l] = 1
 			} else {
 				plh[node.Id][l] = 0
 			}
 		}
-		if codon == NOCODON {
-			plh[node.Id][nCodon] = 1
+		if cod == codon.NOCODON {
+			plh[node.Id][codon.NCodon] = 1
 		}
 	}
 
@@ -392,13 +393,13 @@ func (m *BaseModel) observedSubL(class, pos int, plh [][]float64) (res float64) 
 				// get child partial likelhiood
 				cplh := plh[child.Id]
 				s := 0.0
-				if l1 != nCodon {
+				if l1 != codon.NCodon {
 					// get the row
-					q := m.eQts[class][child.Id][l1*nCodon:]
+					q := m.eQts[class][child.Id][l1*codon.NCodon:]
 
 					for _, l2 := range lettersF {
 						//s += q.Get(l1, l2) * plh[child.Id][l2]
-						if l2 != nCodon {
+						if l2 != codon.NCodon {
 							s += q[l2] * cplh[l2]
 						} else {
 							pia := 0.0
@@ -413,9 +414,9 @@ func (m *BaseModel) observedSubL(class, pos int, plh [][]float64) (res float64) 
 					paa := 1.0
 					for _, l2 := range lettersF {
 						pai := 0.0
-						if l2 != nCodon {
+						if l2 != codon.NCodon {
 							for _, l1 := range lettersA {
-								pai += m.cf[l1] * m.eQts[class][child.Id][l1*nCodon+l2]
+								pai += m.cf[l1] * m.eQts[class][child.Id][l1*codon.NCodon+l2]
 							}
 							pai /= fabs
 
@@ -433,7 +434,7 @@ func (m *BaseModel) observedSubL(class, pos int, plh [][]float64) (res float64) 
 
 		if node.IsRoot() {
 			for _, l := range lettersF {
-				if l != nCodon {
+				if l != codon.NCodon {
 
 					res += m.cf[l] * plh[node.Id][l]
 				} else {
@@ -465,12 +466,12 @@ func (m *BaseModel) fixedSubL(class, pos int, plh [][]float64) (res float64) {
 		plh[node.Id][0] = 1
 		plh[node.Id][1] = 1
 		for _, child := range node.ChildNodes() {
-			p00 := m.eQts[class][child.Id][l*nCodon+l]
+			p00 := m.eQts[class][child.Id][l*codon.NCodon+l]
 			p01 := 1 - p00
 			p10 := 0.0
-			for l1 := 0; l1 < nCodon; l1++ {
+			for l1 := 0; l1 < codon.NCodon; l1++ {
 				if l != l1 {
-					p10 += m.cf[l1] * m.eQts[class][child.Id][l1*nCodon+l]
+					p10 += m.cf[l1] * m.eQts[class][child.Id][l1*codon.NCodon+l]
 				}
 			}
 			p10 /= (1 - m.cf[l])

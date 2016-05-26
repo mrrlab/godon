@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"bitbucket.org/Davydov/godon/cmodel"
+	"bitbucket.org/Davydov/godon/codon"
 	"bitbucket.org/Davydov/godon/optimize"
 )
 
@@ -13,8 +14,8 @@ func TestBSG(tst *testing.T) {
 		tst.Error("Error: ", err)
 	}
 
-	cf := cmodel.F3X4(cali)
-	bsg := cmodel.NewBranchSiteGamma(cali, t, cf, 4, true)
+	cf := codon.F3X4(cali)
+	bsg := cmodel.NewBranchSiteGamma(cali, t, cf, true, 1, 4)
 	m := optimize.Optimizable(bsg).Copy()
 	npar := len(bsg.GetFloatParameters())
 	if npar != 5 {

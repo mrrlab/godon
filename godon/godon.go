@@ -17,6 +17,7 @@ import (
 
 	"bitbucket.org/Davydov/godon/bio"
 	"bitbucket.org/Davydov/godon/cmodel"
+	"bitbucket.org/Davydov/godon/codon"
 	"bitbucket.org/Davydov/godon/optimize"
 	"bitbucket.org/Davydov/godon/tree"
 )
@@ -163,7 +164,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	cali, err := cmodel.ToCodonSequences(ali)
+	cali, err := codon.ToCodonSequences(ali)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -200,14 +201,14 @@ func main() {
 	log.Infof("intree_unroot=%s", t)
 	log.Debug(t.FullString())
 
-	var cf cmodel.CodonFrequency
+	var cf codon.CodonFrequency
 
 	if *cFreqFileName != "" {
 		cFreqFile, err := os.Open(*cFreqFileName)
 		if err != nil {
 			log.Fatal(err)
 		}
-		cf, err = cmodel.ReadFrequency(cFreqFile)
+		cf, err = codon.ReadFrequency(cFreqFile)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -215,10 +216,10 @@ func main() {
 		switch *cFreq {
 		case "F0":
 			log.Info("F0 frequency")
-			cf = cmodel.F0()
+			cf = codon.F0()
 		case "F3X4":
 			log.Info("F3X4 frequency")
-			cf = cmodel.F3X4(cali)
+			cf = codon.F3X4(cali)
 		default:
 			log.Fatal("Unknow codon freuquency specification")
 		}

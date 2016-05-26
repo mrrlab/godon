@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"bitbucket.org/Davydov/godon/cmodel"
+	"bitbucket.org/Davydov/godon/codon"
 	"bitbucket.org/Davydov/godon/optimize"
 )
 
@@ -13,7 +14,7 @@ func TestM0vrate(tst *testing.T) {
 		tst.Error("Error: ", err)
 	}
 
-	cf := cmodel.F3X4(cali)
+	cf := codon.F3X4(cali)
 	m0v := cmodel.NewM0vrate(cali, t, cf)
 	m := optimize.Optimizable(m0v).Copy()
 	npar := len(m0v.GetFloatParameters())

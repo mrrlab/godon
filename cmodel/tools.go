@@ -7,6 +7,7 @@ import (
 	"github.com/op/go-logging"
 
 	"bitbucket.org/Davydov/godon/bio"
+	"bitbucket.org/Davydov/godon/codon"
 	"bitbucket.org/Davydov/godon/tree"
 )
 
@@ -20,7 +21,7 @@ const (
 
 var log = logging.MustGetLogger("cmodel")
 
-func GetTreeAlignment(data string) (t *tree.Tree, cali CodonSequences, err error) {
+func GetTreeAlignment(data string) (t *tree.Tree, cali codon.CodonSequences, err error) {
 	tf, err := os.Open(path.Join("testdata", data+".nwk"))
 	if err != nil {
 		return
@@ -43,7 +44,7 @@ func GetTreeAlignment(data string) (t *tree.Tree, cali CodonSequences, err error
 		return
 	}
 
-	cali, err = ToCodonSequences(ali)
+	cali, err = codon.ToCodonSequences(ali)
 	if err != nil {
 		return
 	}

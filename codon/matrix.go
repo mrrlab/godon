@@ -1,4 +1,4 @@
-package cmodel
+package codon
 
 import (
 	"fmt"
@@ -13,8 +13,8 @@ import (
 const smallScale = 1e-30
 
 var (
-	zeroQ     *mat64.Dense
-	identityP *mat64.Dense
+	ZeroQ     *mat64.Dense
+	IdentityP *mat64.Dense
 )
 
 func createIdentityMatrix(size int) (m *mat64.Dense) {
@@ -36,23 +36,23 @@ func Sum(m *mat64.Dense) (s float64) {
 	return
 }
 
-func createTransitionMatrix(cf CodonFrequency, kappa, omega float64, m *mat64.Dense) (*mat64.Dense, float64) {
-	return createRateTransitionMatrix(cf, kappa, omega, []float64{1, 1, 1}, m)
+func CreateTransitionMatrix(cf CodonFrequency, kappa, omega float64, m *mat64.Dense) (*mat64.Dense, float64) {
+	return CreateRateTransitionMatrix(cf, kappa, omega, []float64{1, 1, 1}, m)
 }
 
-func createRateTransitionMatrix(cf CodonFrequency, kappa, omega float64, rates []float64, m *mat64.Dense) (*mat64.Dense, float64) {
+func CreateRateTransitionMatrix(cf CodonFrequency, kappa, omega float64, rates []float64, m *mat64.Dense) (*mat64.Dense, float64) {
 	//fmt.Println("kappa=", kappa, ", omega=", omega)
 	if m == nil {
-		m = mat64.NewDense(nCodon, nCodon, nil)
+		m = mat64.NewDense(NCodon, NCodon, nil)
 	}
-	for i1 := 0; i1 < nCodon; i1++ {
-		for i2 := 0; i2 < nCodon; i2++ {
+	for i1 := 0; i1 < NCodon; i1++ {
+		for i2 := 0; i2 < NCodon; i2++ {
 			if i1 == i2 {
 				m.Set(i1, i2, 0)
 				continue
 			}
-			c1 := numCodon[byte(i1)]
-			c2 := numCodon[byte(i2)]
+			c1 := NumCodon[byte(i1)]
+			c2 := NumCodon[byte(i2)]
 			dist, transitions, pos := codonDistance(c1, c2)
 
 			if dist > 1 {
@@ -69,20 +69,20 @@ func createRateTransitionMatrix(cf CodonFrequency, kappa, omega float64, rates [
 			}
 		}
 	}
-	for i1 := 0; i1 < nCodon; i1++ {
+	for i1 := 0; i1 < NCodon; i1++ {
 		rowSum := 0.0
-		for i2 := 0; i2 < nCodon; i2++ {
+		for i2 := 0; i2 < NCodon; i2++ {
 			rowSum += m.At(i1, i2)
 		}
 		m.Set(i1, i1, -rowSum)
 	}
 	scale := 0.0
-	for i := 0; i < nCodon; i++ {
+	for i := 0; i < NCodon; i++ {
 		scale += -cf[i] * m.At(i, i)
 	}
 
 	if scale < smallScale {
-		return zeroQ, 0
+		return ZeroQ, 0
 	}
 	return m, scale
 
@@ -90,16 +90,16 @@ func createRateTransitionMatrix(cf CodonFrequency, kappa, omega float64, rates [
 
 func scaleMatrix(in *mat64.Dense, scale float64, out *mat64.Dense) *mat64.Dense {
 	if out == nil {
-		out = mat64.NewDense(nCodon, nCodon, nil)
+		out = mat64.NewDense(NCodon, NCodon, nil)
 	}
 	out.Scale(scale, in)
 	return out
 }
 
 func PrintQ(Q *mat64.Dense) {
-	codons := make([]string, len(codonNum))
+	codons := make([]string, len(CodonNum))
 	i := 0
-	for k, _ := range codonNum {
+	for k, _ := range CodonNum {
 		codons[i] = k
 		i++
 	}
@@ -113,7 +113,7 @@ func PrintQ(Q *mat64.Dense) {
 	for _, codon1 := range codons {
 		fmt.Print(codon1, "\t")
 		for _, codon2 := range codons {
-			fmt.Printf("%0.4f\t", Q.At(int(codonNum[codon1]), int(codonNum[codon2])))
+			fmt.Printf("%0.4f\t", Q.At(int(CodonNum[codon1]), int(CodonNum[codon2])))
 		}
 		fmt.Println()
 	}
@@ -121,13 +121,13 @@ func PrintQ(Q *mat64.Dense) {
 
 func PrintUnQ(Q *mat64.Dense) {
 	fmt.Print("\t")
-	for i := 0; i < nCodon; i++ {
-		fmt.Print(numCodon[byte(i)], "\t")
+	for i := 0; i < NCodon; i++ {
+		fmt.Print(NumCodon[byte(i)], "\t")
 	}
 	fmt.Println()
-	for i1 := 0; i1 < nCodon; i1++ {
-		fmt.Print(numCodon[byte(i1)], "\t")
-		for i2 := 0; i2 < nCodon; i2++ {
+	for i1 := 0; i1 < NCodon; i1++ {
+		fmt.Print(NumCodon[byte(i1)], "\t")
+		for i2 := 0; i2 < NCodon; i2++ {
 			fmt.Printf("%0.4f\t", Q.At(i1, i2))
 		}
 		fmt.Println()
