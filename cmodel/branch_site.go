@@ -4,13 +4,14 @@ import (
 	"math"
 	"math/rand"
 
+	"bitbucket.org/Davydov/godon/codon"
 	"bitbucket.org/Davydov/godon/optimize"
 	"bitbucket.org/Davydov/godon/tree"
 )
 
 type BranchSite struct {
 	*BaseModel
-	q0, q1, q2             *EMatrix
+	q0, q1, q2             *codon.EMatrix
 	kappa                  float64
 	omega0, omega2         float64
 	p01sum, p0prop         float64
@@ -19,12 +20,12 @@ type BranchSite struct {
 	propdone               bool
 }
 
-func NewBranchSite(cali CodonSequences, t *tree.Tree, cf CodonFrequency, fixw2 bool) (m *BranchSite) {
+func NewBranchSite(cali codon.CodonSequences, t *tree.Tree, cf codon.CodonFrequency, fixw2 bool) (m *BranchSite) {
 	m = &BranchSite{
 		fixw2: fixw2,
-		q0:    &EMatrix{},
-		q1:    &EMatrix{},
-		q2:    &EMatrix{},
+		q0:    &codon.EMatrix{},
+		q1:    &codon.EMatrix{},
+		q2:    &codon.EMatrix{},
 	}
 
 	m.BaseModel = NewBaseModel(cali, t, cf, m)
@@ -44,9 +45,9 @@ func (m *BranchSite) GetNClass() int {
 func (m *BranchSite) Copy() optimize.Optimizable {
 	newM := &BranchSite{
 		BaseModel: m.BaseModel.Copy(),
-		q0:        &EMatrix{},
-		q1:        &EMatrix{},
-		q2:        &EMatrix{},
+		q0:        &codon.EMatrix{},
+		q1:        &codon.EMatrix{},
+		q2:        &codon.EMatrix{},
 		kappa:     m.kappa,
 		omega0:    m.omega0,
 		omega2:    m.omega2,
@@ -197,7 +198,7 @@ func (m *BranchSite) updateProportions() {
 
 func (m *BranchSite) updateMatrices() {
 	if !m.q0done {
-		Q0, s0 := createTransitionMatrix(m.cf, m.kappa, m.omega0, m.q0.Q)
+		Q0, s0 := codon.CreateTransitionMatrix(m.cf, m.kappa, m.omega0, m.q0.Q)
 		m.q0.Set(Q0, s0)
 		err := m.q0.Eigen()
 		if err != nil {
@@ -207,7 +208,7 @@ func (m *BranchSite) updateMatrices() {
 	}
 
 	if !m.q1done {
-		Q1, s1 := createTransitionMatrix(m.cf, m.kappa, 1, m.q1.Q)
+		Q1, s1 := codon.CreateTransitionMatrix(m.cf, m.kappa, 1, m.q1.Q)
 		m.q1.Set(Q1, s1)
 		err := m.q1.Eigen()
 		if err != nil {
@@ -217,7 +218,7 @@ func (m *BranchSite) updateMatrices() {
 	}
 
 	if !m.q2done {
-		Q2, s2 := createTransitionMatrix(m.cf, m.kappa, m.omega2, m.q2.Q)
+		Q2, s2 := codon.CreateTransitionMatrix(m.cf, m.kappa, m.omega2, m.q2.Q)
 		m.q2.Set(Q2, s2)
 		err := m.q2.Eigen()
 		if err != nil {

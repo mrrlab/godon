@@ -1,20 +1,21 @@
 package cmodel
 
 import (
+	"bitbucket.org/Davydov/godon/codon"
 	"bitbucket.org/Davydov/godon/optimize"
 	"bitbucket.org/Davydov/godon/tree"
 )
 
 type M0 struct {
 	*BaseModel
-	q            *EMatrix
+	q            *codon.EMatrix
 	omega, kappa float64
 	qdone        bool
 }
 
-func NewM0(cali CodonSequences, t *tree.Tree, cf CodonFrequency) (m *M0) {
+func NewM0(cali codon.CodonSequences, t *tree.Tree, cf codon.CodonFrequency) (m *M0) {
 	m = &M0{
-		q: &EMatrix{},
+		q: &codon.EMatrix{},
 	}
 	m.BaseModel = NewBaseModel(cali, t, cf, m)
 	m.prop[0] = 1
@@ -31,7 +32,7 @@ func (m *M0) GetNClass() int {
 func (m *M0) Copy() optimize.Optimizable {
 	newM := &M0{
 		BaseModel: m.BaseModel.Copy(),
-		q:         &EMatrix{},
+		q:         &codon.EMatrix{},
 		omega:     m.omega,
 		kappa:     m.kappa,
 	}
@@ -80,7 +81,7 @@ func (m *M0) SetDefaults() {
 }
 
 func (m *M0) UpdateMatrix() {
-	Q, s := createTransitionMatrix(m.cf, m.kappa, m.omega, m.q.Q)
+	Q, s := codon.CreateTransitionMatrix(m.cf, m.kappa, m.omega, m.q.Q)
 	m.q.Set(Q, s)
 
 	err := m.q.Eigen()

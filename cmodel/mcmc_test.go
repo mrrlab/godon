@@ -3,6 +3,7 @@ package cmodel
 import (
 	"testing"
 
+	"bitbucket.org/Davydov/godon/codon"
 	"bitbucket.org/Davydov/godon/optimize"
 )
 
@@ -12,7 +13,7 @@ func BenchmarkMCMCD1(b *testing.B) {
 		b.Error("Error: ", err)
 	}
 
-	cf := F0()
+	cf := codon.F0()
 
 	m0 := NewM0(cali, t, cf)
 

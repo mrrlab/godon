@@ -4,6 +4,7 @@ import (
 	"math"
 	"testing"
 
+	"bitbucket.org/Davydov/godon/codon"
 	"bitbucket.org/Davydov/godon/optimize"
 )
 
@@ -13,7 +14,7 @@ func TestBranchSiteReprM0D1(tst *testing.T) {
 		tst.Error("Error: ", err)
 	}
 
-	cf := F3X4(cali)
+	cf := codon.F3X4(cali)
 
 	m0 := NewM0(cali, t, cf)
 	chain := optimize.NewMH(false, 0)
@@ -29,7 +30,7 @@ func TestBranchSiteReprM0D1(tst *testing.T) {
 	if err != nil {
 		tst.Error("Error: ", err)
 	}
-	cf = F3X4(cali)
+	cf = codon.F3X4(cali)
 	m0 = NewM0(cali, t, cf)
 	m0.SetParameters(k, w)
 	newL := m0.Likelihood()
@@ -46,7 +47,7 @@ func TestBranchSiteReprM0D2(tst *testing.T) {
 		tst.Error("Error: ", err)
 	}
 
-	cf := F0()
+	cf := codon.F0()
 
 	m0 := NewM0(cali, t, cf)
 	as := optimize.NewAdaptiveSettings()
@@ -64,7 +65,7 @@ func TestBranchSiteReprM0D2(tst *testing.T) {
 	if err != nil {
 		tst.Error("Error: ", err)
 	}
-	cf = F0()
+	cf = codon.F0()
 	m0 = NewM0(cali, t, cf)
 	m0.SetParameters(k, w)
 	newL := m0.Likelihood()
@@ -81,7 +82,7 @@ func TestBranchSiteReprM0D3(tst *testing.T) {
 		tst.Error("Error: ", err)
 	}
 
-	cf := F3X4(cali)
+	cf := codon.F3X4(cali)
 
 	m0 := NewM0(cali, t, cf)
 	chain := optimize.NewMH(false, 0)
@@ -97,7 +98,7 @@ func TestBranchSiteReprM0D3(tst *testing.T) {
 	if err != nil {
 		tst.Error("Error: ", err)
 	}
-	cf = F3X4(cali)
+	cf = codon.F3X4(cali)
 	m0 = NewM0(cali, t, cf)
 	m0.SetParameters(k, w)
 	newL := m0.Likelihood()
@@ -118,7 +119,7 @@ func TestBranchSiteReprBSD1(tst *testing.T) {
 		tst.Error("Error: ", err)
 	}
 
-	cf := F3X4(cali)
+	cf := codon.F3X4(cali)
 
 	h1 := NewBranchSite(cali, t, cf, false)
 	chain := optimize.NewMH(false, 0)
@@ -134,7 +135,7 @@ func TestBranchSiteReprBSD1(tst *testing.T) {
 	if err != nil {
 		tst.Error("Error: ", err)
 	}
-	cf = F3X4(cali)
+	cf = codon.F3X4(cali)
 	h1 = NewBranchSite(cali, t, cf, false)
 	h1.SetParameters(k, w0, w2, p0, p1)
 	newL := h1.Likelihood()
@@ -155,7 +156,7 @@ func TestBranchSiteReprBSD2(tst *testing.T) {
 		tst.Error("Error: ", err)
 	}
 
-	cf := F0()
+	cf := codon.F0()
 
 	h1 := NewBranchSite(cali, t, cf, false)
 	chain := optimize.NewMH(false, 0)
@@ -173,7 +174,7 @@ func TestBranchSiteReprBSD2(tst *testing.T) {
 		tst.Error("Error: ", err)
 	}
 
-	cf = F0()
+	cf = codon.F0()
 	h1 = NewBranchSite(cali, t, cf, false)
 	h1.SetParameters(k, w0, w2, p0, p1)
 	newL := h1.Likelihood()
@@ -193,7 +194,7 @@ func TestBranchSiteReprBSD3(tst *testing.T) {
 		tst.Error("Error: ", err)
 	}
 
-	cf := F3X4(cali)
+	cf := codon.F3X4(cali)
 
 	h1 := NewBranchSite(cali, t, cf, true)
 	as := optimize.NewAdaptiveSettings()
@@ -212,7 +213,7 @@ func TestBranchSiteReprBSD3(tst *testing.T) {
 	if err != nil {
 		tst.Error("Error: ", err)
 	}
-	cf = F3X4(cali)
+	cf = codon.F3X4(cali)
 	h1 = NewBranchSite(cali, t, cf, false)
 	h1.SetParameters(k, w0, w2, p0, p1)
 

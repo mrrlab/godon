@@ -3,6 +3,8 @@ package cmodel
 import (
 	"math"
 	"testing"
+
+	"bitbucket.org/Davydov/godon/codon"
 )
 
 /*** Test M0 ***/
@@ -12,7 +14,7 @@ func TestM0F0D1(tst *testing.T) {
 		tst.Error("Error: ", err)
 	}
 
-	cf := F0()
+	cf := codon.F0()
 	m0 := NewM0(cali, t, cf)
 	m0.SetParameters(2, 0.5)
 
@@ -31,7 +33,7 @@ func TestM0F3X4D1(tst *testing.T) {
 		tst.Error("Error: ", err)
 	}
 
-	cf := F3X4(cali)
+	cf := codon.F3X4(cali)
 	m0 := NewM0(cali, t, cf)
 	m0.SetParameters(2, 0.5)
 
@@ -50,7 +52,7 @@ func TestM0F0D2(tst *testing.T) {
 		tst.Error("Error: ", err)
 	}
 
-	cf := F0()
+	cf := codon.F0()
 	m0 := NewM0(cali, t, cf)
 	m0.SetParameters(1.79668, 0.09879)
 
@@ -69,7 +71,7 @@ func TestM0F3X4D2(tst *testing.T) {
 		tst.Error("Error: ", err)
 	}
 
-	cf := F3X4(cali)
+	cf := codon.F3X4(cali)
 	m0 := NewM0(cali, t, cf)
 	m0.SetParameters(3.12566, 0.03430)
 
@@ -91,7 +93,7 @@ func TestM0F0D3(tst *testing.T) {
 		tst.Error("Error: ", err)
 	}
 
-	cf := F0()
+	cf := codon.F0()
 	m0 := NewM0(cali, t, cf)
 	m0.SetParameters(1.77621, 0.10313)
 
@@ -111,7 +113,7 @@ func TestBranchSiteF0D1(tst *testing.T) {
 		tst.Error("Error: ", err)
 	}
 
-	cf := F0()
+	cf := codon.F0()
 	p0, p1 := 0.946800, 0.000098
 
 	h1 := NewBranchSite(cali, t, cf, false)
@@ -131,7 +133,7 @@ func TestBranchSiteF3X4D1(tst *testing.T) {
 		tst.Error("Error: ", err)
 	}
 
-	cf := F3X4(cali)
+	cf := codon.F3X4(cali)
 	p0, p1 := 0.934681, 0.000000
 
 	h1 := NewBranchSite(cali, t, cf, false)
@@ -151,7 +153,7 @@ func TestBranchSiteF0D2(tst *testing.T) {
 		tst.Error("Error: ", err)
 	}
 
-	cf := F0()
+	cf := codon.F0()
 	p0, p1 := 0.899776, 0.041502
 
 	h1 := NewBranchSite(cali, t, cf, false)
@@ -171,7 +173,7 @@ func TestBranchSiteF3X4D2(tst *testing.T) {
 		tst.Error("Error: ", err)
 	}
 
-	cf := F3X4(cali)
+	cf := codon.F3X4(cali)
 	p0, p1 := 0.932349, 0.005383
 
 	h1 := NewBranchSite(cali, t, cf, false)
@@ -194,7 +196,7 @@ func TestBranchSiteF0D3(tst *testing.T) {
 		tst.Error("Error: ", err)
 	}
 
-	cf := F0()
+	cf := codon.F0()
 	p0, p1 := 0.883725, 0.099870
 
 	h1 := NewBranchSite(cali, t, cf, false)
@@ -217,7 +219,7 @@ func TestBranchSiteF3X4D3(tst *testing.T) {
 		tst.Error("Error: ", err)
 	}
 
-	cf := F3X4(cali)
+	cf := codon.F3X4(cali)
 	p0, p1 := 0.902686, 0.079667
 
 	h1 := NewBranchSite(cali, t, cf, false)
@@ -238,7 +240,7 @@ func BenchmarkM0F0D1(b *testing.B) {
 		b.Error("Error: ", err)
 	}
 
-	cf := F0()
+	cf := codon.F0()
 
 	m0 := NewM0(cali, t, cf)
 
@@ -256,7 +258,7 @@ func BenchmarkM0F0D2(b *testing.B) {
 		b.Error("Error: ", err)
 	}
 
-	cf := F0()
+	cf := codon.F0()
 
 	m0 := NewM0(cali, t, cf)
 
@@ -275,7 +277,7 @@ func BenchmarkBranchSiteF0D1(b *testing.B) {
 		b.Error("Error: ", err)
 	}
 
-	cf := F0()
+	cf := codon.F0()
 	p0, p1 := 0.946800, 0.000098
 
 	h1 := NewBranchSite(cali, t, cf, false)
@@ -293,7 +295,7 @@ func BenchmarkBranchSiteF0D2(b *testing.B) {
 		b.Error("Error: ", err)
 	}
 
-	cf := F0()
+	cf := codon.F0()
 	p0, p1 := 0.899776, 0.041502
 
 	h1 := NewBranchSite(cali, t, cf, false)

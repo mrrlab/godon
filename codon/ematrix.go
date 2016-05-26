@@ -1,4 +1,4 @@
-package cmodel
+package codon
 
 import (
 	"errors"
@@ -60,6 +60,9 @@ func (m *EMatrix) Eigen() (err error) {
 func (m *EMatrix) Exp(cD *matrix.DenseMatrix, t float64) (*matrix.DenseMatrix, error) {
 	if m.d.Cols() != m.d.Rows() {
 		return nil, errors.New("D isn't a square matrix")
+	}
+	if m.Scale < smallScale {
+		return IdentityP, nil
 	}
 	// This is a dirty hack to allow 0-scale matricies
 	if math.IsInf(t, 1) {
