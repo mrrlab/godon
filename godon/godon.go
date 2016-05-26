@@ -330,7 +330,7 @@ func main() {
 	f := os.Stdout
 
 	if *outF != "" {
-		f, err := os.Create(*outF)
+		f, err = os.Create(*outF)
 		if err != nil {
 			log.Fatal("Error creating trajectory file:", err)
 		}
