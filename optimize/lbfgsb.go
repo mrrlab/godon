@@ -88,6 +88,7 @@ func (l *LBFGSB) EvaluateGradient(x []float64) (grad []float64) {
 		}
 
 	}
+	log.Debugf("Grad(%v)=%v", l.parameters.Values(nil), grad)
 	return
 }
 
