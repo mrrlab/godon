@@ -17,6 +17,8 @@ const (
 	smallDiff = 1e-4
 )
 
+var log = logging.MustGetLogger("cmodel")
+
 func GetTreeAlignment(data string) (t *tree.Tree, cali codon.CodonSequences, err error) {
 	tf, err := os.Open(path.Join("testdata", data+".nwk"))
 	if err != nil {
