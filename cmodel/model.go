@@ -259,6 +259,7 @@ func (m *BaseModel) ExpBranches() {
 
 // Calculate tree likelihood.
 func (m *BaseModel) Likelihood() (lnL float64) {
+	log.Debugf("x=%v", m.parameters.Values(nil))
 	if !m.expAllBr {
 		m.ExpBranches()
 	} else {
@@ -317,6 +318,7 @@ func (m *BaseModel) Likelihood() (lnL float64) {
 	if math.IsNaN(lnL) {
 		lnL = math.Inf(-1)
 	}
+	log.Debugf("L=%v", lnL)
 	return
 }
 
