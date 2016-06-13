@@ -7,6 +7,8 @@ import (
 	"bitbucket.org/Davydov/godon/bio"
 	"bitbucket.org/Davydov/godon/codon"
 	"bitbucket.org/Davydov/godon/tree"
+
+	"github.com/op/go-logging"
 )
 
 const (
