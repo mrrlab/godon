@@ -159,9 +159,16 @@ func (m *BaseModel) ReorderAlignment() {
 		nm2id[s.Name] = i
 	}
 
+	if m.tree.NLeaves() != len(m.cali) {
+		log.Fatal("Tree doesn't match the alignment.")
+	}
 	newCali := make(codon.CodonSequences, m.tree.NLeaves())
 	for node := range m.tree.Terminals() {
-		newCali[node.LeafId] = m.cali[nm2id[node.Name]]
+		nodeId, ok := nm2id[node.Name]
+		if !ok {
+			log.Fatalf("No sequence found for the leaf <%s>.", node.Name)
+		}
+		newCali[node.LeafId] = m.cali[nodeId]
 	}
 
 	m.cali = newCali
