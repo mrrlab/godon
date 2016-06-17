@@ -23,9 +23,9 @@ type BranchSite struct {
 func NewBranchSite(cali codon.CodonSequences, t *tree.Tree, cf codon.CodonFrequency, fixw2 bool) (m *BranchSite) {
 	m = &BranchSite{
 		fixw2: fixw2,
-		q0:    &codon.EMatrix{},
-		q1:    &codon.EMatrix{},
-		q2:    &codon.EMatrix{},
+		q0:    &codon.EMatrix{CF: cf},
+		q1:    &codon.EMatrix{CF: cf},
+		q2:    &codon.EMatrix{CF: cf},
 	}
 
 	m.BaseModel = NewBaseModel(cali, t, cf, m)
@@ -45,9 +45,9 @@ func (m *BranchSite) GetNClass() int {
 func (m *BranchSite) Copy() optimize.Optimizable {
 	newM := &BranchSite{
 		BaseModel: m.BaseModel.Copy(),
-		q0:        &codon.EMatrix{},
-		q1:        &codon.EMatrix{},
-		q2:        &codon.EMatrix{},
+		q0:        &codon.EMatrix{CF: m.cf},
+		q1:        &codon.EMatrix{CF: m.cf},
+		q2:        &codon.EMatrix{CF: m.cf},
 		kappa:     m.kappa,
 		omega0:    m.omega0,
 		omega2:    m.omega2,

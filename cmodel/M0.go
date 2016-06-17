@@ -15,7 +15,7 @@ type M0 struct {
 
 func NewM0(cali codon.CodonSequences, t *tree.Tree, cf codon.CodonFrequency) (m *M0) {
 	m = &M0{
-		q: &codon.EMatrix{},
+		q: &codon.EMatrix{CF: cf},
 	}
 	m.BaseModel = NewBaseModel(cali, t, cf, m)
 	m.prop[0] = 1
@@ -32,7 +32,7 @@ func (m *M0) GetNClass() int {
 func (m *M0) Copy() optimize.Optimizable {
 	newM := &M0{
 		BaseModel: m.BaseModel.Copy(),
-		q:         &codon.EMatrix{},
+		q:         &codon.EMatrix{CF: m.cf},
 		omega:     m.omega,
 		kappa:     m.kappa,
 	}
