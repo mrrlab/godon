@@ -10,6 +10,7 @@ import (
 type EMatrix struct {
 	Q     *matrix.DenseMatrix
 	Scale float64
+	CF    CodonFrequency
 	v     *matrix.DenseMatrix
 	d     *matrix.DenseMatrix
 	iv    *matrix.DenseMatrix
