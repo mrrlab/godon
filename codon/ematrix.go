@@ -10,7 +10,7 @@ import (
 type EMatrix struct {
 	Q     *mat64.Dense
 	Scale float64
-	cf    CodonFrequency
+	CF    CodonFrequency
 	v     *mat64.Dense
 	d     *mat64.Dense
 	iv    *mat64.Dense
@@ -18,7 +18,7 @@ type EMatrix struct {
 
 func NewEMatrix(Q *mat64.Dense, scale float64, cf CodonFrequency) *EMatrix {
 	//cols, rows := Q.Dims()
-	return &EMatrix{Q: Q, Scale: scale, cf: cf}
+	return &EMatrix{Q: Q, Scale: scale, CF: cf}
 }
 
 func (m *EMatrix) Copy(recv *EMatrix) *EMatrix {
@@ -30,7 +30,7 @@ func (m *EMatrix) Copy(recv *EMatrix) *EMatrix {
 	recv.d = m.d
 	recv.iv = m.iv
 	recv.Scale = m.Scale
-	recv.cf = m.cf
+	recv.CF = m.CF
 	return recv
 }
 
@@ -70,7 +70,7 @@ func (m *EMatrix) Eigen() (err error) {
 	// and Pi_i (inverse)
 	Pi := mat64.NewDense(cols, rows, nil)
 	Pi_i := mat64.NewDense(cols, rows, nil)
-	for i, p := range m.cf {
+	for i, p := range m.CF {
 		Pi.Set(i, i, math.Sqrt(p))
 		Pi_i.Set(i, i, 1/math.Sqrt(p))
 	}
@@ -89,6 +89,7 @@ func (m *EMatrix) Eigen() (err error) {
 	}
 	R := mat64.NewDense(cols, rows, nil)
 	R.EigenvectorsSym(&decomp)
+	m.v = mat64.NewDense(cols, rows, nil)
 	m.v.Mul(Pi_i, R)
 
 	d := decomp.Values(nil)

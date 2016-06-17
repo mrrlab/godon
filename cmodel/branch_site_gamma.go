@@ -52,9 +52,9 @@ func NewBranchSiteGamma(cali codon.CodonSequences, t *tree.Tree, cf codon.CodonF
 	m.BaseModel = NewBaseModel(cali, t, cf, m)
 
 	for i := 0; i < scat*ncatcg; i++ {
-		m.q0s[i] = &codon.EMatrix{}
-		m.q1s[i] = &codon.EMatrix{}
-		m.q2s[i] = &codon.EMatrix{}
+		m.q0s[i] = &codon.EMatrix{CF: cf}
+		m.q1s[i] = &codon.EMatrix{CF: cf}
+		m.q2s[i] = &codon.EMatrix{CF: cf}
 	}
 
 	m.setupParameters()
@@ -98,9 +98,9 @@ func (m *BranchSiteGamma) Copy() optimize.Optimizable {
 	newM.BaseModel.Model = newM
 
 	for i := 0; i < scat*m.ncatcg; i++ {
-		newM.q0s[i] = &codon.EMatrix{}
-		newM.q1s[i] = &codon.EMatrix{}
-		newM.q2s[i] = &codon.EMatrix{}
+		newM.q0s[i] = &codon.EMatrix{CF: m.cf}
+		newM.q1s[i] = &codon.EMatrix{CF: m.cf}
+		newM.q2s[i] = &codon.EMatrix{CF: m.cf}
 	}
 
 	newM.setupParameters()

@@ -60,10 +60,10 @@ func NewM8(cali codon.CodonSequences, t *tree.Tree, cf codon.CodonFrequency, add
 	}
 
 	for i := 0; i < gcat*ncatcg; i++ {
-		m.q0[i] = &codon.EMatrix{}
+		m.q0[i] = &codon.EMatrix{CF: cf}
 	}
 	for i := 0; i < gcat*ncatcg*ncatb; i++ {
-		m.qb[i] = &codon.EMatrix{}
+		m.qb[i] = &codon.EMatrix{CF: cf}
 	}
 
 	m.BaseModel = NewBaseModel(cali, t, cf, m)
@@ -106,10 +106,10 @@ func (m *M8) Copy() optimize.Optimizable {
 	}
 
 	for i := 0; i < gcat*m.ncatcg; i++ {
-		newM.q0[i] = &codon.EMatrix{}
+		newM.q0[i] = &codon.EMatrix{CF: m.cf}
 	}
 	for i := 0; i < gcat*m.ncatb*m.ncatcg; i++ {
-		newM.qb[i] = &codon.EMatrix{}
+		newM.qb[i] = &codon.EMatrix{CF: m.cf}
 	}
 
 	newM.BaseModel.Model = newM

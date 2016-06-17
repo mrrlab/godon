@@ -18,8 +18,8 @@ type M0vrate struct {
 
 func NewM0vrate(cali codon.CodonSequences, t *tree.Tree, cf codon.CodonFrequency) (m *M0vrate) {
 	m = &M0vrate{
-		q0: &codon.EMatrix{},
-		q1: &codon.EMatrix{},
+		q0: &codon.EMatrix{CF: cf},
+		q1: &codon.EMatrix{CF: cf},
 	}
 
 	m.BaseModel = NewBaseModel(cali, t, cf, m)
@@ -36,8 +36,8 @@ func (m *M0vrate) GetNClass() int {
 func (m *M0vrate) Copy() optimize.Optimizable {
 	newM := &M0vrate{
 		BaseModel: m.BaseModel.Copy(),
-		q0:        &codon.EMatrix{},
-		q1:        &codon.EMatrix{},
+		q0:        &codon.EMatrix{CF: m.cf},
+		q1:        &codon.EMatrix{CF: m.cf},
 		omega:     m.omega,
 		kappa:     m.kappa,
 		s:         m.s,
