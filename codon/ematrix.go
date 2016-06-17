@@ -109,11 +109,8 @@ func (m *EMatrix) Eigen() (err error) {
 	for i, v := range d {
 		m.d.Set(i, i, v)
 	}
-	err = m.iv.Inverse(R)
-	if err != nil {
-		return err
-	}
-	m.iv.Mul(m.iv, Pi)
+
+	m.iv.Mul(R.T(), Pi)
 	return nil
 }
 
