@@ -10,14 +10,15 @@ import (
 type EMatrix struct {
 	Q     *mat64.Dense
 	Scale float64
+	cf    CodonFrequency
 	v     *mat64.Dense
 	d     *mat64.Dense
 	iv    *mat64.Dense
 }
 
-func NewEMatrix(Q *mat64.Dense, scale float64) *EMatrix {
+func NewEMatrix(Q *mat64.Dense, scale float64, cf CodonFrequency) *EMatrix {
 	//cols, rows := Q.Dims()
-	return &EMatrix{Q: Q, Scale: scale}
+	return &EMatrix{Q: Q, Scale: scale, cf: cf}
 }
 
 func (m *EMatrix) Copy(recv *EMatrix) *EMatrix {
@@ -29,6 +30,7 @@ func (m *EMatrix) Copy(recv *EMatrix) *EMatrix {
 	recv.d = m.d
 	recv.iv = m.iv
 	recv.Scale = m.Scale
+	recv.cf = m.cf
 	return recv
 }
 
@@ -51,6 +53,7 @@ func (m *EMatrix) ScaleD(scale float64) {
 }
 
 func (m *EMatrix) Eigen() (err error) {
+	// Please refer to the EigenQREV pdf from PAML for explanations.
 	if m.v != nil {
 		return nil
 	}
@@ -63,24 +66,42 @@ func (m *EMatrix) Eigen() (err error) {
 		m.iv = mat64.NewDense(cols, rows, nil)
 	}
 
-	decomp := mat64.Eigen{}
+	// First compute matrix Pi=p_1^{1/2}, p_2^{1/2}. ...
+	// and Pi_i (inverse)
+	Pi := mat64.NewDense(cols, rows, nil)
+	Pi_i := mat64.NewDense(cols, rows, nil)
+	for i, p := range m.cf {
+		Pi.Set(i, i, math.Sqrt(p))
+		Pi_i.Set(i, i, 1/math.Sqrt(p))
+	}
+	// Compute symmetric matrix A = Pi * Q * Pi_i
+	A := mat64.NewDense(cols, rows, nil)
+	A.Mul(Pi, m.Q)
+	A.Mul(A, Pi_i)
+	AS := mat64.NewSymDense(cols, A.RawMatrix().Data)
 
-	status := decomp.Factorize(m.Q, true)
+	decomp := mat64.EigenSym{}
+
+	status := decomp.Factorize(AS, true)
 
 	if !status {
 		panic("Error decompozing Q")
 	}
-	m.v = decomp.Vectors()
+	R := mat64.NewDense(cols, rows, nil)
+	R.EigenvectorsSym(&decomp)
+	m.v.Mul(Pi_i, R)
+
 	d := decomp.Values(nil)
 	m.d = mat64.NewDense(cols, rows, nil)
 
 	for i, v := range d {
-		m.d.Set(i, i, real(v))
+		m.d.Set(i, i, v)
 	}
-	err = m.iv.Inverse(m.v)
+	err = m.iv.Inverse(R)
 	if err != nil {
 		return err
 	}
+	m.iv.Mul(m.iv, Pi)
 	return nil
 }
 
