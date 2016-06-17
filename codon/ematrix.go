@@ -7,6 +7,8 @@ import (
 	"github.com/gonum/matrix/mat64"
 )
 
+const smallFreq = 1e-20
+
 type EMatrix struct {
 	Q     *mat64.Dense
 	Scale float64
@@ -66,14 +68,23 @@ func (m *EMatrix) Eigen() (err error) {
 		m.iv = mat64.NewDense(cols, rows, nil)
 	}
 
+	// make sure we have no zero frequences
+	psum := 0.0
+	for _, p := range m.CF {
+		p = math.Max(smallFreq, p)
+		psum += p
+	}
+
 	// First compute matrix Pi=p_1^{1/2}, p_2^{1/2}. ...
 	// and Pi_i (inverse)
 	Pi := mat64.NewDense(cols, rows, nil)
 	Pi_i := mat64.NewDense(cols, rows, nil)
 	for i, p := range m.CF {
+		p = math.Max(smallFreq, p) / psum
 		Pi.Set(i, i, math.Sqrt(p))
 		Pi_i.Set(i, i, 1/math.Sqrt(p))
 	}
+
 	// Compute symmetric matrix A = Pi * Q * Pi_i
 	A := mat64.NewDense(cols, rows, nil)
 	A.Mul(Pi, m.Q)
