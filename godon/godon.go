@@ -243,7 +243,7 @@ func main() {
 			class1++
 		}
 		if class1 == 0 &&
-			(*model == "BS" || *model == "BSC" || *model == "BSG") {
+			(*model == "BS" || *model == "BSC" || *model == "BSG" || *model == "BSGE") {
 			log.Warning("Warning: no class=1 nodes")
 		}
 	}
@@ -281,6 +281,10 @@ func main() {
 		log.Info("Using branch site gamma model")
 		log.Infof("%d site gamma categories, %d codon gama categories", *ncatsg, *ncatcg)
 		m = cmodel.NewBranchSiteGamma(cali, t, cf, *fixw, *ncatsg, *ncatcg)
+	case "BSGE":
+		log.Info("Using branch site gamma model with explicit rates")
+		log.Infof("%d site gamma categories, %d codon gama categories", *ncatsg, *ncatcg)
+		m = cmodel.NewBranchSiteGammaERates(cali, t, cf, *fixw, *ncatsg, *ncatcg)
 	case "BS":
 		log.Info("Using branch site model")
 		m = cmodel.NewBranchSite(cali, t, cf, *fixw)

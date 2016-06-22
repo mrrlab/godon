@@ -64,7 +64,13 @@ type BaseModel struct {
 	expAllBr bool
 	expBr    []bool
 
+	// this is a list of exponentiated matricies
 	eQts [][][]float64
+
+	// likelihoods per position
+	prunAllPos bool
+	prunPos    []bool
+	L          []float64
 }
 
 // Creates a new base Model.
@@ -83,6 +89,8 @@ func NewBaseModel(cali codon.CodonSequences, t *tree.Tree, cf codon.CodonFrequen
 		expBr:    make([]bool, t.MaxNodeId()+1),
 		prop:     make([][]float64, cali.Length()),
 		nclass:   nclass,
+		L:        make([]float64, cali.Length()),
+		prunPos:  make([]bool, cali.Length()),
 	}
 	p := make([]float64, nclass)
 	for i := range bm.prop {
@@ -210,6 +218,7 @@ func (m *BaseModel) ExpBranch(br int) {
 		}
 	}
 	m.expBr[br] = true
+	m.prunAllPos = false
 }
 
 // Exponentiate all branches in the tree.
@@ -276,6 +285,7 @@ func (m *BaseModel) Likelihood() (lnL float64) {
 	log.Debugf("x=%v", m.parameters.Values(nil))
 	if !m.expAllBr {
 		m.ExpBranches()
+		m.prunAllPos = false
 	} else {
 		for _, node := range m.tree.NodeIdArray() {
 			if node == nil {
@@ -283,6 +293,7 @@ func (m *BaseModel) Likelihood() (lnL float64) {
 			}
 			if !m.expBr[node.Id] && node != nil {
 				m.ExpBranch(node.Id)
+				m.prunAllPos = false
 			}
 		}
 	}
@@ -291,9 +302,9 @@ func (m *BaseModel) Likelihood() (lnL float64) {
 		panic("incorrect proportion length")
 	}
 
-	nTasks := m.cali.Length()
-	results := make(chan float64, nTasks)
-	tasks := make(chan int, nTasks)
+	nPos := m.cali.Length()
+	results := make(chan bool, nPos)
+	tasks := make(chan int, nPos)
 
 	for i := 0; i < runtime.GOMAXPROCS(0); i++ {
 		go func() {
@@ -318,20 +329,33 @@ func (m *BaseModel) Likelihood() (lnL float64) {
 						}
 					}
 				}
-				results <- math.Log(res)
+				m.L[pos] = math.Log(res)
+				m.prunPos[pos] = true
+				results <- true
 			}
 		}()
 	}
 
-	for pos := 0; pos < nTasks; pos++ {
-		tasks <- pos
+	ass := 0
+	for pos := 0; pos < nPos; pos++ {
+		if !m.prunAllPos || !m.prunPos[pos] {
+			tasks <- pos
+			ass++
+		}
 	}
 	close(tasks)
 
-	for i := 0; i < nTasks; i++ {
-		dlnL := <-results
-		lnL += dlnL
+	// wait for all assignments to finish
+	for ass > 0 {
+		<-results
+		ass--
 	}
+
+	for i := 0; i < nPos; i++ {
+		lnL += m.L[i]
+		m.prunPos[i] = true
+	}
+	m.prunAllPos = true
 	if math.IsNaN(lnL) {
 		lnL = math.Inf(-1)
 	}
