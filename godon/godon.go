@@ -165,7 +165,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	log.Infof("Read alignment of %d codons, %d fixed positions, %d ambiguous positions", len(cali[0].Sequence), cali.NFixed(), cali.NAmbiguous())
+	log.Infof("Read alignment of %d codons, %d fixed positions, %d ambiguous positions", cali.Length(), cali.NFixed(), cali.NAmbiguous())
 
 	treeFile, err := os.Open(flag.Args()[1])
 	if err != nil {

@@ -42,6 +42,10 @@ func (seq CodonSequence) String() (s string) {
 	return
 }
 
+func (seqs CodonSequences) Length() int {
+	return len(seqs[0].Sequence)
+}
+
 func (seqs CodonSequences) String() (s string) {
 	for _, seq := range seqs {
 		s += seq.String()
@@ -50,7 +54,7 @@ func (seqs CodonSequences) String() (s string) {
 }
 
 func (seqs CodonSequences) NAmbiguous() (count int) {
-	for i := range seqs[0].Sequence {
+	for i := 0; i < seqs.Length(); i++ {
 		for _, seq := range seqs {
 			if seq.Sequence[i] == NOCODON {
 				count++
@@ -84,8 +88,8 @@ func ToCodonSequences(seqs bio.Sequences) (cs CodonSequences, err error) {
 
 // NFixed calculates number of constant positions in the alignment.
 func (seqs CodonSequences) NFixed() (f int) {
-	f = len(seqs[0].Sequence)
-	for pos, _ := range seqs[0].Sequence {
+	f = seqs.Length()
+	for pos := 0; pos < seqs.Length(); pos++ {
 		for i := 1; i < len(seqs); i++ {
 			if seqs[i].Sequence[pos] != seqs[0].Sequence[pos] {
 				f--
@@ -97,8 +101,8 @@ func (seqs CodonSequences) NFixed() (f int) {
 }
 
 func (seqs CodonSequences) Fixed() (fixed []bool) {
-	fixed = make([]bool, len(seqs[0].Sequence))
-	for pos, _ := range seqs[0].Sequence {
+	fixed = make([]bool, seqs.Length())
+	for pos := 0; pos < seqs.Length(); pos++ {
 		isFixed := true
 		for i := 1; i < len(seqs); i++ {
 			if seqs[i].Sequence[pos] != seqs[0].Sequence[pos] {
@@ -114,9 +118,9 @@ func (seqs CodonSequences) Fixed() (fixed []bool) {
 }
 
 func (seqs CodonSequences) Letters() (found [][]int, absent [][]int) {
-	found = make([][]int, len(seqs[0].Sequence))
-	absent = make([][]int, len(seqs[0].Sequence))
-	for pos, _ := range seqs[0].Sequence {
+	found = make([][]int, seqs.Length())
+	absent = make([][]int, seqs.Length())
+	for pos := 0; pos < seqs.Length(); pos++ {
 		found[pos] = make([]int, 0, NCodon)
 		absent[pos] = make([]int, 0, NCodon)
 		pf := make(map[int]bool, NCodon)
