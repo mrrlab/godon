@@ -24,6 +24,7 @@ func TestBSG(tst *testing.T) {
 
 	ds := optimize.NewDS()
 	ds.SetOptimizable(m)
+	ds.Quiet = true
 	ds.Run(5)
 
 	npar1 := len(m.GetFloatParameters())
@@ -35,5 +36,6 @@ func TestBSG(tst *testing.T) {
 
 	mh := optimize.NewMH(false, 0)
 	mh.SetOptimizable(m)
+	mh.Quiet = true
 	mh.Run(5)
 }

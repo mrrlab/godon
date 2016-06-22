@@ -31,6 +31,7 @@ func TestSimplex(tst *testing.T) {
 
 	ds := optimize.NewDS()
 	ds.SetOptimizable(m)
+	ds.Quiet = true
 	ds.Run(5)
 
 	m = m.Copy()
@@ -42,6 +43,7 @@ func TestSimplex(tst *testing.T) {
 
 	ds = optimize.NewDS()
 	ds.SetOptimizable(m)
+	ds.Quiet = true
 	ds.Run(5)
 }
 
@@ -56,6 +58,7 @@ func TestMH(tst *testing.T) {
 
 	mh := optimize.NewMH(false, 0)
 	mh.SetOptimizable(bs)
+	mh.Quiet = true
 	mh.Run(5)
 
 	m := bs.Copy()
@@ -67,6 +70,7 @@ func TestMH(tst *testing.T) {
 
 	mh = optimize.NewMH(false, 0)
 	mh.SetOptimizable(m)
+	mh.Quiet = true
 	mh.Run(5)
 }
 
@@ -93,6 +97,7 @@ func TestAnnealing(tst *testing.T) {
 
 	an := optimize.NewMH(true, 0)
 	an.SetOptimizable(m0)
+	an.Quiet = true
 	an.Run(5)
 
 	m := m0.Copy()
@@ -103,6 +108,7 @@ func TestAnnealing(tst *testing.T) {
 	}
 	an = optimize.NewMH(false, 0)
 	an.SetOptimizable(m)
+	an.Quiet = true
 	an.Run(5)
 
 }
@@ -119,6 +125,7 @@ func TestLBFGSB(tst *testing.T) {
 
 	l := optimize.NewLBFGSB()
 	l.SetOptimizable(m0)
+	l.Quiet = true
 	l.Run(5)
 
 	m := m0.Copy()
@@ -130,5 +137,6 @@ func TestLBFGSB(tst *testing.T) {
 
 	l = optimize.NewLBFGSB()
 	l.SetOptimizable(m)
+	l.Quiet = true
 	l.Run(5)
 }

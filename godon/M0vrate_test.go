@@ -24,6 +24,7 @@ func TestM0vrate(tst *testing.T) {
 
 	ds := optimize.NewDS()
 	ds.SetOptimizable(m)
+	ds.Quiet = true
 	ds.Run(5)
 
 	npar1 := len(m.GetFloatParameters())
@@ -35,5 +36,6 @@ func TestM0vrate(tst *testing.T) {
 
 	ds = optimize.NewDS()
 	ds.SetOptimizable(m)
+	ds.Quiet = true
 	ds.Run(5)
 }
