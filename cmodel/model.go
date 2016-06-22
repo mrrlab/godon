@@ -284,7 +284,7 @@ func (m *BaseModel) Likelihood() (lnL float64) {
 		panic("incorrect proportion length")
 	}
 
-	nTasks := len(m.cali[0].Sequence)
+	nTasks := m.cali.Length()
 	results := make(chan float64, nTasks)
 	tasks := make(chan int, nTasks)
 
