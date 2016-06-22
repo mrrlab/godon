@@ -296,7 +296,7 @@ func (m *BranchSiteGamma) fillMatricies(omega float64, dest []*codon.EMatrix) {
 			for c3 := 0; c3 < m.ncatsg; c3++ {
 				m.tmp[2] = m.gammas[c3]
 
-				e := &codon.EMatrix{}
+				e := &codon.EMatrix{CF: m.cf}
 				Q, s := codon.CreateRateTransitionMatrix(m.cf, m.kappa, omega, m.tmp, e.Q)
 				e.Set(Q, s)
 				err := e.Eigen()

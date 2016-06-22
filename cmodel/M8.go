@@ -273,7 +273,7 @@ func (m *M8) updateQ() {
 			for c3 := 0; c3 < m.ncatsg; c3++ {
 				m.tmp[2] = m.gammas[c3]
 
-				e := &codon.EMatrix{}
+				e := &codon.EMatrix{CF: m.cf}
 
 				Q, s := codon.CreateRateTransitionMatrix(m.cf, m.kappa, m.omega, m.tmp, e.Q)
 				e.Set(Q, s)
@@ -318,7 +318,7 @@ func (m *M8) updateQb() {
 				m.tmp[2] = m.gammas[c3]
 
 				for icl, omega := range m.omegab {
-					e := &codon.EMatrix{}
+					e := &codon.EMatrix{CF: m.cf}
 					Q, s := codon.CreateRateTransitionMatrix(m.cf, m.kappa, omega, m.tmp, e.Q)
 					e.Set(Q, s)
 					err := e.Eigen()
