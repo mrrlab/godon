@@ -18,7 +18,7 @@ func NewM0(cali codon.CodonSequences, t *tree.Tree, cf codon.CodonFrequency) (m 
 		q: &codon.EMatrix{CF: cf},
 	}
 	m.BaseModel = NewBaseModel(cali, t, cf, m)
-	m.prop[0] = 1
+	m.prop[0][0] = 1
 
 	m.setupParameters()
 	m.SetDefaults()

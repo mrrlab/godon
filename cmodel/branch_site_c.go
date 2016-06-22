@@ -156,19 +156,19 @@ func (m *BranchSiteC) SetBranchMatrices() {
 
 func (m *BranchSiteC) updateProportions() {
 	p2 := m.omega2 / 1000
-	m.prop[0] = m.p0prop * (1 - p2)
-	m.prop[1] = (1 - m.p0prop) * (1 - p2)
-	m.prop[2] = m.p0prop * p2
-	m.prop[3] = (1 - m.p0prop) * p2
+	m.prop[0][0] = m.p0prop * (1 - p2)
+	m.prop[0][1] = (1 - m.p0prop) * (1 - p2)
+	m.prop[0][2] = m.p0prop * p2
+	m.prop[0][3] = (1 - m.p0prop) * p2
 
 	for _, node := range m.tree.NodeIdArray() {
 		if node == nil {
 			continue
 		}
 		if node.Class == 0 {
-			m.scale[node.Id] = (m.prop[0]+m.prop[2])*m.q0.Scale + (m.prop[1]+m.prop[3])*m.q1.Scale
+			m.scale[node.Id] = (m.prop[0][0]+m.prop[0][2])*m.q0.Scale + (m.prop[0][1]+m.prop[0][3])*m.q1.Scale
 		} else {
-			m.scale[node.Id] = m.prop[0]*m.q0.Scale + m.prop[1]*m.q1.Scale + (m.prop[2]+m.prop[3])*m.q2.Scale
+			m.scale[node.Id] = m.prop[0][0]*m.q0.Scale + m.prop[0][1]*m.q1.Scale + (m.prop[0][2]+m.prop[0][3])*m.q2.Scale
 		}
 	}
 	m.propdone = true

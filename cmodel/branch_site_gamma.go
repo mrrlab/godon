@@ -268,10 +268,10 @@ func (m *BranchSiteGamma) updateProportions() {
 	p1 := m.p01sum - p0
 	bothcat := m.ncatcg * scat
 	for i := 0; i < bothcat; i++ {
-		m.prop[i+bothcat*0] = p0 / float64(bothcat)
-		m.prop[i+bothcat*1] = p1 / float64(bothcat)
-		m.prop[i+bothcat*2] = (1 - p0 - p1) * p0 / (p0 + p1) / float64(bothcat)
-		m.prop[i+bothcat*3] = (1 - p0 - p1) * p1 / (p0 + p1) / float64(bothcat)
+		m.prop[0][i+bothcat*0] = p0 / float64(bothcat)
+		m.prop[0][i+bothcat*1] = p1 / float64(bothcat)
+		m.prop[0][i+bothcat*2] = (1 - p0 - p1) * p0 / (p0 + p1) / float64(bothcat)
+		m.prop[0][i+bothcat*3] = (1 - p0 - p1) * p1 / (p0 + p1) / float64(bothcat)
 	}
 
 	for _, node := range m.tree.NodeIdArray() {
@@ -280,7 +280,7 @@ func (m *BranchSiteGamma) updateProportions() {
 		}
 		scale := 0.0
 		for i := 0; i < bothcat*4; i++ {
-			scale += m.prop[i] * m.qs[i][node.Id].Scale
+			scale += m.prop[0][i] * m.qs[i][node.Id].Scale
 		}
 		m.scale[node.Id] = scale
 	}

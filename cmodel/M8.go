@@ -361,7 +361,7 @@ func (m *M8) updateProportions() {
 	i := 0
 	var q *codon.EMatrix
 	for i, q = range m.qb {
-		m.prop[i] = pqi
+		m.prop[0][i] = pqi
 		scale += q.Scale * pqi
 	}
 
@@ -370,7 +370,7 @@ func (m *M8) updateProportions() {
 		pqi := (1 - m.p0) / float64(gcat*m.ncatcg)
 		for _, q = range m.q0 {
 			scale += q.Scale * pqi
-			m.prop[i] = pqi
+			m.prop[0][i] = pqi
 			i++
 		}
 		if i != gcat*(m.ncatb+1)*m.ncatcg {

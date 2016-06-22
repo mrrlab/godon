@@ -40,15 +40,18 @@ type Model interface {
 type BaseModel struct {
 	Model
 
-	tree       *tree.Tree
-	optBranch  bool
-	cali       codon.CodonSequences
-	lettersF   [][]int
-	lettersA   [][]int
-	cf         codon.CodonFrequency
-	qs         [][]*codon.EMatrix
-	scale      []float64
-	prop       []float64
+	tree      *tree.Tree
+	optBranch bool
+	cali      codon.CodonSequences
+	lettersF  [][]int
+	lettersA  [][]int
+	cf        codon.CodonFrequency
+	qs        [][]*codon.EMatrix
+	scale     []float64
+	//prop is proportions, in theory it can be different for every site
+	//by default it's the same, i.e. prop[0] == prop[1] == ... = prop[ncodons]
+	//if it is different special care should be taken in Copy method of the model
+	prop       [][]float64
 	nclass     int
 	parameters optimize.FloatParameters
 	as         *optimize.AdaptiveSettings
@@ -78,8 +81,12 @@ func NewBaseModel(cali codon.CodonSequences, t *tree.Tree, cf codon.CodonFrequen
 		qs:       make([][]*codon.EMatrix, nclass),
 		scale:    make([]float64, t.MaxNodeId()+1),
 		expBr:    make([]bool, t.MaxNodeId()+1),
-		prop:     make([]float64, nclass),
+		prop:     make([][]float64, cali.Length()),
 		nclass:   nclass,
+	}
+	p := make([]float64, nclass)
+	for i := range bm.prop {
+		bm.prop[i] = p
 	}
 	for i := 0; i < nclass; i++ {
 		bm.qs[i] = make([]*codon.EMatrix, t.MaxNodeId()+1)
@@ -91,7 +98,7 @@ func NewBaseModel(cali codon.CodonSequences, t *tree.Tree, cf codon.CodonFrequen
 
 func (m *BaseModel) Copy() (newM *BaseModel) {
 	newM = NewBaseModel(m.cali, m.tree.Copy(), m.cf, m.Model)
-	copy(newM.prop, m.prop)
+	copy(newM.prop[0], m.prop[0])
 	newM.as = m.as
 	newM.optBranch = m.optBranch
 	return
@@ -280,7 +287,7 @@ func (m *BaseModel) Likelihood() (lnL float64) {
 		}
 	}
 
-	if len(m.prop) != len(m.qs) {
+	if len(m.prop) != m.cali.Length() {
 		panic("incorrect proportion length")
 	}
 
@@ -297,7 +304,10 @@ func (m *BaseModel) Likelihood() (lnL float64) {
 			}
 			for pos := range tasks {
 				res := 0.0
-				for class, p := range m.prop {
+				for class, p := range m.prop[pos] {
+					if p <= 1e-20 {
+						continue
+					}
 					if m.optFixed && len(m.lettersF[pos]) == 2 {
 						res += m.fixedSubL(class, pos, plh) * p
 					} else {

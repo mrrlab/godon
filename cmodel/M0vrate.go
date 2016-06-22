@@ -100,14 +100,14 @@ func (m *M0vrate) SetDefaults() {
 }
 
 func (m *M0vrate) updateProportions() {
-	m.prop[0] = 1 / m.s
-	m.prop[1] = 1 - m.prop[0]
+	m.prop[0][0] = 1 / m.s
+	m.prop[0][1] = 1 - m.prop[0][0]
 
 	for _, node := range m.tree.NodeIdArray() {
 		if node == nil {
 			continue
 		}
-		m.scale[node.Id] = m.prop[0]*m.q0.Scale + m.prop[1]*m.q1.Scale
+		m.scale[node.Id] = m.prop[0][0]*m.q0.Scale + m.prop[0][1]*m.q1.Scale
 		m.qs[0][node.Id] = m.q0
 		m.qs[1][node.Id] = m.q1
 	}
