@@ -40,3 +40,17 @@ func NormalProposal(sd float64) func(float64) float64 {
 		return x + rand.NormFloat64()*sd
 	}
 }
+
+func DiscretePropose(state int, nstates int) (newstate int) {
+	if nstates <= 1 {
+		panic("number of states should be at least 1")
+	}
+	if state < 0 {
+		panic("incorrect state")
+	}
+	newstate = rand.Intn(nstates - 1)
+	if newstate >= state {
+		newstate++
+	}
+	return
+}
