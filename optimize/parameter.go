@@ -270,3 +270,35 @@ func (p *BasicFloatParameter) Accept(iter int) {
 func (p *BasicFloatParameter) String() string {
 	return strconv.FormatFloat(*p.float64, 'f', 6, 64)
 }
+
+type DiscreteParameter struct {
+	*BasicFloatParameter
+	NStates int
+}
+
+func NewDiscreteParameter(par *float64, name string, nstates int) (dpar *DiscreteParameter) {
+	if nstates <= 1 {
+		panic("incorrect number of states for a discrete parameter")
+	}
+	dpar = &DiscreteParameter{NStates: nstates}
+	dpar.BasicFloatParameter = &BasicFloatParameter{
+		float64:   par,
+		name:      name,
+		priorFunc: DiscreteUniformPrior(nstates),
+		min:       0,
+		max:       float64(nstates - 1),
+	}
+	return
+}
+
+func (p *DiscreteParameter) Propose() {
+	newState := DiscretePropose(int(*p.float64), p.NStates)
+	p.old, *p.float64 = *p.float64, float64(newState)
+	if p.onChange != nil {
+		p.onChange()
+	}
+}
+
+func (p *DiscreteParameter) String() string {
+	return strconv.Itoa(int(*p.float64))
+}

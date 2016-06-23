@@ -214,7 +214,7 @@ func (m *BranchSiteGammaERates) addParameters(fpg optimize.FloatParameterGenerat
 		// every codon has a rate parameter
 		for i := 0; i < m.cali.Length(); i++ {
 			nm := fmt.Sprintf("rate_%04d", i+1)
-			rate := fpg(&m.cs_rates[i], nm)
+			rate := optimize.NewDiscreteParameter(&m.cs_rates[i], nm, m.GetNClass()/4)
 			// make a copy of i for the closure
 			pos := i
 			rate.SetOnChange(func() {
@@ -222,10 +222,6 @@ func (m *BranchSiteGammaERates) addParameters(fpg optimize.FloatParameterGenerat
 				m.csrdone = false
 			})
 
-			rate.SetPriorFunc(optimize.UniformPrior(0, 1, false, false))
-			rate.SetMin(0)
-			rate.SetMax(1)
-			rate.SetProposalFunc(optimize.NormalProposal(0.3))
 			m.parameters.Append(rate)
 		}
 	}
@@ -271,7 +267,7 @@ func (m *BranchSiteGammaERates) SetDefaults() {
 
 	cs_rates := make([]float64, m.cali.Length())
 	for i := range cs_rates {
-		cs_rates[i] = rand.Float64()
+		cs_rates[i] = float64(rand.Intn(m.GetNClass() / 4))
 	}
 
 	m.SetParameters(kappa, omega0, omega2, p0, p1, alphas, alphac, cs_rates)
@@ -326,7 +322,7 @@ func (m *BranchSiteGammaERates) updateProportions() {
 
 	for pos := 0; pos < m.cali.Length(); pos++ {
 		if !m.allpropdone || !m.propdone[pos] {
-			class := int(float64(m.GetNClass()) / 4 * m.cs_rates[pos])
+			class := int(m.cs_rates[pos])
 			for i := 0; i < m.GetNClass()/4; i++ {
 				if class == i {
 					m.prop[pos][i+bothcat*0] = p0

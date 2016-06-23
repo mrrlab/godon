@@ -20,6 +20,15 @@ func UniformPrior(min, max float64, incmin, incmax bool) func(float64) float64 {
 	}
 }
 
+func DiscreteUniformPrior(nstates int) func(float64) float64 {
+	if nstates <= 1 {
+		panic("incorrect number of states")
+	}
+	return func(x float64) float64 {
+		return 1 / float64(nstates)
+	}
+}
+
 func GammaPrior(shape, scale float64, inczero bool) func(float64) float64 {
 	if scale <= 0 || scale <= 0 {
 		panic("shape and scale of gamma distribution must be > 0")
