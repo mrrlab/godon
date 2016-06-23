@@ -51,3 +51,9 @@ func GetTreeAlignment(data string) (t *tree.Tree, cali codon.CodonSequences, err
 
 	return
 }
+
+func setLogLevel() {
+	logging.SetLevel(logging.WARNING, "godon")
+	logging.SetLevel(logging.WARNING, "optimize")
+	logging.SetLevel(logging.WARNING, "cmodel")
+}
