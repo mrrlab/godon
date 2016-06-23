@@ -215,8 +215,10 @@ func (m *BranchSiteGammaERates) addParameters(fpg optimize.FloatParameterGenerat
 		for i := 0; i < m.cali.Length(); i++ {
 			nm := fmt.Sprintf("rate_%04d", i+1)
 			rate := fpg(&m.cs_rates[i], nm)
+			// make a copy of i for the closure
+			pos := i
 			rate.SetOnChange(func() {
-				m.propdone[i] = false
+				m.propdone[pos] = false
 				m.csrdone = false
 			})
 
