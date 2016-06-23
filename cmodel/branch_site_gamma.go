@@ -301,7 +301,7 @@ func (m *BranchSiteGamma) fillMatricies(omega float64, dest []*codon.EMatrix) {
 				e.Set(Q, s)
 				err := e.Eigen()
 				if err != nil {
-					panic("error finding eigen")
+					log.Fatal(err)
 				}
 
 				for ecl, rate := range m.gammac {

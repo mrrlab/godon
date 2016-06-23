@@ -70,6 +70,9 @@ func (m *EMatrix) Eigen() (err error) {
 
 	// make sure we have no zero frequences
 	psum := 0.0
+	if len(m.CF) == 0 {
+		return errors.New("EMatrix has an empty codon frequency")
+	}
 	for _, p := range m.CF {
 		p = math.Max(smallFreq, p)
 		psum += p
