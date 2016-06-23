@@ -300,10 +300,11 @@ func (m *BaseModel) Likelihood() (lnL float64) {
 	}
 
 	nPos := m.cali.Length()
-	results := make(chan bool, nPos)
+	nWorkers := runtime.GOMAXPROCS(0)
+	done := make(chan struct{}, nWorkers)
 	tasks := make(chan int, nPos)
 
-	for i := 0; i < runtime.GOMAXPROCS(0); i++ {
+	for i := 0; i < nWorkers; i++ {
 		go func() {
 			nni := m.tree.MaxNodeId() + 1
 			plh := make([][]float64, nni)
@@ -311,6 +312,9 @@ func (m *BaseModel) Likelihood() (lnL float64) {
 				plh[i] = make([]float64, codon.NCodon+1)
 			}
 			for pos := range tasks {
+				if m.prunAllPos && m.prunPos[pos] {
+					continue
+				}
 				res := 0.0
 				for class, p := range m.prop[pos] {
 					if p <= 1e-20 {
@@ -328,24 +332,19 @@ func (m *BaseModel) Likelihood() (lnL float64) {
 				}
 				m.L[pos] = math.Log(res)
 				m.prunPos[pos] = true
-				results <- true
 			}
+			done <- struct{}{}
 		}()
 	}
 
-	ass := 0
 	for pos := 0; pos < nPos; pos++ {
-		if !m.prunAllPos || !m.prunPos[pos] {
-			tasks <- pos
-			ass++
-		}
+		tasks <- pos
 	}
 	close(tasks)
 
 	// wait for all assignments to finish
-	for ass > 0 {
-		<-results
-		ass--
+	for i := 0; i < nWorkers; i++ {
+		<-done
 	}
 
 	for i := 0; i < nPos; i++ {
