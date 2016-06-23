@@ -60,3 +60,9 @@ func maxInt(a int, b ...int) int {
 	}
 	return a
 }
+
+func setLogLevel() {
+	logging.SetLevel(logging.WARNING, "godon")
+	logging.SetLevel(logging.WARNING, "optimize")
+	logging.SetLevel(logging.WARNING, "cmodel")
+}

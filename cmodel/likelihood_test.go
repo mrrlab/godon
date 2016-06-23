@@ -235,6 +235,7 @@ func TestBranchSiteF3X4D3(tst *testing.T) {
 
 /*** Benchmark M0 ***/
 func BenchmarkM0F0D1(b *testing.B) {
+	setLogLevel()
 	t, cali, err := GetTreeAlignment(data1)
 	if err != nil {
 		b.Error("Error: ", err)
@@ -253,6 +254,7 @@ func BenchmarkM0F0D1(b *testing.B) {
 }
 
 func BenchmarkM0F0D2(b *testing.B) {
+	setLogLevel()
 	t, cali, err := GetTreeAlignment(data2)
 	if err != nil {
 		b.Error("Error: ", err)
@@ -272,6 +274,7 @@ func BenchmarkM0F0D2(b *testing.B) {
 
 /*** Benchmark BranchSite ***/
 func BenchmarkBranchSiteF0D1(b *testing.B) {
+	setLogLevel()
 	t, cali, err := GetTreeAlignment(data1)
 	if err != nil {
 		b.Error("Error: ", err)
@@ -290,6 +293,7 @@ func BenchmarkBranchSiteF0D1(b *testing.B) {
 }
 
 func BenchmarkBranchSiteF0D2(b *testing.B) {
+	setLogLevel()
 	t, cali, err := GetTreeAlignment(data1)
 	if err != nil {
 		b.Error("Error: ", err)
