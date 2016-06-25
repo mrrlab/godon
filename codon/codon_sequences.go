@@ -43,6 +43,9 @@ func (seq CodonSequence) String() (s string) {
 }
 
 func (seqs CodonSequences) Length() int {
+	if len(seqs) == 0 {
+		return 0
+	}
 	return len(seqs[0].Sequence)
 }
 
