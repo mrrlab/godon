@@ -165,6 +165,9 @@ func main() {
 		log.Fatal(err)
 	}
 
+	if cali.Length() == 0 {
+		log.Fatal("Zero length alignment")
+	}
 	log.Infof("Read alignment of %d codons, %d fixed positions, %d ambiguous positions", cali.Length(), cali.NFixed(), cali.NAmbiguous())
 
 	treeFile, err := os.Open(flag.Args()[1])
