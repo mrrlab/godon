@@ -73,5 +73,11 @@ func (m *EMatrix) Exp(cD *matrix.DenseMatrix, t float64) (*matrix.DenseMatrix, e
 	for i := 0; i < m.d.Rows(); i++ {
 		cD.Set(i, i, math.Exp(m.d.Get(i, i)*t))
 	}
-	return matrix.Product(m.v, cD, m.iv), nil
+	P := matrix.Product(m.v, cD, m.iv)
+	Parr := P.Array()
+	// Make sure there's no negative elements
+	for i := range Parr {
+		Parr[i] = math.Abs(Parr[i])
+	}
+	return P, nil
 }
