@@ -7,6 +7,8 @@ import (
 	"github.com/skelterjohn/go.matrix"
 )
 
+const smallFreq = 1e-20
+
 type EMatrix struct {
 	Q     *matrix.DenseMatrix
 	Scale float64
@@ -44,17 +46,53 @@ func (m *EMatrix) Set(Q *matrix.DenseMatrix, scale float64) {
 }
 
 func (m *EMatrix) Eigen() (err error) {
+	// Please refer to the EigenQREV pdf from PAML for explanations.
 	if m.v != nil {
 		return nil
 	}
-	m.v, m.d, err = m.Q.Eigen()
+	if m.Scale < smallScale {
+		// No need to eigen 0-matrix
+		return nil
+	}
+	rows := m.Q.Rows()
+	cols := m.Q.Cols()
+
+	// make sure we have no zero frequences
+	psum := 0.0
+	if len(m.CF) == 0 {
+		return errors.New("EMatrix has an empty codon frequency")
+	}
+	for _, p := range m.CF {
+		p = math.Max(smallFreq, p)
+		psum += p
+	}
+
+	Pi := matrix.Zeros(cols, rows)
+	Pi_i := matrix.Zeros(cols, rows)
+	for i, p := range m.CF {
+		p = math.Max(smallFreq, p) / psum
+		Pi.Set(i, i, math.Sqrt(p))
+		Pi_i.Set(i, i, 1/math.Sqrt(p))
+	}
+
+	// Compute symmetric matrix A = Pi * Q * Pi_i
+	A := matrix.Product(Pi, m.Q, Pi_i)
+
+	R, D, err := A.Eigen()
 	if err != nil {
 		return err
 	}
-	m.iv, err = m.v.Inverse()
+
+	m.d = D
+
+	m.v = matrix.Product(Pi_i, R)
+
+	err = R.TransposeInPlace()
 	if err != nil {
 		return err
 	}
+
+	m.iv = matrix.Product(R, Pi)
 	return nil
 }
 
