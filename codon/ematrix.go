@@ -62,7 +62,7 @@ func (m *EMatrix) Exp(cD *matrix.DenseMatrix, t float64) (*matrix.DenseMatrix, e
 	if m.d.Cols() != m.d.Rows() {
 		return nil, errors.New("D isn't a square matrix")
 	}
-	if m.Scale < smallScale {
+	if m.Scale*t < smallScale {
 		return IdentityP, nil
 	}
 	// This is a dirty hack to allow 0-scale matricies
