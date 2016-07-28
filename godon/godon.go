@@ -202,6 +202,7 @@ func main() {
 	}
 
 	log.Infof("intree_unroot=%s", t)
+	log.Debugf("brtree_unroot=%s", t.BrString())
 	log.Debug(t.FullString())
 
 	var cf codon.CodonFrequency
