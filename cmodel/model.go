@@ -509,7 +509,7 @@ func (m *BaseModel) fixedSubL(class, pos int, plh [][]float64) (res float64) {
 		plh[i][0] = math.NaN()
 	}
 
-	l := int(m.cali[0].Sequence[pos])
+	l := m.lettersF[pos][0]
 
 	for node := range m.tree.Terminals() {
 		plh[node.Id][0] = 1
