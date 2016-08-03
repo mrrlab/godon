@@ -23,13 +23,15 @@ const (
 )
 
 const (
-	smallProp = 1e-20
+	smallProp       = 1e-20
+	defaultMaxBrLen = 100
 )
 
 type TreeOptimizable interface {
 	optimize.Optimizable
 	SetOptimizeBranchLengths()
 	SetAdaptive(*optimize.AdaptiveSettings)
+	SetMaxBranchLength(float64)
 	SetAggregationMode(mode AggMode)
 }
 
@@ -62,6 +64,7 @@ type BaseModel struct {
 	nclass     int
 	parameters optimize.FloatParameters
 	as         *optimize.AdaptiveSettings
+	maxBrLen   float64
 
 	// aggregation mode
 	aggMode AggMode
@@ -128,6 +131,11 @@ func (m *BaseModel) SetOptimizeBranchLengths() {
 	m.setupParameters()
 }
 
+func (m *BaseModel) SetMaxBranchLength(maxBrLen float64) {
+	m.maxBrLen = maxBrLen
+	m.setupParameters()
+}
+
 func (m *BaseModel) GetFloatParameters() optimize.FloatParameters {
 	return m.parameters
 }
@@ -146,7 +154,11 @@ func (m *BaseModel) setupParameters() {
 
 // Make branch length parameters adaptive.
 func (m *BaseModel) addBranchParameters(fpg optimize.FloatParameterGenerator) {
+	if m.maxBrLen == 0 {
+		m.maxBrLen = defaultMaxBrLen
+	}
 	if m.optBranch {
+
 		for _, node := range m.tree.NodeIdArray() {
 			if node == nil {
 				continue
@@ -162,7 +174,7 @@ func (m *BaseModel) addBranchParameters(fpg optimize.FloatParameterGenerator) {
 			})
 			par.SetPriorFunc(optimize.GammaPrior(1, 2, false))
 			par.SetMin(0)
-			par.SetMax(100)
+			par.SetMax(m.maxBrLen)
 			par.SetProposalFunc(optimize.NormalProposal(0.01))
 			m.parameters.Append(par)
 

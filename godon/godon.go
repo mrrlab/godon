@@ -57,6 +57,7 @@ func main() {
 	// model
 	model := flag.String("model", "M0", "todel type (M0 or BS for branch site)")
 	fgBranch := flag.Int("fg", -1, "fg branch number")
+	maxBrLen := flag.Float64("maxbrlen", 100, "maximum branch length, default: 100")
 	noOptBrLen := flag.Bool("nobrlen", false, "don't optimize branch lengths")
 	cFreq := flag.String("cfreq", "F3X4", "codon frequecny (F0 or F3X4)")
 	cFreqFileName := flag.String("cfreqfn", "", "codon frequencies file (overrides -cfreq)")
@@ -276,6 +277,8 @@ func main() {
 
 	if !*noOptBrLen {
 		log.Info("Will optimize branch lengths")
+		log.Infof("Maximum branch length: %f", *maxBrLen)
+		m.SetMaxBranchLength(*maxBrLen)
 		m.SetOptimizeBranchLengths()
 	} else {
 		log.Info("Will not optimize branch lengths")
