@@ -331,7 +331,12 @@ func (m *BaseModel) Likelihood() (lnL float64) {
 						// if proportion is to small
 						continue
 					}
-					if m.aggMode == AGG_FIXED && len(m.lettersF[pos]) == 2 {
+					if len(m.lettersF[pos]) == 1 {
+						// no letters in the current position
+						// probability = 1, res += 0
+						res += 1 * p
+
+					} else if m.aggMode == AGG_FIXED && len(m.lettersF[pos]) == 2 {
 						res += m.fixedSubL(class, pos, plh) * p
 					} else {
 						if m.aggMode == AGG_OBSERVED {
