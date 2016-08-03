@@ -32,7 +32,7 @@ type TreeOptimizable interface {
 	SetOptimizeBranchLengths()
 	SetAdaptive(*optimize.AdaptiveSettings)
 	SetMaxBranchLength(float64)
-	SetAggregationMode(mode AggMode)
+	SetAggregationMode(AggMode)
 }
 
 type TreeOptimizableSiteClass interface {

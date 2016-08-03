@@ -296,7 +296,7 @@ func main() {
 		log.Fatalf("Unknown aggregation mode: %s", *aggregate)
 	}
 	if *aggregate != "none" {
-		log.Infof("Approximate likelihood computations: %f", *aggregate)
+		log.Infof("Aggregation mode: %s", *aggregate)
 	}
 	m.SetAggregationMode(aggMode)
 
