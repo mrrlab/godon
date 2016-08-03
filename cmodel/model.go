@@ -17,13 +17,21 @@ import (
 
 var impl native.Implementation
 
+type AggMode int
+
+const (
+	AGG_NONE AggMode = iota
+	AGG_OBSERVED
+	AGG_FIXED
+)
+
 type TreeOptimizable interface {
 	optimize.Optimizable
 	SetOptimizeBranchLengths()
 	SetAdaptive(*optimize.AdaptiveSettings)
 	// It's a bit confusing name. Here we
 	// enable program optimizations.
-	SetOptimizations(fixed, all bool)
+	SetAggregationMode(mode AggMode)
 }
 
 type TreeOptimizableSiteClass interface {
@@ -56,9 +64,8 @@ type BaseModel struct {
 	parameters optimize.FloatParameters
 	as         *optimize.AdaptiveSettings
 
-	// optimizations
-	optFixed bool
-	optAll   bool
+	// aggregation mode
+	aggMode AggMode
 
 	// remember computations wee need to perform
 	expAllBr bool
@@ -164,9 +171,8 @@ func (m *BaseModel) addBranchParameters(fpg optimize.FloatParameterGenerator) {
 	}
 }
 
-func (m *BaseModel) SetOptimizations(fixed, all bool) {
-	m.optFixed = fixed
-	m.optAll = all
+func (m *BaseModel) SetAggregationMode(mode AggMode) {
+	m.aggMode = mode
 }
 
 // Reorder codon alignment so order of nodes and sequences are the same.
@@ -323,10 +329,10 @@ func (m *BaseModel) Likelihood() (lnL float64) {
 					if p <= 1e-20 {
 						continue
 					}
-					if m.optFixed && len(m.lettersF[pos]) == 2 {
+					if m.aggMode == AGG_FIXED && len(m.lettersF[pos]) == 2 {
 						res += m.fixedSubL(class, pos, plh) * p
 					} else {
-						if m.optAll {
+						if m.aggMode == AGG_OBSERVED {
 							res += m.observedSubL(class, pos, plh) * p
 						} else {
 							res += m.fullSubL(class, pos, plh) * p

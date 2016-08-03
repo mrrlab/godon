@@ -89,9 +89,11 @@ func main() {
 	maxAdapt := flag.Int("maxadapt", -1, "stop adapting after iteration (20% by default)")
 
 	// optimizations
-	optFixed := flag.Bool("fixed", false, "optimize fixed position likelihood by limiting markov chain to observed states")
-	optAll := flag.Bool("observed", false, "optimize likelihood computation by limiting markov chain to observed states")
-	printFull := flag.Bool("printfull", false, "print full likelihood in the end of optimization")
+	aggregate := flag.String("aggregate", "none", "state aggregation mode: "+
+		"observed (all positions, keep observed states), "+
+		"fixed (absolutely conserved positions, keep observed), "+
+		"none (default)")
+	printFull := flag.Bool("printfull", false, "print full (non-aggregated) likelihood in the end of optimization")
 
 	// technical
 	nCPU := flag.Int("cpu", 0, "number of cpu to use")
@@ -305,8 +307,21 @@ func main() {
 		log.Info("Will not optimize branch lengths")
 	}
 
-	log.Infof("Optimize likelihood computations. Fixed positions: %t, all positions: %t.", *optFixed, *optAll)
-	m.SetOptimizations(*optFixed, *optAll)
+	var aggMode cmodel.AggMode
+	switch *aggregate {
+	case "none":
+		aggMode = cmodel.AGG_NONE
+	case "observed":
+		aggMode = cmodel.AGG_OBSERVED
+	case "fixed":
+		aggMode = cmodel.AGG_FIXED
+	default:
+		log.Fatalf("Unknown aggregation mode: %s", *aggregate)
+	}
+	if *aggregate != "none" {
+		log.Infof("Approximate likelihood computations: %f", *aggregate)
+	}
+	m.SetAggregationMode(aggMode)
 
 	if *startF != "" {
 		l := lastLine(*startF)
@@ -436,8 +451,8 @@ MethodLoop:
 		}
 	}
 
-	if *printFull && (*optFixed || *optAll) {
-		m.SetOptimizations(false, false)
+	if *printFull && (aggMode != cmodel.AGG_NONE) {
+		m.SetAggregationMode(cmodel.AGG_NONE)
 		log.Notice("Full likelihood: ", m.Likelihood())
 	}
 
