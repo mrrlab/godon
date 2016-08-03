@@ -57,7 +57,7 @@ func main() {
 	// model
 	model := flag.String("model", "M0", "todel type (M0 or BS for branch site)")
 	fgBranch := flag.Int("fg", -1, "fg branch number")
-	maxBrLen := flag.Float64("maxbrlen", 100, "maximum branch length, default: 100")
+	maxBrLen := flag.Float64("maxbrlen", 100, "maximum branch length")
 	noOptBrLen := flag.Bool("nobrlen", false, "don't optimize branch lengths")
 	cFreq := flag.String("cfreq", "F3X4", "codon frequecny (F0 or F3X4)")
 	cFreqFileName := flag.String("cfreqfn", "", "codon frequencies file (overrides -cfreq)")
@@ -92,8 +92,7 @@ func main() {
 	// optimizations
 	aggregate := flag.String("aggregate", "none", "state aggregation mode: "+
 		"observed (all positions, keep observed states), "+
-		"fixed (absolutely conserved positions, keep observed), "+
-		"none (default)")
+		"fixed (absolutely conserved positions, keep observed)")
 	printFull := flag.Bool("printfull", false, "print full (non-aggregated) likelihood in the end of optimization")
 
 	// technical
