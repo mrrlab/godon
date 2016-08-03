@@ -25,6 +25,10 @@ const (
 	AGG_FIXED
 )
 
+const (
+	smallProp = 1e-20
+)
+
 type TreeOptimizable interface {
 	optimize.Optimizable
 	SetOptimizeBranchLengths()
@@ -326,7 +330,8 @@ func (m *BaseModel) Likelihood() (lnL float64) {
 				}
 				res := 0.0
 				for class, p := range m.prop[pos] {
-					if p <= 1e-20 {
+					if p <= smallProp {
+						// if proportion is to small
 						continue
 					}
 					if m.aggMode == AGG_FIXED && len(m.lettersF[pos]) == 2 {
