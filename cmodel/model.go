@@ -30,8 +30,6 @@ type TreeOptimizable interface {
 	optimize.Optimizable
 	SetOptimizeBranchLengths()
 	SetAdaptive(*optimize.AdaptiveSettings)
-	// It's a bit confusing name. Here we
-	// enable program optimizations.
 	SetAggregationMode(mode AggMode)
 }
 
