@@ -3,6 +3,7 @@ package cmodel
 
 import (
 	"math"
+	"math/rand"
 	"runtime"
 	"strconv"
 	"sync"
@@ -23,6 +24,7 @@ const (
 	AGG_NONE AggMode = iota
 	AGG_OBSERVED
 	AGG_FIXED
+	AGG_RANDOM
 )
 
 const (
@@ -57,6 +59,7 @@ type BaseModel struct {
 	cali      codon.CodonSequences
 	lettersF  [][]int
 	lettersA  [][]int
+	rshuffle  []int //random shuffle of positions
 	cf        codon.CodonFrequency
 	qs        [][]*codon.EMatrix
 	scale     []float64
@@ -94,6 +97,7 @@ func NewBaseModel(cali codon.CodonSequences, t *tree.Tree, cf codon.CodonFrequen
 		cali:     cali,
 		lettersF: f,
 		lettersA: a,
+		rshuffle: rand.Perm(cali.Length()),
 		tree:     t,
 		cf:       cf,
 		qs:       make([][]*codon.EMatrix, nclass),
@@ -352,7 +356,7 @@ func (m *BaseModel) Likelihood() (lnL float64) {
 					} else if m.aggMode == AGG_FIXED && len(m.lettersF[pos]) == 2 {
 						res += m.fixedSubL(class, pos, plh) * p
 					} else {
-						if m.aggMode == AGG_OBSERVED {
+						if m.aggMode == AGG_OBSERVED || m.aggMode == AGG_RANDOM {
 							res += m.observedSubL(class, pos, plh) * p
 						} else {
 							res += m.fullSubL(class, pos, plh) * p
@@ -433,8 +437,14 @@ func (m *BaseModel) fullSubL(class, pos int, plh [][]float64) (res float64) {
 // observedSubL calculates likelihood for given site class and position
 // taking into account only visible states.
 func (m *BaseModel) observedSubL(class, pos int, plh [][]float64) (res float64) {
-	lettersF := m.lettersF[pos]
-	lettersA := m.lettersA[pos]
+	spos := pos
+	//if random, possition state spaces should be shuffled
+	if m.aggMode == AGG_RANDOM {
+		spos = m.rshuffle[pos]
+	}
+
+	lettersF := m.lettersF[spos]
+	lettersA := m.lettersA[spos]
 	fabs := 0.0
 	for _, l := range lettersA {
 		fabs += m.cf[l]
@@ -442,14 +452,16 @@ func (m *BaseModel) observedSubL(class, pos int, plh [][]float64) (res float64) 
 
 	for node := range m.tree.Terminals() {
 		cod := m.cali[node.LeafId].Sequence[pos]
+		nfound := 0
 		for _, l := range lettersF {
 			if l == int(m.cali[node.LeafId].Sequence[pos]) || cod == codon.NOCODON {
 				plh[node.Id][l] = 1
+				nfound++
 			} else {
 				plh[node.Id][l] = 0
 			}
 		}
-		if cod == codon.NOCODON {
+		if cod == codon.NOCODON || nfound == 0 {
 			plh[node.Id][codon.NCodon] = 1
 		}
 	}
