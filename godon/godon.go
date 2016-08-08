@@ -89,7 +89,8 @@ func main() {
 	// optimizations
 	aggregate := flag.String("aggregate", "none", "state aggregation mode: "+
 		"observed (all positions, keep observed states), "+
-		"fixed (absolutely conserved positions, keep observed)")
+		"fixed (absolutely conserved positions, keep observed),"+
+		"random (like observed, but states are shuffled between positions)")
 	printFull := flag.Bool("printfull", false, "print full (non-aggregated) likelihood in the end of optimization")
 
 	// technical
@@ -291,6 +292,8 @@ func main() {
 		aggMode = cmodel.AGG_OBSERVED
 	case "fixed":
 		aggMode = cmodel.AGG_FIXED
+	case "random":
+		aggMode = cmodel.AGG_RANDOM
 	default:
 		log.Fatalf("Unknown aggregation mode: %s", *aggregate)
 	}
