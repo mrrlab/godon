@@ -89,7 +89,7 @@ func main() {
 	// optimizations
 	aggregate := flag.String("aggregate", "none", "state aggregation mode: "+
 		"observed (all positions, keep observed states), "+
-		"fixed (absolutely conserved positions, keep observed),"+
+		"fixed (absolutely conserved positions, keep observed), "+
 		"random (like observed, but states are shuffled between positions)")
 	printFull := flag.Bool("printfull", false, "print full (non-aggregated) likelihood in the end of optimization")
 
