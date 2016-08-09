@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"strings"
 
 	"bitbucket.org/Davydov/godon/bio"
 )
@@ -78,7 +79,7 @@ func ToCodonSequences(seqs bio.Sequences) (cs CodonSequences, err error) {
 		cseq.Name = seq.Name
 		cseq.Sequence = make([]byte, 0, len(seq.Sequence)/3)
 		for i := 0; i < len(seq.Sequence); i += 3 {
-			cnum, ok := CodonNum[seq.Sequence[i:i+3]]
+			cnum, ok := CodonNum[strings.ToUpper(seq.Sequence[i:i+3])]
 			if !ok {
 				cnum = NOCODON
 			}
