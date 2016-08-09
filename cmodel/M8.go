@@ -9,6 +9,7 @@ import (
 	"bitbucket.org/Davydov/godon/tree"
 )
 
+// M8 is an implementation of M8 model.
 type M8 struct {
 	*BaseModel
 	qb           []*codon.EMatrix
@@ -40,6 +41,7 @@ type M8 struct {
 	gammacdone bool
 }
 
+// NewM8 creates a new M8 model.
 func NewM8(cali codon.CodonSequences, t *tree.Tree, cf codon.CodonFrequency, addw, fixw bool, ncatb, ncatsg, ncatcg int) (m *M8) {
 	// n site gamma categories, ncatb * n^3 matrices
 	gcat := ncatsg * ncatsg * ncatsg
@@ -73,6 +75,7 @@ func NewM8(cali codon.CodonSequences, t *tree.Tree, cf codon.CodonFrequency, add
 	return
 }
 
+// GetNClass returns number of site classes.
 func (m *M8) GetNClass() int {
 	gcat := m.ncatsg * m.ncatsg * m.ncatsg
 	if m.addw {
@@ -81,6 +84,8 @@ func (m *M8) GetNClass() int {
 	return gcat * m.ncatb * m.ncatcg
 }
 
+// Copy makes a copy of the model preserving the model parameter
+// values.
 func (m *M8) Copy() optimize.Optimizable {
 	// n inner gamma categories, ncatb * n^3 matrices
 	gcat := m.ncatsg * m.ncatsg * m.ncatsg
@@ -117,6 +122,8 @@ func (m *M8) Copy() optimize.Optimizable {
 	return newM
 }
 
+// addParameters adds all the model parameters to the parameter
+// storage.
 func (m *M8) addParameters(fpg optimize.FloatParameterGenerator) {
 	if m.addw {
 		p0 := fpg(&m.p0, "p0")
@@ -198,10 +205,12 @@ func (m *M8) addParameters(fpg optimize.FloatParameterGenerator) {
 	}
 }
 
+// GetParameters returns the model parameter values.
 func (m *M8) GetParameters() (p0, p, q, kappa, omega, alphas, alphac float64) {
 	return m.p0, m.p, m.q, m.kappa, m.omega, m.alphas, m.alphac
 }
 
+// SetParameters sets the model parameter values.
 func (m *M8) SetParameters(p0, p, q, kappa, omega, alphas, alphac float64) {
 	if m.addw {
 		m.p0 = p0
@@ -223,6 +232,7 @@ func (m *M8) SetParameters(p0, p, q, kappa, omega, alphas, alphac float64) {
 	m.q0done = false
 }
 
+// SetDefaults sets the default initial parameter values.
 func (m *M8) SetDefaults() {
 	p0 := 0.69 + rand.Float64()*0.3
 	p := 1e-3 + rand.Float64()*10
@@ -263,6 +273,9 @@ func (m *M8) SetDefaults() {
 //   (total: (ncatb + 1) * ncatsg^3) * ncatcg
 // ]
 
+// UpdateQ updates Q-matrices for after change in the model parameter
+// values. This functions updates matrices for the positive selection
+// (w2).
 func (m *M8) updateQ() {
 	gcat := m.ncatsg * m.ncatsg * m.ncatsg
 
@@ -304,6 +317,9 @@ func (m *M8) updateQ() {
 	m.propdone = false
 }
 
+// updateQb updates Q-matrices for after change in the model parameter
+// values. This functions updates matrices for the negative selection
+// (beta-distributed).
 func (m *M8) updateQb() {
 	gcat := m.ncatsg * m.ncatsg * m.ncatsg
 
@@ -347,6 +363,8 @@ func (m *M8) updateQb() {
 	m.propdone = false
 }
 
+// updateProportions updates proportions if model parameters are
+// changing.
 func (m *M8) updateProportions() {
 	scale := 0.0
 
@@ -389,6 +407,8 @@ func (m *M8) updateProportions() {
 	m.expAllBr = false
 }
 
+
+// Likelihood computes likelihood.
 func (m *M8) Likelihood() float64 {
 	if !m.gammasdone {
 		if m.ncatsg > 1 {

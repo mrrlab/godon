@@ -19,8 +19,10 @@ const (
 	smallDiff = 1e-3
 )
 
+// log is a global logging variable.
 var log = logging.MustGetLogger("cmodel")
 
+// GetTreeAlignment returns a tree and elignment for testing purposes.
 func GetTreeAlignment(data string) (t *tree.Tree, cali codon.CodonSequences, err error) {
 	tf, err := os.Open(path.Join("testdata", data+".nwk"))
 	if err != nil {
@@ -52,6 +54,7 @@ func GetTreeAlignment(data string) (t *tree.Tree, cali codon.CodonSequences, err
 	return
 }
 
+// maxInt returns maximum integer value.
 func maxInt(a int, b ...int) int {
 	for _, v := range b {
 		if v > a {
@@ -61,6 +64,7 @@ func maxInt(a int, b ...int) int {
 	return a
 }
 
+// setLogLevel sets the default log-level to WARNING.
 func setLogLevel() {
 	logging.SetLevel(logging.WARNING, "godon")
 	logging.SetLevel(logging.WARNING, "optimize")

@@ -6,6 +6,7 @@ import (
 	"bitbucket.org/Davydov/godon/tree"
 )
 
+// M0vrate is an extension of M0 model with a simple rate variation.
 type M0vrate struct {
 	*BaseModel
 	q0, q1       *codon.EMatrix
@@ -16,6 +17,7 @@ type M0vrate struct {
 	propdone     bool
 }
 
+// NewM0vrate creates a new M0vrate model.
 func NewM0vrate(cali codon.CodonSequences, t *tree.Tree, cf codon.CodonFrequency) (m *M0vrate) {
 	m = &M0vrate{
 		q0: &codon.EMatrix{CF: cf},
@@ -29,10 +31,13 @@ func NewM0vrate(cali codon.CodonSequences, t *tree.Tree, cf codon.CodonFrequency
 	return
 }
 
+// GetNClass returns number of site classes.
 func (m *M0vrate) GetNClass() int {
 	return 2
 }
 
+// Copy makes a copy of the model preserving the model parameter
+// values.
 func (m *M0vrate) Copy() optimize.Optimizable {
 	newM := &M0vrate{
 		BaseModel: m.BaseModel.Copy(),
@@ -48,6 +53,8 @@ func (m *M0vrate) Copy() optimize.Optimizable {
 	return newM
 }
 
+// addParameters adds all the model parameters to the parameter
+// storage.
 func (m *M0vrate) addParameters(fpg optimize.FloatParameterGenerator) {
 	omega := fpg(&m.omega, "omega")
 	omega.SetOnChange(func() {
@@ -84,10 +91,12 @@ func (m *M0vrate) addParameters(fpg optimize.FloatParameterGenerator) {
 	m.parameters.Append(s)
 }
 
+// GetParameters returns the model parameter values.
 func (m *M0vrate) GetParameters() (kappa, omega float64) {
 	return m.kappa, m.omega
 }
 
+// SetParameters sets the model parameter values.
 func (m *M0vrate) SetParameters(kappa, omega, s float64) {
 	m.kappa = kappa
 	m.omega = omega
@@ -95,10 +104,13 @@ func (m *M0vrate) SetParameters(kappa, omega, s float64) {
 	m.qdone = false
 }
 
+// SetDefaults sets the default initial parameter values.
 func (m *M0vrate) SetDefaults() {
 	m.SetParameters(1, 1, 2)
 }
 
+// updateProportions updates proportions if model parameters are
+// changing.
 func (m *M0vrate) updateProportions() {
 	m.prop[0][0] = 1 / m.s
 	m.prop[0][1] = 1 - m.prop[0][0]
@@ -115,6 +127,7 @@ func (m *M0vrate) updateProportions() {
 	m.expAllBr = false
 }
 
+// updateMatrix updates the Q-matrices.
 func (m *M0vrate) updateMatrix() {
 	Q0, scale := codon.CreateTransitionMatrix(m.cf, m.kappa, m.omega, m.q0.Q)
 	m.q0.Set(Q0, scale)
@@ -128,6 +141,7 @@ func (m *M0vrate) updateMatrix() {
 	m.updateProportions()
 }
 
+// Likelihood computes likelihood.
 func (m *M0vrate) Likelihood() float64 {
 	if !m.qdone {
 		m.updateMatrix()

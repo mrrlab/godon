@@ -9,6 +9,7 @@ import (
 	"bitbucket.org/Davydov/godon/tree"
 )
 
+// BranchSite is an implementation of the branch-site model.
 type BranchSite struct {
 	*BaseModel
 	q0, q1, q2             *codon.EMatrix
@@ -20,6 +21,7 @@ type BranchSite struct {
 	propdone               bool
 }
 
+// NewBranchSite creates a new BranchSite model.
 func NewBranchSite(cali codon.CodonSequences, t *tree.Tree, cf codon.CodonFrequency, fixw2 bool) (m *BranchSite) {
 	m = &BranchSite{
 		fixw2: fixw2,
@@ -38,10 +40,13 @@ func NewBranchSite(cali codon.CodonSequences, t *tree.Tree, cf codon.CodonFreque
 
 }
 
+// GetNClass returns number of site classes.
 func (m *BranchSite) GetNClass() int {
 	return 4
 }
 
+// Copy makes a copy of the model preserving the model parameter
+// values.
 func (m *BranchSite) Copy() optimize.Optimizable {
 	newM := &BranchSite{
 		BaseModel: m.BaseModel.Copy(),
@@ -61,6 +66,8 @@ func (m *BranchSite) Copy() optimize.Optimizable {
 	return newM
 }
 
+// addParameters adds all the model parameters to the parameter
+// storage.
 func (m *BranchSite) addParameters(fpg optimize.FloatParameterGenerator) {
 	kappa := fpg(&m.kappa, "kappa")
 	kappa.SetOnChange(func() {
@@ -117,6 +124,7 @@ func (m *BranchSite) addParameters(fpg optimize.FloatParameterGenerator) {
 	m.parameters.Append(p0prop)
 }
 
+// SetParameters sets the model parameter values.
 func (m *BranchSite) SetParameters(kappa float64, omega0, omega2 float64, p0, p1 float64) {
 	m.kappa = kappa
 	m.omega0 = omega0
@@ -130,10 +138,12 @@ func (m *BranchSite) SetParameters(kappa float64, omega0, omega2 float64, p0, p1
 	m.q0done, m.q1done, m.q2done = false, false, false
 }
 
+// GetParameters returns the model parameter values.
 func (m *BranchSite) GetParameters() (kappa float64, omega0, omega2 float64, p0, p1 float64) {
 	return m.kappa, m.omega0, m.omega2, m.p01sum * m.p0prop, m.p01sum * (1 - m.p0prop)
 }
 
+// SetDefaults sets the default initial parameter values.
 func (m *BranchSite) SetDefaults() {
 	// these parameters mostly come from codeml
 	kappa := 1e-2 + rand.Float64()*10
@@ -146,6 +156,7 @@ func (m *BranchSite) SetDefaults() {
 	m.SetParameters(kappa, omega0, omega2, p0, p1)
 }
 
+// setBranchMatrices set matrices for all the branches.
 func (m *BranchSite) setBranchMatrices() {
 	for i := 0; i < len(m.qs); i++ {
 		for _, node := range m.tree.NodeIdArray() {
@@ -174,6 +185,8 @@ func (m *BranchSite) setBranchMatrices() {
 	}
 }
 
+// updateProportions updates proportions if model parameters are
+// changing.
 func (m *BranchSite) updateProportions() {
 	p0 := m.p0prop * m.p01sum
 	p1 := m.p01sum - p0
@@ -196,6 +209,7 @@ func (m *BranchSite) updateProportions() {
 	m.expAllBr = false
 }
 
+// updateMatrices updates matrices if model parameters are changing.
 func (m *BranchSite) updateMatrices() {
 	if !m.q0done {
 		Q0, s0 := codon.CreateTransitionMatrix(m.cf, m.kappa, m.omega0, m.q0.Q)
@@ -231,6 +245,7 @@ func (m *BranchSite) updateMatrices() {
 	m.expAllBr = false
 }
 
+// Likelihood computes likelihood.
 func (m *BranchSite) Likelihood() float64 {
 	if !m.q0done || !m.q1done || !m.q2done {
 		m.updateMatrices()

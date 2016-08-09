@@ -11,6 +11,8 @@ import (
 	"bitbucket.org/Davydov/godon/tree"
 )
 
+// BranchSite is an implementation of the branch-site model with gamma
+// rates variation with exlicit rate values.
 type BranchSiteGammaERates struct {
 	*BaseModel
 	q0s            []*codon.EMatrix
@@ -41,6 +43,7 @@ type BranchSiteGammaERates struct {
 	csrdone                bool
 }
 
+// NewBranchSiteGammaERates creates a new BranchSiteGammaERates model.
 func NewBranchSiteGammaERates(cali codon.CodonSequences, t *tree.Tree, cf codon.CodonFrequency, fixw2 bool, ncatsg, ncatcg int) (m *BranchSiteGammaERates) {
 	scat := ncatsg * ncatsg * ncatsg
 
@@ -78,12 +81,15 @@ func NewBranchSiteGammaERates(cali codon.CodonSequences, t *tree.Tree, cf codon.
 
 }
 
+// GetNClass returns number of site classes.
 func (m *BranchSiteGammaERates) GetNClass() int {
 	scat := m.ncatsg * m.ncatsg * m.ncatsg
 
 	return 4 * scat * m.ncatcg
 }
 
+// Copy makes a copy of the model preserving the model parameter
+// values.
 func (m *BranchSiteGammaERates) Copy() optimize.Optimizable {
 	scat := m.ncatsg * m.ncatsg * m.ncatsg
 	newM := &BranchSiteGammaERates{
@@ -130,6 +136,8 @@ func (m *BranchSiteGammaERates) Copy() optimize.Optimizable {
 	return newM
 }
 
+// addParameters adds all the model parameters to the parameter
+// storage.
 func (m *BranchSiteGammaERates) addParameters(fpg optimize.FloatParameterGenerator) {
 	kappa := fpg(&m.kappa, "kappa")
 	kappa.SetOnChange(func() {
@@ -228,6 +236,7 @@ func (m *BranchSiteGammaERates) addParameters(fpg optimize.FloatParameterGenerat
 
 }
 
+// SetParameters sets the model parameter values.
 func (m *BranchSiteGammaERates) SetParameters(kappa float64, omega0, omega2 float64, p0, p1 float64, alphas, alphac float64, cs_rates []float64) {
 	m.kappa = kappa
 	m.omega0 = omega0
@@ -247,12 +256,14 @@ func (m *BranchSiteGammaERates) SetParameters(kappa float64, omega0, omega2 floa
 	copy(m.cs_rates, cs_rates)
 }
 
+// GetParameters returns the model parameter values.
 func (m *BranchSiteGammaERates) GetParameters() (kappa float64, omega0, omega2 float64, p0, p1 float64, alphas, alphac float64, cs_rates []float64) {
 	cs_rates = make([]float64, len(m.cs_rates))
 	copy(cs_rates, m.cs_rates)
 	return m.kappa, m.omega0, m.omega2, m.p01sum * m.p0prop, m.p01sum * (1 - m.p0prop), m.alphas, m.alphac, cs_rates
 }
 
+// SetDefaults sets the default initial parameter values.
 func (m *BranchSiteGammaERates) SetDefaults() {
 	// these parameters mostly come from codeml
 	kappa := 1e-2 + rand.Float64()*10
@@ -292,6 +303,7 @@ func (m *BranchSiteGammaERates) SetDefaults() {
 // cat 4, internal gamma cat ncatsg^3, external gamma cat ncatcg
 // (total: 4 * ncatsg^3 * ncatcg)
 
+// setBranchMatrices set matrices for all the branches.
 func (m *BranchSiteGammaERates) setBranchMatrices() {
 	scat := m.ncatsg * m.ncatsg * m.ncatsg
 	for _, node := range m.tree.NodeIdArray() {
@@ -314,6 +326,8 @@ func (m *BranchSiteGammaERates) setBranchMatrices() {
 	}
 }
 
+// updateProportions updates proportions if model parameters are
+// changing.
 func (m *BranchSiteGammaERates) updateProportions() {
 	scat := m.ncatsg * m.ncatsg * m.ncatsg
 	p0 := m.p0prop * m.p01sum
@@ -360,6 +374,7 @@ func (m *BranchSiteGammaERates) updateProportions() {
 	m.expAllBr = false
 }
 
+// fillMatricies sets Q-matricies for all the rates.
 func (m *BranchSiteGammaERates) fillMatricies(omega float64, dest []*codon.EMatrix) {
 	for c1 := 0; c1 < m.ncatsg; c1++ {
 		m.tmp[0] = m.gammas[c1]
@@ -388,6 +403,7 @@ func (m *BranchSiteGammaERates) fillMatricies(omega float64, dest []*codon.EMatr
 	}
 }
 
+// updateMatrices updates matrices if model parameters are changing.
 func (m *BranchSiteGammaERates) updateMatrices() {
 	if !m.q0done {
 		m.fillMatricies(m.omega0, m.q0s)
@@ -408,6 +424,7 @@ func (m *BranchSiteGammaERates) updateMatrices() {
 	m.expAllBr = false
 }
 
+// Likelihood computes likelihood.
 func (m *BranchSiteGammaERates) Likelihood() float64 {
 	if !m.gammasdone {
 		if m.ncatsg > 1 {
