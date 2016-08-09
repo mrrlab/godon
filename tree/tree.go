@@ -327,7 +327,7 @@ type Node struct {
 	BranchLength float64
 	// Parent is the parent node (nil for the root).
 	Parent       *Node
-	// ChildNodes is an array of children nodes.
+	// ChildNodes is an array (slice) of children nodes.
 	childNodes   []*Node
 	// Id is the node ID.
 	Id           int

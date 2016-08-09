@@ -16,7 +16,8 @@ var log = logging.MustGetLogger("optimize")
 // Optimizable is something which can be optimized using the
 // optimizer.
 type Optimizable interface {
-	// GetFloatParameters returns array of float parameters.
+	// GetFloatParameters returns array (slice) of float
+	// parameters.
 	GetFloatParameters() FloatParameters
 	// Copy creates a copy of optimizable.
 	Copy() Optimizable

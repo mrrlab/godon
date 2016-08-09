@@ -9,7 +9,7 @@ import (
 	"bitbucket.org/Davydov/godon/bio"
 )
 
-// CodonFrequency is array of codon frequencies.
+// CodonFrequency is array (slice) of codon frequencies.
 type CodonFrequency []float64
 
 // getCodons returns a channel with every codon (64).
@@ -64,7 +64,7 @@ func ReadFrequency(rd io.Reader) (CodonFrequency, error) {
 
 }
 
-// F0 returns array of equal codon frequencies.
+// F0 returns array (slice) of equal codon frequencies.
 func F0() CodonFrequency {
 	cf := make(CodonFrequency, NCodon)
 	for i := 0; i < NCodon; i++ {

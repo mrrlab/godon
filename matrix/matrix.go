@@ -16,7 +16,8 @@ type Matrix struct {
 	matrixView C.gsl_matrix_view
 }
 
-// NewFromArray creates a new matrix of size n1*n2 from an array.
+// NewFromArray creates a new matrix of size n1*n2 from an array
+// (slice).
 func NewFromArray(data []float64, n1 int, n2 int) (*Matrix, error) {
 	if len(data) != n1*n2 {
 		return nil, errors.New("matrix dimensions don't match slice size")

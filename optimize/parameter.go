@@ -60,7 +60,7 @@ type FloatParameter interface {
 // FloatParameter.
 type FloatParameterGenerator func(*float64, string) FloatParameter
 
-// FloatParameters is an array of FloatParameters.
+// FloatParameters is an array (slice) of FloatParameters.
 type FloatParameters []FloatParameter
 
 // Append appends a new float parameter.
