@@ -1,4 +1,5 @@
-// This code implements ideas and pseudocode presented by Xavier Meyer <Xavier.Meyer.2 at unil.ch>.
+// This code implements ideas and pseudocode presented by Xavier Meyer
+// <Xavier.Meyer.2 at unil.ch>.
 
 package optimize
 
@@ -7,6 +8,7 @@ import (
 	"math/rand"
 )
 
+// AdaptiveParameter is an adaptive parameter for adaptive MCMC.
 type AdaptiveParameter struct {
 	*BasicFloatParameter
 	t    int
@@ -30,23 +32,38 @@ type AdaptiveParameter struct {
 	*AdaptiveSettings
 }
 
+// AdaptiveSettings are settings for an adaptive MCMC.
 type AdaptiveSettings struct {
+	// WSize window size to compute mean and variance.
 	WSize     int
+	// K specifies how often Mu should be updated.
 	K         int
+	// Skip is the number of iterations to skip before starting
+	// adaptation.
 	Skip      int
+	// MaxAdapt is the number of iterations to adapt.
 	MaxAdapt  int
+	// MaxUpdate maximum number of update for a parameter.
 	MaxUpdate int
+	// Epsilon is part of stopping criteria for stopping
+	// adaptation.
 	Epsilon   float64
+	// C is a Robbins-Monro algorithm parameter
 	C         float64
+	// Nu is a Robbins-Monro algorithm parameter
 	Nu        float64
+	// Lambda is the proposal multiplier.
 	Lambda    float64
+	// SD is initial standard deviation.
 	SD        float64
 }
 
+// square computes x^2.
 func square(x float64) float64 {
 	return x * x
 }
 
+// NewAdaptiveSettings creates new settings for adaptive MCMC.
 func NewAdaptiveSettings() *AdaptiveSettings {
 	return &AdaptiveSettings{
 		WSize:     10,
@@ -62,10 +79,12 @@ func NewAdaptiveSettings() *AdaptiveSettings {
 	}
 }
 
+// ParameterGenerator generates an adaptive MCMC parameter.
 func (as *AdaptiveSettings) ParameterGenerator(par *float64, name string) FloatParameter {
 	return NewAdaptiveParameter(par, name, as)
 }
 
+// NewAdaptiveParameter creates a new adaptive MCMC parameter.
 func NewAdaptiveParameter(par *float64, name string, ap *AdaptiveSettings) (a *AdaptiveParameter) {
 	a = &AdaptiveParameter{
 		BasicFloatParameter: NewBasicFloatParameter(par, name),
@@ -86,12 +105,15 @@ func NewAdaptiveParameter(par *float64, name string, ap *AdaptiveSettings) (a *A
 	return
 }
 
+// Accept is called if value is accepted.
 func (a *AdaptiveParameter) Accept(iter int) {
 	if iter >= a.Skip && iter < a.MaxAdapt {
 		a.UpdateMu()
 	}
 }
 
+// RobbinsMonro implements Robbins-Monro algorithm for learning mean
+// and variance.
 func (a *AdaptiveParameter) RobbinsMonro() (gamma float64) {
 	delta := a.bmean - a.mean
 	if (delta > 0 && !a.delta) || (delta < 0 && a.delta) {
@@ -103,6 +125,7 @@ func (a *AdaptiveParameter) RobbinsMonro() (gamma float64) {
 	return
 }
 
+// CheckConvergenceMu checks if Mu converged.
 func (a *AdaptiveParameter) CheckConvergenceMu() {
 	if len(a.vals) == a.WSize {
 		oldVal := <-a.vals
@@ -135,6 +158,7 @@ func (a *AdaptiveParameter) CheckConvergenceMu() {
 	}
 }
 
+// UpdateMu updates Mu value.
 func (a *AdaptiveParameter) UpdateMu() {
 	if a.converged {
 		return
@@ -169,6 +193,7 @@ func (a *AdaptiveParameter) UpdateMu() {
 	a.t++
 }
 
+// AdaptiveProposal proposes a new point using adaptive MCMC.
 func (a *AdaptiveParameter) AdaptiveProposal() func(float64) float64 {
 	return func(x float64) float64 {
 		return x + rand.NormFloat64()*math.Sqrt(a.variance)*a.Lambda

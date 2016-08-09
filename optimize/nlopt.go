@@ -17,20 +17,30 @@ import (
 	"unsafe"
 )
 
+// NLopt optimization methods.
 const (
-	// local non-gradient
+	// Constrained Optimization BY Linear Approximations
+	// (local, gradient-free)
 	NLOPT_COBYLA = iota
+	// BOBYQA optimizer (local, gradient-free)
 	NLOPT_BOBYQA
+	// Downhill simplex (local, gradient-free)
 	NLOPT_SIMPLEX
-	// local gradient based
+	// LBFGS: local Broyden–Fletcher–Goldfarb–Shanno
+	// (local, gradient-based)
 	NLOPT_LBFGS
+	// SQP: sequential quadratic programming
+	// (local, gradient-based)
 	NLOPT_SQP
-	// global
+	// DIviding RECTangles algorithm (global)
 	NLOPT_DIRECT
+	// Controlled Random Search (global)
 	NLOPT_CRS
+	// Multi-Level Single-Linkage (global)
 	NLOPT_MLSL
 )
 
+// returnStatus converts status to a constant name.
 var returnStatus = map[C.nlopt_result]string{
 	1:  "NLOPT_SUCCESS",
 	2:  "NLOPT_STOPVAL_REACHED",
@@ -45,6 +55,7 @@ var returnStatus = map[C.nlopt_result]string{
 	-5: "NLOPT_FORCED_STOP",
 }
 
+// NLOPT is nlopt optimizer.
 type NLOPT struct {
 	BaseOptimizer
 	gopt          C.nlopt_opt
@@ -63,6 +74,7 @@ type NLOPT struct {
 	loc_algorithm C.nlopt_algorithm
 }
 
+// NewNLOPT creates a new NLOPT optimizer.
 func NewNLOPT(algorithm int, seed int64) (nlopt *NLOPT) {
 	nlopt = &NLOPT{
 		BaseOptimizer: BaseOptimizer{
@@ -114,6 +126,7 @@ func NewNLOPT(algorithm int, seed int64) (nlopt *NLOPT) {
 	return
 }
 
+// Run runs the optimizer.
 func (n *NLOPT) Run(iterations int) {
 	log.Infof("NLopt algorithm: %v.", C.GoString(C.nlopt_algorithm_name(n.algorithm)))
 	n.gopt = C.nlopt_create(n.algorithm, (C.uint)(len(n.parameters)))

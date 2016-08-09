@@ -4,6 +4,7 @@ import (
 	"math"
 )
 
+// UniformPrior returns a uniform prior function.
 func UniformPrior(min, max float64, incmin, incmax bool) func(float64) float64 {
 	if max <= min {
 		panic("max <= min")
@@ -20,6 +21,7 @@ func UniformPrior(min, max float64, incmin, incmax bool) func(float64) float64 {
 	}
 }
 
+// DiscreteUniformPrior returns function returning 1/nstates.
 func DiscreteUniformPrior(nstates int) func(float64) float64 {
 	if nstates <= 1 {
 		panic("incorrect number of states")
@@ -29,6 +31,7 @@ func DiscreteUniformPrior(nstates int) func(float64) float64 {
 	}
 }
 
+// GammaPrior returns a function returning a gamma distribution.
 func GammaPrior(shape, scale float64, inczero bool) func(float64) float64 {
 	if scale <= 0 || scale <= 0 {
 		panic("shape and scale of gamma distribution must be > 0")
@@ -42,6 +45,7 @@ func GammaPrior(shape, scale float64, inczero bool) func(float64) float64 {
 	}
 }
 
+// ExponentialPrior returns a function returning a exponential distribution.
 func ExponentialPrior(rate float64, inczero bool) func(float64) float64 {
 	if rate <= 0 {
 		panic("exponential rate should be > 0")
@@ -54,6 +58,8 @@ func ExponentialPrior(rate float64, inczero bool) func(float64) float64 {
 	}
 }
 
+// ProductPrior returns a function which a multiplication of two
+// functions.
 func ProductPrior(f, g func(float64) float64) func(float64) float64 {
 	return func(x float64) float64 {
 		return f(x) * g(x)
