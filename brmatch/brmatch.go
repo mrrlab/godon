@@ -1,3 +1,5 @@
+// Brmatch prints branch label (*label) correspondance between two
+// topologically identical trees.
 package main
 
 import (
