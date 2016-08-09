@@ -10,21 +10,32 @@ import (
 )
 
 var (
-	alphabet  = [...]byte{'T', 'C', 'A', 'G'}
+	// alphabet is a nucleotide alphabet.
+	alphabet = [...]byte{'T', 'C', 'A', 'G'}
+	// rAlphabet is reverse nucleotide alphabet (letter to a number)
 	rAlphabet = map[byte]byte{'T': 0, 'C': 1, 'A': 2, 'G': 3}
-	CodonNum  = map[string]byte{}
-	NumCodon  = map[byte]string{}
-	NCodon    int
-	NOCODON   = byte(255)
+	// CodonNum translates codon into its' number.
+	CodonNum = map[string]byte{}
+	// NumCodon translates codon number to its' string.
+	NumCodon = map[byte]string{}
+	// NCodon is total number of codons (61).
+	NCodon int
+	// NOCODON is a special number which represents an unknown
+	// codon.
+	NOCODON = byte(255)
 )
 
+// CodonSequence stores a sequence of codons with the sequence name.
 type CodonSequence struct {
 	Name     string
 	Sequence []byte
 }
 
+// CodonSequences is an array of codon sequences with their
+// names. E.g. codon alignment.
 type CodonSequences []CodonSequence
 
+// String returns text representation of codon frequencies.
 func (cf CodonFrequency) String() (s string) {
 	s = "<CodonFrequency: "
 	for i, f := range cf {
@@ -34,6 +45,7 @@ func (cf CodonFrequency) String() (s string) {
 	return
 }
 
+// String returns FASTA representation of the codon sequence.
 func (seq CodonSequence) String() (s string) {
 	var b bytes.Buffer
 	for _, c := range seq.Sequence {
@@ -43,6 +55,7 @@ func (seq CodonSequence) String() (s string) {
 	return
 }
 
+// Length returns the length of codon alignment in codons.
 func (seqs CodonSequences) Length() int {
 	if len(seqs) == 0 {
 		return 0
@@ -50,6 +63,7 @@ func (seqs CodonSequences) Length() int {
 	return len(seqs[0].Sequence)
 }
 
+// String returns all codon sequences in FASTA format.
 func (seqs CodonSequences) String() (s string) {
 	for _, seq := range seqs {
 		s += seq.String()
@@ -57,6 +71,8 @@ func (seqs CodonSequences) String() (s string) {
 	return s[:len(s)-1]
 }
 
+// NAmbiguous returns number of ambiguous positions in the codon
+// alignment.
 func (seqs CodonSequences) NAmbiguous() (count int) {
 	for i := 0; i < seqs.Length(); i++ {
 		for _, seq := range seqs {
@@ -69,6 +85,8 @@ func (seqs CodonSequences) NAmbiguous() (count int) {
 	return
 }
 
+// ToCodonSequences converts nucleotide bio.Sequences to
+// CodonSequences.
 func ToCodonSequences(seqs bio.Sequences) (cs CodonSequences, err error) {
 	cs = make(CodonSequences, 0, len(seqs))
 	for _, seq := range seqs {
@@ -104,6 +122,8 @@ func (seqs CodonSequences) NFixed() (f int) {
 	return
 }
 
+// Fixed returns a bool vector, all absolutely conserved (fixed)
+// positions have true value.
 func (seqs CodonSequences) Fixed() (fixed []bool) {
 	fixed = make([]bool, seqs.Length())
 	for pos := 0; pos < seqs.Length(); pos++ {
@@ -121,6 +141,8 @@ func (seqs CodonSequences) Fixed() (fixed []bool) {
 	return
 }
 
+// Letters returns a set of present and absent codons at each position
+// of the alignment.
 func (seqs CodonSequences) Letters() (found [][]int, absent [][]int) {
 	found = make([][]int, seqs.Length())
 	absent = make([][]int, seqs.Length())

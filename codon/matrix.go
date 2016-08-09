@@ -10,13 +10,19 @@ import (
 	"bitbucket.org/Davydov/godon/bio"
 )
 
+// smallScale is a small value such that if Q-scale is less than it,
+// the matrix is replace by an identity matrix.
 const smallScale = 1e-30
 
 var (
+	// ZeroQ is a zero-matrix.
 	ZeroQ     *matrix.DenseMatrix
+	// IdentityP is an identity matrix. It's used if the branch or
+	// scale is very small.
 	IdentityP *matrix.DenseMatrix
 )
 
+// createIdentityMatrix creates an identity matrix of size size.
 func createIdentityMatrix(size int) (m *matrix.DenseMatrix) {
 	m = matrix.Zeros(size, size)
 	for i := 0; i < size; i++ {
@@ -35,6 +41,7 @@ func Sum(m *matrix.DenseMatrix) (s float64) {
 	return
 }
 
+// CreateTransitionMatrix creates a transition matrix.
 func CreateTransitionMatrix(cf CodonFrequency, kappa, omega float64, m *matrix.DenseMatrix) (*matrix.DenseMatrix, float64) {
 	//fmt.Println("kappa=", kappa, ", omega=", omega)
 	if m == nil {
@@ -82,6 +89,7 @@ func CreateTransitionMatrix(cf CodonFrequency, kappa, omega float64, m *matrix.D
 
 }
 
+// PrintQ prints a Q or P matrix.
 func PrintQ(Q *matrix.DenseMatrix) {
 	codons := make([]string, len(CodonNum))
 	i := 0
@@ -105,6 +113,7 @@ func PrintQ(Q *matrix.DenseMatrix) {
 	}
 }
 
+// PrintUnQ prints Q or P matrix without codon names.
 func PrintUnQ(Q *matrix.DenseMatrix) {
 	fmt.Print("\t")
 	for i := 0; i < NCodon; i++ {
@@ -120,6 +129,7 @@ func PrintUnQ(Q *matrix.DenseMatrix) {
 	}
 }
 
+// codonDistance computes distance and number of transitions
 func codonDistance(c1, c2 string) (dist, transitions int) {
 	for i := 0; i < len(c1); i++ {
 		s1 := c1[i]

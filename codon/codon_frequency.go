@@ -9,6 +9,7 @@ import (
 	"bitbucket.org/Davydov/godon/bio"
 )
 
+// CodonFrequency is array of codon frequencies.
 type CodonFrequency []float64
 
 // getCodons returns a channel with every codon (64).
@@ -31,6 +32,8 @@ func getCodons() <-chan string {
 	return ch
 }
 
+// ReadFrequency reads codon frequencies from a reader. It should be
+// just a list of numbers in a text format.
 func ReadFrequency(rd io.Reader) (CodonFrequency, error) {
 	cf := make(CodonFrequency, NCodon)
 
@@ -61,6 +64,7 @@ func ReadFrequency(rd io.Reader) (CodonFrequency, error) {
 
 }
 
+// F0 returns array of equal codon frequencies.
 func F0() CodonFrequency {
 	cf := make(CodonFrequency, NCodon)
 	for i := 0; i < NCodon; i++ {
@@ -69,6 +73,7 @@ func F0() CodonFrequency {
 	return cf
 }
 
+// F3X4 computes F3X4-style frequencies based on the alignment.
 func F3X4(cali CodonSequences) (cf CodonFrequency) {
 	poscf := make([][]float64, 3)
 	for i := 0; i < 3; i++ {

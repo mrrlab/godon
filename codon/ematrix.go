@@ -7,19 +7,26 @@ import (
 	"github.com/skelterjohn/go.matrix"
 )
 
+// EMatrix stores Q-matrix and it's eigendecomposition to quickly
+// compute e^Qt.
 type EMatrix struct {
+	// Q is Q-matrix
 	Q     *matrix.DenseMatrix
+	// Scale is matrix scale.
 	Scale float64
+	// CF is codon frequency.
 	CF    CodonFrequency
 	v     *matrix.DenseMatrix
 	d     *matrix.DenseMatrix
 	iv    *matrix.DenseMatrix
 }
 
+// NewEMatrix creates a new EMatrix.
 func NewEMatrix(Q *matrix.DenseMatrix, scale float64) *EMatrix {
 	return &EMatrix{Q: Q, Scale: scale}
 }
 
+// Copy creates a copy of EMatrix while saving eigendecomposition.
 func (m *EMatrix) Copy() (newM *EMatrix) {
 	newM = &EMatrix{Scale: m.Scale}
 	if m.Q != nil {
@@ -37,12 +44,14 @@ func (m *EMatrix) Copy() (newM *EMatrix) {
 	return
 }
 
+// Set sets Q-matrix and its' scale.
 func (m *EMatrix) Set(Q *matrix.DenseMatrix, scale float64) {
 	m.Q = Q
 	m.Scale = scale
 	m.v = nil
 }
 
+// Eigen performs eigendecomposition.
 func (m *EMatrix) Eigen() (err error) {
 	if m.v != nil {
 		return nil
@@ -58,6 +67,7 @@ func (m *EMatrix) Eigen() (err error) {
 	return nil
 }
 
+// Exp computes P=e^Qt and writes it to cD matrix.
 func (m *EMatrix) Exp(cD *matrix.DenseMatrix, t float64) (*matrix.DenseMatrix, error) {
 	if m.d.Cols() != m.d.Rows() {
 		return nil, errors.New("D isn't a square matrix")
