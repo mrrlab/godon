@@ -1,3 +1,4 @@
+// Tree implements tree structure and newick parsing.
 package tree
 
 import (
@@ -11,15 +12,23 @@ import (
 	"unicode/utf8"
 )
 
+
+// Mode is a newick parsing mode variable.
 type Mode int
 
+// Newick parsing modes.
 const (
+	// Default parsing mode.
 	NORMAL Mode = iota
+	// Parsing branch length.
 	LENGTH
+	// Parsing node class.
 	CLASS
 )
 
+// Tree is a tree structure.
 type Tree struct {
+	// Node is the root node.
 	*Node
 	nNodes      int
 	maxNodeId   int
@@ -27,6 +36,7 @@ type Tree struct {
 	nodeOrder   []*Node
 }
 
+// ClearCache clears all precomputed parameters.
 func (tree *Tree) ClearCache() {
 	tree.nNodes = 0
 	// can we use something like append here? do we need to bother?
@@ -34,6 +44,7 @@ func (tree *Tree) ClearCache() {
 	tree.nodeOrder = nil
 }
 
+// NNodes returns number of nodes.
 func (tree *Tree) NNodes() int {
 	if tree.nNodes == 0 {
 		tree.nNodes = tree.NSubNodes()
@@ -41,6 +52,7 @@ func (tree *Tree) NNodes() int {
 	return tree.nNodes
 }
 
+// MaxNodeId returns maximum id of a node.
 func (tree *Tree) MaxNodeId() (maxId int) {
 	if tree.maxNodeId > 0 {
 		return tree.maxNodeId
@@ -54,6 +66,8 @@ func (tree *Tree) MaxNodeId() (maxId int) {
 	return
 }
 
+// NodeIdArray returns an array (slice). This array allows addressing
+// nodes by their ids.
 func (tree *Tree) NodeIdArray() []*Node {
 	if tree.nodeIdArray == nil {
 		tree.nodeIdArray = make([]*Node, tree.MaxNodeId()+1)
@@ -66,6 +80,7 @@ func (tree *Tree) NodeIdArray() []*Node {
 	return tree.nodeIdArray
 }
 
+// Terminals returns a channel with all the terminal nodes of a tree.
 func (tree *Tree) Terminals() <-chan *Node {
 	return tree.Walker(func(n *Node) bool {
 		if len(n.childNodes) == 0 {
@@ -75,12 +90,15 @@ func (tree *Tree) Terminals() <-chan *Node {
 	})
 }
 
+// NonTerminals returns a channel with all the non-terminal nodes of a
+// tree.
 func (tree *Tree) NonTerminals() <-chan *Node {
 	return tree.Walker(func(node *Node) bool {
 		return node.IsTerminal()
 	})
 }
 
+// ClassNodes returns a channel with all the nodes of a given class.
 func (tree *Tree) ClassNodes(class int) <-chan *Node {
 	return tree.Walker(func(node *Node) bool {
 		if node.Class == class {
@@ -90,6 +108,7 @@ func (tree *Tree) ClassNodes(class int) <-chan *Node {
 	})
 }
 
+// NLeaves returns number of leaves.
 func (tree *Tree) NLeaves() (i int) {
 	for _ = range tree.Walker(func(node *Node) bool {
 		return node.IsTerminal()
@@ -99,6 +118,8 @@ func (tree *Tree) NLeaves() (i int) {
 	return
 }
 
+// Walker returns a channel iterating over nodes. An optional function
+// is provided to filter nodes.
 func (tree *Tree) Walker(filter func(*Node) bool) <-chan *Node {
 	ch := make(chan *Node, tree.NNodes())
 	tree.Walk(ch, filter)
@@ -145,6 +166,7 @@ func (tree *Tree) Copy() (newTree *Tree) {
 	return
 }
 
+// NodeOrder returns an array (slice) with nodes in post-order.
 func (tree *Tree) NodeOrder() []*Node {
 	if tree.nodeOrder == nil {
 		tree.nodeOrder = make([]*Node, 0, tree.NNodes())
@@ -181,6 +203,8 @@ func (tree *Tree) NodeOrder() []*Node {
 	return tree.nodeOrder
 }
 
+// IsRooted returns true if the tree is rooted (i.e. bifurcation at
+// the root).
 func (tree *Tree) IsRooted() bool {
 	if len(tree.Node.childNodes) == 2 {
 		return true
@@ -188,6 +212,8 @@ func (tree *Tree) IsRooted() bool {
 	return false
 }
 
+// Unroot unroots the tree (i.e. replaces bifurcation at the root with
+// a trifurcation).
 func (tree *Tree) Unroot() (int, error) {
 	if tree.NLeaves() < 3 {
 		return 0, errors.New("Unrooting works only for trees with >= 2 leaves")
@@ -243,6 +269,8 @@ func (tree *Tree) Unroot() (int, error) {
 	return noRoot.Id, nil
 }
 
+// Root roots the tree by replacing trifurcation at the root by a
+// bifurcation.
 func (tree *Tree) Root(branchId int) error {
 	if len(tree.Node.childNodes) == 2 {
 		// no need to change
@@ -291,16 +319,25 @@ func (tree *Tree) Root(branchId int) error {
 	return nil
 }
 
+// Node is a node of a tree.
 type Node struct {
+	// Name is the node label.
 	Name         string
+	// BranchLength is the length of the  branch going to the node.
 	BranchLength float64
+	// Parent is the parent node (nil for the root).
 	Parent       *Node
+	// ChildNodes is an array of children nodes.
 	childNodes   []*Node
+	// Id is the node ID.
 	Id           int
+	// LeafId is the leaf id.
 	LeafId       int
+	// Class is a node class (specified by # symbol in newick).
 	Class        int
 }
 
+// NewNode creates a new Node.
 func NewNode(parent *Node, nodeId int) (node *Node) {
 	node = &Node{Parent: parent, Id: nodeId}
 	return
@@ -318,11 +355,14 @@ func (node *Node) Copy() *Node {
 	}
 }
 
+// AddChild adds a child node.
 func (node *Node) AddChild(subNode *Node) {
 	subNode.Parent = node
 	node.childNodes = append(node.childNodes, subNode)
 }
 
+// BrString returns a newick string with branch labels for a node and
+// its' subnodes.
 func (node *Node) BrString() (s string) {
 	if node.IsTerminal() {
 		return fmt.Sprintf("%s*%d", node.Name, node.Id)
@@ -341,6 +381,8 @@ func (node *Node) BrString() (s string) {
 	return s
 }
 
+// ClassString returns a newick string with class labels for a node
+// and its' subnodes.
 func (node *Node) ClassString() (s string) {
 	if node.IsTerminal() {
 		if node.Class == 0 {
@@ -367,6 +409,7 @@ func (node *Node) ClassString() (s string) {
 	return s
 }
 
+// String returns a newick string for a node and its' subnodes.
 func (node *Node) String() (s string) {
 	if node.IsTerminal() {
 		return fmt.Sprintf("%s:%0.6f", node.Name, node.BranchLength)
@@ -385,6 +428,8 @@ func (node *Node) String() (s string) {
 	return s
 }
 
+// LongString returns an extended string with all the ids, classes,
+// etc for one node.
 func (node *Node) LongString() (s string) {
 	s = "<"
 	if node.Parent == nil {
@@ -404,10 +449,12 @@ func (node *Node) LongString() (s string) {
 	return
 }
 
+// FullString returns extended string for the whole tree.
 func (node *Node) FullString() string {
 	return strings.TrimSpace(node.prefixString(""))
 }
 
+// prefixString adds space prefix depending on the node level.
 func (node *Node) prefixString(prefix string) (s string) {
 	s = prefix + node.LongString() + "\n"
 	for _, node := range node.childNodes {
@@ -416,10 +463,13 @@ func (node *Node) prefixString(prefix string) (s string) {
 	return
 }
 
+// ChildNodes returns a children nodes slice.
 func (node *Node) ChildNodes() []*Node {
 	return node.childNodes
 }
 
+// Walk traverses the tree nodes and sends them into a channel. An
+// optional filtering function may be provided.
 func (node *Node) Walk(ch chan *Node, filter func(*Node) bool) {
 	if filter == nil || filter(node) {
 		ch <- node
@@ -429,6 +479,7 @@ func (node *Node) Walk(ch chan *Node, filter func(*Node) bool) {
 	}
 }
 
+// NSubNodes returns a total number of subnodes for a current node.
 func (node *Node) NSubNodes() (size int) {
 	for _, node := range node.childNodes {
 		size += node.NSubNodes()
@@ -436,14 +487,18 @@ func (node *Node) NSubNodes() (size int) {
 	return size + 1
 }
 
+// IsRoot returns true if current node is a root.
 func (node *Node) IsRoot() bool {
 	return node.Parent == nil
 }
 
+// IsTerminal returns true if node is a leaf.
 func (node *Node) IsTerminal() bool {
 	return len(node.childNodes) == 0
 }
 
+// IsSpecial returns true if character is a special character
+// (i.e. not identifier).
 func IsSpecial(c rune) bool {
 	switch c {
 	case '(', ')', ':', '#', ';', ',':
@@ -452,6 +507,8 @@ func IsSpecial(c rune) bool {
 	return false
 
 }
+
+// NiewckSplit is a function parsing a newick-formatted data.
 func NewickSplit(data []byte, atEOF bool) (advance int, token []byte, err error) {
 	start := 0
 	// Skip leading spaces; and return 1-char tokens.
@@ -485,6 +542,7 @@ func NewickSplit(data []byte, atEOF bool) (advance int, token []byte, err error)
 	return 0, nil, nil
 }
 
+// ParseNewick parses a newick formatted reader into the Tree type.
 func ParseNewick(rd io.Reader) (tree *Tree, err error) {
 	scanner := bufio.NewScanner(rd)
 
