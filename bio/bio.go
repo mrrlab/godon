@@ -1,3 +1,4 @@
+// Package bio provides functions related to the genetic code.
 package bio
 
 import (
@@ -9,6 +10,8 @@ import (
 )
 
 var (
+	// GeneticCode is a map, codon string (capital letters) is the key,
+	// amino acids (capital letter) are values.
 	GeneticCode = map[string]byte{
 		"ATA": 'I', "ATC": 'I', "ATT": 'I', "ATG": 'M',
 		"ACA": 'T', "ACC": 'T', "ACG": 'T', "ACT": 'T',
@@ -28,6 +31,10 @@ var (
 		"TGC": 'C', "TGT": 'C', "TGA": '_', "TGG": 'W'}
 )
 
+// Translate translates nucleotide (DNA) sequence string into the
+// protein string. Error is returned is sequence is not divisible by
+// three, non-terminal stop-codon is found or wrong codon is
+// encountered.
 func Translate(nseq string) (string, error) {
 	var buffer bytes.Buffer
 
@@ -49,6 +56,8 @@ func Translate(nseq string) (string, error) {
 	return buffer.String(), nil
 }
 
+// IsStopCodon tests if the string is a stop-codon (DNA alphabet,
+// capital letters).
 func IsStopCodon(codon string) bool {
 	if GeneticCode[codon] == '_' {
 		return true
@@ -56,13 +65,17 @@ func IsStopCodon(codon string) bool {
 	return false
 }
 
+// Sequence is a type which is intended for storing nucleotide or
+// protein sequence with it's name.
 type Sequence struct {
 	Name     string
 	Sequence string
 }
 
+// Sequences stores multiple sequences. E.g. a sequence alignment.
 type Sequences []Sequence
 
+// ParseFasta parses FASTA sequences from a reader.
 func ParseFasta(rd io.Reader) (seqs Sequences, err error) {
 	seqs = make(Sequences, 0, 10)
 	scanner := bufio.NewScanner(rd)
@@ -86,6 +99,8 @@ func ParseFasta(rd io.Reader) (seqs Sequences, err error) {
 
 }
 
+// Wrap inputs a string and wraps it so string length is n characters
+// or less.
 func Wrap(seq string, n int) (s string) {
 	for i := 0; i < len(seq); i += n {
 		end := i + n
@@ -97,11 +112,13 @@ func Wrap(seq string, n int) (s string) {
 	return
 }
 
+// String returns a sequence in FASTA format.
 func (seq Sequence) String() (s string) {
 	s = ">" + seq.Name + "\n" + Wrap(seq.Sequence, 80)
 	return
 }
 
+// String returns sequences in FASTA format.
 func (seqs Sequences) String() (s string) {
 	for _, seq := range seqs {
 		s += seq.String()
