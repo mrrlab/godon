@@ -1,3 +1,4 @@
+// plot_gamma creates a plot of discrete gamma distribution.
 package main
 
 import (

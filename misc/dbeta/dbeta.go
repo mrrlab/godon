@@ -1,3 +1,4 @@
+// DBeta returns values of a discre beta distribution.
 package main
 
 import (
