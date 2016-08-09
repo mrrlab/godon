@@ -3,6 +3,8 @@ Brexp is a simple tool which helps working with trees in newick
 format. It has three modes: "brlen" will export all the branch
 lengths, "brtree" and "selectome" will export tree with branch number
 labels in godon or selectome numbering style respectively.
+
+By default it reads a tree from stdin.
 */
 package main
 
