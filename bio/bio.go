@@ -31,10 +31,9 @@ var (
 		"TGC": 'C', "TGT": 'C', "TGA": '_', "TGG": 'W'}
 )
 
-// Translate translates nucleotide (DNA) sequence string into the
-// protein string. Error is returned is sequence is not divisible by
-// three, non-terminal stop-codon is found or wrong codon is
-// encountered.
+// Translate translates nucleotide sequence string into the protein
+// string. Error is returned is sequence is not divisible by three,
+// non-terminal stop-codon is found or wrong codon is encountered.
 func Translate(nseq string) (string, error) {
 	var buffer bytes.Buffer
 
@@ -42,9 +41,14 @@ func Translate(nseq string) (string, error) {
 		return "", errors.New("sequence length doesn't divide by 3")
 	}
 
+	// Convert all the letters to uppercase and U->T.
+	nseq = strings.Replace(strings.ToUpper(nseq), "U", "T", -1)
+
 	for i := 0; i < len(nseq); i += 3 {
 		aa := GeneticCode[nseq[i:i+3]]
-		if aa == '_' {
+		if aa == 0 {
+			return buffer.String(), errors.New("unknown codon")
+		} else if aa == '_' {
 			if i+3 >= len(nseq) {
 				// it's ok if this is the last codon
 				break
