@@ -1,4 +1,26 @@
-// MCMC sampler for branch-site and M0 models.
+/*
+
+Godon implements number of codon models (including M0 and
+branch-site). It includes various likelihood optimizers as well as
+Metropolis-Hastings sampler.
+
+The basic usage of godon looks like this:
+
+	godon alignment.fst tree.nwk
+
+, this will run M0 model with a default optimizer (downhill simplex).
+
+You can change a model and an optimizer:
+
+	godon -model BS -method lbfgsb alignment.fst tree.nwk
+
+The above will use the branch-site model and LBFGS-B optimizer.
+
+To see all the options run:
+
+	godon -h
+
+*/
 package main
 
 import (
@@ -22,6 +44,7 @@ import (
 	"bitbucket.org/Davydov/godon/tree"
 )
 
+// These three variables are set during the compilation.
 var githash = ""
 var gitbranch = ""
 var buildstamp = ""
@@ -30,6 +53,7 @@ var version = fmt.Sprintf("branch: %s, revision: %s, build time: %s", gitbranch,
 var log = logging.MustGetLogger("godon")
 var formatter = logging.MustStringFormatter(`%{message}`)
 
+// lastLine returns the last line of a file content.
 func lastLine(fn string) (line string) {
 	f, err := os.Open(fn)
 	if err != nil {
