@@ -1,3 +1,7 @@
+// Norm is an optimizer for a normal distribution. It first simulates
+// a random sequence of normally distributed values from several
+// distributions and then uses maximum likelihood or MCMC to estimate
+// parameters (or get the posterior distribution).
 package main
 
 import (
@@ -20,6 +24,7 @@ const (
 	sdev = 2
 )
 
+// MNormModel is a model for multiple normal distributions.
 type MNormModel struct {
 	data             [][]float64
 	mean             []float64
@@ -29,10 +34,12 @@ type MNormModel struct {
 	parameters       optimize.FloatParameters
 }
 
+// square computes x^2
 func square(x float64) float64 {
 	return x * x
 }
 
+// NewMNormModel creates a new MNormModel.
 func NewMNormModel(data [][]float64, adaptive bool) (m *MNormModel) {
 	mean := make([]float64, len(data))
 	sd := make([]float64, len(data))
@@ -57,6 +64,7 @@ func NewMNormModel(data [][]float64, adaptive bool) (m *MNormModel) {
 	return
 }
 
+// Copy copies a MNormModel.
 func (m *MNormModel) Copy() optimize.Optimizable {
 	mean := make([]float64, m.n)
 	copy(mean, m.mean)
@@ -80,6 +88,7 @@ func (m *MNormModel) Copy() optimize.Optimizable {
 	return newM
 }
 
+// AddParameters creates all the parameters.
 func (m *MNormModel) AddParameters(fpg optimize.FloatParameterGenerator) {
 	for i := 0; i < m.n; i++ {
 		name := "sd" + strconv.Itoa(i)
@@ -100,10 +109,12 @@ func (m *MNormModel) AddParameters(fpg optimize.FloatParameterGenerator) {
 	}
 }
 
+// GetFloatParameters returns the parameter storage.
 func (m *MNormModel) GetFloatParameters() optimize.FloatParameters {
 	return m.parameters
 }
 
+// Likelihood computes likelihood.
 func (m *MNormModel) Likelihood() (res float64) {
 	for i := 0; i < m.n; i++ {
 		if m.sd[i] < 0 {
@@ -117,6 +128,7 @@ func (m *MNormModel) Likelihood() (res float64) {
 	return
 }
 
+// genData generates data given the distribution parameters.
 func genData(mean []float64, sd []float64, n int) (data [][]float64) {
 	if len(mean) != len(sd) {
 		panic("sdev and mean should be the same length")
@@ -136,6 +148,7 @@ func genData(mean []float64, sd []float64, n int) (data [][]float64) {
 
 }
 
+// getMeanSD computes mean and SD.
 func getMeanSD(data []float64) (mean, sd float64) {
 	for _, x := range data {
 		mean += x
