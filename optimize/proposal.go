@@ -4,6 +4,7 @@ import (
 	"math/rand"
 )
 
+// Returns a random value in the range [0, 1], including 1.
 func Rand() float64 {
 	// 1.0 is not included and we would like to be symmetric
 	r := float64(1)
@@ -14,6 +15,7 @@ func Rand() float64 {
 
 }
 
+// UniformProposal returns uniform proposal function.
 func UniformProposal(width float64) func(float64) float64 {
 	if width <= 0 {
 		panic("width should be non-negative")
@@ -23,6 +25,8 @@ func UniformProposal(width float64) func(float64) float64 {
 	}
 }
 
+// UniformGlobalProposal returns uniform proposal function given max
+// and min.
 func UniformGlobalProposal(min, max float64) func(float64) float64 {
 	if max <= min {
 		panic("max <= min")
@@ -32,6 +36,7 @@ func UniformGlobalProposal(min, max float64) func(float64) float64 {
 	}
 }
 
+// NormalProposal returns normal proposal function.
 func NormalProposal(sd float64) func(float64) float64 {
 	if sd <= 0 {
 		panic("sd should be >= 0")
@@ -41,6 +46,8 @@ func NormalProposal(sd float64) func(float64) float64 {
 	}
 }
 
+// DiscreteProposal returns function returning a random integer
+// converted to float64.
 func DiscretePropose(state int, nstates int) (newstate int) {
 	if nstates <= 1 {
 		panic("number of states should be at least 1")

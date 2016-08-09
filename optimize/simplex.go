@@ -5,11 +5,13 @@ import (
 )
 
 const (
+	// TINY is ftol for the downhill simplex.
 	TINY        = 1e-10
+	// SMALL is atol for downhill simplex.
 	SMALL       = 1e-6
-	SMALL_DELTA = 1.1
 )
 
+// DS is a downhill simplex optimizer.
 type DS struct {
 	BaseOptimizer
 	delta      float64
@@ -24,6 +26,7 @@ type DS struct {
 	newPar     FloatParameters
 }
 
+// NewDS creates a new DH optimizer.
 func NewDS() (ds *DS) {
 	ds = &DS{
 		delta: 1,
@@ -33,6 +36,7 @@ func NewDS() (ds *DS) {
 	return
 }
 
+// createSimplex create an initial simplex for optimization.
 func (ds *DS) createSimplex(opt Optimizable, delta float64) {
 	parameters := opt.GetFloatParameters()
 	ds.points = make([]Optimizable, len(parameters)+1)
@@ -97,6 +101,7 @@ func (ds *DS) calcPsum() {
 	}
 }
 
+// Run starts the optimization.
 func (ds *DS) Run(iterations int) {
 	// first create a simplex
 	ds.createSimplex(ds.Optimizable, ds.delta)

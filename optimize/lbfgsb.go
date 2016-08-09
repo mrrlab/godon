@@ -6,12 +6,15 @@ import (
 	lbfgsb "github.com/afbarnard/go-lbfgsb"
 )
 
+// LBFGSB is wrapper around go-lbfgsb library. It uses L-BFGS-B
+// algorithm of hill climbing.
 type LBFGSB struct {
 	BaseOptimizer
 	dH   float64
 	grad []float64
 }
 
+// NewLBFGSB creates a new LBFGSB optimizer.
 func NewLBFGSB() (lbfgsb *LBFGSB) {
 	lbfgsb = &LBFGSB{
 		BaseOptimizer: BaseOptimizer{
@@ -22,6 +25,7 @@ func NewLBFGSB() (lbfgsb *LBFGSB) {
 	return
 }
 
+// Logger is a function which is called back on every iteration.
 func (l *LBFGSB) Logger(info *lbfgsb.OptimizationIterationInformation) {
 	l.i += 1
 	l.parameters.SetValues(info.X)
@@ -33,6 +37,7 @@ func (l *LBFGSB) Logger(info *lbfgsb.OptimizationIterationInformation) {
 	}
 }
 
+// EvaluateFunction evaluates likelihood function for point x.
 func (l *LBFGSB) EvaluateFunction(x []float64) float64 {
 	if !l.parameters.ValuesInRange(x) {
 		return math.Inf(+1)
@@ -49,6 +54,7 @@ func (l *LBFGSB) EvaluateFunction(x []float64) float64 {
 	return -L
 }
 
+// EvaluateGradient evaluates gradient for point x.
 func (l *LBFGSB) EvaluateGradient(x []float64) (grad []float64) {
 	if l.grad == nil {
 		l.grad = make([]float64, len(x))
@@ -92,6 +98,7 @@ func (l *LBFGSB) EvaluateGradient(x []float64) (grad []float64) {
 	return
 }
 
+// Run starts the optimization.
 func (l *LBFGSB) Run(iterations int) {
 	l.maxL = math.Inf(-1)
 

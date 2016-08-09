@@ -6,6 +6,7 @@ import (
 	"strings"
 )
 
+// ReadFloats converts string of floats into slice of float64.
 func ReadFloats(s string) ([]float64, error) {
 	r := strings.NewReader(s)
 	scanner := bufio.NewScanner(r)

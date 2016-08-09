@@ -5,6 +5,7 @@ import (
 	"math/rand"
 )
 
+// MH is a Metropolis-Hastings sampler.
 type MH struct {
 	BaseOptimizer
 	AccPeriod int
@@ -14,6 +15,7 @@ type MH struct {
 	SD            float64
 }
 
+// NewMH creates a new MH sampler.
 func NewMH(annealing bool, annealingSkip int) (mcmc *MH) {
 	mcmc = &MH{
 		BaseOptimizer: BaseOptimizer{
@@ -27,6 +29,7 @@ func NewMH(annealing bool, annealingSkip int) (mcmc *MH) {
 	return
 }
 
+// Run starts sampling.
 func (m *MH) Run(iterations int) {
 	m.l = m.Likelihood()
 	m.calls++
