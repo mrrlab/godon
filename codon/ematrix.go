@@ -7,22 +7,31 @@ import (
 	"github.com/gonum/matrix/mat64"
 )
 
+// smallFreq is a small frequency which is used instead of zeros in
+// the codon frequency.
 const smallFreq = 1e-20
 
+// EMatrix stores Q-matrix and it's eigendecomposition to quickly
+// compute e^Qt.
 type EMatrix struct {
+	// Q is Q-matrix
 	Q     *mat64.Dense
+	// Scale is matrix scale.
 	Scale float64
+	// CF is codon frequency.
 	CF    CodonFrequency
 	v     *mat64.Dense
 	d     *mat64.Dense
 	iv    *mat64.Dense
 }
 
+// NewEMatrix creates a new EMatrix.
 func NewEMatrix(Q *mat64.Dense, scale float64, cf CodonFrequency) *EMatrix {
 	//cols, rows := Q.Dims()
 	return &EMatrix{Q: Q, Scale: scale, CF: cf}
 }
 
+// Copy creates a copy of EMatrix while saving eigendecomposition.
 func (m *EMatrix) Copy(recv *EMatrix) *EMatrix {
 	if recv == nil {
 		recv = &EMatrix{}
@@ -36,12 +45,14 @@ func (m *EMatrix) Copy(recv *EMatrix) *EMatrix {
 	return recv
 }
 
+// Set sets Q-matrix and its' scale.
 func (m *EMatrix) Set(Q *mat64.Dense, scale float64) {
 	m.Q = Q
 	m.Scale = scale
 	m.v = nil
 }
 
+// ScaleD scales matrix after the eigendecomposition.
 func (m *EMatrix) ScaleD(scale float64) {
 	if m.Scale < smallScale {
 		// no need to scale almost zero matrix
@@ -54,6 +65,7 @@ func (m *EMatrix) ScaleD(scale float64) {
 	m.Scale *= scale
 }
 
+// Eigen performs eigendecomposition.
 func (m *EMatrix) Eigen() (err error) {
 	// Please refer to the EigenQREV pdf from PAML for explanations.
 	if m.v != nil {
@@ -117,6 +129,7 @@ func (m *EMatrix) Eigen() (err error) {
 	return nil
 }
 
+// Exp computes P=e^Qt and writes it to cD matrix.
 func (m *EMatrix) Exp(cD *mat64.Dense, t float64) (*mat64.Dense, error) {
 	rows, cols := m.Q.Dims()
 	if cols != rows {

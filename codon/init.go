@@ -1,3 +1,5 @@
+// Codon is the package for working with codons, codon transition
+// matrices and codon frequencies.
 package codon
 
 import (
@@ -6,6 +8,8 @@ import (
 	"bitbucket.org/Davydov/godon/bio"
 )
 
+// init initializes codon to a number arrays, number of codons and
+// zero Q and identity P matrices.
 func init() {
 	i := byte(0)
 	for codon := range getCodons() {
