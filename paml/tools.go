@@ -1,3 +1,4 @@
+// Paml implements some functions from PAML source code.
 package paml
 
 /* this code comes from PAML 4.8a */
@@ -7,14 +8,20 @@ import (
 	"math"
 )
 
+/*
+
+QuantileChi2 returns z so that Prob{x<z}=prob where x is Chi2
+distributed with df=v
+
+returns -1 if in error.  0.000002<prob<0.999998
+
+RATNEST FORTRAN by Best DJ & Roberts DE (1975) The percentage points
+of the Chi2 distribution.  Applied Statistics 24: 385-388.  (AS91)
+
+Converted into C by Ziheng Yang, Oct. 1993.
+
+*/
 func QuantileChi2(prob, v float64) (ch float64) {
-	/* returns z so that Prob{x<z}=prob where x is Chi2 distributed with df=v
-	   returns -1 if in error.   0.000002<prob<0.999998
-	   RATNEST FORTRAN by
-	       Best DJ & Roberts DE (1975) The percentage points of the
-	       Chi2 distribution.  Applied Statistics 24: 385-388.  (AS91)
-	   Converted into C by Ziheng Yang, Oct. 1993.
-	*/
 	e := .5e-6
 	aa := .6931471805
 	p := prob
@@ -100,10 +107,12 @@ l4:
 	return
 }
 
+// QuantileGamma returns quantile for gamma distribution.
 func QuantileGamma(prob, alpha, beta float64) float64 {
 	return QuantileChi2(prob, 2.0*(alpha)) / (2.0 * (beta))
 }
 
+// QuantileNormal returns quantile for normal distribution.
 func QuantileNormal(prob float64) float64 {
 	/* returns z so that Prob{x<z}=prob where x ~ N(0,1) and (1e-12)<prob<1-(1e-12)
 	   returns (-9999) if in error
@@ -147,17 +156,25 @@ func QuantileNormal(prob float64) float64 {
 	}
 }
 
+/*
+
+IncompleteGamma returns the incomplete gamma ratio I(x,alpha) where x
+is the upper limit of the integration and alpha is the shape
+parameter.
+
+returns (-1) if in error
+
+ln_gamma_alpha = ln(Gamma(alpha)), is almost redundant.
+
+(1) series expansion, if (alpha>x || x<=1)
+
+(2) continued fraction, otherwise
+
+RATNEST FORTRAN by Bhattacharjee GP (1970) The incomplete gamma
+integral.  Applied Statistics, 19: 285-287 (AS32)
+
+*/
 func IncompleteGamma(x, alpha, ln_gamma_alpha float64) (gin float64) {
-	/* returns the incomplete gamma ratio I(x,alpha) where x is the upper
-	           limit of the integration and alpha is the shape parameter.
-	   returns (-1) if in error
-	   ln_gamma_alpha = ln(Gamma(alpha)), is almost redundant.
-	   (1) series expansion,     if (alpha>x || x<=1)
-	   (2) continued fraction,   otherwise
-	   RATNEST FORTRAN by
-	   Bhattacharjee GP (1970) The incomplete gamma integral.  Applied Statistics,
-	   19: 285-287 (AS32)
-	*/
 	i := 0
 	p := alpha
 	g := ln_gamma_alpha
@@ -244,6 +261,7 @@ l50:
 	return
 }
 
+// DiscreteGamma returns discrete gamma distribution.
 func DiscreteGamma(alpha, beta float64, K int, UseMedian bool, tmp, res []float64) []float64 {
 	/*
 	   discretization of G(alpha, beta) with equal proportions in each category.
@@ -286,6 +304,7 @@ func DiscreteGamma(alpha, beta float64, K int, UseMedian bool, tmp, res []float6
 	return res
 }
 
+// LnBeta returns log of Beta distribution.
 func LnBeta(p, q float64) float64 {
 	lgp, _ := math.Lgamma(p)
 	lgq, _ := math.Lgamma(q)
@@ -295,22 +314,24 @@ func LnBeta(p, q float64) float64 {
 
 var eps, alneps, sml, alnsml float64 = 0, 0, 0, 0
 
+/*
+
+CDFBeta returns distribution function of the standard form of the beta
+distribution, that is, the incomplete beta ratio I_x(p,q).
+
+This is also known as the incomplete beta function ratio I_x(p, q)
+
+lnbeta is log of the complete beta function; provide it if known, and
+otherwise use 0.
+
+This is called from QuantileBeta() in a root-finding loop.
+
+This routine is a translation into C of a Fortran subroutine by
+W. Fullerton of Los Alamos Scientific Laboratory.  Bosten and Battiste
+(1974).  Remark on Algorithm 179, CACM 17, p153, (1974).
+
+*/
 func CDFBeta(x, pin, qin, lnbeta float64) float64 {
-	/* Returns distribution function of the standard form of the beta distribution,
-	   that is, the incomplete beta ratio I_x(p,q).
-
-	   This is also known as the incomplete beta function ratio I_x(p, q)
-
-	   lnbeta is log of the complete beta function; provide it if known,
-	   and otherwise use 0.
-
-	   This is called from QuantileBeta() in a root-finding loop.
-
-	    This routine is a translation into C of a Fortran subroutine
-	    by W. Fullerton of Los Alamos Scientific Laboratory.
-	    Bosten and Battiste (1974).
-	    Remark on Algorithm 179, CACM 17, p153, (1974).
-	*/
 	var ans, c, finsum, p, ps, p1, q, term, xb, xi, y float64
 	small := 1e-15
 	var n, ib int
@@ -426,20 +447,23 @@ func CDFBeta(x, pin, qin, lnbeta float64) float64 {
 	return ans
 }
 
+/*
+
+QuantileBeta calculates the Quantile of the beta distribution
+
+Cran, G. W., K. J. Martin and G. E. Thomas (1977).  Remark AS R19 and
+Algorithm AS 109, Applied Statistics, 26(1), 111-114.  Remark AS R83
+(v.39, 309-310) and correction (v.40(1) p.236).
+
+My own implementation of the algorithm did not bracket the variable
+well.  This version is Adpated from the pbeta and qbeta routines from
+"R : A Computer Language for Statistical Data Analysis".  It fails for
+extreme values of p and q as well, although it seems better than my
+previous version.  Ziheng Yang, May 2001
+
+*/
+
 func QuantileBeta(prob, p, q, lnbeta float64) float64 {
-	/* This calculates the Quantile of the beta distribution
-
-	   Cran, G. W., K. J. Martin and G. E. Thomas (1977).
-	   Remark AS R19 and Algorithm AS 109, Applied Statistics, 26(1), 111-114.
-	   Remark AS R83 (v.39, 309-310) and correction (v.40(1) p.236).
-
-	   My own implementation of the algorithm did not bracket the variable well.
-	   This version is Adpated from the pbeta and qbeta routines from
-	   "R : A Computer Language for Statistical Data Analysis".  It fails for
-	   extreme values of p and q as well, although it seems better than my
-	   previous version.
-	   Ziheng Yang, May 2001
-	*/
 	fpu := 3e-308
 	acu_min := 1e-300
 	lower := fpu
@@ -569,6 +593,7 @@ L_converged:
 	return xinbta
 }
 
+// DiscreteBeta returns discrete beta distribution.
 func DiscreteBeta(p, q float64, K int, UseMedian bool, tmp, res []float64) []float64 {
 	/*
 	   discretization of beta(p, q), with equal proportions in each category.
