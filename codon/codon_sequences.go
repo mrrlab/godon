@@ -31,7 +31,7 @@ type CodonSequence struct {
 	Sequence []byte
 }
 
-// CodonSequences is an array of codon sequences with their
+// CodonSequences is an array (slice) of codon sequences with their
 // names. E.g. codon alignment.
 type CodonSequences []CodonSequence
 
