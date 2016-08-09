@@ -22,7 +22,7 @@ const (
 // log is a global logging variable.
 var log = logging.MustGetLogger("cmodel")
 
-// GetTreeAlignment returns a tree and elignment for testing purposes.
+// GetTreeAlignment returns a tree and alignment for testing purposes.
 func GetTreeAlignment(data string) (t *tree.Tree, cali codon.CodonSequences, err error) {
 	tf, err := os.Open(path.Join("testdata", data+".nwk"))
 	if err != nil {
