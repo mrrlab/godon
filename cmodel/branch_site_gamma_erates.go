@@ -374,8 +374,8 @@ func (m *BranchSiteGammaERates) updateProportions() {
 	m.expAllBr = false
 }
 
-// fillMatricies sets Q-matricies for all the rates.
-func (m *BranchSiteGammaERates) fillMatricies(omega float64, dest []*codon.EMatrix) {
+// fillMatrices sets Q-matrices for all the rates.
+func (m *BranchSiteGammaERates) fillMatrices(omega float64, dest []*codon.EMatrix) {
 	for c1 := 0; c1 < m.ncatsg; c1++ {
 		m.tmp[0] = m.gammas[c1]
 		for c2 := 0; c2 < m.ncatsg; c2++ {
@@ -406,17 +406,17 @@ func (m *BranchSiteGammaERates) fillMatricies(omega float64, dest []*codon.EMatr
 // updateMatrices updates matrices if model parameters are changing.
 func (m *BranchSiteGammaERates) updateMatrices() {
 	if !m.q0done {
-		m.fillMatricies(m.omega0, m.q0s)
+		m.fillMatrices(m.omega0, m.q0s)
 		m.q0done = true
 	}
 
 	if !m.q1done {
-		m.fillMatricies(1, m.q1s)
+		m.fillMatrices(1, m.q1s)
 		m.q1done = true
 	}
 
 	if !m.q2done {
-		m.fillMatricies(m.omega2, m.q2s)
+		m.fillMatrices(m.omega2, m.q2s)
 		m.q2done = true
 	}
 
