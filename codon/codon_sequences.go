@@ -137,7 +137,6 @@ func (seqs CodonSequences) Letters() (found [][]int, absent [][]int) {
 				found[pos] = append(found[pos], l)
 			} else {
 				absent[pos] = append(absent[pos], l)
-				//found[pos] = append(found[pos], l)
 			}
 		}
 
