@@ -14,6 +14,6 @@ func main() {
 	useMedian := flag.Bool("median", false, "Use median instead of mean")
 	flag.Parse()
 
-	r := paml.DiscreteGamma(*p, *q, *ncat, *useMedian, nil, nil)
+	r := paml.DiscreteBeta(*p, *q, *ncat, *useMedian, nil, nil)
 	fmt.Println(r)
 }
