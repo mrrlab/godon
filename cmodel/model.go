@@ -113,7 +113,7 @@ type BaseModel struct {
 	// likelihoods per position
 	prunAllPos bool
 	prunPos    []bool
-	L          []float64
+	l          []float64
 }
 
 // NewBaseModel creates a new base Model.
@@ -133,7 +133,7 @@ func NewBaseModel(cali codon.CodonSequences, t *tree.Tree, cf codon.CodonFrequen
 		expBr:    make([]bool, t.MaxNodeId()+1),
 		prop:     make([][]float64, cali.Length()),
 		nclass:   nclass,
-		L:        make([]float64, cali.Length()),
+		l:        make([]float64, cali.Length()),
 		prunPos:  make([]bool, cali.Length()),
 	}
 	p := make([]float64, nclass)
@@ -404,7 +404,7 @@ func (m *BaseModel) Likelihood() (lnL float64) {
 						}
 					}
 				}
-				m.L[pos] = math.Log(res)
+				m.l[pos] = math.Log(res)
 				m.prunPos[pos] = true
 			}
 			done <- struct{}{}
@@ -422,7 +422,7 @@ func (m *BaseModel) Likelihood() (lnL float64) {
 	}
 
 	for i := 0; i < nPos; i++ {
-		lnL += m.L[i]
+		lnL += m.l[i]
 		m.prunPos[i] = true
 	}
 	m.prunAllPos = true

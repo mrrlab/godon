@@ -32,7 +32,7 @@ func NewBranchSiteC(cali codon.CodonSequences, t *tree.Tree, cf codon.CodonFrequ
 	m.BaseModel = NewBaseModel(cali, t, cf, m)
 
 	m.setupParameters()
-	m.SetBranchMatrices()
+	m.setBranchMatrices()
 	m.SetDefaults()
 
 	return
@@ -59,7 +59,7 @@ func (m *BranchSiteC) Copy() optimize.Optimizable {
 	newM.BaseModel.Model = newM
 
 	newM.setupParameters()
-	newM.SetBranchMatrices()
+	newM.setBranchMatrices()
 	return newM
 }
 
@@ -137,8 +137,8 @@ func (m *BranchSiteC) SetDefaults() {
 	m.SetParameters(kappa, omega0, omega2, p0)
 }
 
-// SetBranchMatrices set matrices for all the branches.
-func (m *BranchSiteC) SetBranchMatrices() {
+// setBranchMatrices set matrices for all the branches.
+func (m *BranchSiteC) setBranchMatrices() {
 	for i := 0; i < len(m.qs); i++ {
 		for _, node := range m.tree.NodeIdArray() {
 			if node == nil {
