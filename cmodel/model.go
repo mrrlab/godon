@@ -15,40 +15,67 @@ import (
 	"bitbucket.org/Davydov/godon/tree"
 )
 
+// AggMode is a type specifying aggregation mode.
 type AggMode int
 
+// Aggregation modes.
 const (
+	// No aggregation.
 	AGG_NONE AggMode = iota
+	// Aggregation on all the positions. All non-observed states
+	// are aggregated.
 	AGG_OBSERVED
+	// Aggregation on absolutely conserved positions. All
+	// non-observed states are aggregated.
 	AGG_FIXED
+	// Aggregation into random states.
 	AGG_RANDOM
 )
 
 const (
-	smallProp       = 1e-20
+	// If the proportion of site class is less than this number no
+	// need to compute probability.
+	smallProp = 1e-20
+	// Default value for the maximum branch length.
 	defaultMaxBrLen = 100
 )
 
+// TreeOptimizable is an extension of optimize.Optimizable which
+// includes tree-related methods.
 type TreeOptimizable interface {
 	optimize.Optimizable
+	// SetOptimizeBranchLengths enables branch-length optimization.
 	SetOptimizeBranchLengths()
+	// SetAdaptive enables adaptive MCMC for the TreeOptimizable.
 	SetAdaptive(*optimize.AdaptiveSettings)
+	// SetMaxBranchLength changes the maximum branch length for
+	// the optimization.
 	SetMaxBranchLength(float64)
+	// SetAggregationMode changes the aggregation mode.
 	SetAggregationMode(AggMode)
 }
 
+// TreeOptimizableSiteClass is a special case of TreeOptimizable which
+// has site-classes.
 type TreeOptimizableSiteClass interface {
 	TreeOptimizable
+	// GetNClass returns number of site classes.
 	GetNClass() int
 }
 
+// Model is an interface for the model. It provides information about
+// number of classes and allows adding parametes.
 type Model interface {
+	// GetNClass returns number of site classes.
 	GetNClass() int
+	// addParameters all the parameters of the Model.
 	addParameters(optimize.FloatParameterGenerator)
 }
 
-// Model stores tree and alignment. Matrices and site classes are stored and cached as well.
+// Model stores tree and alignment. Matrices and site classes are
+// stored and cached as well.
 type BaseModel struct {
+	// Model is the model implementation.
 	Model
 
 	tree      *tree.Tree
@@ -76,7 +103,7 @@ type BaseModel struct {
 	expAllBr bool
 	expBr    []bool
 
-	// this is a list of exponentiated matricies
+	// this is a list of exponentiated matrices
 	eQts [][][]float64
 
 	// likelihoods per position
@@ -85,7 +112,7 @@ type BaseModel struct {
 	L          []float64
 }
 
-// Creates a new base Model.
+// NewBaseModel creates a new base Model.
 func NewBaseModel(cali codon.CodonSequences, t *tree.Tree, cf codon.CodonFrequency, model Model) (bm *BaseModel) {
 	f, a := cali.Letters()
 	nclass := model.GetNClass()
@@ -117,6 +144,7 @@ func NewBaseModel(cali codon.CodonSequences, t *tree.Tree, cf codon.CodonFrequen
 	return
 }
 
+// Copy creates a copy of BaseModel.
 func (m *BaseModel) Copy() (newM *BaseModel) {
 	newM = NewBaseModel(m.cali, m.tree.Copy(), m.cf, m.Model)
 	copy(newM.prop[0], m.prop[0])
@@ -125,25 +153,33 @@ func (m *BaseModel) Copy() (newM *BaseModel) {
 	return
 }
 
+// SetAdaptive enables adaptive mode (for adaptive MCMC).
 func (m *BaseModel) SetAdaptive(as *optimize.AdaptiveSettings) {
 	m.as = as
 	m.setupParameters()
 }
 
+// SetOptimizeBranchLengths enables branch-length optimization.
 func (m *BaseModel) SetOptimizeBranchLengths() {
 	m.optBranch = true
 	m.setupParameters()
 }
 
+// SetMaxBranchLength changes the maximum branch length for
+// the optimization.
 func (m *BaseModel) SetMaxBranchLength(maxBrLen float64) {
 	m.maxBrLen = maxBrLen
 	m.setupParameters()
 }
 
+// GetFloatParameters returns all the optimization parameters.
 func (m *BaseModel) GetFloatParameters() optimize.FloatParameters {
 	return m.parameters
 }
 
+// setupParameters first delete all the parameters and then adds
+// them. This is useful after setting adaptive MCMC mode or other
+// changes in the parameters.
 func (m *BaseModel) setupParameters() {
 	m.parameters = nil
 	var fpg optimize.FloatParameterGenerator
@@ -186,12 +222,14 @@ func (m *BaseModel) addBranchParameters(fpg optimize.FloatParameterGenerator) {
 	}
 }
 
+// SetAggregationMode changes the aggregation mode.
 func (m *BaseModel) SetAggregationMode(mode AggMode) {
 	m.aggMode = mode
 }
 
-// Reorder codon alignment so order of nodes and sequences are the same.
-// This allows faster access to sequences by their index in the array.
+// ReorderAlignment reorders codon alignment so order of nodes and
+// sequences are the same.  This allows faster access to sequences by
+// their index in the array.
 func (m *BaseModel) ReorderAlignment() {
 	nm2id := make(map[string]int)
 	for i, s := range m.cali {
@@ -213,12 +251,14 @@ func (m *BaseModel) ReorderAlignment() {
 	m.cali = newCali
 }
 
+// expTask is a type storing a task of exponentiating matrices for a
+// class & a node.
 type expTask struct {
 	class int
 	node  *tree.Node
 }
 
-// Exponentiate a signle branch. This uses eigen decomposed matrices.
+// ExpBranch exponentiates a signle branch. This uses eigen decomposed matrices.
 func (m *BaseModel) ExpBranch(br int) {
 	node := m.tree.NodeIdArray()[br]
 	cD := matrix.Zeros(codon.NCodon, codon.NCodon)
@@ -242,7 +282,7 @@ func (m *BaseModel) ExpBranch(br int) {
 	m.prunAllPos = false
 }
 
-// Exponentiate all branches in the tree.
+// ExpBranches sxponentiates all branches in the tree.
 func (m *BaseModel) ExpBranches() {
 	if m.eQts == nil {
 		m.eQts = make([][][]float64, len(m.qs))
@@ -301,7 +341,7 @@ func (m *BaseModel) ExpBranches() {
 	m.expAllBr = true
 }
 
-// Calculate tree likelihood.
+// Likelihood calculates tree likelihood.
 func (m *BaseModel) Likelihood() (lnL float64) {
 	log.Debugf("x=%v", m.parameters.Values(nil))
 	if !m.expAllBr {

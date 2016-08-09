@@ -6,6 +6,7 @@ import (
 	"bitbucket.org/Davydov/godon/tree"
 )
 
+// M0 is an implementation of M0 model.
 type M0 struct {
 	*BaseModel
 	q            *codon.EMatrix
@@ -13,6 +14,7 @@ type M0 struct {
 	qdone        bool
 }
 
+// NewM0 creates a new M0 model.
 func NewM0(cali codon.CodonSequences, t *tree.Tree, cf codon.CodonFrequency) (m *M0) {
 	m = &M0{
 		q: &codon.EMatrix{CF: cf},
@@ -25,10 +27,13 @@ func NewM0(cali codon.CodonSequences, t *tree.Tree, cf codon.CodonFrequency) (m 
 	return
 }
 
+// GetNClass returns number of site classes.
 func (m *M0) GetNClass() int {
 	return 1
 }
 
+// Copy makes a copy of the model preserving the model parameter
+// values.
 func (m *M0) Copy() optimize.Optimizable {
 	newM := &M0{
 		BaseModel: m.BaseModel.Copy(),
@@ -41,6 +46,8 @@ func (m *M0) Copy() optimize.Optimizable {
 	return newM
 }
 
+// addParameters adds all the model parameters to the parameter
+// storage.
 func (m *M0) addParameters(fpg optimize.FloatParameterGenerator) {
 	omega := fpg(&m.omega, "omega")
 	omega.SetOnChange(func() {
@@ -66,20 +73,25 @@ func (m *M0) addParameters(fpg optimize.FloatParameterGenerator) {
 	m.parameters.Append(kappa)
 }
 
+// GetParameters returns the model parameter values.
 func (m *M0) GetParameters() (kappa, omega float64) {
 	return m.kappa, m.omega
 }
 
+// SetParameters sets the model parameter values.
 func (m *M0) SetParameters(kappa, omega float64) {
 	m.kappa = kappa
 	m.omega = omega
 	m.qdone = false
 }
 
+// SetDefaults sets the default initial parameter values.
 func (m *M0) SetDefaults() {
 	m.SetParameters(1, 1)
 }
 
+// UpdateMatrix updates Q-matrix after change in the model parameter
+// values.
 func (m *M0) UpdateMatrix() {
 	Q, s := codon.CreateTransitionMatrix(m.cf, m.kappa, m.omega, m.q.Q)
 	m.q.Set(Q, s)
@@ -95,6 +107,7 @@ func (m *M0) UpdateMatrix() {
 	m.expAllBr = false
 }
 
+// Likelihood computes likelihood.
 func (m *M0) Likelihood() float64 {
 	if !m.qdone {
 		m.UpdateMatrix()
