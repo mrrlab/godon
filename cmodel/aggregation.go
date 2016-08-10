@@ -44,14 +44,14 @@ type aggSchema struct {
 
 // observedSubL calculates likelihood for given site class and position
 // taking into account only visible states.
-func (m *BaseModel) observedSubL(class, pos int, plh [][]float64, lettersF, lettersA []int) (res float64) {
-	if len(lettersA) <= 1 {
+func (m *BaseModel) observedSubL(class, pos int, plh [][]float64, lettersF, codonsA []int) (res float64) {
+	if len(codonsA) <= 1 {
 		// aggregation makes sense only for two absent
 		// letters or more
 		return m.fullSubL(class, pos, plh)
 	}
 	fabs := 0.0
-	for _, l := range lettersA {
+	for _, l := range codonsA {
 		fabs += m.cf[l]
 	}
 
@@ -88,7 +88,7 @@ func (m *BaseModel) observedSubL(class, pos int, plh [][]float64, lettersF, lett
 							s += q[l2] * cplh[l2]
 						} else {
 							pia := 0.0
-							for _, l2 := range lettersA {
+							for _, l2 := range codonsA {
 								pia += q[l2]
 							}
 							s += pia * cplh[l2]
@@ -100,7 +100,7 @@ func (m *BaseModel) observedSubL(class, pos int, plh [][]float64, lettersF, lett
 					for _, l2 := range lettersF {
 						pai := 0.0
 						if l2 != codon.NCodon {
-							for _, l1 := range lettersA {
+							for _, l1 := range codonsA {
 								pai += m.cf[l1] * m.eQts[class][child.Id][l1*codon.NCodon+l2]
 							}
 							pai /= fabs
@@ -135,7 +135,7 @@ func (m *BaseModel) observedSubL(class, pos int, plh [][]float64, lettersF, lett
 
 // observedStates aggregation schema for observed codon-based
 // aggregation.
-func (m *BaseModel) observedStates(lettersF, lettersA []int) (schema *aggSchema) {
+func (m *BaseModel) observedStates(lettersF, codonsA []int) (schema *aggSchema) {
 	NStates := len(lettersF)
 
 	schema = &aggSchema{
@@ -152,7 +152,7 @@ func (m *BaseModel) observedStates(lettersF, lettersA []int) (schema *aggSchema)
 		}
 	}
 	aState := NStates - 1
-	for _, l := range lettersA {
+	for _, l := range codonsA {
 		schema.state2codons[aState] = append(schema.state2codons[aState], l)
 		schema.codon2state[l] = aState
 		schema.stateFreq[aState] += m.cf[l]
@@ -256,7 +256,7 @@ func (m *BaseModel) fixedSubL(class, pos int, plh [][]float64) (res float64) {
 		plh[i][0] = math.NaN()
 	}
 
-	l := m.lettersF[pos][0]
+	l := m.codonsF[pos][0]
 
 	for node := range m.tree.Terminals() {
 		plh[node.Id][0] = 1

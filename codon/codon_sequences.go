@@ -125,22 +125,16 @@ func (seqs CodonSequences) Fixed() (fixed []bool) {
 	return
 }
 
-// Letters returns a set of present and absent codons at each position
-// of the alignment.
-func (seqs CodonSequences) Letters() (found [][]int, absent [][]int) {
-	found = make([][]int, seqs.Length())
-	absent = make([][]int, seqs.Length())
-	for pos := 0; pos < seqs.Length(); pos++ {
+// foundAbsent returns an array of found and absent codons based on
+// presence maps. A NCodon state is appended to found.
+func (seqs CodonSequences) foundAbsent(presence []map[int]bool) (found [][]int, absent [][]int) {
+	found = make([][]int, len(presence))
+	absent = make([][]int, len(presence))
+	for pos := 0; pos < len(presence); pos++ {
 		found[pos] = make([]int, 0, NCodon)
 		absent[pos] = make([]int, 0, NCodon)
-		pf := make(map[int]bool, NCodon)
-		for i := 0; i < len(seqs); i++ {
-			if seqs[i].Sequence[pos] != NOCODON {
-				pf[int(seqs[i].Sequence[pos])] = true
-			}
-		}
 		for l := 0; l < NCodon; l++ {
-			if pf[l] {
+			if presence[pos][l] {
 				found[pos] = append(found[pos], l)
 			} else {
 				absent[pos] = append(absent[pos], l)
@@ -154,36 +148,38 @@ func (seqs CodonSequences) Letters() (found [][]int, absent [][]int) {
 	return
 }
 
-// LettersAA returns a set of codons for all present aminoacids and
-// absent ones at each position of the alignment.
-func (seqs CodonSequences) LettersAA() (found [][]int, absent [][]int) {
-	found = make([][]int, seqs.Length())
-	absent = make([][]int, seqs.Length())
+// FoundAbsentCodons returns a set of present and absent codons at
+// each position of the alignment. NCodon state is appended to found.
+func (seqs CodonSequences) FoundAbsentCodons() (found [][]int, absent [][]int) {
+	presence := make([]map[int]bool, seqs.Length())
 	for pos := 0; pos < seqs.Length(); pos++ {
-		found[pos] = make([]int, 0, NCodon)
-		absent[pos] = make([]int, 0, NCodon)
-		pf := make(map[int]bool, NCodon)
+		presence[pos] = make(map[int]bool, NCodon)
+		for i := 0; i < len(seqs); i++ {
+			if seqs[i].Sequence[pos] != NOCODON {
+				presence[pos][int(seqs[i].Sequence[pos])] = true
+			}
+		}
+	}
+	return seqs.foundAbsent(presence)
+}
+
+// FoundAbsentCodonsAA returns a set of codons for all present amino
+// acids and absent ones at each position of the alignment. NCodon
+// state is appended to found.
+func (seqs CodonSequences) FoundAbsentCodonsAA() (found [][]int, absent [][]int) {
+	presence := make([]map[int]bool, seqs.Length())
+	for pos := 0; pos < seqs.Length(); pos++ {
+		presence[pos] = make(map[int]bool, NCodon)
 		for i := 0; i < len(seqs); i++ {
 			if seqs[i].Sequence[pos] != NOCODON {
 				codon := seqs[i].Sequence[pos]
 				scodon := NumCodon[codon]
 				aa := bio.GeneticCode[scodon]
 				for _, c := range bio.RGeneticCode[aa] {
-					pf[int(CodonNum[c])] = true
+					presence[pos][int(CodonNum[c])] = true
 				}
 			}
 		}
-		for l := 0; l < NCodon; l++ {
-			if pf[l] {
-				found[pos] = append(found[pos], l)
-			} else {
-				absent[pos] = append(absent[pos], l)
-			}
-		}
-
-		if len(found[pos]) < NCodon {
-			found[pos] = append(found[pos], NCodon)
-		}
 	}
-	return
+	return seqs.foundAbsent(presence)
 }

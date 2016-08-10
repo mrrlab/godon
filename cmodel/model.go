@@ -64,11 +64,11 @@ type BaseModel struct {
 	tree      *tree.Tree
 	optBranch bool
 	cali      codon.CodonSequences
-	lettersF  [][]int
-	lettersA  [][]int
+	codonsF   [][]int
+	codonsA   [][]int
 	// present codons extended based on present amino acids
-	aaLettersF  [][]int
-	aaLettersA  [][]int
+	aaCodonsF [][]int
+	aaCodonsA [][]int
 	rshuffle  []int //random shuffle of positions
 	//precomtputed aggregation schemas
 	schemas []*aggSchema
@@ -102,27 +102,27 @@ type BaseModel struct {
 
 // NewBaseModel creates a new base Model.
 func NewBaseModel(cali codon.CodonSequences, t *tree.Tree, cf codon.CodonFrequency, model Model) (bm *BaseModel) {
-	f, a := cali.Letters()
-	aaF, aaA := cali.LettersAA()
+	f, a := cali.FoundAbsentCodons()
+	aaF, aaA := cali.FoundAbsentCodonsAA()
 	nclass := model.GetNClass()
 	bm = &BaseModel{
-		Model:    model,
-		cali:     cali,
-		lettersF: f,
-		lettersA: a,
-		aaLettersF: aaF,
-		aaLettersA: aaA,
-		rshuffle: rand.Perm(cali.Length()),
-		schemas:  make([]*aggSchema, cali.Length()),
-		tree:     t,
-		cf:       cf,
-		qs:       make([][]*codon.EMatrix, nclass),
-		scale:    make([]float64, t.MaxNodeId()+1),
-		expBr:    make([]bool, t.MaxNodeId()+1),
-		prop:     make([][]float64, cali.Length()),
-		nclass:   nclass,
-		l:        make([]float64, cali.Length()),
-		prunPos:  make([]bool, cali.Length()),
+		Model:     model,
+		cali:      cali,
+		codonsF:   f,
+		codonsA:   a,
+		aaCodonsF: aaF,
+		aaCodonsA: aaA,
+		rshuffle:  rand.Perm(cali.Length()),
+		schemas:   make([]*aggSchema, cali.Length()),
+		tree:      t,
+		cf:        cf,
+		qs:        make([][]*codon.EMatrix, nclass),
+		scale:     make([]float64, t.MaxNodeId()+1),
+		expBr:     make([]bool, t.MaxNodeId()+1),
+		prop:      make([][]float64, cali.Length()),
+		nclass:    nclass,
+		l:         make([]float64, cali.Length()),
+		prunPos:   make([]bool, cali.Length()),
 	}
 	p := make([]float64, nclass)
 	for i := range bm.prop {
@@ -379,31 +379,31 @@ func (m *BaseModel) Likelihood() (lnL float64) {
 					case p <= smallProp:
 						// if proportion is to small
 						continue
-					case len(m.lettersF[pos]) == 1:
-						// no letters in the current position
+					case len(m.codonsF[pos]) == 1:
+						// no codons in the current position
 						// probability = 1, res += 0
 						res += 1 * p
-					case m.aggMode == AGG_FIXED && len(m.lettersF[pos]) == 2:
+					case m.aggMode == AGG_FIXED && len(m.codonsF[pos]) == 2:
 						res += m.fixedSubL(class, pos, plh) * p
 					case m.aggMode == AGG_OBSERVED:
-						res += m.observedSubL(class, pos, plh, m.lettersF[pos], m.lettersA[pos]) * p
+						res += m.observedSubL(class, pos, plh, m.codonsF[pos], m.codonsA[pos]) * p
 					case m.aggMode == AGG_OBSERVED_AA:
-						res += m.observedSubL(class, pos, plh, m.aaLettersF[pos], m.aaLettersA[pos]) * p
+						res += m.observedSubL(class, pos, plh, m.aaCodonsF[pos], m.aaCodonsA[pos]) * p
 					case m.aggMode == AGG_RANDOM_PS:
 						spos := m.rshuffle[pos]
-						res += m.observedSubL(class, pos, plh, m.lettersF[spos], m.lettersA[spos]) * p
+						res += m.observedSubL(class, pos, plh, m.codonsF[spos], m.codonsA[spos]) * p
 					case m.aggMode == AGG_OBSERVED_NEW:
 						schema := m.schemas[pos]
 						if schema == nil {
-							schema = m.observedStates(m.lettersF[pos], m.lettersA[pos])
+							schema = m.observedStates(m.codonsF[pos], m.codonsA[pos])
 							m.schemas[pos] = schema
 						}
 						res += m.aggSubL(class, pos, plh, schema) * p
 					case m.aggMode == AGG_RANDOM_ST:
 						schema := m.schemas[pos]
 						if schema == nil {
-							// lettersF includes NOCODON, so its' length = nstates
-							schema = m.randomStates(len(m.lettersF[pos]))
+							// codonsF includes NOCODON, so its' length = nstates
+							schema = m.randomStates(len(m.codonsF[pos]))
 							m.schemas[pos] = schema
 						}
 						res += m.aggSubL(class, pos, plh, schema) * p
