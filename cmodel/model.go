@@ -137,6 +137,7 @@ func (m *BaseModel) Copy() (newM *BaseModel) {
 	newM.as = m.as
 	newM.optBranch = m.optBranch
 	newM.rshuffle = m.rshuffle
+	newM.schemas = m.schemas
 	return
 }
 
@@ -387,6 +388,14 @@ func (m *BaseModel) Likelihood() (lnL float64) {
 						schema := m.schemas[pos]
 						if schema == nil {
 							schema = m.observedStates(m.lettersF[pos], m.lettersA[pos])
+							m.schemas[pos] = schema
+						}
+						res += m.aggSubL(class, pos, plh, schema) * p
+					case m.aggMode == AGG_RANDOM_ST:
+						schema := m.schemas[pos]
+						if schema == nil {
+							// lettersF includes NOCODON, so its' length = nstates
+							schema = m.randomStates(len(m.lettersF[pos]))
 							m.schemas[pos] = schema
 						}
 						res += m.aggSubL(class, pos, plh, schema) * p

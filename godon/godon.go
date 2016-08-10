@@ -115,7 +115,8 @@ func main() {
 		"observed (all positions, keep observed states), "+
 		"observed_new (new implementation of observed), "+
 		"fixed (absolutely conserved positions, keep observed), "+
-		"random_ps (like observed, but non-aggregated states are shuffled between the positions)")
+		"random_ps (like observed, but non-aggregated states are shuffled between the positions) "+
+		"random_st (states are chosen at random, number of states as in observed)")
 	printFull := flag.Bool("printfull", false, "print full (non-aggregated) likelihood in the end of optimization")
 
 	// technical
@@ -321,6 +322,8 @@ func main() {
 		aggMode = cmodel.AGG_FIXED
 	case "random_ps":
 		aggMode = cmodel.AGG_RANDOM_PS
+	case "random_st":
+		aggMode = cmodel.AGG_RANDOM_ST
 	default:
 		log.Fatalf("Unknown aggregation mode: %s", *aggregate)
 	}

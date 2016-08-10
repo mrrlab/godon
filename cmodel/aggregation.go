@@ -2,6 +2,7 @@ package cmodel
 
 import (
 	"math"
+	"math/rand"
 
 	"bitbucket.org/Davydov/godon/codon"
 )
@@ -26,6 +27,9 @@ const (
 	// a set of non-aggregated states is shuffled between the
 	// alignment positions.
 	AGG_RANDOM_PS
+	// Aggregation on all the positions. States are chosen at
+	// random, number of states as in observed.
+	AGG_RANDOM_ST
 )
 
 // aggSchema defines an aggregation schema.
@@ -126,8 +130,8 @@ func (m *BaseModel) observedSubL(class, pos int, plh [][]float64, lettersF, lett
 	return
 }
 
-// observedStates creates codon2state, state2codons translation slices
-// & state frequencies for observed codon-based aggregation.
+// observedStates aggregation schema for observed codon-based
+// aggregation.
 func (m *BaseModel) observedStates(lettersF, lettersA []int) (schema *aggSchema) {
 	NStates := len(lettersF)
 
@@ -149,6 +153,23 @@ func (m *BaseModel) observedStates(lettersF, lettersA []int) (schema *aggSchema)
 		schema.state2codons[aState] = append(schema.state2codons[aState], l)
 		schema.codon2state[l] = aState
 		schema.stateFreq[aState] += m.cf[l]
+	}
+	return
+}
+
+// randomStates creates aggregation schema for random state-aggregation.
+func (m *BaseModel) randomStates(NStates int) (schema *aggSchema) {
+	schema = &aggSchema{
+		codon2state:  make([]int, codon.NCodon),
+		state2codons: make([][]int, NStates),
+		stateFreq:    make([]float64, NStates),
+	}
+
+	for cod := 0; cod < codon.NCodon; cod++ {
+		st := rand.Intn(NStates)
+		schema.state2codons[st] = append(schema.state2codons[st], cod)
+		schema.codon2state[cod] = st
+		schema.stateFreq[st] += m.cf[cod]
 	}
 	return
 }
