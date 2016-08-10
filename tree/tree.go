@@ -166,7 +166,8 @@ func (tree *Tree) Copy() (newTree *Tree) {
 	return
 }
 
-// NodeOrder returns an array (slice) with nodes in post-order.
+// NodeOrder returns an array (slice) with non-terminal nodes in
+// post-order.
 func (tree *Tree) NodeOrder() []*Node {
 	if tree.nodeOrder == nil {
 		tree.nodeOrder = make([]*Node, 0, tree.NNodes())
