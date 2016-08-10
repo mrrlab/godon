@@ -176,21 +176,32 @@ func (m *BaseModel) aggSubL(class, pos int, plh [][]float64, schema *aggSchema) 
 				// get child partial likelhiood
 				cplh := plh[child.Id]
 				s := 0.0
+				rowSum := 0.0
 				for s2 := 0; s2 < NStates; s2++ {
+					// probability of substitution s1 -> s2
 					ps12 := 0.0
-					for _, l1 := range schema.state2codons[s1] {
-						// get the row
-						q := m.eQts[class][child.Id][l1*codon.NCodon:]
-						pl12 := 0.0
-						for _, l2 := range schema.state2codons[s2] {
-							pl12 += q[l2]
+					if s2 != NStates-1 {
+						for _, l1 := range schema.state2codons[s1] {
+							// get the row
+							q := m.eQts[class][child.Id][l1*codon.NCodon:]
+							pl12 := 0.0
+							for _, l2 := range schema.state2codons[s2] {
+								pl12 += q[l2]
 
+							}
+							ps12 += m.cf[l1] * pl12
 						}
-						ps12 += m.cf[l1] * pl12
+						//s += q.Get(l1, l2) * plh[child.Id][l2]
+						ps12 /= schema.stateFreq[s1]
+						rowSum += ps12
+					} else {
+						// sum of probabilities should be equal to 1.
+						// we do not have to compute the full probability.
+						// this saves a lot of time, especially if the
+						// larst states includes many codons.
+						ps12 = 1 - rowSum
 					}
-
-					//s += q.Get(l1, l2) * plh[child.Id][l2]
-					s += ps12 / schema.stateFreq[s1] * cplh[s2]
+					s += ps12 * cplh[s2]
 				}
 				l *= s
 			}
