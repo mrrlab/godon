@@ -154,9 +154,9 @@ func (seqs CodonSequences) Letters() (found [][]int, absent [][]int) {
 	return
 }
 
-// ExtendedLetters returns a set of codons for all present aminoacids
-// and absent ones at each position of the alignment.
-func (seqs CodonSequences) ExtendedLetters() (found [][]int, absent [][]int) {
+// LettersAA returns a set of codons for all present aminoacids and
+// absent ones at each position of the alignment.
+func (seqs CodonSequences) LettersAA() (found [][]int, absent [][]int) {
 	found = make([][]int, seqs.Length())
 	absent = make([][]int, seqs.Length())
 	for pos := 0; pos < seqs.Length(); pos++ {
