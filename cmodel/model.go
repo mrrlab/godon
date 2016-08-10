@@ -603,28 +603,45 @@ func (m *BaseModel) observedSubLNew(class, pos int, plh [][]float64) (res float6
 		}
 	}
 
+	// first compute all the P-matricies
+	nodep := make([][]float64, m.tree.MaxNodeId()+1)
+	for _, node := range m.tree.NodeIdArray() {
+		if node == nil {
+			continue
+		}
+		p := make([]float64, NStates*NStates)
+		for s1 := 0; s1 < NStates; s1++ {
+			for s2 := 0; s2 < NStates; s2++ {
+				ps12 := 0.0
+				for _, l1 := range states[s1] {
+					// get the row
+					q := m.eQts[class][node.Id][l1*codon.NCodon:]
+					pl12 := 0.0
+					for _, l2 := range states[s2] {
+						pl12 += q[l2]
+
+					}
+					ps12 += m.cf[l1] * pl12
+				}
+
+				p[s1*NStates+s2] = ps12 / stateFreq[s1]
+			}
+		}
+		nodep[node.Id] = p
+	}
+
 	for _, node := range m.tree.NodeOrder() {
 		for s1 := 0; s1 < NStates; s1++ {
 			l := 1.0
 			for _, child := range node.ChildNodes() {
+				// p is the current row
+				p := nodep[child.Id][s1*NStates:]
 				// get child partial likelhiood
 				cplh := plh[child.Id]
 				s := 0.0
 				for s2 := 0; s2 < NStates; s2++ {
-					ps12 := 0.0
-					for _, l1 := range states[s1] {
-						// get the row
-						q := m.eQts[class][child.Id][l1*codon.NCodon:]
-						pl12 := 0.0
-						for _, l2 := range states[s2] {
-							pl12 += q[l2]
-
-						}
-						ps12 += m.cf[l1] * pl12
-					}
-
 					//s += q.Get(l1, l2) * plh[child.Id][l2]
-					s += ps12 / stateFreq[s1] * cplh[s2]
+					s += p[s2] * cplh[s2]
 				}
 				l *= s
 			}
