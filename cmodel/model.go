@@ -28,8 +28,9 @@ const (
 	// Aggregation on absolutely conserved positions. All
 	// non-observed states are aggregated.
 	AGG_FIXED
-	// Aggregation into random states.
-	AGG_RANDOM
+	// Aggregation on all the positions. All non-observed states
+	// are aggregated. More general implementation.
+	AGG_OBSERVED_NEW
 )
 
 const (
@@ -392,12 +393,14 @@ func (m *BaseModel) Likelihood() (lnL float64) {
 
 					} else if m.aggMode == AGG_FIXED && len(m.lettersF[pos]) == 2 {
 						res += m.fixedSubL(class, pos, plh) * p
+					} else if m.aggMode == AGG_OBSERVED && len(m.lettersA[pos]) > 1 {
+						// aggregation makes sense only for two absent
+						// letters or more
+						res += m.observedSubL(class, pos, plh) * p
+					} else if m.aggMode == AGG_OBSERVED_NEW && len(m.lettersA[pos]) > 1 {
+						res += m.observedSubLNew(class, pos, plh) * p
 					} else {
-						if m.aggMode == AGG_OBSERVED || m.aggMode == AGG_RANDOM {
-							res += m.observedSubL(class, pos, plh) * p
-						} else {
-							res += m.fullSubL(class, pos, plh) * p
-						}
+						res += m.fullSubL(class, pos, plh) * p
 					}
 				}
 				m.l[pos] = math.Log(res)
@@ -478,14 +481,8 @@ func (m *BaseModel) fullSubL(class, pos int, plh [][]float64) (res float64) {
 // observedSubL calculates likelihood for given site class and position
 // taking into account only visible states.
 func (m *BaseModel) observedSubL(class, pos int, plh [][]float64) (res float64) {
-	spos := pos
-	//if random, possition state spaces should be shuffled
-	if m.aggMode == AGG_RANDOM {
-		spos = m.rshuffle[pos]
-	}
-
-	lettersF := m.lettersF[spos]
-	lettersA := m.lettersA[spos]
+	lettersF := m.lettersF[pos]
+	lettersA := m.lettersA[pos]
 	fabs := 0.0
 	for _, l := range lettersA {
 		fabs += m.cf[l]
@@ -566,6 +563,83 @@ func (m *BaseModel) observedSubL(class, pos int, plh [][]float64) (res float64) 
 		}
 
 	}
+	return
+}
+
+// observedSubLNew calculates likelihood for given site class and
+// position taking into account only visible states. This is a more
+// general implementation of observedSubL.
+func (m *BaseModel) observedSubLNew(class, pos int, plh [][]float64) (res float64) {
+	lettersF := m.lettersF[pos]
+	lettersA := m.lettersA[pos]
+
+	l2s := make([]int, codon.NCodon)
+	NStates := len(lettersF)
+	states := make([][]int, NStates)
+	stateFreq := make([]float64, NStates)
+	for i, l := range lettersF {
+		if l != codon.NCodon {
+			states[i] = append(states[i], l)
+			l2s[l] = i
+			stateFreq[i] += m.cf[l]
+		}
+	}
+	aState := NStates - 1
+	for _, l := range lettersA {
+		states[aState] = append(states[aState], l)
+		l2s[l] = aState
+		stateFreq[aState] += m.cf[l]
+	}
+
+	for node := range m.tree.Terminals() {
+		cod := m.cali[node.LeafId].Sequence[pos]
+		st := l2s[cod]
+		for i := range states {
+			if cod == codon.NOCODON || i == st {
+				plh[node.Id][i] = 1
+			} else {
+				plh[node.Id][i] = 0
+			}
+		}
+	}
+
+	for _, node := range m.tree.NodeOrder() {
+		for s1 := 0; s1 < NStates; s1++ {
+			l := 1.0
+			for _, child := range node.ChildNodes() {
+				// get child partial likelhiood
+				cplh := plh[child.Id]
+				s := 0.0
+				for s2 := 0; s2 < NStates; s2++ {
+					ps12 := 0.0
+					for _, l1 := range states[s1] {
+						// get the row
+						q := m.eQts[class][child.Id][l1*codon.NCodon:]
+						pl12 := 0.0
+						for _, l2 := range states[s2] {
+							pl12 += q[l2]
+
+						}
+						ps12 += m.cf[l1] * pl12
+					}
+
+					//s += q.Get(l1, l2) * plh[child.Id][l2]
+					s += ps12 / stateFreq[s1] * cplh[s2]
+				}
+				l *= s
+			}
+			plh[node.Id][s1] = l
+		}
+
+		if node.IsRoot() {
+			for s := 0; s < NStates; s++ {
+				res += stateFreq[s] * plh[node.Id][s]
+			}
+			break
+		}
+
+	}
+
 	return
 }
 
