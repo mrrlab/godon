@@ -113,6 +113,7 @@ func main() {
 	// optimizations
 	aggregate := flag.String("aggregate", "none", "state aggregation mode: "+
 		"observed (all positions, keep observed states), "+
+		"observed_aa (all position, keep codons encoding for present amino acids), "+
 		"observed_new (new implementation of observed), "+
 		"fixed (absolutely conserved positions, keep observed), "+
 		"random_ps (like observed, but non-aggregated states are shuffled between the positions) "+
@@ -316,6 +317,8 @@ func main() {
 		aggMode = cmodel.AGG_NONE
 	case "observed":
 		aggMode = cmodel.AGG_OBSERVED
+	case "observed_aa":
+		aggMode = cmodel.AGG_OBSERVED_AA
 	case "observed_new":
 		aggMode = cmodel.AGG_OBSERVED_NEW
 	case "fixed":

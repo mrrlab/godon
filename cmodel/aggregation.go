@@ -17,6 +17,9 @@ const (
 	// Aggregation on all the positions. All non-observed states
 	// are aggregated.
 	AGG_OBSERVED
+	// Aggregation on all the positions. Codons encoding for
+	// non-observed amino acids are aggregated.
+	AGG_OBSERVED_AA
 	// Aggregation on absolutely conserved positions. All
 	// non-observed states are aggregated.
 	AGG_FIXED

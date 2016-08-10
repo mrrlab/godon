@@ -66,6 +66,9 @@ type BaseModel struct {
 	cali      codon.CodonSequences
 	lettersF  [][]int
 	lettersA  [][]int
+	// present codons extended based on present amino acids
+	aaLettersF  [][]int
+	aaLettersA  [][]int
 	rshuffle  []int //random shuffle of positions
 	//precomtputed aggregation schemas
 	schemas []*aggSchema
@@ -100,12 +103,15 @@ type BaseModel struct {
 // NewBaseModel creates a new base Model.
 func NewBaseModel(cali codon.CodonSequences, t *tree.Tree, cf codon.CodonFrequency, model Model) (bm *BaseModel) {
 	f, a := cali.Letters()
+	aaF, aaA := cali.LettersAA()
 	nclass := model.GetNClass()
 	bm = &BaseModel{
 		Model:    model,
 		cali:     cali,
 		lettersF: f,
 		lettersA: a,
+		aaLettersF: aaF,
+		aaLettersA: aaA,
 		rshuffle: rand.Perm(cali.Length()),
 		schemas:  make([]*aggSchema, cali.Length()),
 		tree:     t,
@@ -381,6 +387,8 @@ func (m *BaseModel) Likelihood() (lnL float64) {
 						res += m.fixedSubL(class, pos, plh) * p
 					case m.aggMode == AGG_OBSERVED:
 						res += m.observedSubL(class, pos, plh, m.lettersF[pos], m.lettersA[pos]) * p
+					case m.aggMode == AGG_OBSERVED_AA:
+						res += m.observedSubL(class, pos, plh, m.aaLettersF[pos], m.aaLettersA[pos]) * p
 					case m.aggMode == AGG_RANDOM_PS:
 						spos := m.rshuffle[pos]
 						res += m.observedSubL(class, pos, plh, m.lettersF[spos], m.lettersA[spos]) * p
