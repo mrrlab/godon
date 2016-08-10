@@ -381,8 +381,8 @@ func (m *BaseModel) Likelihood() (lnL float64) {
 						spos := m.rshuffle[pos]
 						res += m.observedSubL(class, pos, plh, m.lettersF[spos], m.lettersA[spos]) * p
 					case m.aggMode == AGG_OBSERVED_NEW:
-						codon2state, state2codons, stateFreqs := m.observedStates(m.lettersF[pos], m.lettersA[pos])
-						res += m.aggSubL(class, pos, plh, codon2state, state2codons, stateFreqs) * p
+						scheme := m.observedStates(m.lettersF[pos], m.lettersA[pos])
+						res += m.aggSubL(class, pos, plh, scheme) * p
 					default:
 						res += m.fullSubL(class, pos, plh) * p
 					}
