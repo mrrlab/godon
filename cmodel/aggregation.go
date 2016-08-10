@@ -25,7 +25,7 @@ const (
 	// Aggregation on all the positions. Similar to observed, but
 	// a set of non-aggregated states is shuffled between the
 	// alignment positions.
-	AGG_RANDOM
+	AGG_RANDOM_PS
 )
 
 // aggSchema defines an aggregation schema.

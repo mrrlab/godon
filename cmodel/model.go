@@ -380,7 +380,7 @@ func (m *BaseModel) Likelihood() (lnL float64) {
 						res += m.fixedSubL(class, pos, plh) * p
 					case m.aggMode == AGG_OBSERVED:
 						res += m.observedSubL(class, pos, plh, m.lettersF[pos], m.lettersA[pos]) * p
-					case m.aggMode == AGG_RANDOM:
+					case m.aggMode == AGG_RANDOM_PS:
 						spos := m.rshuffle[pos]
 						res += m.observedSubL(class, pos, plh, m.lettersF[spos], m.lettersA[spos]) * p
 					case m.aggMode == AGG_OBSERVED_NEW:
