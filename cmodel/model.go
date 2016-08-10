@@ -71,9 +71,11 @@ type BaseModel struct {
 	lettersF  [][]int
 	lettersA  [][]int
 	rshuffle  []int //random shuffle of positions
-	cf        codon.CodonFrequency
-	qs        [][]*codon.EMatrix
-	scale     []float64
+	//precomtputed aggregation schemas
+	schemas []*aggSchema
+	cf      codon.CodonFrequency
+	qs      [][]*codon.EMatrix
+	scale   []float64
 	//prop is proportions, in theory it can be different for every site
 	//by default it's the same, i.e. prop[0] == prop[1] == ... = prop[ncodons]
 	//if it is different special care should be taken in Copy method of the model
@@ -109,6 +111,7 @@ func NewBaseModel(cali codon.CodonSequences, t *tree.Tree, cf codon.CodonFrequen
 		lettersF: f,
 		lettersA: a,
 		rshuffle: rand.Perm(cali.Length()),
+		schemas:  make([]*aggSchema, cali.Length()),
 		tree:     t,
 		cf:       cf,
 		qs:       make([][]*codon.EMatrix, nclass),
@@ -385,8 +388,12 @@ func (m *BaseModel) Likelihood() (lnL float64) {
 						spos := m.rshuffle[pos]
 						res += m.observedSubL(class, pos, plh, m.lettersF[spos], m.lettersA[spos]) * p
 					case m.aggMode == AGG_OBSERVED_NEW:
-						scheme := m.observedStates(m.lettersF[pos], m.lettersA[pos])
-						res += m.aggSubL(class, pos, plh, scheme) * p
+						schema := m.schemas[pos]
+						if schema == nil {
+							schema = m.observedStates(m.lettersF[pos], m.lettersA[pos])
+							m.schemas[pos] = schema
+						}
+						res += m.aggSubL(class, pos, plh, schema) * p
 					default:
 						res += m.fullSubL(class, pos, plh) * p
 					}
