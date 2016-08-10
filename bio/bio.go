@@ -35,7 +35,7 @@ var (
 
 func init() {
 	// initialize RGeneticCode
-	RGeneticCode := make(map[byte][]string, 21)
+	RGeneticCode = make(map[byte][]string, 21)
 	for codon, aa := range GeneticCode {
 		RGeneticCode[aa] = append(RGeneticCode[aa], codon)
 	}
