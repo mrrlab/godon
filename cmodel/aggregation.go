@@ -157,6 +157,11 @@ func (m *BaseModel) observedStates(lettersF, lettersA []int) (schema *aggSchema)
 // using provided aggregation schema.
 func (m *BaseModel) aggSubL(class, pos int, plh [][]float64, schema *aggSchema) (res float64) {
 	NStates := len(schema.state2codons)
+	if NStates >= codon.NCodon {
+		// number of states is larger than number of codons,
+		// aggregation doesn't make sense
+		return m.fullSubL(class, pos, plh)
+	}
 	for node := range m.tree.Terminals() {
 		cod := m.cali[node.LeafId].Sequence[pos]
 		st := schema.codon2state[cod]
