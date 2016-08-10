@@ -407,7 +407,8 @@ func (m *BaseModel) Likelihood() (lnL float64) {
 						spos := m.rshuffle[pos]
 						res += m.observedSubL(class, pos, plh, m.lettersF[spos], m.lettersA[spos]) * p
 					case m.aggMode == AGG_OBSERVED_NEW:
-						res += m.observedSubLNew(class, pos, plh) * p
+						codon2state, state2codons, stateFreqs := m.observedStates(m.lettersF[pos], m.lettersA[pos])
+						res += m.aggSubL(class, pos, plh, codon2state, state2codons, stateFreqs) * p
 					default:
 						res += m.fullSubL(class, pos, plh) * p
 					}
@@ -574,35 +575,38 @@ func (m *BaseModel) observedSubL(class, pos int, plh [][]float64, lettersF, lett
 	return
 }
 
-// observedSubLNew calculates likelihood for given site class and
-// position taking into account only visible states. This is a more
-// general implementation of observedSubL.
-func (m *BaseModel) observedSubLNew(class, pos int, plh [][]float64) (res float64) {
-	lettersF := m.lettersF[pos]
-	lettersA := m.lettersA[pos]
-
-	l2s := make([]int, codon.NCodon)
+// observedStates creates codon2state, state2codons translation slices
+// & state frequencies for observed codon-based aggregation.
+func (m *BaseModel) observedStates(lettersF, lettersA []int) (codon2state []int, state2codons [][]int, stateFreq []float64) {
 	NStates := len(lettersF)
-	states := make([][]int, NStates)
-	stateFreq := make([]float64, NStates)
+
+	codon2state = make([]int, codon.NCodon)
+	state2codons = make([][]int, NStates)
+	stateFreq = make([]float64, NStates)
 	for i, l := range lettersF {
 		if l != codon.NCodon {
-			states[i] = append(states[i], l)
-			l2s[l] = i
+			state2codons[i] = append(state2codons[i], l)
+			codon2state[l] = i
 			stateFreq[i] += m.cf[l]
 		}
 	}
 	aState := NStates - 1
 	for _, l := range lettersA {
-		states[aState] = append(states[aState], l)
-		l2s[l] = aState
+		state2codons[aState] = append(state2codons[aState], l)
+		codon2state[l] = aState
 		stateFreq[aState] += m.cf[l]
 	}
+	return
+}
 
+// aggSubL calculates likelihood for given site class and position
+// using provided aggregation scheme.
+func (m *BaseModel) aggSubL(class, pos int, plh [][]float64, codon2state []int, state2codons [][]int, stateFreq []float64) (res float64) {
+	NStates := len(state2codons)
 	for node := range m.tree.Terminals() {
 		cod := m.cali[node.LeafId].Sequence[pos]
-		st := l2s[cod]
-		for i := range states {
+		st := codon2state[cod]
+		for i := range state2codons {
 			if cod == codon.NOCODON || i == st {
 				plh[node.Id][i] = 1
 			} else {
@@ -620,11 +624,11 @@ func (m *BaseModel) observedSubLNew(class, pos int, plh [][]float64) (res float6
 				s := 0.0
 				for s2 := 0; s2 < NStates; s2++ {
 					ps12 := 0.0
-					for _, l1 := range states[s1] {
+					for _, l1 := range state2codons[s1] {
 						// get the row
 						q := m.eQts[class][child.Id][l1*codon.NCodon:]
 						pl12 := 0.0
-						for _, l2 := range states[s2] {
+						for _, l2 := range state2codons[s2] {
 							pl12 += q[l2]
 
 						}
