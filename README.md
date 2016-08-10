@@ -15,8 +15,7 @@ Godon supports likelihood optimization
 as well as MCMC
 ([Metropolis-Hastings algorithm](https://en.wikipedia.org/wiki/Metropolis%E2%80%93Hastings_algorithm)).
 
-Godon supports state aggregation (options `-observed` and `-fixed`,
-the last is applied only to the absolutely conserved positions). See
+Godon supports state aggregation (option `-aggregate`). See
 [the paper](http://biorxiv.org/content/early/2015/12/24/035063) for
 the details.
 
@@ -40,23 +39,27 @@ $ godon -method mh -model M0 ali.fst tree.nwk
 
 
 ## repository contents ##
+* ``bin`` installation script
 * ``bio`` reads fasta and translates genetic code
-* ``matrix`` is a wrapper for some GNU Scientific Library functions
-  (not used currently)
-* ``optimize`` is the MCMC & downhill simplex implementation
-* ``tree`` is tree manipulation library
+* ``cmodel`` codon models
+* ``codon`` working with codon and transition matrices
 * ``godon`` is MCMC sampler/maximum likelihood for M0 and branchsite
   model
-* ``norm`` sampler for multiple normal distribution model
+* ``misc`` various utilities
+* ``optimize`` is the MCMC & downhill simplex implementation
+* ``tree`` is tree manipulation library
 
-### cmodel ###
-* ``M0.go`` — M0 model
-* ``branch_site.go`` — branch site model
+### codon ###
 * ``codon_frequency.go`` — F0, F3X4
 * ``codon_sequences.go`` — codon alignment class
 * ``ematrix.go`` — matrix class which remembers its eigen
   decomposition
-* ``matrix.go`` — codon transition matrix
+* ``matrix.go`` — transition matrix routines
+
+### cmodel ###
+* ``aggregation.go`` — codon aggregation code
+* ``branch_site.go`` — branch site model
+* ``M0.go`` — M0 model
 * ``model.go`` — tree + alignment model base class
 * ``tools.go`` — misc helper functions
 
@@ -67,12 +70,21 @@ $ godon -method mh -model M0 ali.fst tree.nwk
   chain evaluation
 
 ### optimize ###
+* ``adaptive.go`` — adaptive parameter class
+* ``lbfgsb.go`` — L-BFGS-B optimizer
 * ``mh.go`` — metropolis hastings & simulated annealing
   implementations
+* ``nlopt_callback.go`` — NLopt callback wrapper
+* ``nlopt.go`` — NLopt wrapper
+* ``optimizer.go`` — Optimizer and Optimizable intefaces
 * ``parameter.go`` — float64 parameter class
-* ``adaptive.go`` — adaptive parameter class
 * ``prior.go`` — prior functions
 * ``proposal.go`` — proposal functions
-* ``optimizer.go`` — Optimizer and Optimizable intefaces
 * ``simplex.go`` — simplex method
 * ``utils.go`` — helper functions
+
+### misc ###
+* ``brexp`` exports branch lengths and node labels in various
+formats
+* ``brmatch`` matches branch labels between two trees
+* ``norm`` is a sampler for multiple normal distributions model
