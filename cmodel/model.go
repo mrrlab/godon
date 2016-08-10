@@ -31,6 +31,10 @@ const (
 	// Aggregation on all the positions. All non-observed states
 	// are aggregated. More general implementation.
 	AGG_OBSERVED_NEW
+	// Aggregation on all the positions. Similar to observed, but
+	// a set of non-aggregated states is shuffled between the
+	// alignment positions.
+	AGG_RANDOM
 )
 
 const (
@@ -151,6 +155,7 @@ func (m *BaseModel) Copy() (newM *BaseModel) {
 	copy(newM.prop[0], m.prop[0])
 	newM.as = m.as
 	newM.optBranch = m.optBranch
+	newM.rshuffle = m.rshuffle
 	return
 }
 
@@ -393,7 +398,7 @@ func (m *BaseModel) Likelihood() (lnL float64) {
 
 					} else if m.aggMode == AGG_FIXED && len(m.lettersF[pos]) == 2 {
 						res += m.fixedSubL(class, pos, plh) * p
-					} else if m.aggMode == AGG_OBSERVED && len(m.lettersA[pos]) > 1 {
+					} else if (m.aggMode == AGG_OBSERVED || m.aggMode == AGG_RANDOM) && len(m.lettersA[pos]) > 1 {
 						// aggregation makes sense only for two absent
 						// letters or more
 						res += m.observedSubL(class, pos, plh) * p
@@ -481,8 +486,12 @@ func (m *BaseModel) fullSubL(class, pos int, plh [][]float64) (res float64) {
 // observedSubL calculates likelihood for given site class and position
 // taking into account only visible states.
 func (m *BaseModel) observedSubL(class, pos int, plh [][]float64) (res float64) {
-	lettersF := m.lettersF[pos]
-	lettersA := m.lettersA[pos]
+	spos := pos
+	if m.aggMode == AGG_RANDOM {
+		spos = m.rshuffle[pos]
+	}
+	lettersF := m.lettersF[spos]
+	lettersA := m.lettersA[spos]
 	fabs := 0.0
 	for _, l := range lettersA {
 		fabs += m.cf[l]
