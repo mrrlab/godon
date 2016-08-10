@@ -174,6 +174,20 @@ func (m *BaseModel) randomStates(NStates int) (schema *aggSchema) {
 		schema.codon2state[cod] = st
 		schema.stateFreq[st] += m.cf[cod]
 	}
+
+	// ensure no empty states
+	for st := 0; st < NStates; st++ {
+		if schema.state2codons[st] == nil {
+			// if empty exchange with the last
+			// if st == NStates - 1, nothing bad happens
+			schema.state2codons[st] = schema.state2codons[NStates-1]
+			for _, cod := range schema.state2codons[st] {
+				schema.codon2state[cod] = st
+				schema.stateFreq[st] = schema.stateFreq[NStates-1]
+			}
+			NStates--
+		}
+	}
 	return
 }
 
