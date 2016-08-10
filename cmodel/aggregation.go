@@ -1,6 +1,7 @@
 package cmodel
 
 import (
+	"fmt"
 	"math"
 	"math/rand"
 
@@ -40,6 +41,10 @@ type aggSchema struct {
 	codon2state  []int
 	state2codons [][]int
 	stateFreq    []float64
+}
+
+func (schema *aggSchema) String() string {
+	return fmt.Sprintf("<aggSchema: %v>", schema.state2codons)
 }
 
 // observedSubL calculates likelihood for given site class and position
