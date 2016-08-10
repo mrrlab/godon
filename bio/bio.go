@@ -29,7 +29,17 @@ var (
 		"TTC": 'F', "TTT": 'F', "TTA": 'L', "TTG": 'L',
 		"TAC": 'Y', "TAT": 'Y', "TAA": '_', "TAG": '_',
 		"TGC": 'C', "TGT": 'C', "TGA": '_', "TGG": 'W'}
+	// RGeneticCode is mapping amino acids to their codons.
+	RGeneticCode map[byte][]string
 )
+
+func init() {
+	// initialize RGeneticCode
+	RGeneticCode := make(map[byte][]string, 21)
+	for codon, aa := range GeneticCode {
+		RGeneticCode[aa] = append(RGeneticCode[aa], codon)
+	}
+}
 
 // Translate translates nucleotide sequence string into the protein
 // string. Error is returned is sequence is not divisible by three,
