@@ -391,24 +391,24 @@ func (m *BaseModel) Likelihood() (lnL float64) {
 				}
 				res := 0.0
 				for class, p := range m.prop[pos] {
-					if p <= smallProp {
+					switch {
+					case p <= smallProp:
 						// if proportion is to small
 						continue
-					}
-					if len(m.lettersF[pos]) == 1 {
+					case len(m.lettersF[pos]) == 1:
 						// no letters in the current position
 						// probability = 1, res += 0
 						res += 1 * p
-
-					} else if m.aggMode == AGG_FIXED && len(m.lettersF[pos]) == 2 {
+					case m.aggMode == AGG_FIXED && len(m.lettersF[pos]) == 2:
 						res += m.fixedSubL(class, pos, plh) * p
-					} else if (m.aggMode == AGG_OBSERVED || m.aggMode == AGG_RANDOM) && len(m.lettersA[pos]) > 1 {
-						// aggregation makes sense only for two absent
-						// letters or more
-						res += m.observedSubL(class, pos, plh) * p
-					} else if m.aggMode == AGG_OBSERVED_NEW && len(m.lettersA[pos]) > 1 {
+					case m.aggMode == AGG_OBSERVED:
+						res += m.observedSubL(class, pos, plh, m.lettersF[pos], m.lettersA[pos]) * p
+					case m.aggMode == AGG_RANDOM:
+						spos := m.rshuffle[pos]
+						res += m.observedSubL(class, pos, plh, m.lettersF[spos], m.lettersA[spos]) * p
+					case m.aggMode == AGG_OBSERVED_NEW:
 						res += m.observedSubLNew(class, pos, plh) * p
-					} else {
+					default:
 						res += m.fullSubL(class, pos, plh) * p
 					}
 				}
@@ -485,13 +485,12 @@ func (m *BaseModel) fullSubL(class, pos int, plh [][]float64) (res float64) {
 
 // observedSubL calculates likelihood for given site class and position
 // taking into account only visible states.
-func (m *BaseModel) observedSubL(class, pos int, plh [][]float64) (res float64) {
-	spos := pos
-	if m.aggMode == AGG_RANDOM {
-		spos = m.rshuffle[pos]
+func (m *BaseModel) observedSubL(class, pos int, plh [][]float64, lettersF, lettersA []int) (res float64) {
+	if len(lettersA) <= 1 {
+		// aggregation makes sense only for two absent
+		// letters or more
+		return m.fullSubL(class, pos, plh)
 	}
-	lettersF := m.lettersF[spos]
-	lettersA := m.lettersA[spos]
 	fabs := 0.0
 	for _, l := range lettersA {
 		fabs += m.cf[l]
