@@ -143,6 +143,7 @@ func (m *BaseModel) Copy() (newM *BaseModel) {
 	newM.as = m.as
 	newM.optBranch = m.optBranch
 	newM.rshuffle = m.rshuffle
+	newM.aggMode = m.aggMode
 	newM.schemas = m.schemas
 	return
 }
@@ -218,6 +219,17 @@ func (m *BaseModel) addBranchParameters(fpg optimize.FloatParameterGenerator) {
 
 // SetAggregationMode changes the aggregation mode.
 func (m *BaseModel) SetAggregationMode(mode AggMode) {
+	if mode == AGG_OBSERVED_NEW {
+		for pos := range m.schemas {
+			m.schemas[pos] = m.observedStates(m.codonsF[pos], m.codonsA[pos])
+		}
+	} else if mode == AGG_RANDOM_ST {
+		// we do it here since this part has to be sequential
+		// in order to be deterministic
+		for pos := range m.schemas {
+			m.schemas[pos] = m.randomStates(len(m.codonsF[pos]))
+		}
+	}
 	m.aggMode = mode
 }
 
@@ -393,20 +405,9 @@ func (m *BaseModel) Likelihood() (lnL float64) {
 						spos := m.rshuffle[pos]
 						res += m.observedSubL(class, pos, plh, m.codonsF[spos], m.codonsA[spos]) * p
 					case m.aggMode == AGG_OBSERVED_NEW:
-						schema := m.schemas[pos]
-						if schema == nil {
-							schema = m.observedStates(m.codonsF[pos], m.codonsA[pos])
-							m.schemas[pos] = schema
-						}
-						res += m.aggSubL(class, pos, plh, schema) * p
+						fallthrough
 					case m.aggMode == AGG_RANDOM_ST:
-						schema := m.schemas[pos]
-						if schema == nil {
-							// codonsF includes NOCODON, so its' length = nstates
-							schema = m.randomStates(len(m.codonsF[pos]))
-							m.schemas[pos] = schema
-						}
-						res += m.aggSubL(class, pos, plh, schema) * p
+						res += m.aggSubL(class, pos, plh, m.schemas[pos]) * p
 					default:
 						res += m.fullSubL(class, pos, plh) * p
 					}
