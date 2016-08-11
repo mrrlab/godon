@@ -185,13 +185,17 @@ func (m *BaseModel) randomStates(NStates int) (schema *aggSchema) {
 		if len(schema.state2codons[st]) == 0 {
 			// if empty exchange with the last
 			// if st == NStates - 1, nothing bad happens
+			// first exchange last element with the current
 			schema.state2codons[st] = schema.state2codons[NStates-1]
+			schema.stateFreq[st] = schema.stateFreq[NStates-1]
 			for _, cod := range schema.state2codons[st] {
 				schema.codon2state[cod] = st
-				schema.stateFreq[st] = schema.stateFreq[NStates-1]
 			}
+			// then remove the last element
+			schema.stateFreq = schema.stateFreq[:NStates-1]
+			schema.state2codons = schema.state2codons[:NStates-1]
 			NStates--
-			// check the current state
+			// check the current state again
 			st--
 		}
 	}
