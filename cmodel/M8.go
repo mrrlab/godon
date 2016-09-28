@@ -411,7 +411,7 @@ func (m *M8) updateProportions() {
 func (m *M8) Final() {
 	// if w2=1, do not perform NEB analysis.
 	if !m.addw || m.fixw {
-		log.Debug("No NEB since no positive selection in the model.")
+		log.Info("No NEB since no positive selection in the model.")
 		return
 	}
 	classes := make(map[int]bool, m.GetNClass())

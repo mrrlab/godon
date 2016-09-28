@@ -245,6 +245,22 @@ func (m *BranchSite) updateMatrices() {
 	m.expAllBr = false
 }
 
+// Final prints NEB results (only if with positive selection).
+func (m *BranchSite) Final() {
+	// if w2=1, do not perform NEB analysis.
+	if m.fixw2 {
+		log.Info("No NEB since no positive selection in the model.")
+		return
+	}
+	classes := make(map[int]bool, m.GetNClass())
+	classes[2] = true
+	classes[3] = true
+
+	posterior := m.NEBPosterior(classes)
+
+	m.PrintPosterior(posterior)
+}
+
 // Likelihood computes likelihood.
 func (m *BranchSite) Likelihood() float64 {
 	if !m.q0done || !m.q1done || !m.q2done {
