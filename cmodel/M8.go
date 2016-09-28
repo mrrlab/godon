@@ -407,6 +407,34 @@ func (m *M8) updateProportions() {
 	m.expAllBr = false
 }
 
+// Final prints NEB results (only if with positive selection).
+func (m *M8) Final() {
+	// if w2=1, do not perform NEB analysis.
+	if !m.addw || m.fixw {
+		log.Debug("No NEB since no positive selection in the model.")
+		return
+	}
+	classes := make(map[int]bool, m.GetNClass())
+
+	gcat := m.ncatsg * m.ncatsg * m.ncatsg
+
+	for c1 := 0; c1 < m.ncatsg; c1++ {
+		for c2 := 0; c2 < m.ncatsg; c2++ {
+			for c3 := 0; c3 < m.ncatsg; c3++ {
+				for ecl := range m.gammac {
+					catid := (((c1*m.ncatsg)+c2)*m.ncatsg+c3)*m.ncatcg + ecl
+
+					class := m.ncatb*gcat*m.ncatcg + catid
+					classes[class] = true
+				}
+			}
+		}
+	}
+
+	posterior := m.NEBPosterior(classes)
+
+	m.PrintPosterior(posterior)
+}
 
 // Likelihood computes likelihood.
 func (m *M8) Likelihood() float64 {

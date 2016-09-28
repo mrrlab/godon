@@ -461,6 +461,7 @@ MethodLoop:
 		oldOpt = opt
 	}
 	opt.PrintFinal()
+	m.Final()
 
 	if !*noOptBrLen {
 		if root {

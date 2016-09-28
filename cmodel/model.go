@@ -11,6 +11,7 @@ import (
 	"github.com/gonum/blas/native"
 	"github.com/gonum/matrix/mat64"
 
+	"bitbucket.org/Davydov/godon/bio"
 	"bitbucket.org/Davydov/godon/codon"
 	"bitbucket.org/Davydov/godon/optimize"
 	"bitbucket.org/Davydov/godon/tree"
@@ -40,6 +41,8 @@ type TreeOptimizable interface {
 	SetMaxBranchLength(float64)
 	// SetAggregationMode changes the aggregation mode.
 	SetAggregationMode(AggMode)
+	// Final performs analysis after optimization is complete.
+	Final()
 }
 
 // TreeOptimizableSiteClass is a special case of TreeOptimizable which
@@ -427,6 +430,111 @@ func (m *BaseModel) Likelihood() (lnL float64) {
 	return
 }
 
+// classLikelihood returns an array (slice) of likelihoods for every
+// site class, this can be used to perform NEB/BEB (Naive/Bayes
+// empirical Bayes) analysis.
+func (m *BaseModel) classLikelihoods() (res [][]float64) {
+	res = make([][]float64, m.GetNClass())
+	nPos := m.cali.Length()
+	for i := range res {
+		res[i] = make([]float64, nPos)
+	}
+
+	if !m.expAllBr {
+		m.ExpBranches()
+		m.prunAllPos = false
+	} else {
+		for _, node := range m.tree.NodeIdArray() {
+			if node == nil {
+				continue
+			}
+			if !m.expBr[node.Id] && node != nil {
+				m.ExpBranch(node.Id)
+				m.prunAllPos = false
+			}
+		}
+	}
+
+	nWorkers := runtime.GOMAXPROCS(0)
+	done := make(chan struct{}, nWorkers)
+	tasks := make(chan int, nPos)
+
+	for i := 0; i < nWorkers; i++ {
+		go func() {
+			nni := m.tree.MaxNodeId() + 1
+			plh := make([][]float64, nni)
+			for i := 0; i < nni; i++ {
+				plh[i] = make([]float64, codon.NCodon+1)
+			}
+			for pos := range tasks {
+				for class, p := range m.prop[pos] {
+					switch {
+					case p <= smallProp:
+						// if proportion is to small
+						res[class][pos] = 0
+						continue
+					case len(m.lettersF[pos]) == 1:
+						// no letters in the current position
+						// probability = 1
+						res[class][pos] = 1 * p
+					default:
+						res[class][pos] = m.fullSubL(class, pos, plh) * p
+					}
+				}
+			}
+			done <- struct{}{}
+		}()
+	}
+
+	for pos := 0; pos < nPos; pos++ {
+		tasks <- pos
+	}
+	close(tasks)
+
+	// wait for all assignments to finish
+	for i := 0; i < nWorkers; i++ {
+		<-done
+	}
+
+	return
+}
+
+// NEBPosterior returns array (slice) of posterior probabilities for a
+// given classes.
+func (m *BaseModel) NEBPosterior(classes map[int]bool) (res []float64) {
+	nPos := m.cali.Length()
+	nClass := m.GetNClass()
+	res = make([]float64, nPos)
+	// compute class likelihood matrix
+	l := m.classLikelihoods()
+	for pos := range res {
+		numerator := 0.0
+		denominator := 0.0
+		for cl := 0; cl < nClass; cl++ {
+			if classes[cl] {
+				numerator += l[cl][pos]
+			}
+			denominator += l[cl][pos]
+		}
+		res[pos] = numerator / denominator
+	}
+	return
+}
+
+// PrintPosterior prints results of posterior analysis.
+func (m *BaseModel) PrintPosterior(posterior []float64) {
+	log.Notice("NEB analysis, showing positions with p>0.5")
+	log.Notice("pos\tcoodn\taa\tp")
+
+	for i, p := range posterior {
+		if p > 0.5 {
+			codon := codon.NumCodon[m.cali[0].Sequence[i]]
+			aa := bio.GeneticCode[codon]
+			log.Noticef("%v\t%v\t%v\t%0.3f", i+1, codon, aa, p)
+		}
+	}
+}
+
 // fullSubL calculates likelihood for given site class and position.
 func (m *BaseModel) fullSubL(class, pos int, plh [][]float64) (res float64) {
 	for i := 0; i < m.tree.MaxNodeId()+1; i++ {
@@ -467,4 +575,9 @@ func (m *BaseModel) fullSubL(class, pos int, plh [][]float64) (res float64) {
 
 	}
 	return
+}
+
+// Final performs analysis after optimization is complete. This
+// implementation does nothing. This method should be implemented.
+func (m *BaseModel) Final() {
 }
