@@ -530,7 +530,7 @@ func (m *BaseModel) PrintPosterior(posterior []float64) {
 		if p > 0.5 {
 			codon := codon.NumCodon[m.cali[0].Sequence[i]]
 			aa := bio.GeneticCode[codon]
-			log.Noticef("%v\t%v\t%v\t%0.3f", i+1, codon, aa, p)
+			log.Noticef("%v\t%v\t%c\t%0.3f", i+1, codon, aa, p)
 		}
 	}
 }
