@@ -335,9 +335,9 @@ func (m *BaseModel) ExpBranches() {
 	m.expAllBr = true
 }
 
-// Likelihood calculates tree likelihood.
-func (m *BaseModel) Likelihood() (lnL float64) {
-	log.Debugf("x=%v", m.parameters.Values(nil))
+// expBranchesIfNeeded performes matrix exponentiation only if it is
+// needed. It should be called before the likelihood computations.
+func (m *BaseModel) expBranchesIfNeeded() {
 	if !m.expAllBr {
 		m.ExpBranches()
 		m.prunAllPos = false
@@ -352,6 +352,13 @@ func (m *BaseModel) Likelihood() (lnL float64) {
 			}
 		}
 	}
+}
+
+// Likelihood calculates tree likelihood.
+func (m *BaseModel) Likelihood() (lnL float64) {
+	log.Debugf("x=%v", m.parameters.Values(nil))
+
+	m.expBranchesIfNeeded()
 
 	if len(m.prop) != m.cali.Length() {
 		panic("incorrect proportion length")
@@ -440,20 +447,7 @@ func (m *BaseModel) classLikelihoods() (res [][]float64) {
 		res[i] = make([]float64, nPos)
 	}
 
-	if !m.expAllBr {
-		m.ExpBranches()
-		m.prunAllPos = false
-	} else {
-		for _, node := range m.tree.NodeIdArray() {
-			if node == nil {
-				continue
-			}
-			if !m.expBr[node.Id] && node != nil {
-				m.ExpBranch(node.Id)
-				m.prunAllPos = false
-			}
-		}
-	}
+	m.expBranchesIfNeeded()
 
 	nWorkers := runtime.GOMAXPROCS(0)
 	done := make(chan struct{}, nWorkers)
