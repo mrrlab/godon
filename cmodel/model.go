@@ -517,7 +517,6 @@ func (m *BaseModel) NEBPosterior(classes map[int]bool) (res []float64) {
 
 // PrintPosterior prints results of posterior analysis.
 func (m *BaseModel) PrintPosterior(posterior []float64) {
-	log.Notice("NEB analysis, showing positions with p>0.5")
 	log.Notice("pos\tcoodn\taa\tp")
 
 	for i, p := range posterior {

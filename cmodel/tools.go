@@ -1,8 +1,10 @@
 package cmodel
 
 import (
+	"bytes"
 	"os"
 	"path"
+	"fmt"
 
 	"github.com/op/go-logging"
 
@@ -69,4 +71,21 @@ func setLogLevel() {
 	logging.SetLevel(logging.WARNING, "godon")
 	logging.SetLevel(logging.WARNING, "optimize")
 	logging.SetLevel(logging.WARNING, "cmodel")
+}
+
+func strFltSlice(fs []float64) string {
+	var b bytes.Buffer
+	for _, f := range fs {
+		fmt.Fprintf(&b, "%.3f ", f)
+	}
+	return b.String()
+}
+
+func floatRange(start, step float64, n uint) (res []float64) {
+	res = make([]float64, n)
+	for i := 0; i < int(n); i ++ {
+		res[i] = start
+		start += step
+	}
+	return
 }

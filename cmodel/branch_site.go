@@ -2,6 +2,7 @@ package cmodel
 
 import (
 	"math"
+	"math/big"
 	"math/rand"
 
 	"bitbucket.org/Davydov/godon/codon"
@@ -241,8 +242,148 @@ func (m *BranchSite) updateMatrices() {
 		m.q2done = true
 	}
 
-	m.updateProportions()
-	m.expAllBr = false
+	m.propdone = false
+}
+
+//PLMatrix returns site likelihood matrix. First index is w0, second
+//w2, third class, forth position.
+func (m *BranchSite) siteLMatrix(w0, w2 []float64) (res [][][][]float64) {
+	res = make([][][][]float64, len(w0))
+	nClass := m.GetNClass()
+	nPos := m.cali.Length()
+	nni := m.tree.MaxNodeId() + 1
+
+	// temporary storage for likelihood computation
+	plh := make([][]float64, nni)
+	for i := 0; i < nni; i++ {
+		plh[i] = make([]float64, codon.NCodon+1)
+	}
+
+	counter := 0
+
+	for i_w0, w0 := range w0 {
+		m.omega0 = w0
+		m.q0done = false
+		res[i_w0] = make([][][]float64, len(w2))
+		for i_w2, w2 := range w2 {
+			m.omega2 = w2
+			m.q2done = false
+			m.updateMatrices()
+			res[i_w0][i_w2] = make([][]float64, 4)
+			for class := 0; class < nClass; class++ {
+				switch {
+				case class == 0 && i_w2 != 0:
+					res[i_w0][i_w2][class] = res[i_w0][0][class]
+				case class == 1 && (i_w0 != 0 || i_w2 != 0):
+					res[i_w0][i_w2][class] = res[0][0][class]
+				case class == 3 && i_w0 != 0:
+					res[i_w0][i_w2][class] = res[0][i_w2][class]
+				default:
+					res[i_w0][i_w2][class] = make([]float64, nPos)
+					// in this scenario we keep q-factor as computed from MLE
+					m.ExpBranches()
+
+					counter += 1
+					for pos := 0; pos < nPos; pos++ {
+						res[i_w0][i_w2][class][pos] = m.fullSubL(class, pos, plh)
+
+					}
+				}
+			}
+		}
+	}
+	log.Infof("Computed f(x_h|w) for %d classes", counter)
+	return
+}
+
+func (m *BranchSite) computePropBEB(prop []float64, i, j, d int) []float64 {
+	if prop == nil {
+		nClass := m.GetNClass()
+		prop = make([]float64, nClass)
+	}
+	prop[0] = (1. + float64(j)/2*3 + float64(j%2)) / (3 * float64(d))
+	prop[1] = (1. + float64(d-1-i)*3 + float64(j%2)) / (3 * float64(d))
+	prop[2] = (1 - prop[0] - prop[1]) * prop[0] / (prop[0] + prop[1])
+	prop[3] = (1 - prop[0] - prop[1]) * prop[1] / (prop[0] + prop[1])
+	return prop
+}
+
+// BEBPosterior returns BEB posterior values.
+func (m *BranchSite) BEBPosterior() (res []float64) {
+	nPos := m.cali.Length()
+	nClass := m.GetNClass()
+	res = make([]float64, nPos)
+
+	// first create a grid of parameters
+	w0s := floatRange(0.05, 0.1, 10)
+	log.Infof("w0: %v", strFltSlice(w0s))
+
+	w2s := floatRange(1.5, 1, 10)
+	log.Infof("w2: %v", strFltSlice(w2s))
+
+	matr := m.siteLMatrix(w0s, w2s)
+
+	// normalization
+	fx := big.NewFloat(0)
+
+	// storing sum values for every position
+	su := make([]float64, nPos)
+
+	var prop []float64
+
+	product := new(big.Float)
+	productNoPos := new(big.Float)
+	tmp := new(big.Float)
+
+	posterior := make([]big.Float, nPos)
+
+	d := 10
+	// first compute the stat sum (fx)
+	for w0_i := range w0s {
+		for w2_i := range w2s {
+			for i := 0; i < d; i++ {
+				for j := 0; j <= 2*i; j++ {
+					prop = m.computePropBEB(prop, i, j, d)
+					// prior for p0 and p1 0.01, for w0 and w2 0.1
+					prior := 0.01 * 0.1 * 0.1
+
+					product.SetFloat64(1)
+					// first compute the product for every site
+					for pos := 0; pos < nPos; pos++ {
+						su[pos] = 0
+						for class := 0; class < nClass; class++ {
+							su[pos] += matr[w0_i][w2_i][class][pos] * prop[class]
+						}
+						tmp.SetFloat64(su[pos])
+						product.Mul(product, tmp)
+					}
+					tmp.SetFloat64(prior)
+					product.Mul(product, tmp)
+
+					fx.Add(fx, product)
+
+					for pos := 0; pos < nPos; pos++ {
+						// compute product of everything except pos
+						tmp.SetFloat64(su[pos])
+						productNoPos.Quo(product, tmp)
+
+						tmp.SetFloat64(
+							matr[w0_i][w2_i][2][pos]*prop[2] +
+								matr[w0_i][w2_i][3][pos]*prop[3])
+						tmp.Mul(tmp, productNoPos)
+						posterior[pos].Add(&posterior[pos], tmp)
+					}
+				}
+			}
+		}
+	}
+
+	for pos := range posterior {
+		posterior[pos].Quo(&posterior[pos], fx)
+		res[pos], _ = posterior[pos].Float64()
+	}
+
+	return
 }
 
 // Final prints NEB results (only if with positive selection).
@@ -258,6 +399,12 @@ func (m *BranchSite) Final() {
 
 	posterior := m.NEBPosterior(classes)
 
+	log.Notice("NEB analysis")
+	m.PrintPosterior(posterior)
+
+	posterior = m.BEBPosterior()
+
+	log.Notice("BEB analysis")
 	m.PrintPosterior(posterior)
 }
 
