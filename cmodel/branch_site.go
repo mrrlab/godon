@@ -4,6 +4,7 @@ import (
 	"math"
 	"math/big"
 	"math/rand"
+	"runtime"
 
 	"bitbucket.org/Davydov/godon/codon"
 	"bitbucket.org/Davydov/godon/optimize"
@@ -261,6 +262,25 @@ func (m *BranchSite) siteLMatrix(w0, w2 []float64) (res [][][][]float64) {
 
 	counter := 0
 
+	nWorkers := runtime.GOMAXPROCS(0)
+	done := make(chan struct{}, nWorkers)
+	type bebtask struct {
+		i_w0, i_w2, class, pos int
+	}
+	tasks := make(chan bebtask, nPos)
+
+	go func() {
+		nni := m.tree.MaxNodeId() + 1
+		plh := make([][]float64, nni)
+		for i := 0; i < nni; i++ {
+			plh[i] = make([]float64, codon.NCodon+1)
+		}
+		for task := range tasks {
+			res[task.i_w0][task.i_w2][task.class][task.pos] = m.fullSubL(task.class, task.pos, plh)
+			done <- struct{}{}
+		}
+	}()
+
 	for i_w0, w0 := range w0 {
 		m.omega0 = w0
 		m.q0done = false
@@ -269,6 +289,8 @@ func (m *BranchSite) siteLMatrix(w0, w2 []float64) (res [][][][]float64) {
 			m.omega2 = w2
 			m.q2done = false
 			m.updateMatrices()
+			// in this scenario we keep q-factor as computed from MLE
+			m.ExpBranches()
 			res[i_w0][i_w2] = make([][]float64, 4)
 			for class := 0; class < nClass; class++ {
 				switch {
@@ -280,13 +302,15 @@ func (m *BranchSite) siteLMatrix(w0, w2 []float64) (res [][][][]float64) {
 					res[i_w0][i_w2][class] = res[0][i_w2][class]
 				default:
 					res[i_w0][i_w2][class] = make([]float64, nPos)
-					// in this scenario we keep q-factor as computed from MLE
-					m.ExpBranches()
 
 					counter += 1
 					for pos := 0; pos < nPos; pos++ {
-						res[i_w0][i_w2][class][pos] = m.fullSubL(class, pos, plh)
-
+						//res[i_w0][i_w2][class][pos] = m.fullSubL(class, pos, plh)
+						tasks <- bebtask{i_w0, i_w2, class, pos}
+					}
+					// wait for everyone to finish
+					for pos := 0; pos < nPos; pos++ {
+						<-done
 					}
 				}
 			}
