@@ -338,6 +338,8 @@ func (m *BranchSite) BEBPosterior() (res []float64) {
 	nClass := m.GetNClass()
 	res = make([]float64, nPos)
 
+	log.Info("w0 and w2 grid")
+
 	// first create a grid of parameters
 	w0s := floatRange(0.05, 0.1, 10)
 	log.Infof("w0: %v", strFltSlice(w0s))
