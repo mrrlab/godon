@@ -245,13 +245,6 @@ func (m *BaseModel) ReorderAlignment() {
 	m.cali = newCali
 }
 
-// expTask is a type storing a task of exponentiating matrices for a
-// class & a node.
-type expTask struct {
-	class int
-	node  *tree.Node
-}
-
 // ExpBranch exponentiates a signle branch. This uses eigen decomposed matrices.
 func (m *BaseModel) ExpBranch(br int) {
 	node := m.tree.NodeIdArray()[br]
@@ -292,6 +285,14 @@ func (m *BaseModel) ExpBranches() {
 	}
 
 	nTasks := len(m.qs) * m.tree.NNodes()
+
+	// expTask is a type storing a task of exponentiating matrices for a
+	// class & a node.
+	type expTask struct {
+		class int
+		node  *tree.Node
+	}
+
 	tasks := make(chan expTask, nTasks)
 	var wg sync.WaitGroup
 
