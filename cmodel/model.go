@@ -464,7 +464,7 @@ func (m *BaseModel) classLikelihoods() (res [][]float64) {
 				for class, p := range m.prop[pos] {
 					switch {
 					case p <= smallProp:
-						// if proportion is to small
+						// if proportion is too small
 						res[class][pos] = 0
 						continue
 					case len(m.lettersF[pos]) == 1:
