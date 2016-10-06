@@ -348,8 +348,35 @@ func (m *BranchSiteGamma) updateMatrices() {
 		m.q2done = true
 	}
 
-	m.updateProportions()
+	m.propdone = false
 	m.expAllBr = false
+}
+
+// Final prints NEB results (only if with positive selection).
+func (m *BranchSiteGamma) Final() {
+	// if w2=1, do not perform NEB analysis.
+	if m.fixw2 {
+		log.Info("No NEB since no positive selection in the model.")
+		return
+	}
+	classes := make(map[int]bool, m.GetNClass())
+	scat := m.ncatsg * m.ncatsg * m.ncatsg
+	for i := 0; i < m.ncatcg; i++ {
+		for j := 0; j < scat; j++ {
+			classes[m.ncatcg*scat*2+i+j*m.ncatcg] = true
+			classes[m.ncatcg*scat*3+i+j*m.ncatcg] = true
+		}
+	}
+
+	posterior := m.NEBPosterior(classes)
+
+	log.Notice("NEB analysis")
+	m.PrintPosterior(posterior)
+
+	//posterior = m.BEBPosterior()
+
+	log.Notice("BEB analysis")
+	m.PrintPosterior(posterior)
 }
 
 // Likelihood computes likelihood.
