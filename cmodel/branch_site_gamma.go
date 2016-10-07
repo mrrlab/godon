@@ -2,7 +2,9 @@ package cmodel
 
 import (
 	"math"
+	"math/big"
 	"math/rand"
+	"runtime"
 
 	"bitbucket.org/Davydov/godon/codon"
 	"bitbucket.org/Davydov/godon/optimize"
@@ -352,6 +354,193 @@ func (m *BranchSiteGamma) updateMatrices() {
 	m.expAllBr = false
 }
 
+// computePropBEB computes class proportions given the i, j and d parameters.
+func (m *BranchSiteGamma) computePropBEB(prop []float64, i, j, d int) []float64 {
+	if prop == nil {
+		nClass := m.GetNClass()
+		prop = make([]float64, nClass)
+	}
+	p0 := (1. + float64(j)/2*3 + float64(j%2)) / (3 * float64(d))
+	p1 := (1. + float64(d-1-i)*3 + float64(j%2)) / (3 * float64(d))
+	p2a := (1 - p0 - p1) * p0 / (p0 + p1)
+	p2b := (1 - p0 - p1) * p1 / (p0 + p1)
+	scat := m.ncatsg * m.ncatsg * m.ncatsg
+	bothcat := m.ncatcg * scat
+	for i := 0; i < bothcat; i++ {
+		prop[i+bothcat*0] = p0 / float64(bothcat)
+		prop[i+bothcat*1] = p1 / float64(bothcat)
+		prop[i+bothcat*2] = p2a / float64(bothcat)
+		prop[i+bothcat*3] = p2b / float64(bothcat)
+	}
+
+	return prop
+}
+
+//siteLMatrix returns site likelihood matrix. First index is w0, second
+//w2, third class, forth position.
+func (m *BranchSiteGamma) siteLMatrix(w0, w2 []float64) (res [][][][]float64) {
+	res = make([][][][]float64, len(w0))
+	nClass := m.GetNClass()
+	nPos := m.cali.Length()
+	nni := m.tree.MaxNodeId() + 1
+
+	scat := m.ncatsg * m.ncatsg * m.ncatsg
+	bothcat := m.ncatcg * scat
+
+	// temporary storage for likelihood computation
+	plh := make([][]float64, nni)
+	for i := 0; i < nni; i++ {
+		plh[i] = make([]float64, codon.NCodon+1)
+	}
+
+	counter := 0
+
+	nWorkers := runtime.GOMAXPROCS(0)
+	done := make(chan struct{}, nWorkers)
+	type bebtask struct {
+		i_w0, i_w2, class, pos int
+	}
+	tasks := make(chan bebtask, nPos)
+
+	go func() {
+		nni := m.tree.MaxNodeId() + 1
+		plh := make([][]float64, nni)
+		for i := 0; i < nni; i++ {
+			plh[i] = make([]float64, codon.NCodon+1)
+		}
+		for task := range tasks {
+			res[task.i_w0][task.i_w2][task.class][task.pos] = m.fullSubL(task.class, task.pos, plh)
+			done <- struct{}{}
+		}
+	}()
+
+	for i_w0, w0 := range w0 {
+		m.omega0 = w0
+		m.q0done = false
+		res[i_w0] = make([][][]float64, len(w2))
+		for i_w2, w2 := range w2 {
+			m.omega2 = w2
+			m.q2done = false
+			m.updateMatrices()
+			// in this scenario we keep q-factor as computed from MLE
+			m.ExpBranches()
+			res[i_w0][i_w2] = make([][]float64, nClass)
+			for class := 0; class < nClass; class++ {
+				switch {
+				case class/bothcat == 0 && i_w2 != 0:
+					res[i_w0][i_w2][class] = res[i_w0][0][class]
+				case class/bothcat == 1 && (i_w0 != 0 || i_w2 != 0):
+					res[i_w0][i_w2][class] = res[0][0][class]
+				case class/bothcat == 3 && i_w0 != 0:
+					res[i_w0][i_w2][class] = res[0][i_w2][class]
+				default:
+					res[i_w0][i_w2][class] = make([]float64, nPos)
+
+					counter += 1
+					for pos := 0; pos < nPos; pos++ {
+						//res[i_w0][i_w2][class][pos] = m.fullSubL(class, pos, plh)
+						tasks <- bebtask{i_w0, i_w2, class, pos}
+					}
+					// wait for everyone to finish
+					for pos := 0; pos < nPos; pos++ {
+						<-done
+					}
+				}
+			}
+		}
+	}
+	log.Infof("Computed f(x_h|w) for %d classes", counter)
+	return
+}
+
+// BEBPosterior returns BEB posterior values.
+func (m *BranchSiteGamma) BEBPosterior() (res []float64) {
+	nPos := m.cali.Length()
+	nClass := m.GetNClass()
+	res = make([]float64, nPos)
+
+	scat := m.ncatsg * m.ncatsg * m.ncatsg
+	bothcat := m.ncatcg * scat
+
+	log.Info("w0 and w2 grid")
+
+	// first create a grid of parameters
+	w0s := floatRange(0.05, 0.1, 10)
+	log.Infof("w0: %v", strFltSlice(w0s))
+
+	w2s := floatRange(1.5, 1, 10)
+	log.Infof("w2: %v", strFltSlice(w2s))
+
+	matr := m.siteLMatrix(w0s, w2s)
+
+	// normalization
+	fx := big.NewFloat(0)
+
+	// storing sum values for every position
+	su := make([]float64, nPos)
+
+	var prop []float64
+
+	product := new(big.Float)
+	productNoPos := new(big.Float)
+	tmp := new(big.Float)
+
+	posterior := make([]big.Float, nPos)
+
+	d := 10
+	// first compute the stat sum (fx)
+	for w0_i := range w0s {
+		for w2_i := range w2s {
+			for i := 0; i < d; i++ {
+				for j := 0; j <= 2*i; j++ {
+					prop = m.computePropBEB(prop, i, j, d)
+					// prior for p0 and p1 0.01, for w0 and w2 0.1
+					prior := 0.01 * 0.1 * 0.1
+
+					product.SetFloat64(1)
+					// first compute the product for every site
+					for pos := 0; pos < nPos; pos++ {
+						su[pos] = 0
+						for class := 0; class < nClass; class++ {
+							su[pos] += matr[w0_i][w2_i][class][pos] * prop[class]
+						}
+						tmp.SetFloat64(su[pos])
+						product.Mul(product, tmp)
+					}
+					tmp.SetFloat64(prior)
+					product.Mul(product, tmp)
+
+					fx.Add(fx, product)
+
+					for pos := 0; pos < nPos; pos++ {
+						// compute product of everything except pos
+						tmp.SetFloat64(su[pos])
+						productNoPos.Quo(product, tmp)
+
+						s := 0.0
+						for i := 0; i < bothcat; i++ {
+							cl := i + bothcat*2
+							s += matr[w0_i][w2_i][cl][pos] * prop[cl]
+							cl = i + bothcat*3
+							s += matr[w0_i][w2_i][cl][pos] * prop[cl]
+						}
+						tmp.SetFloat64(s)
+						tmp.Mul(tmp, productNoPos)
+						posterior[pos].Add(&posterior[pos], tmp)
+					}
+				}
+			}
+		}
+	}
+
+	for pos := range posterior {
+		posterior[pos].Quo(&posterior[pos], fx)
+		res[pos], _ = posterior[pos].Float64()
+	}
+
+	return
+}
+
 // Final prints NEB results (only if with positive selection).
 func (m *BranchSiteGamma) Final() {
 	// if w2=1, do not perform NEB analysis.
@@ -373,7 +562,7 @@ func (m *BranchSiteGamma) Final() {
 	log.Notice("NEB analysis")
 	m.PrintPosterior(posterior)
 
-	//posterior = m.BEBPosterior()
+	posterior = m.BEBPosterior()
 
 	log.Notice("BEB analysis")
 	m.PrintPosterior(posterior)
