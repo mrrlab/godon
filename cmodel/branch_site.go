@@ -246,7 +246,7 @@ func (m *BranchSite) updateMatrices() {
 	m.propdone = false
 }
 
-//PLMatrix returns site likelihood matrix. First index is w0, second
+//siteLMatrix returns site likelihood matrix. First index is w0, second
 //w2, third class, forth position.
 func (m *BranchSite) siteLMatrix(w0, w2 []float64) (res [][][][]float64) {
 	res = make([][][][]float64, len(w0))
@@ -291,7 +291,7 @@ func (m *BranchSite) siteLMatrix(w0, w2 []float64) (res [][][][]float64) {
 			m.updateMatrices()
 			// in this scenario we keep q-factor as computed from MLE
 			m.ExpBranches()
-			res[i_w0][i_w2] = make([][]float64, 4)
+			res[i_w0][i_w2] = make([][]float64, nClass)
 			for class := 0; class < nClass; class++ {
 				switch {
 				case class == 0 && i_w2 != 0:
@@ -320,6 +320,7 @@ func (m *BranchSite) siteLMatrix(w0, w2 []float64) (res [][][][]float64) {
 	return
 }
 
+// computePropBEB computes class proportions given the i, j and d parameters.
 func (m *BranchSite) computePropBEB(prop []float64, i, j, d int) []float64 {
 	if prop == nil {
 		nClass := m.GetNClass()
