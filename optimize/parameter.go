@@ -110,7 +110,7 @@ func (p *FloatParameters) ValuesInRange(vals []float64) bool {
 // SetValues sets values from a slice.
 func (p *FloatParameters) SetValues(v []float64) error {
 	if len(v) != len(*p) {
-		errors.New("Incorrect number of parameters")
+		return errors.New("Incorrect number of parameters")
 	}
 	for i, par := range *p {
 		par.Set(v[i])
