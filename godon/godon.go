@@ -53,14 +53,22 @@ var version = fmt.Sprintf("branch: %s, revision: %s, build time: %s", gitbranch,
 
 // Summary is storing godon summary information.
 type Summary struct {
-	Version     string   `json:"version"`
+	// Version stores godon version.
+	Version string `json:"version"`
+	// CommandLine is an array storing binary name and all command-line parameters.
 	CommandLine []string `json:"commandLine"`
-	Seed        int64    `json:"seed"`
-	NCPU        int      `json:"nCPU"`
-	StartTree   string   `json:"startTree"`
-	EndTree     string   `json:"endTree,omitempty"`
-	FullLnL     float64  `json:"fullLnL,omitempty"`
-	Time        float64  `json:"time"`
+	// Seed is the seed used for random number generation initialization.
+	Seed int64 `json:"seed"`
+	// NThreads is the number of processes used.
+	NThreads int `json:"nThreads"`
+	// StartTree is the starting tree after unrooting.
+	StartTree string `json:"startTree"`
+	// EndTree is the tree after branch length optimization (if performend).
+	EndTree string `json:"endTree,omitempty"`
+	// FullLnL is the full (non-aggregated) likelihood, it's only computed if specified (-printfull).
+	FullLnL float64 `json:"fullLnL,omitempty"`
+	// Time is the computations time in seconds.
+	Time float64 `json:"time"`
 }
 
 // Logger settings.
@@ -138,7 +146,7 @@ func main() {
 	printFull := flag.Bool("printfull", false, "print full (non-aggregated) likelihood in the end of optimization")
 
 	// technical
-	nCPU := flag.Int("cpu", 0, "number of cpu to use")
+	nThreads := flag.Int("nt", 0, "number of threads to use")
 	seed := flag.Int64("seed", -1, "random generator seed, default time based")
 	cpuProfile := flag.String("cpuprofile", "", "write cpu profile to file")
 
@@ -191,11 +199,11 @@ func main() {
 	log.Infof("Random seed=%v", *seed)
 
 	rand.Seed(*seed)
-	runtime.GOMAXPROCS(*nCPU)
+	runtime.GOMAXPROCS(*nThreads)
 
 	effectiveNCPU := runtime.GOMAXPROCS(0)
 	log.Infof("Using CPUs: %d.\n", effectiveNCPU)
-	summary.NCPU = effectiveNCPU
+	summary.NThreads = effectiveNCPU
 
 	if len(flag.Args()) < 2 {
 		log.Fatal("you should specify tree and alignment")
