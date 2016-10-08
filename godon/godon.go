@@ -25,6 +25,7 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"math/rand"
@@ -50,6 +51,19 @@ var gitbranch = ""
 var buildstamp = ""
 var version = fmt.Sprintf("branch: %s, revision: %s, build time: %s", gitbranch, githash, buildstamp)
 
+// Summary is storing godon summary information.
+type Summary struct {
+	Version     string   `json:"version"`
+	CommandLine []string `json:"commandLine"`
+	Seed        int64    `json:"seed"`
+	NCPU        int      `json:"nCPU"`
+	StartTree   string   `json:"startTree"`
+	EndTree     string   `json:"endTree,omitempty"`
+	FullLnL     float64  `json:"fullLnL,omitempty"`
+	Time        float64  `json:"time"`
+}
+
+// Logger settings.
 var log = logging.MustGetLogger("godon")
 var formatter = logging.MustStringFormatter(`%{message}`)
 
@@ -71,6 +85,8 @@ func lastLine(fn string) (line string) {
 
 func main() {
 	startTime := time.Now()
+
+	summary := Summary{}
 
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Godon %s\n", version)
@@ -132,6 +148,7 @@ func main() {
 	outTreeF := flag.String("tree", "", "write tree to a file")
 	startF := flag.String("start", "", "read start position from the trajectory file")
 	logLevel := flag.String("loglevel", "notice", "loglevel ('critical', 'error', 'warning', 'notice', 'info', 'debug')")
+	jsonF := flag.String("json", "", "write json output to a file")
 
 	flag.Parse()
 
@@ -161,9 +178,11 @@ func main() {
 
 	// print revision
 	log.Info(version)
+	summary.Version = version
 
 	// print commandline
 	log.Info("Command line:", os.Args)
+	summary.CommandLine = os.Args
 
 	if *seed == -1 {
 		*seed = time.Now().UnixNano()
@@ -174,7 +193,9 @@ func main() {
 	rand.Seed(*seed)
 	runtime.GOMAXPROCS(*nCPU)
 
-	log.Infof("Using CPUs: %d.\n", runtime.GOMAXPROCS(0))
+	effectiveNCPU := runtime.GOMAXPROCS(0)
+	log.Infof("Using CPUs: %d.\n", effectiveNCPU)
+	summary.NCPU = effectiveNCPU
 
 	if len(flag.Args()) < 2 {
 		log.Fatal("you should specify tree and alignment")
@@ -230,6 +251,7 @@ func main() {
 	}
 
 	log.Infof("intree_unroot=%s", t)
+	summary.StartTree = t.String()
 	log.Debugf("brtree_unroot=%s", t.BrString())
 	log.Debug(t.FullString())
 
@@ -472,6 +494,7 @@ MethodLoop:
 			}
 		}
 		log.Infof("outtree=%s", t)
+		summary.EndTree = t.String()
 	}
 
 	if *outTreeF != "" {
@@ -486,10 +509,31 @@ MethodLoop:
 
 	if *printFull && (aggMode != cmodel.AGG_NONE) {
 		m.SetAggregationMode(cmodel.AGG_NONE)
-		log.Notice("Full likelihood: ", m.Likelihood())
+		L := m.Likelihood()
+		log.Notice("Full likelihood: ", L)
+		summary.FullLnL = L
 	}
 
 	endTime := time.Now()
 
-	log.Noticef("Running time: %v", endTime.Sub(startTime))
+	deltaT := endTime.Sub(startTime)
+	log.Noticef("Running time: %v", deltaT)
+	summary.Time = deltaT.Seconds()
+
+	// output summary in json format
+	if *jsonF != "" {
+		j, err := json.Marshal(summary)
+		if err != nil {
+			log.Error(err)
+		} else {
+			log.Debug(string(j))
+			f, err := os.Create(*jsonF)
+			if err != nil {
+				log.Error("Error creating json output file:", err)
+			} else {
+				f.Write(j)
+			}
+			f.Close()
+		}
+	}
 }
