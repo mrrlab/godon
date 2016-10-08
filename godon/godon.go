@@ -69,6 +69,8 @@ type Summary struct {
 	FullLnL float64 `json:"fullLnL,omitempty"`
 	// Time is the computations time in seconds.
 	Time float64 `json:"time"`
+	// Model is the model summary, including BEB and NEB if available.
+	Model interface{} `json:"model,omitempty"`
 }
 
 // Logger settings.
@@ -492,6 +494,7 @@ MethodLoop:
 	}
 	opt.PrintFinal()
 	m.Final()
+	summary.Model = m.Summary()
 
 	if !*noOptBrLen {
 		if root {

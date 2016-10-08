@@ -21,6 +21,13 @@ type BranchSite struct {
 	fixw2                  bool
 	q0done, q1done, q2done bool
 	propdone               bool
+	summary                brachSiteSummary
+}
+
+// brachSiteSummary stores summary information.
+type brachSiteSummary struct {
+	SitePosteriorNEB []float64 `json:"sitePosteriorNEB,omitempty"`
+	SitePosteriorBEB []float64 `json:"sitePosteriorBEB,omitempty"`
 }
 
 // NewBranchSite creates a new BranchSite model.
@@ -425,11 +432,13 @@ func (m *BranchSite) Final() {
 	classes[3] = true
 
 	posterior := m.NEBPosterior(classes)
+	m.summary.SitePosteriorNEB = posterior
 
 	log.Notice("NEB analysis")
 	m.PrintPosterior(posterior)
 
 	posterior = m.BEBPosterior()
+	m.summary.SitePosteriorBEB = posterior
 
 	log.Notice("BEB analysis")
 	m.PrintPosterior(posterior)
@@ -444,4 +453,8 @@ func (m *BranchSite) Likelihood() float64 {
 		m.updateProportions()
 	}
 	return m.BaseModel.Likelihood()
+}
+
+func (m *BranchSite) Summary() interface{} {
+	return m.summary
 }
