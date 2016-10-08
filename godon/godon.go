@@ -71,6 +71,8 @@ type Summary struct {
 	Time float64 `json:"time"`
 	// Model is the model summary, including BEB and NEB if available.
 	Model interface{} `json:"model,omitempty"`
+	// Optimizers is an array of summary of all optimizers used.
+	Optimizers []interface{} `json:"optimizers"`
 }
 
 // Logger settings.
@@ -490,6 +492,7 @@ MethodLoop:
 		opt.WatchSignals(os.Interrupt, syscall.SIGUSR2)
 
 		opt.Run(*iterations)
+		summary.Optimizers = append(summary.Optimizers, opt.Summary())
 		oldOpt = opt
 	}
 	opt.PrintFinal()

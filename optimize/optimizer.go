@@ -55,19 +55,35 @@ type Optimizer interface {
 	LoadFromOptimizer(Optimizer)
 	// PrintFinal prints the final output.
 	PrintFinal()
+	// Summary returns optimization summary for JSON output.
+	Summary() interface{}
+}
+
+// baseOptimizerSummary stores summary information.
+type baseOptimizerSummary struct {
+	// MaxLnL is the maximum likelihood value.
+	MaxLnL float64 `json:"maxLnL"`
+	// MaxLParameters is the maximum likelihood parameter values.
+	MaxLParameters map[string]float64 `json:"maxLParameters"`
+	// NIterations is the number of iterations, for gradient-based methods can be less than number of funciton calls.
+	NIterations int `json:"nIterations"`
+	// NCalls is the number of function calls, cumulative for chained methods
+	NCalls int `json:"nLikelihoodComputations"`
+	// Status is the optimization status.
+	Status interface{} `json:"status,omitempty"`
 }
 
 // BaseOptimizer contains basic data for an optimizer.
 type BaseOptimizer struct {
 	Optimizable
-	i          int
-	calls      int
-	l          float64
-	maxL       float64
-	maxLPar    []float64
-	repPeriod  int
-	sig        chan os.Signal
-	output     io.Writer
+	i         int
+	calls     int
+	l         float64
+	maxL      float64
+	maxLPar   []float64
+	repPeriod int
+	sig       chan os.Signal
+	output    io.Writer
 	// Quiet controls whether output should be printed.
 	Quiet      bool
 	parameters FloatParameters
@@ -166,7 +182,7 @@ func (o *BaseOptimizer) GetMaxL() float64 {
 }
 
 // GetMaxLParameters returns parameter values for the maximum
-// likelihood value.
+// likelihood value as a string.
 func (o *BaseOptimizer) GetMaxLParameters() (s string) {
 	for i, v := range o.maxLPar {
 		s += fmt.Sprintf("%0.5f", v)
@@ -175,4 +191,23 @@ func (o *BaseOptimizer) GetMaxLParameters() (s string) {
 		}
 	}
 	return s
+}
+
+// GetMaxLParametersMap returns parameter values for the maximum
+// likelihood value as a map.
+func (o *BaseOptimizer) GetMaxLParametersMap() (m map[string]float64) {
+	m = make(map[string]float64, len(o.maxLPar))
+	for i, v := range o.maxLPar {
+		m[o.parameters[i].Name()] = v
+	}
+	return m
+}
+
+func (o *BaseOptimizer) Summary() interface{} {
+	return baseOptimizerSummary{
+		MaxLnL:         o.maxL,
+		MaxLParameters: o.GetMaxLParametersMap(),
+		NIterations:    o.GetNIter(),
+		NCalls:         o.GetNCalls(),
+	}
 }

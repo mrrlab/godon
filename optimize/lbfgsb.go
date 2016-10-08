@@ -10,8 +10,9 @@ import (
 // algorithm of hill climbing.
 type LBFGSB struct {
 	BaseOptimizer
-	dH   float64
-	grad []float64
+	dH         float64
+	grad       []float64
+	exitStatus lbfgsb.ExitStatus
 }
 
 // NewLBFGSB creates a new LBFGSB optimizer.
@@ -119,16 +120,31 @@ func (l *LBFGSB) Run(iterations int) {
 	opt.SetBounds(bounds)
 	opt.SetLogger(l.Logger)
 
-	_, exitStatus := opt.Minimize(l, l.parameters.Values(nil))
+	_, l.exitStatus = opt.Minimize(l, l.parameters.Values(nil))
 
-	switch exitStatus.Code {
+	switch l.exitStatus.Code {
 	case lbfgsb.SUCCESS:
 		fallthrough
 	case lbfgsb.APPROXIMATE:
-		log.Info("LBFGSB status:", exitStatus)
+		log.Info("LBFGSB status:", l.exitStatus)
 	case lbfgsb.WARNING:
-		log.Warning("Warning, LBFGSB status:", exitStatus)
+		log.Warning("Warning, LBFGSB status:", l.exitStatus)
 	default:
-		log.Error("Error during LBFGSB:", exitStatus)
+		log.Error("Error during LBFGSB:", l.exitStatus)
 	}
+}
+
+func (l *LBFGSB) Summary() interface{} {
+	s := l.BaseOptimizer.Summary().(baseOptimizerSummary)
+	s.Status = struct {
+		Code       lbfgsb.ExitStatusCode `json:"code"`
+		CodeString string                `json:"codeString"`
+		Message    string                `json:"message"`
+	}{
+		l.exitStatus.Code,
+		l.exitStatus.Code.String(),
+		l.exitStatus.Message,
+	}
+	return s
+
 }
