@@ -56,7 +56,8 @@ func ReadFrequency(rd io.Reader, gcode *bio.GeneticCode) (CodonFrequency, error)
 }
 
 // F0 returns array (slice) of equal codon frequencies.
-func F0(gcode *bio.GeneticCode) CodonFrequency {
+func F0(cali CodonSequences) CodonFrequency {
+	gcode := cali[0].GCode
 	cf := CodonFrequency{
 		Freq:  make([]float64, gcode.NCodon),
 		GCode: gcode,
@@ -68,7 +69,8 @@ func F0(gcode *bio.GeneticCode) CodonFrequency {
 }
 
 // F3X4 computes F3X4-style frequencies based on the alignment.
-func F3X4(cali CodonSequences, gcode *bio.GeneticCode) (cf CodonFrequency) {
+func F3X4(cali CodonSequences) (cf CodonFrequency) {
+	gcode := cali[0].GCode
 	poscf := make([][]float64, 3)
 	for i := 0; i < 3; i++ {
 		poscf[i] = make([]float64, 4)

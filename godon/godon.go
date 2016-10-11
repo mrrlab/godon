@@ -289,10 +289,10 @@ func main() {
 		switch *cFreq {
 		case "F0":
 			log.Info("F0 frequency")
-			cf = codon.F0(gcode)
+			cf = codon.F0(cali)
 		case "F3X4":
 			log.Info("F3X4 frequency")
-			cf = codon.F3X4(cali, gcode)
+			cf = codon.F3X4(cali)
 		default:
 			log.Fatal("Unknow codon freuquency specification")
 		}
