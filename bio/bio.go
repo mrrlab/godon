@@ -10,31 +10,86 @@ import (
 )
 
 var (
-	// GeneticCode is a map, codon string (capital letters) is the key,
-	// amino acids (capital letter) are values.
-	GeneticCode = map[string]byte{
-		"ATA": 'I', "ATC": 'I', "ATT": 'I', "ATG": 'M',
-		"ACA": 'T', "ACC": 'T', "ACG": 'T', "ACT": 'T',
-		"AAC": 'N', "AAT": 'N', "AAA": 'K', "AAG": 'K',
-		"AGC": 'S', "AGT": 'S', "AGA": 'R', "AGG": 'R',
-		"CTA": 'L', "CTC": 'L', "CTG": 'L', "CTT": 'L',
-		"CCA": 'P', "CCC": 'P', "CCG": 'P', "CCT": 'P',
-		"CAC": 'H', "CAT": 'H', "CAA": 'Q', "CAG": 'Q',
-		"CGA": 'R', "CGC": 'R', "CGG": 'R', "CGT": 'R',
-		"GTA": 'V', "GTC": 'V', "GTG": 'V', "GTT": 'V',
-		"GCA": 'A', "GCC": 'A', "GCG": 'A', "GCT": 'A',
-		"GAC": 'D', "GAT": 'D', "GAA": 'E', "GAG": 'E',
-		"GGA": 'G', "GGC": 'G', "GGG": 'G', "GGT": 'G',
-		"TCA": 'S', "TCC": 'S', "TCG": 'S', "TCT": 'S',
-		"TTC": 'F', "TTT": 'F', "TTA": 'L', "TTG": 'L',
-		"TAC": 'Y', "TAT": 'Y', "TAA": '_', "TAG": '_',
-		"TGC": 'C', "TGT": 'C', "TGA": '_', "TGG": 'W'}
+	// nAlphabet is a nucleotide alphabet.
+	nAlphabet = [...]byte{'T', 'C', 'A', 'G'}
+	// rNAlphabet is reverse nucleotide alphabet (letter to a number)
+	rNAlphabet = map[byte]byte{'T': 0, 'C': 1, 'A': 2, 'G': 3}
 )
+
+// GeneticCode is a structure holding genetic code.
+type GeneticCode struct {
+	// Id according to NCBI.
+	Id int
+	// Genetic code name.
+	Name string
+	// Short name (if present).
+	ShortName string
+	// Map from codon to amino acid or '*' for stop codon.
+	Map map[string]byte
+	// NCodon is total number of codons (61 for the standard code).
+	NCodon int
+	// CodonNum translates codon into its' number.
+	CodonNum map[string]byte
+	// NumCodon translates codon number to its' string.
+	NumCodon map[byte]string
+}
+
+// GetCodons returns a channel with every codon (64).
+func GetCodons() <-chan string {
+	ch := make(chan string)
+	var cn func(string)
+	cn = func(prefix string) {
+		if len(prefix) == 3 {
+			ch <- prefix
+		} else {
+			for _, l := range nAlphabet {
+				cn(prefix + string(l))
+			}
+			if len(prefix) == 0 {
+				close(ch)
+			}
+		}
+	}
+	go cn("")
+	return ch
+}
+
+// newGeneticCode creates a new genetic code. id, name and shortName
+// are coming from NCBI. aas is a string of amino acids, and starts is
+// a string of start codons, not used currently.
+func newGeneticCode(id int, name, shortName string, aas, starts string) *GeneticCode {
+	gc := GeneticCode{
+		Id:        id,
+		Name:      name,
+		ShortName: shortName,
+		Map:       make(map[string]byte, 64),
+		CodonNum:  make(map[string]byte, 64),
+		NumCodon:  make(map[byte]string, 64),
+	}
+	aasBytes := []byte(aas)
+	// i is the position in aas string
+	i := 0
+	// j is the numeric code of codons
+	j := byte(0)
+	for codon := range GetCodons() {
+		aa := aasBytes[i]
+		gc.Map[codon] = aa
+		i++
+		if aa != '*' {
+			gc.NCodon += 1
+			gc.CodonNum[codon] = j
+			gc.NumCodon[j] = codon
+			j++
+		}
+	}
+
+	return &gc
+}
 
 // Translate translates nucleotide sequence string into the protein
 // string. Error is returned is sequence is not divisible by three,
 // non-terminal stop-codon is found or wrong codon is encountered.
-func Translate(nseq string) (string, error) {
+func (gcode *GeneticCode) Translate(nseq string) (string, error) {
 	var buffer bytes.Buffer
 
 	if len(nseq)%3 != 0 {
@@ -45,7 +100,7 @@ func Translate(nseq string) (string, error) {
 	nseq = strings.Replace(strings.ToUpper(nseq), "U", "T", -1)
 
 	for i := 0; i < len(nseq); i += 3 {
-		aa := GeneticCode[nseq[i:i+3]]
+		aa := gcode.Map[nseq[i:i+3]]
 		if aa == 0 {
 			return buffer.String(), errors.New("unknown codon")
 		} else if aa == '_' {
@@ -62,8 +117,8 @@ func Translate(nseq string) (string, error) {
 
 // IsStopCodon tests if the string is a stop-codon (DNA alphabet,
 // capital letters).
-func IsStopCodon(codon string) bool {
-	if GeneticCode[codon] == '_' {
+func (gcode *GeneticCode) IsStopCodon(codon string) bool {
+	if gcode.Map[codon] == '*' {
 		return true
 	}
 	return false

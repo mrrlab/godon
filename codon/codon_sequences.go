@@ -1,3 +1,5 @@
+// Codon is the package for working with codons, codon transition
+// matrices and codon frequencies.
 package codon
 
 import (
@@ -10,16 +12,6 @@ import (
 )
 
 var (
-	// alphabet is a nucleotide alphabet.
-	alphabet = [...]byte{'T', 'C', 'A', 'G'}
-	// rAlphabet is reverse nucleotide alphabet (letter to a number)
-	rAlphabet = map[byte]byte{'T': 0, 'C': 1, 'A': 2, 'G': 3}
-	// CodonNum translates codon into its' number.
-	CodonNum = map[string]byte{}
-	// NumCodon translates codon number to its' string.
-	NumCodon = map[byte]string{}
-	// NCodon is total number of codons (61).
-	NCodon int
 	// NOCODON is a special number which represents an unknown
 	// codon.
 	NOCODON = byte(255)
@@ -29,6 +21,7 @@ var (
 type CodonSequence struct {
 	Name     string
 	Sequence []byte
+	GCode    *bio.GeneticCode
 }
 
 // CodonSequences is an array (slice) of codon sequences with their
@@ -38,8 +31,8 @@ type CodonSequences []CodonSequence
 // String returns text representation of codon frequencies.
 func (cf CodonFrequency) String() (s string) {
 	s = "<CodonFrequency: "
-	for i, f := range cf {
-		s += fmt.Sprintf(" %v: %v,", NumCodon[byte(i)], f)
+	for i, f := range cf.Freq {
+		s += fmt.Sprintf(" %v: %v,", cf.GCode.NumCodon[byte(i)], f)
 	}
 	s = s[:len(s)-1] + ">"
 	return
@@ -49,7 +42,7 @@ func (cf CodonFrequency) String() (s string) {
 func (seq CodonSequence) String() (s string) {
 	var b bytes.Buffer
 	for _, c := range seq.Sequence {
-		b.WriteString(NumCodon[c] + " ")
+		b.WriteString(seq.GCode.NumCodon[c] + " ")
 	}
 	s = ">" + seq.Name + "\n" + bio.Wrap(b.String(), 80)
 	return
@@ -87,7 +80,7 @@ func (seqs CodonSequences) NAmbiguous() (count int) {
 
 // ToCodonSequences converts nucleotide bio.Sequences to
 // CodonSequences.
-func ToCodonSequences(seqs bio.Sequences) (cs CodonSequences, err error) {
+func ToCodonSequences(seqs bio.Sequences, gcode *bio.GeneticCode) (cs CodonSequences, err error) {
 	cs = make(CodonSequences, 0, len(seqs))
 	for _, seq := range seqs {
 		if len(seq.Sequence)%3 != 0 {
@@ -96,8 +89,9 @@ func ToCodonSequences(seqs bio.Sequences) (cs CodonSequences, err error) {
 		var cseq CodonSequence
 		cseq.Name = seq.Name
 		cseq.Sequence = make([]byte, 0, len(seq.Sequence)/3)
+		cseq.GCode = gcode
 		for i := 0; i < len(seq.Sequence); i += 3 {
-			cnum, ok := CodonNum[strings.ToUpper(seq.Sequence[i:i+3])]
+			cnum, ok := gcode.CodonNum[strings.ToUpper(seq.Sequence[i:i+3])]
 			if !ok {
 				cnum = NOCODON
 			}
@@ -144,6 +138,7 @@ func (seqs CodonSequences) Fixed() (fixed []bool) {
 // Letters returns a set of present and absent codons at each position
 // of the alignment.
 func (seqs CodonSequences) Letters() (found [][]int, absent [][]int) {
+	NCodon := seqs[0].GCode.NCodon
 	found = make([][]int, seqs.Length())
 	absent = make([][]int, seqs.Length())
 	for pos := 0; pos < seqs.Length(); pos++ {

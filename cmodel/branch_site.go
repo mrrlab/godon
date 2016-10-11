@@ -264,7 +264,7 @@ func (m *BranchSite) siteLMatrix(w0, w2 []float64) (res [][][][]float64) {
 	// temporary storage for likelihood computation
 	plh := make([][]float64, nni)
 	for i := 0; i < nni; i++ {
-		plh[i] = make([]float64, codon.NCodon+1)
+		plh[i] = make([]float64, m.cf.GCode.NCodon+1)
 	}
 
 	counter := 0
@@ -280,7 +280,7 @@ func (m *BranchSite) siteLMatrix(w0, w2 []float64) (res [][][][]float64) {
 		nni := m.tree.MaxNodeId() + 1
 		plh := make([][]float64, nni)
 		for i := 0; i < nni; i++ {
-			plh[i] = make([]float64, codon.NCodon+1)
+			plh[i] = make([]float64, m.cf.GCode.NCodon+1)
 		}
 		for task := range tasks {
 			res[task.i_w0][task.i_w2][task.class][task.pos] = m.fullSubL(task.class, task.pos, plh)

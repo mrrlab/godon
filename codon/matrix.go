@@ -14,14 +14,6 @@ import (
 // the matrix is replace by an identity matrix.
 const smallScale = 1e-30
 
-var (
-	// ZeroQ is a zero-matrix.
-	ZeroQ     *mat64.Dense
-	// IdentityP is an identity matrix. It's used if the branch or
-	// scale is very small.
-	IdentityP *mat64.Dense
-)
-
 // createIdentityMatrix creates an identity matrix of size size.
 func createIdentityMatrix(size int) (m *mat64.Dense) {
 	m = mat64.NewDense(size, size, nil)
@@ -51,16 +43,16 @@ func CreateTransitionMatrix(cf CodonFrequency, kappa, omega float64, m *mat64.De
 func CreateRateTransitionMatrix(cf CodonFrequency, kappa, omega float64, rates []float64, m *mat64.Dense) (*mat64.Dense, float64) {
 	//fmt.Println("kappa=", kappa, ", omega=", omega)
 	if m == nil {
-		m = mat64.NewDense(NCodon, NCodon, nil)
+		m = mat64.NewDense(cf.GCode.NCodon, cf.GCode.NCodon, nil)
 	}
-	for i1 := 0; i1 < NCodon; i1++ {
-		for i2 := 0; i2 < NCodon; i2++ {
+	for i1 := 0; i1 < cf.GCode.NCodon; i1++ {
+		for i2 := 0; i2 < cf.GCode.NCodon; i2++ {
 			if i1 == i2 {
 				m.Set(i1, i2, 0)
 				continue
 			}
-			c1 := NumCodon[byte(i1)]
-			c2 := NumCodon[byte(i2)]
+			c1 := cf.GCode.NumCodon[byte(i1)]
+			c2 := cf.GCode.NumCodon[byte(i2)]
 			dist, transitions, pos := codonDistance(c1, c2)
 
 			if dist > 1 {
@@ -68,29 +60,29 @@ func CreateRateTransitionMatrix(cf CodonFrequency, kappa, omega float64, rates [
 				continue
 			}
 			m.Set(i1, i2, rates[pos])
-			m.Set(i1, i2, m.At(i1, i2)*cf[i2])
+			m.Set(i1, i2, m.At(i1, i2)*cf.Freq[i2])
 			if transitions == 1 {
 				m.Set(i1, i2, m.At(i1, i2)*kappa)
 			}
-			if bio.GeneticCode[c1] != bio.GeneticCode[c2] {
+			if cf.GCode.Map[c1] != cf.GCode.Map[c2] {
 				m.Set(i1, i2, m.At(i1, i2)*omega)
 			}
 		}
 	}
-	for i1 := 0; i1 < NCodon; i1++ {
+	for i1 := 0; i1 < cf.GCode.NCodon; i1++ {
 		rowSum := 0.0
-		for i2 := 0; i2 < NCodon; i2++ {
+		for i2 := 0; i2 < cf.GCode.NCodon; i2++ {
 			rowSum += m.At(i1, i2)
 		}
 		m.Set(i1, i1, -rowSum)
 	}
 	scale := 0.0
-	for i := 0; i < NCodon; i++ {
-		scale += -cf[i] * m.At(i, i)
+	for i := 0; i < cf.GCode.NCodon; i++ {
+		scale += -cf.Freq[i] * m.At(i, i)
 	}
 
 	if scale < smallScale {
-		return ZeroQ, 0
+		return mat64.NewDense(cf.GCode.NCodon, cf.GCode.NCodon, nil), 0
 	}
 	return m, scale
 
@@ -98,6 +90,7 @@ func CreateRateTransitionMatrix(cf CodonFrequency, kappa, omega float64, rates [
 
 // scaleMatrix scles a matrix by multiplying every value by scale.
 func scaleMatrix(in *mat64.Dense, scale float64, out *mat64.Dense) *mat64.Dense {
+	NCodon, _ := in.Dims()
 	if out == nil {
 		out = mat64.NewDense(NCodon, NCodon, nil)
 	}
@@ -106,10 +99,10 @@ func scaleMatrix(in *mat64.Dense, scale float64, out *mat64.Dense) *mat64.Dense 
 }
 
 // PrintQ prints a Q or P matrix.
-func PrintQ(Q *mat64.Dense) {
-	codons := make([]string, len(CodonNum))
+func PrintQ(Q *mat64.Dense, gcode bio.GeneticCode) {
+	codons := make([]string, gcode.NCodon)
 	i := 0
-	for k, _ := range CodonNum {
+	for k, _ := range gcode.CodonNum {
 		codons[i] = k
 		i++
 	}
@@ -123,22 +116,23 @@ func PrintQ(Q *mat64.Dense) {
 	for _, codon1 := range codons {
 		fmt.Print(codon1, "\t")
 		for _, codon2 := range codons {
-			fmt.Printf("%0.4f\t", Q.At(int(CodonNum[codon1]), int(CodonNum[codon2])))
+			fmt.Printf("%0.4f\t", Q.At(int(gcode.CodonNum[codon1]), int(gcode.CodonNum[codon2])))
 		}
 		fmt.Println()
 	}
 }
 
 // PrintUnQ prints Q or P matrix without codon names.
-func PrintUnQ(Q *mat64.Dense) {
+func PrintUnQ(Q *mat64.Dense, gcode bio.GeneticCode) {
 	fmt.Print("\t")
-	for i := 0; i < NCodon; i++ {
-		fmt.Print(NumCodon[byte(i)], "\t")
+
+	for i := 0; i < gcode.NCodon; i++ {
+		fmt.Print(gcode.NumCodon[byte(i)], "\t")
 	}
 	fmt.Println()
-	for i1 := 0; i1 < NCodon; i1++ {
-		fmt.Print(NumCodon[byte(i1)], "\t")
-		for i2 := 0; i2 < NCodon; i2++ {
+	for i1 := 0; i1 < gcode.NCodon; i1++ {
+		fmt.Print(gcode.NumCodon[byte(i1)], "\t")
+		for i2 := 0; i2 < gcode.NCodon; i2++ {
 			fmt.Printf("%0.4f\t", Q.At(i1, i2))
 		}
 		fmt.Println()

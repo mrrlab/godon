@@ -108,6 +108,7 @@ func main() {
 
 	// model
 	model := flag.String("model", "M0", "todel type (M0 or BS for branch site)")
+	gcodeId := flag.Int("gcode", 1, "NCBI genetic code id, standard by default")
 	fgBranch := flag.Int("fg", -1, "fg branch number")
 	maxBrLen := flag.Float64("maxbrlen", 100, "maximum branch length")
 	noOptBrLen := flag.Bool("nobrlen", false, "don't optimize branch lengths")
@@ -214,6 +215,12 @@ func main() {
 		return
 	}
 
+	gcode, ok := bio.GeneticCodes[*gcodeId]
+	if !ok {
+		log.Fatalf("couldn't load genetic code with id=%d", gcodeId)
+	}
+	log.Infof("Genetic code: %d, \"%s\"", gcode.Id, gcode.Name)
+
 	fastaFile, err := os.Open(flag.Args()[0])
 	if err != nil {
 		log.Fatal(err)
@@ -225,7 +232,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	cali, err := codon.ToCodonSequences(ali)
+	cali, err := codon.ToCodonSequences(ali, gcode)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -274,7 +281,7 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		cf, err = codon.ReadFrequency(cFreqFile)
+		cf, err = codon.ReadFrequency(cFreqFile, gcode)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -282,10 +289,10 @@ func main() {
 		switch *cFreq {
 		case "F0":
 			log.Info("F0 frequency")
-			cf = codon.F0()
+			cf = codon.F0(gcode)
 		case "F3X4":
 			log.Info("F3X4 frequency")
-			cf = codon.F3X4(cali)
+			cf = codon.F3X4(cali, gcode)
 		default:
 			log.Fatal("Unknow codon freuquency specification")
 		}

@@ -15,14 +15,14 @@ const smallFreq = 1e-20
 // compute e^Qt.
 type EMatrix struct {
 	// Q is Q-matrix
-	Q     *mat64.Dense
+	Q *mat64.Dense
 	// Scale is matrix scale.
 	Scale float64
 	// CF is codon frequency.
-	CF    CodonFrequency
-	v     *mat64.Dense
-	d     *mat64.Dense
-	iv    *mat64.Dense
+	CF CodonFrequency
+	v  *mat64.Dense
+	d  *mat64.Dense
+	iv *mat64.Dense
 }
 
 // NewEMatrix creates a new EMatrix.
@@ -82,10 +82,10 @@ func (m *EMatrix) Eigen() (err error) {
 
 	// make sure we have no zero frequences
 	psum := 0.0
-	if len(m.CF) == 0 {
+	if len(m.CF.Freq) == 0 {
 		return errors.New("EMatrix has an empty codon frequency")
 	}
-	for _, p := range m.CF {
+	for _, p := range m.CF.Freq {
 		p = math.Max(smallFreq, p)
 		psum += p
 	}
@@ -94,7 +94,7 @@ func (m *EMatrix) Eigen() (err error) {
 	// and Pi_i (inverse)
 	Pi := mat64.NewDense(cols, rows, nil)
 	Pi_i := mat64.NewDense(cols, rows, nil)
-	for i, p := range m.CF {
+	for i, p := range m.CF.Freq {
 		p = math.Max(smallFreq, p) / psum
 		Pi.Set(i, i, math.Sqrt(p))
 		Pi_i.Set(i, i, 1/math.Sqrt(p))
@@ -136,7 +136,7 @@ func (m *EMatrix) Exp(cD *mat64.Dense, t float64) (*mat64.Dense, error) {
 		return nil, errors.New("D isn't a square matrix")
 	}
 	if m.Scale*t < smallScale {
-		return IdentityP, nil
+		return createIdentityMatrix(cols), nil
 	}
 	// This is a dirty hack to allow 0-scale matricies
 	if math.IsInf(t, 1) {

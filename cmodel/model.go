@@ -11,7 +11,6 @@ import (
 	"github.com/gonum/blas/native"
 	"github.com/gonum/matrix/mat64"
 
-	"bitbucket.org/Davydov/godon/bio"
 	"bitbucket.org/Davydov/godon/codon"
 	"bitbucket.org/Davydov/godon/optimize"
 	"bitbucket.org/Davydov/godon/tree"
@@ -250,7 +249,7 @@ func (m *BaseModel) ReorderAlignment() {
 // ExpBranch exponentiates a signle branch. This uses eigen decomposed matrices.
 func (m *BaseModel) ExpBranch(br int) {
 	node := m.tree.NodeIdArray()[br]
-	cD := mat64.NewDense(codon.NCodon, codon.NCodon, nil)
+	cD := mat64.NewDense(m.cf.GCode.NCodon, m.cf.GCode.NCodon, nil)
 	for class, _ := range m.qs {
 		var oclass int
 		for oclass = class - 1; oclass >= 0; oclass-- {
@@ -301,7 +300,7 @@ func (m *BaseModel) ExpBranches() {
 	for i := 0; i < runtime.GOMAXPROCS(0); i++ {
 		wg.Add(1)
 		go func() {
-			cD := mat64.NewDense(codon.NCodon, codon.NCodon, nil)
+			cD := mat64.NewDense(m.cf.GCode.NCodon, m.cf.GCode.NCodon, nil)
 			for s := range tasks {
 				Q, err := m.qs[s.class][s.node.Id].Exp(cD, s.node.BranchLength/m.scale[s.node.Id])
 				if err != nil {
@@ -377,7 +376,7 @@ func (m *BaseModel) Likelihood() (lnL float64) {
 			nni := m.tree.MaxNodeId() + 1
 			plh := make([][]float64, nni)
 			for i := 0; i < nni; i++ {
-				plh[i] = make([]float64, codon.NCodon+1)
+				plh[i] = make([]float64, m.cf.GCode.NCodon+1)
 			}
 			for pos := range tasks {
 				if m.prunAllPos && m.prunPos[pos] {
@@ -461,7 +460,7 @@ func (m *BaseModel) classLikelihoods() (res [][]float64) {
 			nni := m.tree.MaxNodeId() + 1
 			plh := make([][]float64, nni)
 			for i := 0; i < nni; i++ {
-				plh[i] = make([]float64, codon.NCodon+1)
+				plh[i] = make([]float64, m.cf.GCode.NCodon+1)
 			}
 			for pos := range tasks {
 				for class, p := range m.prop[pos] {
@@ -524,8 +523,8 @@ func (m *BaseModel) PrintPosterior(posterior []float64) {
 
 	for i, p := range posterior {
 		if p > 0.5 {
-			codon := codon.NumCodon[m.cali[0].Sequence[i]]
-			aa := bio.GeneticCode[codon]
+			codon := m.cf.GCode.NumCodon[m.cali[0].Sequence[i]]
+			aa := m.cf.GCode.Map[codon]
 			log.Noticef("%v\t%v\t%c\t%0.3f", i+1, codon, aa, p)
 		}
 	}
@@ -533,13 +532,15 @@ func (m *BaseModel) PrintPosterior(posterior []float64) {
 
 // fullSubL calculates likelihood for given site class and position.
 func (m *BaseModel) fullSubL(class, pos int, plh [][]float64) (res float64) {
+	NCodon := m.cf.GCode.NCodon
+
 	for i := 0; i < m.tree.MaxNodeId()+1; i++ {
 		plh[i][0] = math.NaN()
 	}
 
 	for node := range m.tree.Terminals() {
 		cod := m.cali[node.LeafId].Sequence[pos]
-		for l := byte(0); l < byte(codon.NCodon); l++ {
+		for l := byte(0); l < byte(NCodon); l++ {
 			if cod == codon.NOCODON || l == cod {
 				plh[node.Id][l] = 1
 			} else {
@@ -549,22 +550,22 @@ func (m *BaseModel) fullSubL(class, pos int, plh [][]float64) (res float64) {
 	}
 
 	for _, node := range m.tree.NodeOrder() {
-		for l1 := 0; l1 < codon.NCodon; l1++ {
+		for l1 := 0; l1 < NCodon; l1++ {
 			l := 1.0
 			for _, child := range node.ChildNodes() {
 				// get the row
-				q := m.eQts[class][child.Id][l1*codon.NCodon:]
+				q := m.eQts[class][child.Id][l1*NCodon:]
 				// get child partial likelhiood
 				cplh := plh[child.Id]
-				s := impl.Ddot(codon.NCodon, q, 1, cplh, 1)
+				s := impl.Ddot(NCodon, q, 1, cplh, 1)
 				l *= s
 			}
 			plh[node.Id][l1] = l
 		}
 
 		if node.IsRoot() {
-			for l := 0; l < codon.NCodon; l++ {
-				res += m.cf[l] * plh[node.Id][l]
+			for l := 0; l < NCodon; l++ {
+				res += m.cf.Freq[l] * plh[node.Id][l]
 			}
 			break
 		}

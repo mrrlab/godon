@@ -2,9 +2,9 @@ package cmodel
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"path"
-	"fmt"
 
 	"github.com/op/go-logging"
 
@@ -26,6 +26,9 @@ var log = logging.MustGetLogger("cmodel")
 
 // GetTreeAlignment returns a tree and alignment for testing purposes.
 func GetTreeAlignment(data string) (t *tree.Tree, cali codon.CodonSequences, err error) {
+	// using standard genetic code
+	gcode := bio.GeneticCodes[1]
+
 	tf, err := os.Open(path.Join("testdata", data+".nwk"))
 	if err != nil {
 		return
@@ -48,7 +51,7 @@ func GetTreeAlignment(data string) (t *tree.Tree, cali codon.CodonSequences, err
 		return
 	}
 
-	cali, err = codon.ToCodonSequences(ali)
+	cali, err = codon.ToCodonSequences(ali, gcode)
 	if err != nil {
 		return
 	}
@@ -83,7 +86,7 @@ func strFltSlice(fs []float64) string {
 
 func floatRange(start, step float64, n uint) (res []float64) {
 	res = make([]float64, n)
-	for i := 0; i < int(n); i ++ {
+	for i := 0; i < int(n); i++ {
 		res[i] = start
 		start += step
 	}
