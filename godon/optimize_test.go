@@ -53,7 +53,7 @@ func TestMH(tst *testing.T) {
 		tst.Error("Error: ", err)
 	}
 
-	cf := codon.F0()
+	cf := codon.F0(cali)
 	bs := cmodel.NewBranchSite(cali, t, cf, false)
 
 	mh := optimize.NewMH(false, 0)
@@ -119,7 +119,7 @@ func TestLBFGSB(tst *testing.T) {
 		tst.Error("Error: ", err)
 	}
 
-	cf := codon.F0()
+	cf := codon.F0(cali)
 	m0 := cmodel.NewM0(cali, t, cf)
 	m0.SetParameters(2, 0.5)
 

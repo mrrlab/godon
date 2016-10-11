@@ -14,7 +14,7 @@ func BenchmarkMCMCD1(b *testing.B) {
 		b.Error("Error: ", err)
 	}
 
-	cf := codon.F0()
+	cf := codon.F0(cali)
 
 	m0 := NewM0(cali, t, cf)
 
