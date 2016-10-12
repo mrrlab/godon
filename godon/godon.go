@@ -201,6 +201,7 @@ func main() {
 		log.Debug("Random seed from time")
 	}
 	log.Infof("Random seed=%v", *seed)
+	summary.Seed = *seed
 
 	rand.Seed(*seed)
 	runtime.GOMAXPROCS(*nThreads)
