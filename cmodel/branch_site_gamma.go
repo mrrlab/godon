@@ -37,6 +37,13 @@ type BranchSiteGamma struct {
 	propdone               bool
 	gammacdone             bool
 	gammasdone             bool
+	summary                brachSiteGammaSummary
+}
+
+// brachSiteGammaSummary stores summary information.
+type brachSiteGammaSummary struct {
+	SitePosteriorNEB []float64 `json:"sitePosteriorNEB,omitempty"`
+	SitePosteriorBEB []float64 `json:"sitePosteriorBEB,omitempty"`
 }
 
 // NewBranchSiteGamma creates a new BranchSiteGamma model.
@@ -558,11 +565,13 @@ func (m *BranchSiteGamma) Final() {
 	}
 
 	posterior := m.NEBPosterior(classes)
+	m.summary.SitePosteriorNEB = posterior
 
 	log.Notice("NEB analysis")
 	m.PrintPosterior(posterior)
 
 	posterior = m.BEBPosterior()
+	m.summary.SitePosteriorBEB = posterior
 
 	log.Notice("BEB analysis")
 	m.PrintPosterior(posterior)
@@ -599,4 +608,12 @@ func (m *BranchSiteGamma) Likelihood() float64 {
 		m.updateProportions()
 	}
 	return m.BaseModel.Likelihood()
+}
+
+func (m *BranchSiteGamma) Summary() interface{} {
+	if m.summary.SitePosteriorBEB != nil || m.summary.SitePosteriorNEB != nil {
+		return m.summary
+	}
+	// nil prevents json from printing "{}"
+	return nil
 }
