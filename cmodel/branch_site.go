@@ -456,5 +456,9 @@ func (m *BranchSite) Likelihood() float64 {
 }
 
 func (m *BranchSite) Summary() interface{} {
-	return m.summary
+	if m.summary.SitePosteriorBEB != nil || m.summary.SitePosteriorNEB != nil {
+		return m.summary
+	}
+	// nil prevents json from printing "{}"
+	return nil
 }
