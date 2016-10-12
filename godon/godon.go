@@ -33,7 +33,6 @@ import (
 	"runtime"
 	"runtime/pprof"
 	"strings"
-	"syscall"
 	"time"
 
 	"github.com/op/go-logging"
@@ -496,7 +495,6 @@ MethodLoop:
 			opt.SetOptimizable(m)
 		}
 		opt.SetReportPeriod(*report)
-		opt.WatchSignals(os.Interrupt, syscall.SIGUSR2)
 
 		opt.Run(*iterations)
 		summary.Optimizers = append(summary.Optimizers, opt.Summary())
