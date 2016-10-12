@@ -338,6 +338,14 @@ func main() {
 	case "M0vrate":
 		log.Info("Using M0vrate model")
 		m = cmodel.NewM0vrate(cali, t, cf)
+	case "M1a":
+		log.Info("Using M1a model")
+		log.Infof("%d site gamma categories, %d codon gama categories", *ncatsg, *ncatcg)
+		m = cmodel.NewM2(cali, t, cf, false, *ncatsg, *ncatcg)
+	case "M2a":
+		log.Info("Using M2a model")
+		log.Infof("%d site gamma categories, %d codon gama categories", *ncatsg, *ncatcg)
+		m = cmodel.NewM2(cali, t, cf, true, *ncatsg, *ncatcg)
 	case "M7":
 		log.Info("Using M7 model")
 		log.Infof("%d beta categories, %d site gamma categories, %d codon gama categories", *ncatb, *ncatsg, *ncatcg)
