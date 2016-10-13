@@ -523,8 +523,23 @@ func (m *BaseModel) PrintPosterior(posterior []float64) {
 
 	for i, p := range posterior {
 		if p > 0.5 {
-			codon := m.cf.GCode.NumCodon[m.cali[0].Sequence[i]]
-			aa := m.cf.GCode.Map[codon]
+			bcodon := byte(0)
+			for _, seq := range m.cali {
+				bcodon = seq.Sequence[i]
+				if bcodon != codon.NOCODON {
+					break
+				}
+			}
+
+			codon, ok := m.cf.GCode.NumCodon[bcodon]
+			if !ok {
+				codon = "NNN"
+			}
+			aa, ok := m.cf.GCode.Map[codon]
+			if !ok {
+				aa = 'X'
+			}
+
 			log.Noticef("%v\t%v\t%c\t%0.3f", i+1, codon, aa, p)
 		}
 	}
