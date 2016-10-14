@@ -147,7 +147,9 @@ func (n *NLOPT) Run(iterations int) {
 		C.nlopt_set_local_optimizer(n.gopt, n.lopt)
 	}
 
-	C.nlopt_set_max_objective(n.gopt, (C.nlopt_func)(unsafe.Pointer(C.callback_adaptor)), unsafe.Pointer(n))
+	nId := registerObject(n)
+	defer unregisterObject(nId)
+	C.nlopt_set_max_objective(n.gopt, (C.nlopt_func)(unsafe.Pointer(C.callback_adaptor)), unsafe.Pointer(&nId))
 
 	lb := make([]C.double, len(n.parameters))
 	ub := make([]C.double, len(n.parameters))
