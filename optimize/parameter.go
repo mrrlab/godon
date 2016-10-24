@@ -124,6 +124,9 @@ func (par *FloatParameters) ReadLine(l string) error {
 	if err != nil {
 		return err
 	}
+	if len(v) < 2 {
+		return errors.New("Parameter line has not enough elements")
+	}
 	err = par.SetValues(v[2:])
 	if err != nil {
 		return err
