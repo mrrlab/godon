@@ -17,7 +17,8 @@ as well as MCMC
 
 Godon supports state aggregation (option `-aggregate`). See
 [the paper](http://biorxiv.org/content/early/2015/12/24/035063) for
-the details.
+the details. For the paper we used v0.5 (39bf774). Since then
+likelihood computations code were substantially changed.
 
 **Warning**: Godon is currently in an early beta stage.
 
@@ -28,7 +29,7 @@ Branch-Site model without ooptimizing the branch lengths (use only a
 single CPU).
 ```
 #!bash
-$ godon -cpu 1 -nobrlen -method lbfgsb -model BS ali.fst tree.nwk
+$ godon -nt 1 -nobrlen -method lbfgsb -model BS ali.fst tree.nwk
 ```
 
 Run MCMC using M0 model.
@@ -46,7 +47,8 @@ $ godon -method mh -model M0 ali.fst tree.nwk
 * ``godon`` is MCMC sampler/maximum likelihood for M0 and branchsite
   model
 * ``misc`` various utilities
-* ``optimize`` is the MCMC & downhill simplex implementation
+* ``optimize`` is the MCMC & downhill simplex and other algorithms implementation
+* ``paml`` various functions ported from [PAML](http://abacus.gene.ucl.ac.uk/software/paml.html)
 * ``tree`` is tree manipulation library
 
 ### codon ###
