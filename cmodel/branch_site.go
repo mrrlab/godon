@@ -455,6 +455,7 @@ func (m *BranchSite) Likelihood() float64 {
 	return m.BaseModel.Likelihood()
 }
 
+// Summary returns the run summary (site posterior for NEB and BEB).
 func (m *BranchSite) Summary() interface{} {
 	if m.summary.SitePosteriorBEB != nil || m.summary.SitePosteriorNEB != nil {
 		return m.summary
