@@ -107,7 +107,7 @@ func main() {
 
 	// model
 	model := flag.String("model", "M0", "todel type (M0 or BS for branch site)")
-	gcodeId := flag.Int("gcode", 1, "NCBI genetic code id, standard by default")
+	gcodeID := flag.Int("gcode", 1, "NCBI genetic code id, standard by default")
 	fgBranch := flag.Int("fg", -1, "fg branch number")
 	maxBrLen := flag.Float64("maxbrlen", 100, "maximum branch length")
 	noOptBrLen := flag.Bool("nobrlen", false, "don't optimize branch lengths")
@@ -215,9 +215,9 @@ func main() {
 		return
 	}
 
-	gcode, ok := bio.GeneticCodes[*gcodeId]
+	gcode, ok := bio.GeneticCodes[*gcodeID]
 	if !ok {
-		log.Fatalf("couldn't load genetic code with id=%d", gcodeId)
+		log.Fatalf("couldn't load genetic code with id=%d", gcodeID)
 	}
 	log.Infof("Genetic code: %d, \"%s\"", gcode.Id, gcode.Name)
 
@@ -258,12 +258,12 @@ func main() {
 
 	// Root the tree in the end
 	var root = false
-	var rootId = 0
+	var rootID = 0
 
 	if t.IsRooted() {
 		log.Warning("Tree is rooted. Will unroot.")
 		root = true
-		rootId, err = t.Unroot()
+		rootID, err = t.Unroot()
 		if err != nil {
 			log.Fatal("Error unrooting tree:", err)
 		}
@@ -516,7 +516,7 @@ MethodLoop:
 	if !*noOptBrLen {
 		if root {
 			log.Infof("unrooted_outtree=%s", t)
-			err = t.Root(rootId)
+			err = t.Root(rootID)
 			if err != nil {
 				log.Error("Error rooting tree:", err)
 			}
