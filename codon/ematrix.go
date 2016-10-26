@@ -19,14 +19,14 @@ type EMatrix struct {
 	// Scale is matrix scale.
 	Scale float64
 	// CF is codon frequency.
-	CF CodonFrequency
+	CF Frequency
 	v  *mat64.Dense
 	d  *mat64.Dense
 	iv *mat64.Dense
 }
 
 // NewEMatrix creates a new EMatrix.
-func NewEMatrix(Q *mat64.Dense, scale float64, cf CodonFrequency) *EMatrix {
+func NewEMatrix(Q *mat64.Dense, scale float64, cf Frequency) *EMatrix {
 	//cols, rows := Q.Dims()
 	return &EMatrix{Q: Q, Scale: scale, CF: cf}
 }
@@ -93,17 +93,17 @@ func (m *EMatrix) Eigen() (err error) {
 	// First compute matrix Pi=p_1^{1/2}, p_2^{1/2}. ...
 	// and Pi_i (inverse)
 	Pi := mat64.NewDense(cols, rows, nil)
-	Pi_i := mat64.NewDense(cols, rows, nil)
+	PiI := mat64.NewDense(cols, rows, nil)
 	for i, p := range m.CF.Freq {
 		p = math.Max(smallFreq, p) / psum
 		Pi.Set(i, i, math.Sqrt(p))
-		Pi_i.Set(i, i, 1/math.Sqrt(p))
+		PiI.Set(i, i, 1/math.Sqrt(p))
 	}
 
 	// Compute symmetric matrix A = Pi * Q * Pi_i
 	A := mat64.NewDense(cols, rows, nil)
 	A.Mul(Pi, m.Q)
-	A.Mul(A, Pi_i)
+	A.Mul(A, PiI)
 	AS := mat64.NewSymDense(cols, A.RawMatrix().Data)
 
 	decomp := mat64.EigenSym{}
@@ -116,7 +116,7 @@ func (m *EMatrix) Eigen() (err error) {
 	R := mat64.NewDense(cols, rows, nil)
 	R.EigenvectorsSym(&decomp)
 	m.v = mat64.NewDense(cols, rows, nil)
-	m.v.Mul(Pi_i, R)
+	m.v.Mul(PiI, R)
 
 	d := decomp.Values(nil)
 	m.d = mat64.NewDense(cols, rows, nil)

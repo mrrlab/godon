@@ -15,9 +15,8 @@ func UniformPrior(min, max float64, incmin, incmax bool) func(float64) float64 {
 			(incmax && x > max) ||
 			(!incmax && x >= max) {
 			return math.Inf(-1)
-		} else {
-			return -math.Log(max - min)
 		}
+		return -math.Log(max - min)
 	}
 }
 
@@ -33,7 +32,7 @@ func DiscreteUniformPrior(nstates int) func(float64) float64 {
 
 // GammaPrior returns a function returning a gamma distribution.
 func GammaPrior(shape, scale float64, inczero bool) func(float64) float64 {
-	if scale <= 0 || scale <= 0 {
+	if scale <= 0 || shape <= 0 {
 		panic("shape and scale of gamma distribution must be > 0")
 	}
 	return func(x float64) float64 {

@@ -8,9 +8,9 @@ import (
 )
 
 const (
-	// Minimum value for randomization.
+	// MIN is the minimum value for randomization.
 	MIN = -10
-	// Maximum value for randomization.
+	// MAX is the maximum value for randomization.
 	MAX = +10
 )
 
@@ -164,7 +164,7 @@ func (p *FloatParameters) InRange() bool {
 	return true
 }
 
-// Returns a string with tab-separated parameter names.
+// NamesString returns a string with tab-separated parameter names.
 func (p *FloatParameters) NamesString() (s string) {
 	for i, par := range *p {
 		if i != 0 {
@@ -367,7 +367,7 @@ func NewDiscreteParameter(par *float64, name string, nstates int) (dpar *Discret
 
 // Propose set x to a new proposed value
 func (p *DiscreteParameter) Propose() {
-	newState := DiscretePropose(int(*p.float64), p.NStates)
+	newState := DiscreteProposal(int(*p.float64), p.NStates)
 	p.old, *p.float64 = *p.float64, float64(newState)
 	if p.onChange != nil {
 		p.onChange()

@@ -1,4 +1,4 @@
-// Optimize is a collection of optimizers and MCMC samplers.
+// Package optimize is a collection of optimizers and MCMC samplers.
 package optimize
 
 import (

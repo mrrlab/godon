@@ -9,7 +9,7 @@ import (
 	"bitbucket.org/Davydov/godon/tree"
 )
 
-// M1 is an implementation of M1a & M2a models.
+// M2 is an implementation of M1a & M2a models.
 type M2 struct {
 	*BaseModel
 	q0             []*codon.EMatrix
@@ -38,8 +38,8 @@ type M2 struct {
 	tmp []float64
 }
 
-// NewM8 creates a new M8 model.
-func NewM2(cali codon.CodonSequences, t *tree.Tree, cf codon.CodonFrequency, addw bool, ncatsg, ncatcg int) (m *M2) {
+// NewM2 creates a new M2 model.
+func NewM2(cali codon.Sequences, t *tree.Tree, cf codon.Frequency, addw bool, ncatsg, ncatcg int) (m *M2) {
 	// n site gamma categories, ncatb * n^3 matrices
 	gcat := ncatsg * ncatsg * ncatsg
 	m = &M2{

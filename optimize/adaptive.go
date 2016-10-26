@@ -35,27 +35,27 @@ type AdaptiveParameter struct {
 // AdaptiveSettings are settings for an adaptive MCMC.
 type AdaptiveSettings struct {
 	// WSize window size to compute mean and variance.
-	WSize     int
+	WSize int
 	// K specifies how often Mu should be updated.
-	K         int
+	K int
 	// Skip is the number of iterations to skip before starting
 	// adaptation.
-	Skip      int
+	Skip int
 	// MaxAdapt is the number of iterations to adapt.
-	MaxAdapt  int
+	MaxAdapt int
 	// MaxUpdate maximum number of update for a parameter.
 	MaxUpdate int
 	// Epsilon is part of stopping criteria for stopping
 	// adaptation.
-	Epsilon   float64
+	Epsilon float64
 	// C is a Robbins-Monro algorithm parameter
-	C         float64
+	C float64
 	// Nu is a Robbins-Monro algorithm parameter
-	Nu        float64
+	Nu float64
 	// Lambda is the proposal multiplier.
-	Lambda    float64
+	Lambda float64
 	// SD is initial standard deviation.
-	SD        float64
+	SD float64
 }
 
 // square computes x^2.

@@ -48,7 +48,7 @@ func NormalProposal(sd float64) func(float64) float64 {
 
 // DiscreteProposal returns function returning a random integer
 // converted to float64.
-func DiscretePropose(state int, nstates int) (newstate int) {
+func DiscreteProposal(state int, nstates int) (newstate int) {
 	if nstates <= 1 {
 		panic("number of states should be at least 1")
 	}

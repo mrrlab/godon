@@ -1,4 +1,4 @@
-// Codon is the package for working with codons, codon transition
+// Package codon is the package for working with codons, codon transition
 // matrices and codon frequencies.
 package codon
 
@@ -17,19 +17,19 @@ var (
 	NOCODON = byte(255)
 )
 
-// CodonSequence stores a sequence of codons with the sequence name.
-type CodonSequence struct {
+// Sequence stores a sequence of codons with the sequence name.
+type Sequence struct {
 	Name     string
 	Sequence []byte
 	GCode    *bio.GeneticCode
 }
 
-// CodonSequences is an array (slice) of codon sequences with their
+// Sequences is an array (slice) of codon sequences with their
 // names. E.g. codon alignment.
-type CodonSequences []CodonSequence
+type Sequences []Sequence
 
 // String returns text representation of codon frequencies.
-func (cf CodonFrequency) String() (s string) {
+func (cf Frequency) String() (s string) {
 	s = "<CodonFrequency: "
 	for i, f := range cf.Freq {
 		s += fmt.Sprintf(" %v: %v,", cf.GCode.NumCodon[byte(i)], f)
@@ -39,7 +39,7 @@ func (cf CodonFrequency) String() (s string) {
 }
 
 // String returns FASTA representation of the codon sequence.
-func (seq CodonSequence) String() (s string) {
+func (seq Sequence) String() (s string) {
 	var b bytes.Buffer
 	for _, c := range seq.Sequence {
 		b.WriteString(seq.GCode.NumCodon[c] + " ")
@@ -49,7 +49,7 @@ func (seq CodonSequence) String() (s string) {
 }
 
 // Length returns the length of codon alignment in codons.
-func (seqs CodonSequences) Length() int {
+func (seqs Sequences) Length() int {
 	if len(seqs) == 0 {
 		return 0
 	}
@@ -57,7 +57,7 @@ func (seqs CodonSequences) Length() int {
 }
 
 // String returns all codon sequences in FASTA format.
-func (seqs CodonSequences) String() (s string) {
+func (seqs Sequences) String() (s string) {
 	for _, seq := range seqs {
 		s += seq.String()
 	}
@@ -66,7 +66,7 @@ func (seqs CodonSequences) String() (s string) {
 
 // NAmbiguous returns number of ambiguous positions in the codon
 // alignment.
-func (seqs CodonSequences) NAmbiguous() (count int) {
+func (seqs Sequences) NAmbiguous() (count int) {
 	for i := 0; i < seqs.Length(); i++ {
 		for _, seq := range seqs {
 			if seq.Sequence[i] == NOCODON {
@@ -80,13 +80,13 @@ func (seqs CodonSequences) NAmbiguous() (count int) {
 
 // ToCodonSequences converts nucleotide bio.Sequences to
 // CodonSequences.
-func ToCodonSequences(seqs bio.Sequences, gcode *bio.GeneticCode) (cs CodonSequences, err error) {
-	cs = make(CodonSequences, 0, len(seqs))
+func ToCodonSequences(seqs bio.Sequences, gcode *bio.GeneticCode) (cs Sequences, err error) {
+	cs = make(Sequences, 0, len(seqs))
 	for _, seq := range seqs {
 		if len(seq.Sequence)%3 != 0 {
 			return nil, errors.New("sequence length doesn't divide by 3")
 		}
-		var cseq CodonSequence
+		var cseq Sequence
 		cseq.Name = seq.Name
 		cseq.Sequence = make([]byte, 0, len(seq.Sequence)/3)
 		cseq.GCode = gcode
@@ -103,7 +103,7 @@ func ToCodonSequences(seqs bio.Sequences, gcode *bio.GeneticCode) (cs CodonSeque
 }
 
 // NFixed calculates number of constant positions in the alignment.
-func (seqs CodonSequences) NFixed() (f int) {
+func (seqs Sequences) NFixed() (f int) {
 	f = seqs.Length()
 	for pos := 0; pos < seqs.Length(); pos++ {
 		for i := 1; i < len(seqs); i++ {
@@ -118,7 +118,7 @@ func (seqs CodonSequences) NFixed() (f int) {
 
 // Fixed returns a bool vector, all absolutely conserved (fixed)
 // positions have true value.
-func (seqs CodonSequences) Fixed() (fixed []bool) {
+func (seqs Sequences) Fixed() (fixed []bool) {
 	fixed = make([]bool, seqs.Length())
 	for pos := 0; pos < seqs.Length(); pos++ {
 		isFixed := true
@@ -137,7 +137,7 @@ func (seqs CodonSequences) Fixed() (fixed []bool) {
 
 // Letters returns a set of present and absent codons at each position
 // of the alignment.
-func (seqs CodonSequences) Letters() (found [][]int, absent [][]int) {
+func (seqs Sequences) Letters() (found [][]int, absent [][]int) {
 	NCodon := seqs[0].GCode.NCodon
 	found = make([][]int, seqs.Length())
 	absent = make([][]int, seqs.Length())

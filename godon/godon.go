@@ -219,7 +219,7 @@ func main() {
 	if !ok {
 		log.Fatalf("couldn't load genetic code with id=%d", gcodeID)
 	}
-	log.Infof("Genetic code: %d, \"%s\"", gcode.Id, gcode.Name)
+	log.Infof("Genetic code: %d, \"%s\"", gcode.ID, gcode.Name)
 
 	fastaFile, err := os.Open(flag.Args()[0])
 	if err != nil {
@@ -274,7 +274,7 @@ func main() {
 	log.Debugf("brtree_unroot=%s", t.BrString())
 	log.Debug(t.FullString())
 
-	var cf codon.CodonFrequency
+	var cf codon.Frequency
 
 	if *cFreqFileName != "" {
 		cFreqFile, err := os.Open(*cFreqFileName)

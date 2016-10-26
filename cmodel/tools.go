@@ -25,7 +25,7 @@ const (
 var log = logging.MustGetLogger("cmodel")
 
 // GetTreeAlignment returns a tree and alignment for testing purposes.
-func GetTreeAlignment(data string) (t *tree.Tree, cali codon.CodonSequences, err error) {
+func GetTreeAlignment(data string) (t *tree.Tree, cali codon.Sequences, err error) {
 	// using standard genetic code
 	gcode := bio.GeneticCodes[1]
 

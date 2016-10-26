@@ -35,12 +35,12 @@ func Sum(m *mat64.Dense) (s float64) {
 }
 
 // CreateTransitionMatrix creates a transition matrix.
-func CreateTransitionMatrix(cf CodonFrequency, kappa, omega float64, m *mat64.Dense) (*mat64.Dense, float64) {
+func CreateTransitionMatrix(cf Frequency, kappa, omega float64, m *mat64.Dense) (*mat64.Dense, float64) {
 	return CreateRateTransitionMatrix(cf, kappa, omega, []float64{1, 1, 1}, m)
 }
 
 // CreateRateTransitionMatrix creates a transition matrix given the vector of rates.
-func CreateRateTransitionMatrix(cf CodonFrequency, kappa, omega float64, rates []float64, m *mat64.Dense) (*mat64.Dense, float64) {
+func CreateRateTransitionMatrix(cf Frequency, kappa, omega float64, rates []float64, m *mat64.Dense) (*mat64.Dense, float64) {
 	//fmt.Println("kappa=", kappa, ", omega=", omega)
 	if m == nil {
 		m = mat64.NewDense(cf.GCode.NCodon, cf.GCode.NCodon, nil)
@@ -102,7 +102,7 @@ func scaleMatrix(in *mat64.Dense, scale float64, out *mat64.Dense) *mat64.Dense 
 func PrintQ(Q *mat64.Dense, gcode bio.GeneticCode) {
 	codons := make([]string, gcode.NCodon)
 	i := 0
-	for k, _ := range gcode.CodonNum {
+	for k := range gcode.CodonNum {
 		codons[i] = k
 		i++
 	}

@@ -22,7 +22,7 @@ type BranchSiteC struct {
 }
 
 // NewBranchSiteC creates a new BranchSiteC model.
-func NewBranchSiteC(cali codon.CodonSequences, t *tree.Tree, cf codon.CodonFrequency) (m *BranchSiteC) {
+func NewBranchSiteC(cali codon.Sequences, t *tree.Tree, cf codon.Frequency) (m *BranchSiteC) {
 	m = &BranchSiteC{
 		q0: &codon.EMatrix{CF: cf},
 		q1: &codon.EMatrix{CF: cf},

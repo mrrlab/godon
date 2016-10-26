@@ -42,7 +42,7 @@ type M8 struct {
 }
 
 // NewM8 creates a new M8 model.
-func NewM8(cali codon.CodonSequences, t *tree.Tree, cf codon.CodonFrequency, addw, fixw bool, ncatb, ncatsg, ncatcg int) (m *M8) {
+func NewM8(cali codon.Sequences, t *tree.Tree, cf codon.Frequency, addw, fixw bool, ncatb, ncatsg, ncatcg int) (m *M8) {
 	// n site gamma categories, ncatb * n^3 matrices
 	gcat := ncatsg * ncatsg * ncatsg
 	if ncatb < 2 {

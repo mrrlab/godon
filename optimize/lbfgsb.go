@@ -34,7 +34,7 @@ func NewLBFGSB() (lbfgsb *LBFGSB) {
 
 // Logger is a function which is called back on every iteration.
 func (l *LBFGSB) Logger(info *lbfgsb.OptimizationIterationInformation) {
-	l.i += 1
+	l.i++
 	l.parameters.SetValues(info.X)
 	l.PrintLine(l.parameters, -info.F)
 	select {
@@ -140,6 +140,7 @@ func (l *LBFGSB) Run(iterations int) {
 	}
 }
 
+// Summary returns optimization summary (i.e. success/error, etc).
 func (l *LBFGSB) Summary() interface{} {
 	s := l.BaseOptimizer.Summary().(baseOptimizerSummary)
 	s.Status = struct {

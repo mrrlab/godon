@@ -11,8 +11,8 @@ import (
 	"bitbucket.org/Davydov/godon/tree"
 )
 
-// BranchSite is an implementation of the branch-site model with gamma
-// rates variation with exlicit rate values.
+// BranchSiteGammaERates is an implementation of the branch-site model with
+// gamma rates variation with exlicit rate values.
 type BranchSiteGammaERates struct {
 	*BaseModel
 	q0s            []*codon.EMatrix
@@ -29,7 +29,7 @@ type BranchSiteGammaERates struct {
 	gammac []float64
 	// this should be discrete, but optimizer supports only float
 	// so class[i] = int(cs_rates[i] * NClass / 4)
-	cs_rates []float64
+	csRates []float64
 	// temporary array
 	tmp                    []float64
 	ncatcg                 int
@@ -44,7 +44,7 @@ type BranchSiteGammaERates struct {
 }
 
 // NewBranchSiteGammaERates creates a new BranchSiteGammaERates model.
-func NewBranchSiteGammaERates(cali codon.CodonSequences, t *tree.Tree, cf codon.CodonFrequency, fixw2 bool, ncatsg, ncatcg int) (m *BranchSiteGammaERates) {
+func NewBranchSiteGammaERates(cali codon.Sequences, t *tree.Tree, cf codon.Frequency, fixw2 bool, ncatsg, ncatcg int) (m *BranchSiteGammaERates) {
 	scat := ncatsg * ncatsg * ncatsg
 
 	m = &BranchSiteGammaERates{
@@ -56,7 +56,7 @@ func NewBranchSiteGammaERates(cali codon.CodonSequences, t *tree.Tree, cf codon.
 		q2s:      make([]*codon.EMatrix, scat*ncatcg),
 		gammas:   make([]float64, ncatsg),
 		gammac:   make([]float64, ncatcg),
-		cs_rates: make([]float64, cali.Length()),
+		csRates:  make([]float64, cali.Length()),
 		propdone: make([]bool, cali.Length()),
 		tmp:      make([]float64, maxInt(ncatcg, ncatsg, 3)),
 	}
@@ -116,7 +116,7 @@ func (m *BranchSiteGammaERates) Copy() optimize.Optimizable {
 	}
 	newM.BaseModel.Model = newM
 
-	copy(newM.cs_rates, m.cs_rates)
+	copy(newM.csRates, m.csRates)
 
 	// basemodel assumes that all props are identical,
 	// we need to copy them explicitly
@@ -222,7 +222,7 @@ func (m *BranchSiteGammaERates) addParameters(fpg optimize.FloatParameterGenerat
 		// every codon has a rate parameter
 		for i := 0; i < m.cali.Length(); i++ {
 			nm := fmt.Sprintf("rate_%04d", i+1)
-			rate := optimize.NewDiscreteParameter(&m.cs_rates[i], nm, m.GetNClass()/4)
+			rate := optimize.NewDiscreteParameter(&m.csRates[i], nm, m.GetNClass()/4)
 			// make a copy of i for the closure
 			pos := i
 			rate.SetOnChange(func() {
@@ -237,7 +237,7 @@ func (m *BranchSiteGammaERates) addParameters(fpg optimize.FloatParameterGenerat
 }
 
 // SetParameters sets the model parameter values.
-func (m *BranchSiteGammaERates) SetParameters(kappa float64, omega0, omega2 float64, p0, p1 float64, alphas, alphac float64, cs_rates []float64) {
+func (m *BranchSiteGammaERates) SetParameters(kappa float64, omega0, omega2 float64, p0, p1 float64, alphas, alphac float64, csRates []float64) {
 	m.kappa = kappa
 	m.omega0 = omega0
 	if !m.fixw2 {
@@ -250,17 +250,17 @@ func (m *BranchSiteGammaERates) SetParameters(kappa float64, omega0, omega2 floa
 	m.q0done, m.q1done, m.q2done = false, false, false
 	m.alphas = alphas
 	m.alphac = alphac
-	if len(cs_rates) != len(m.cs_rates) {
+	if len(csRates) != len(m.csRates) {
 		panic("Incorrect number of rates")
 	}
-	copy(m.cs_rates, cs_rates)
+	copy(m.csRates, csRates)
 }
 
 // GetParameters returns the model parameter values.
-func (m *BranchSiteGammaERates) GetParameters() (kappa float64, omega0, omega2 float64, p0, p1 float64, alphas, alphac float64, cs_rates []float64) {
-	cs_rates = make([]float64, len(m.cs_rates))
-	copy(cs_rates, m.cs_rates)
-	return m.kappa, m.omega0, m.omega2, m.p01sum * m.p0prop, m.p01sum * (1 - m.p0prop), m.alphas, m.alphac, cs_rates
+func (m *BranchSiteGammaERates) GetParameters() (kappa float64, omega0, omega2 float64, p0, p1 float64, alphas, alphac float64, csRates []float64) {
+	csRates = make([]float64, len(m.csRates))
+	copy(csRates, m.csRates)
+	return m.kappa, m.omega0, m.omega2, m.p01sum * m.p0prop, m.p01sum * (1 - m.p0prop), m.alphas, m.alphac, csRates
 }
 
 // SetDefaults sets the default initial parameter values.
@@ -276,12 +276,12 @@ func (m *BranchSiteGammaERates) SetDefaults() {
 	alphas := 0.5 + rand.Float64()*3
 	alphac := 0.5 + rand.Float64()*3
 
-	cs_rates := make([]float64, m.cali.Length())
-	for i := range cs_rates {
-		cs_rates[i] = float64(rand.Intn(m.GetNClass() / 4))
+	csRates := make([]float64, m.cali.Length())
+	for i := range csRates {
+		csRates[i] = float64(rand.Intn(m.GetNClass() / 4))
 	}
 
-	m.SetParameters(kappa, omega0, omega2, p0, p1, alphas, alphac, cs_rates)
+	m.SetParameters(kappa, omega0, omega2, p0, p1, alphas, alphac, csRates)
 }
 
 // Organization of the class categories.
@@ -336,7 +336,7 @@ func (m *BranchSiteGammaERates) updateProportions() {
 
 	for pos := 0; pos < m.cali.Length(); pos++ {
 		if !m.allpropdone || !m.propdone[pos] {
-			class := int(m.cs_rates[pos])
+			class := int(m.csRates[pos])
 			for i := 0; i < m.GetNClass()/4; i++ {
 				if class == i {
 					m.prop[pos][i+bothcat*0] = p0

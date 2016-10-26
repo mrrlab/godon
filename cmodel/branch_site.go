@@ -31,7 +31,7 @@ type brachSiteSummary struct {
 }
 
 // NewBranchSite creates a new BranchSite model.
-func NewBranchSite(cali codon.CodonSequences, t *tree.Tree, cf codon.CodonFrequency, fixw2 bool) (m *BranchSite) {
+func NewBranchSite(cali codon.Sequences, t *tree.Tree, cf codon.Frequency, fixw2 bool) (m *BranchSite) {
 	m = &BranchSite{
 		fixw2: fixw2,
 		q0:    &codon.EMatrix{CF: cf},

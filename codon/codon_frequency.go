@@ -14,16 +14,16 @@ var (
 	rAlphabet = map[byte]byte{'T': 0, 'C': 1, 'A': 2, 'G': 3}
 )
 
-// CodonFrequency is array (slice) of codon frequencies.
-type CodonFrequency struct {
+// Frequency is array (slice) of codon frequencies.
+type Frequency struct {
 	Freq  []float64
 	GCode *bio.GeneticCode
 }
 
 // ReadFrequency reads codon frequencies from a reader. It should be
 // just a list of numbers in a text format.
-func ReadFrequency(rd io.Reader, gcode *bio.GeneticCode) (CodonFrequency, error) {
-	cf := CodonFrequency{
+func ReadFrequency(rd io.Reader, gcode *bio.GeneticCode) (Frequency, error) {
+	cf := Frequency{
 		Freq:  make([]float64, gcode.NCodon),
 		GCode: gcode,
 	}
@@ -56,9 +56,9 @@ func ReadFrequency(rd io.Reader, gcode *bio.GeneticCode) (CodonFrequency, error)
 }
 
 // F0 returns array (slice) of equal codon frequencies.
-func F0(cali CodonSequences) CodonFrequency {
+func F0(cali Sequences) Frequency {
 	gcode := cali[0].GCode
-	cf := CodonFrequency{
+	cf := Frequency{
 		Freq:  make([]float64, gcode.NCodon),
 		GCode: gcode,
 	}
@@ -69,7 +69,7 @@ func F0(cali CodonSequences) CodonFrequency {
 }
 
 // F3X4 computes F3X4-style frequencies based on the alignment.
-func F3X4(cali CodonSequences) (cf CodonFrequency) {
+func F3X4(cali Sequences) (cf Frequency) {
 	gcode := cali[0].GCode
 	poscf := make([][]float64, 3)
 	for i := 0; i < 3; i++ {
@@ -88,7 +88,7 @@ func F3X4(cali CodonSequences) (cf CodonFrequency) {
 		}
 	}
 
-	cf = CodonFrequency{
+	cf = Frequency{
 		Freq:  make([]float64, gcode.NCodon),
 		GCode: gcode,
 	}
@@ -99,7 +99,7 @@ func F3X4(cali CodonSequences) (cf CodonFrequency) {
 		sum += cf.Freq[ci]
 	}
 
-	for ci, _ := range cf.Freq {
+	for ci := range cf.Freq {
 		cf.Freq[ci] /= sum
 	}
 

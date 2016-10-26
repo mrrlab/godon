@@ -19,7 +19,7 @@ var (
 // GeneticCode is a structure holding genetic code.
 type GeneticCode struct {
 	// Id according to NCBI.
-	Id int
+	ID int
 	// Genetic code name.
 	Name string
 	// Short name (if present).
@@ -59,7 +59,7 @@ func GetCodons() <-chan string {
 // a string of start codons, not used currently.
 func newGeneticCode(id int, name, shortName string, aas, starts string) *GeneticCode {
 	gc := GeneticCode{
-		Id:        id,
+		ID:        id,
 		Name:      name,
 		ShortName: shortName,
 		Map:       make(map[string]byte, 64),
@@ -76,7 +76,7 @@ func newGeneticCode(id int, name, shortName string, aas, starts string) *Genetic
 		gc.Map[codon] = aa
 		i++
 		if aa != '*' {
-			gc.NCodon += 1
+			gc.NCodon++
 			gc.CodonNum[codon] = j
 			gc.NumCodon[j] = codon
 			j++

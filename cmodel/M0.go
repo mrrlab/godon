@@ -15,7 +15,7 @@ type M0 struct {
 }
 
 // NewM0 creates a new M0 model.
-func NewM0(cali codon.CodonSequences, t *tree.Tree, cf codon.CodonFrequency) (m *M0) {
+func NewM0(cali codon.Sequences, t *tree.Tree, cf codon.Frequency) (m *M0) {
 	m = &M0{
 		q: &codon.EMatrix{CF: cf},
 	}

@@ -18,7 +18,7 @@ type M0vrate struct {
 }
 
 // NewM0vrate creates a new M0vrate model.
-func NewM0vrate(cali codon.CodonSequences, t *tree.Tree, cf codon.CodonFrequency) (m *M0vrate) {
+func NewM0vrate(cali codon.Sequences, t *tree.Tree, cf codon.Frequency) (m *M0vrate) {
 	m = &M0vrate{
 		q0: &codon.EMatrix{CF: cf},
 		q1: &codon.EMatrix{CF: cf},

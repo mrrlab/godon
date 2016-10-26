@@ -63,7 +63,7 @@ type Model interface {
 	addParameters(optimize.FloatParameterGenerator)
 }
 
-// Model stores tree and alignment. Matrices and site classes are
+// BaseModel stores tree and alignment. Matrices and site classes are
 // stored and cached as well.
 type BaseModel struct {
 	// Model is the model implementation.
@@ -71,13 +71,13 @@ type BaseModel struct {
 
 	tree      *tree.Tree
 	optBranch bool
-	cali      codon.CodonSequences
+	cali      codon.Sequences
 	lettersF  [][]int
 	lettersA  [][]int
 	rshuffle  []int //random shuffle of positions
 	//precomtputed aggregation schemas
 	schemas []*aggSchema
-	cf      codon.CodonFrequency
+	cf      codon.Frequency
 	qs      [][]*codon.EMatrix
 	scale   []float64
 	//prop is proportions, in theory it can be different for every site
@@ -106,7 +106,7 @@ type BaseModel struct {
 }
 
 // NewBaseModel creates a new base Model.
-func NewBaseModel(cali codon.CodonSequences, t *tree.Tree, cf codon.CodonFrequency, model Model) (bm *BaseModel) {
+func NewBaseModel(cali codon.Sequences, t *tree.Tree, cf codon.Frequency, model Model) (bm *BaseModel) {
 	f, a := cali.Letters()
 	nclass := model.GetNClass()
 	bm = &BaseModel{
@@ -198,14 +198,14 @@ func (m *BaseModel) addBranchParameters(fpg optimize.FloatParameterGenerator) {
 			if node == nil {
 				continue
 			}
-			nodeId := node.Id
+			nodeID := node.Id
 			// Root branch is not optimized
 			if node.IsRoot() {
 				continue
 			}
 			par := fpg(&node.BranchLength, "br"+strconv.Itoa(node.Id))
 			par.SetOnChange(func() {
-				m.expBr[nodeId] = false
+				m.expBr[nodeID] = false
 			})
 			par.SetPriorFunc(optimize.GammaPrior(1, 2, false))
 			par.SetMin(0)
@@ -234,13 +234,13 @@ func (m *BaseModel) ReorderAlignment() {
 	if m.tree.NLeaves() != len(m.cali) {
 		log.Fatal("Tree doesn't match the alignment.")
 	}
-	newCali := make(codon.CodonSequences, m.tree.NLeaves())
+	newCali := make(codon.Sequences, m.tree.NLeaves())
 	for node := range m.tree.Terminals() {
-		nodeId, ok := nm2id[node.Name]
+		nodeID, ok := nm2id[node.Name]
 		if !ok {
 			log.Fatalf("No sequence found for the leaf <%s>.", node.Name)
 		}
-		newCali[node.LeafId] = m.cali[nodeId]
+		newCali[node.LeafId] = m.cali[nodeID]
 	}
 
 	m.cali = newCali
@@ -250,7 +250,7 @@ func (m *BaseModel) ReorderAlignment() {
 func (m *BaseModel) ExpBranch(br int) {
 	node := m.tree.NodeIdArray()[br]
 	cD := mat64.NewDense(m.cf.GCode.NCodon, m.cf.GCode.NCodon, nil)
-	for class, _ := range m.qs {
+	for class := range m.qs {
 		var oclass int
 		for oclass = class - 1; oclass >= 0; oclass-- {
 			if m.qs[class][node.Id] == m.qs[oclass][node.Id] {
@@ -274,12 +274,12 @@ func (m *BaseModel) ExpBranch(br int) {
 func (m *BaseModel) ExpBranches() {
 	if m.eQts == nil {
 		m.eQts = make([][][]float64, len(m.qs))
-		for class, _ := range m.qs {
+		for class := range m.qs {
 			m.eQts[class] = make([][]float64, m.tree.MaxNodeId()+1)
 		}
 	} else {
-		for class, _ := range m.eQts {
-			for nd, _ := range m.eQts[class] {
+		for class := range m.eQts {
+			for nd := range m.eQts[class] {
 				m.eQts[class][nd] = nil
 			}
 		}
@@ -312,7 +312,7 @@ func (m *BaseModel) ExpBranches() {
 		}()
 	}
 
-	for class, _ := range m.qs {
+	for class := range m.qs {
 		for _, node := range m.tree.NodeIdArray() {
 			if node == nil {
 				continue

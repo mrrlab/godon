@@ -12,7 +12,7 @@ import (
 	"bitbucket.org/Davydov/godon/tree"
 )
 
-// BranchSite is an implementation of the branch-site model with gamma
+// BranchSiteGamma is an implementation of the branch-site model with gamma
 // rates variation.
 type BranchSiteGamma struct {
 	*BaseModel
@@ -47,7 +47,7 @@ type brachSiteGammaSummary struct {
 }
 
 // NewBranchSiteGamma creates a new BranchSiteGamma model.
-func NewBranchSiteGamma(cali codon.CodonSequences, t *tree.Tree, cf codon.CodonFrequency, fixw2 bool, ncatsg, ncatcg int) (m *BranchSiteGamma) {
+func NewBranchSiteGamma(cali codon.Sequences, t *tree.Tree, cf codon.Frequency, fixw2 bool, ncatsg, ncatcg int) (m *BranchSiteGamma) {
 	scat := ncatsg * ncatsg * ncatsg
 
 	m = &BranchSiteGamma{
@@ -443,7 +443,7 @@ func (m *BranchSiteGamma) siteLMatrix(w0, w2 []float64) (res [][][][]float64) {
 				default:
 					res[iW0][iW2][class] = make([]float64, nPos)
 
-					counter += 1
+					counter++
 					for pos := 0; pos < nPos; pos++ {
 						//res[i_w0][i_w2][class][pos] = m.fullSubL(class, pos, plh)
 						tasks <- bebtask{iW0, iW2, class, pos}
@@ -496,8 +496,8 @@ func (m *BranchSiteGamma) BEBPosterior() (res []float64) {
 
 	d := 10
 	// first compute the stat sum (fx)
-	for w0_i := range w0s {
-		for w2_i := range w2s {
+	for iW0 := range w0s {
+		for iW2 := range w2s {
 			for i := 0; i < d; i++ {
 				for j := 0; j <= 2*i; j++ {
 					prop = m.computePropBEB(prop, i, j, d)
@@ -509,7 +509,7 @@ func (m *BranchSiteGamma) BEBPosterior() (res []float64) {
 					for pos := 0; pos < nPos; pos++ {
 						su[pos] = 0
 						for class := 0; class < nClass; class++ {
-							su[pos] += matr[w0_i][w2_i][class][pos] * prop[class]
+							su[pos] += matr[iW0][iW2][class][pos] * prop[class]
 						}
 						tmp.SetFloat64(su[pos])
 						product.Mul(product, tmp)
@@ -527,9 +527,9 @@ func (m *BranchSiteGamma) BEBPosterior() (res []float64) {
 						s := 0.0
 						for i := 0; i < bothcat; i++ {
 							cl := i + bothcat*2
-							s += matr[w0_i][w2_i][cl][pos] * prop[cl]
+							s += matr[iW0][iW2][cl][pos] * prop[cl]
 							cl = i + bothcat*3
-							s += matr[w0_i][w2_i][cl][pos] * prop[cl]
+							s += matr[iW0][iW2][cl][pos] * prop[cl]
 						}
 						tmp.SetFloat64(s)
 						tmp.Mul(tmp, productNoPos)
@@ -610,6 +610,7 @@ func (m *BranchSiteGamma) Likelihood() float64 {
 	return m.BaseModel.Likelihood()
 }
 
+// Summary returns the run summary (site posterior for NEB and BEB).
 func (m *BranchSiteGamma) Summary() interface{} {
 	if m.summary.SitePosteriorBEB != nil || m.summary.SitePosteriorNEB != nil {
 		return m.summary

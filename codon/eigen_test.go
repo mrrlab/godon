@@ -11,8 +11,8 @@ func BenchmarkEigen1(b *testing.B) {
 	// this is a hack to pass genetic code to F0
 	gcode := bio.GeneticCodes[1]
 	NCodon := gcode.NCodon
-	cs := []CodonSequence{
-		CodonSequence{GCode: gcode},
+	cs := []Sequence{
+		Sequence{GCode: gcode},
 	}
 
 	cf := F0(cs)
@@ -29,8 +29,8 @@ func BenchmarkEigen1(b *testing.B) {
 func BenchmarkEigen2(b *testing.B) {
 	gcode := bio.GeneticCodes[1]
 	NCodon := gcode.NCodon
-	cs := []CodonSequence{
-		CodonSequence{GCode: gcode},
+	cs := []Sequence{
+		Sequence{GCode: gcode},
 	}
 
 	cf := F0(cs)
