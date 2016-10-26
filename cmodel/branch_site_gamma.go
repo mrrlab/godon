@@ -405,7 +405,7 @@ func (m *BranchSiteGamma) siteLMatrix(w0, w2 []float64) (res [][][][]float64) {
 	nWorkers := runtime.GOMAXPROCS(0)
 	done := make(chan struct{}, nWorkers)
 	type bebtask struct {
-		i_w0, i_w2, class, pos int
+		iW0, iW2, class, pos int
 	}
 	tasks := make(chan bebtask, nPos)
 
@@ -416,37 +416,37 @@ func (m *BranchSiteGamma) siteLMatrix(w0, w2 []float64) (res [][][][]float64) {
 			plh[i] = make([]float64, m.cf.GCode.NCodon+1)
 		}
 		for task := range tasks {
-			res[task.i_w0][task.i_w2][task.class][task.pos] = m.fullSubL(task.class, task.pos, plh)
+			res[task.iW0][task.iW2][task.class][task.pos] = m.fullSubL(task.class, task.pos, plh)
 			done <- struct{}{}
 		}
 	}()
 
-	for i_w0, w0 := range w0 {
+	for iW0, w0 := range w0 {
 		m.omega0 = w0
 		m.q0done = false
-		res[i_w0] = make([][][]float64, len(w2))
-		for i_w2, w2 := range w2 {
+		res[iW0] = make([][][]float64, len(w2))
+		for iW2, w2 := range w2 {
 			m.omega2 = w2
 			m.q2done = false
 			m.updateMatrices()
 			// in this scenario we keep q-factor as computed from MLE
 			m.ExpBranches()
-			res[i_w0][i_w2] = make([][]float64, nClass)
+			res[iW0][iW2] = make([][]float64, nClass)
 			for class := 0; class < nClass; class++ {
 				switch {
-				case class/bothcat == 0 && i_w2 != 0:
-					res[i_w0][i_w2][class] = res[i_w0][0][class]
-				case class/bothcat == 1 && (i_w0 != 0 || i_w2 != 0):
-					res[i_w0][i_w2][class] = res[0][0][class]
-				case class/bothcat == 3 && i_w0 != 0:
-					res[i_w0][i_w2][class] = res[0][i_w2][class]
+				case class/bothcat == 0 && iW2 != 0:
+					res[iW0][iW2][class] = res[iW0][0][class]
+				case class/bothcat == 1 && (iW0 != 0 || iW2 != 0):
+					res[iW0][iW2][class] = res[0][0][class]
+				case class/bothcat == 3 && iW0 != 0:
+					res[iW0][iW2][class] = res[0][iW2][class]
 				default:
-					res[i_w0][i_w2][class] = make([]float64, nPos)
+					res[iW0][iW2][class] = make([]float64, nPos)
 
 					counter += 1
 					for pos := 0; pos < nPos; pos++ {
 						//res[i_w0][i_w2][class][pos] = m.fullSubL(class, pos, plh)
-						tasks <- bebtask{i_w0, i_w2, class, pos}
+						tasks <- bebtask{iW0, iW2, class, pos}
 					}
 					// wait for everyone to finish
 					for pos := 0; pos < nPos; pos++ {
