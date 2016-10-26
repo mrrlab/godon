@@ -1,37 +1,90 @@
-**Warning**: Repository and package names are subject to change.
+[![Build Status](https://drone.io/bitbucket.org/Davydov/godon/status.png)](https://drone.io/bitbucket.org/Davydov/godon/latest?branch=master)
 
-**Warning**: This is heavily work in progress.
+Godon is codon models software written in go.
+
+Godon currently supports
+[M0](http://mbe.oxfordjournals.org/content/11/5/725.abstract) and
+[Branch-Site](http:/mbe.oxfordjournals.org/content/22/12/2472) models
+of positive selection.
+
+Godon supports likelihood optimization
+([L-BFGS-B](https://en.wikipedia.org/wiki/Limited-memory_BFGS#L-BFGS-B),
+[downhill simplex](https://en.wikipedia.org/wiki/Nelder%E2%80%93Mead_method)
+&
+[simulated annealing](https://en.wikipedia.org/wiki/Simulated_annealing))
+as well as MCMC
+([Metropolis-Hastings algorithm](https://en.wikipedia.org/wiki/Metropolis%E2%80%93Hastings_algorithm)).
+
+Godon supports state aggregation (option `-aggregate`). See
+[the paper](http://biorxiv.org/content/early/2015/12/24/035063) for
+the details.
+
+**Warning**: Godon is currently in an early beta stage.
+
+## Examples
+
+Perform likelihood maximization using L-BFGS-B optimizer for the
+Branch-Site model without ooptimizing the branch lengths (use only a
+single CPU).
+```
+#!bash
+$ godon -cpu 1 -nobrlen -method lbfgsb -model BS ali.fst tree.nwk
+```
+
+Run MCMC using M0 model.
+```
+#!bash
+$ godon -method mh -model M0 ali.fst tree.nwk
+```
 
 
 ## repository contents ##
+* ``bin`` installation script
 * ``bio`` reads fasta and translates genetic code
-* ``matrix`` is a wrapper for some GNU Scientific Library functions (not used currently)
+* ``cmodel`` codon models
+* ``codon`` working with codon and transition matrices
+* ``godon`` is MCMC sampler/maximum likelihood for M0 and branchsite
+  model
+* ``misc`` various utilities
 * ``optimize`` is the MCMC & downhill simplex implementation
 * ``tree`` is tree manipulation library
-* ``godon`` is MCMC sampler/maximum likelihood for M0 and branchsite model
-* ``norm`` sampler for multiple normal distribution model
 
-## cmodel ##
-* ``M0.go`` — M0 model
-* ``branch_site.go`` — branch site model
+### codon ###
 * ``codon_frequency.go`` — F0, F3X4
 * ``codon_sequences.go`` — codon alignment class
-* ``ematrix.go`` — matrix class which remembers its eigen decomposition
-* ``matrix.go`` — codon transition matrix
+* ``ematrix.go`` — matrix class which remembers its eigen
+  decomposition
+* ``matrix.go`` — transition matrix routines
+
+### cmodel ###
+* ``aggregation.go`` — codon aggregation code
+* ``branch_site.go`` — branch site model
+* ``M0.go`` — M0 model
 * ``model.go`` — tree + alignment model base class
 * ``tools.go`` — misc helper functions
 
-### cmodel tests ###
+#### cmodel tests ####
 * ``likelihood_test.go`` — likelihood test (compare with codeml)
 * ``mcmc_test.go`` — MCMC benchmark
-* ``mcmcpar_test.go`` — test that likelihood is consistent during chain evaluation
+* ``mcmcpar_test.go`` — test that likelihood is consistent during
+  chain evaluation
 
-## optimize ##
-* ``mh.go`` — simple metropolis hastings implementation
-* ``parameter.go`` — float64 parameter class
+### optimize ###
 * ``adaptive.go`` — adaptive parameter class
+* ``lbfgsb.go`` — L-BFGS-B optimizer
+* ``mh.go`` — metropolis hastings & simulated annealing
+  implementations
+* ``nlopt_callback.go`` — NLopt callback wrapper
+* ``nlopt.go`` — NLopt wrapper
+* ``optimizer.go`` — Optimizer and Optimizable intefaces
+* ``parameter.go`` — float64 parameter class
 * ``prior.go`` — prior functions
 * ``proposal.go`` — proposal functions
-* ``optimizer.go`` — Optimizer and Optimizable intefaces
 * ``simplex.go`` — simplex method
 * ``utils.go`` — helper functions
+
+### misc ###
+* ``brexp`` exports branch lengths and node labels in various
+formats
+* ``brmatch`` matches branch labels between two trees
+* ``norm`` is a sampler for multiple normal distributions model
