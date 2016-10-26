@@ -34,7 +34,7 @@ func SelectomeBrString(t *tree.Tree) (s string) {
 
 }
 
-// SelectomeBNodeStringBr returns a newick string with Selectome style
+// SelectomeNodeStringBr returns a newick string with Selectome style
 // labeled nodes for a node.
 func SelectomeNodeStringBr(node *tree.Node) (s string) {
 	if node.IsTerminal() {
@@ -81,9 +81,9 @@ func main() {
 	}
 	switch *mode {
 	case "brlen":
-		for _, node := range t.NodeIdArray() {
+		for _, node := range t.NodeIDArray() {
 			if node != nil {
-				fmt.Printf("br%d=%f\n", node.Id, node.BranchLength)
+				fmt.Printf("br%d=%f\n", node.ID, node.BranchLength)
 			}
 		}
 	case "brtree":

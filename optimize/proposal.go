@@ -4,7 +4,7 @@ import (
 	"math/rand"
 )
 
-// Returns a random value in the range [0, 1], including 1.
+// Rand returns a random value in the range [0, 1], including 1.
 func Rand() float64 {
 	// 1.0 is not included and we would like to be symmetric
 	r := float64(1)

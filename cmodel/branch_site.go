@@ -168,26 +168,26 @@ func (m *BranchSite) SetDefaults() {
 // setBranchMatrices set matrices for all the branches.
 func (m *BranchSite) setBranchMatrices() {
 	for i := 0; i < len(m.qs); i++ {
-		for _, node := range m.tree.NodeIdArray() {
+		for _, node := range m.tree.NodeIDArray() {
 			if node == nil {
 				continue
 			}
 			switch i {
 			case 0:
-				m.qs[i][node.Id] = m.q0
+				m.qs[i][node.ID] = m.q0
 			case 1:
-				m.qs[i][node.Id] = m.q1
+				m.qs[i][node.ID] = m.q1
 			case 2:
 				if node.Class == 1 {
-					m.qs[i][node.Id] = m.q2
+					m.qs[i][node.ID] = m.q2
 				} else {
-					m.qs[i][node.Id] = m.q0
+					m.qs[i][node.ID] = m.q0
 				}
 			case 3:
 				if node.Class == 1 {
-					m.qs[i][node.Id] = m.q2
+					m.qs[i][node.ID] = m.q2
 				} else {
-					m.qs[i][node.Id] = m.q1
+					m.qs[i][node.ID] = m.q1
 				}
 			}
 		}
@@ -204,14 +204,14 @@ func (m *BranchSite) updateProportions() {
 	m.prop[0][2] = (1 - p0 - p1) * p0 / (p0 + p1)
 	m.prop[0][3] = (1 - p0 - p1) * p1 / (p0 + p1)
 
-	for _, node := range m.tree.NodeIdArray() {
+	for _, node := range m.tree.NodeIDArray() {
 		if node == nil {
 			continue
 		}
 		if node.Class == 1 {
-			m.scale[node.Id] = m.prop[0][0]*m.q0.Scale + m.prop[0][1]*m.q1.Scale + (m.prop[0][2]+m.prop[0][3])*m.q2.Scale
+			m.scale[node.ID] = m.prop[0][0]*m.q0.Scale + m.prop[0][1]*m.q1.Scale + (m.prop[0][2]+m.prop[0][3])*m.q2.Scale
 		} else {
-			m.scale[node.Id] = (m.prop[0][0]+m.prop[0][2])*m.q0.Scale + (m.prop[0][1]+m.prop[0][3])*m.q1.Scale
+			m.scale[node.ID] = (m.prop[0][0]+m.prop[0][2])*m.q0.Scale + (m.prop[0][1]+m.prop[0][3])*m.q1.Scale
 		}
 	}
 	m.propdone = true
@@ -259,7 +259,7 @@ func (m *BranchSite) siteLMatrix(w0, w2 []float64) (res [][][][]float64) {
 	res = make([][][][]float64, len(w0))
 	nClass := m.GetNClass()
 	nPos := m.cali.Length()
-	nni := m.tree.MaxNodeId() + 1
+	nni := m.tree.MaxNodeID() + 1
 
 	// temporary storage for likelihood computation
 	plh := make([][]float64, nni)
@@ -277,7 +277,7 @@ func (m *BranchSite) siteLMatrix(w0, w2 []float64) (res [][][][]float64) {
 	tasks := make(chan bebtask, nPos)
 
 	go func() {
-		nni := m.tree.MaxNodeId() + 1
+		nni := m.tree.MaxNodeID() + 1
 		plh := make([][]float64, nni)
 		for i := 0; i < nni; i++ {
 			plh[i] = make([]float64, m.cf.GCode.NCodon+1)

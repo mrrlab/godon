@@ -140,26 +140,26 @@ func (m *BranchSiteC) SetDefaults() {
 // setBranchMatrices set matrices for all the branches.
 func (m *BranchSiteC) setBranchMatrices() {
 	for i := 0; i < len(m.qs); i++ {
-		for _, node := range m.tree.NodeIdArray() {
+		for _, node := range m.tree.NodeIDArray() {
 			if node == nil {
 				continue
 			}
 			switch i {
 			case 0:
-				m.qs[i][node.Id] = m.q0
+				m.qs[i][node.ID] = m.q0
 			case 1:
-				m.qs[i][node.Id] = m.q1
+				m.qs[i][node.ID] = m.q1
 			case 2:
 				if node.Class == 0 {
-					m.qs[i][node.Id] = m.q0
+					m.qs[i][node.ID] = m.q0
 				} else {
-					m.qs[i][node.Id] = m.q2
+					m.qs[i][node.ID] = m.q2
 				}
 			case 3:
 				if node.Class == 0 {
-					m.qs[i][node.Id] = m.q1
+					m.qs[i][node.ID] = m.q1
 				} else {
-					m.qs[i][node.Id] = m.q2
+					m.qs[i][node.ID] = m.q2
 				}
 			}
 		}
@@ -175,14 +175,14 @@ func (m *BranchSiteC) updateProportions() {
 	m.prop[0][2] = m.p0prop * p2
 	m.prop[0][3] = (1 - m.p0prop) * p2
 
-	for _, node := range m.tree.NodeIdArray() {
+	for _, node := range m.tree.NodeIDArray() {
 		if node == nil {
 			continue
 		}
 		if node.Class == 0 {
-			m.scale[node.Id] = (m.prop[0][0]+m.prop[0][2])*m.q0.Scale + (m.prop[0][1]+m.prop[0][3])*m.q1.Scale
+			m.scale[node.ID] = (m.prop[0][0]+m.prop[0][2])*m.q0.Scale + (m.prop[0][1]+m.prop[0][3])*m.q1.Scale
 		} else {
-			m.scale[node.Id] = m.prop[0][0]*m.q0.Scale + m.prop[0][1]*m.q1.Scale + (m.prop[0][2]+m.prop[0][3])*m.q2.Scale
+			m.scale[node.ID] = m.prop[0][0]*m.q0.Scale + m.prop[0][1]*m.q1.Scale + (m.prop[0][2]+m.prop[0][3])*m.q2.Scale
 		}
 	}
 	m.propdone = true

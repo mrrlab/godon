@@ -39,13 +39,13 @@ func main() {
 		log.Fatal(err)
 	}
 
-	nodes1 := t1.NodeIdArray()
-	nodes2 := t2.NodeIdArray()
+	nodes1 := t1.NodeIDArray()
+	nodes2 := t2.NodeIDArray()
 	if len(nodes1) != len(nodes2) {
 		log.Fatal("Two trees have different number of nodes")
 	}
 
-	for i, _ := range nodes1 {
+	for i := range nodes1 {
 		nm1 := nodes1[i].Name
 		if nm1 != "" && nm1[0] == '*' {
 			nm2 := nodes2[i].Name

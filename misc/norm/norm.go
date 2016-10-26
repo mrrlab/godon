@@ -18,10 +18,8 @@ import (
 )
 
 const (
-	N    = 2
-	K    = 100
-	u    = 3
-	sdev = 2
+	n = 2
+	k = 100
 )
 
 // MNormModel is a model for multiple normal distributions.
@@ -44,7 +42,7 @@ func NewMNormModel(data [][]float64, adaptive bool) (m *MNormModel) {
 	mean := make([]float64, len(data))
 	sd := make([]float64, len(data))
 	parameters := make(optimize.FloatParameters, 0, len(data)*2)
-	for i, _ := range sd {
+	for i := range sd {
 		sd[i] = 1
 	}
 	m = &MNormModel{data: data,
@@ -170,21 +168,21 @@ func main() {
 	flag.Parse()
 
 	log.Print("Starting")
-	log.Printf("Will generate %d values for %d normal distributions", K, N)
+	log.Printf("Will generate %d values for %d normal distributions", k, n)
 	if *seed == -1 {
 		rand.Seed(time.Now().UnixNano())
 	} else {
 		rand.Seed(*seed)
 	}
-	mean := make([]float64, 0, K)
-	sd := make([]float64, 0, K)
+	mean := make([]float64, 0, k)
+	sd := make([]float64, 0, k)
 
-	for i := 0; i < N; i++ {
+	for i := 0; i < n; i++ {
 		mean = append(mean, float64(rand.Intn(100)-50))
 		sd = append(sd, float64(rand.Intn(10)+1))
 	}
 
-	data := genData(mean, sd, K)
+	data := genData(mean, sd, k)
 
 	for i, xs := range data {
 		m, s := getMeanSD(xs)

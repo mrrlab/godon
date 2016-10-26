@@ -15,10 +15,7 @@ type Settings struct {
 
 /*** Tests if a and b are approximately equal ***/
 func appreq(a, b float64) bool {
-	if math.Abs(a-b) > smallDiff {
-		return false
-	}
-	return true
+	return math.Abs(a-b) <= smallDiff
 }
 
 /*** Tests that arrays have approximately same values ***/
@@ -47,10 +44,7 @@ func alleq(r []float64) bool {
 		}
 		sum += r[i]
 	}
-	if !appreq(sum, 1) {
-		return false
-	}
-	return true
+	return appreq(sum, 1)
 }
 
 /*** Test discrete beta ***/

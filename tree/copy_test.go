@@ -20,9 +20,9 @@ func TestCopy1(tst *testing.T) {
 	t.ClearCache()
 	t1.ClearCache()
 
-	tNodes := t.NodeIdArray()
-	t1Nodes := t1.NodeIdArray()
-	t2Nodes := t2.NodeIdArray()
+	tNodes := t.NodeIDArray()
+	t1Nodes := t1.NodeIDArray()
+	t2Nodes := t2.NodeIDArray()
 
 	if len(tNodes) != len(t1Nodes) || t.NNodes() != t1.NNodes() {
 		tst.Error("node length differ between t and t1")
@@ -50,7 +50,7 @@ func TestCopy1(tst *testing.T) {
 		}
 	}
 
-	for _, node := range t1.NodeIdArray() {
+	for _, node := range t1.NodeIDArray() {
 		if node != nil {
 			node.BranchLength = 2
 		}
@@ -60,12 +60,12 @@ func TestCopy1(tst *testing.T) {
 		if tNodes[i] == nil {
 			continue
 		}
-		if t.NodeIdArray()[i].BranchLength == t1.NodeIdArray()[i].BranchLength {
+		if t.NodeIDArray()[i].BranchLength == t1.NodeIDArray()[i].BranchLength {
 			tst.Error("node length still match after change")
 		}
 	}
 
-	for _, node := range t2.NodeIdArray() {
+	for _, node := range t2.NodeIDArray() {
 		if node != nil {
 			node.BranchLength = 0.5
 		}
@@ -75,7 +75,7 @@ func TestCopy1(tst *testing.T) {
 		if tNodes[i] == nil {
 			continue
 		}
-		if t1.NodeIdArray()[i].BranchLength <= t2.NodeIdArray()[i].BranchLength {
+		if t1.NodeIDArray()[i].BranchLength <= t2.NodeIDArray()[i].BranchLength {
 			tst.Error("node length is wrong")
 		}
 	}

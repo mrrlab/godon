@@ -263,20 +263,20 @@ func (m *BranchSiteGamma) SetDefaults() {
 // setBranchMatrices set matrices for all the branches.
 func (m *BranchSiteGamma) setBranchMatrices() {
 	scat := m.ncatsg * m.ncatsg * m.ncatsg
-	for _, node := range m.tree.NodeIdArray() {
+	for _, node := range m.tree.NodeIDArray() {
 		if node == nil {
 			continue
 		}
 		for i := 0; i < m.ncatcg; i++ {
 			for j := 0; j < scat; j++ {
-				m.qs[i+j*m.ncatcg+0*scat*m.ncatcg][node.Id] = m.q0s[i+j*m.ncatcg]
-				m.qs[i+j*m.ncatcg+1*scat*m.ncatcg][node.Id] = m.q1s[i+j*m.ncatcg]
+				m.qs[i+j*m.ncatcg+0*scat*m.ncatcg][node.ID] = m.q0s[i+j*m.ncatcg]
+				m.qs[i+j*m.ncatcg+1*scat*m.ncatcg][node.ID] = m.q1s[i+j*m.ncatcg]
 				if node.Class == 1 {
-					m.qs[i+j*m.ncatcg+2*scat*m.ncatcg][node.Id] = m.q2s[i+j*m.ncatcg]
-					m.qs[i+j*m.ncatcg+3*scat*m.ncatcg][node.Id] = m.q2s[i+j*m.ncatcg]
+					m.qs[i+j*m.ncatcg+2*scat*m.ncatcg][node.ID] = m.q2s[i+j*m.ncatcg]
+					m.qs[i+j*m.ncatcg+3*scat*m.ncatcg][node.ID] = m.q2s[i+j*m.ncatcg]
 				} else {
-					m.qs[i+j*m.ncatcg+2*scat*m.ncatcg][node.Id] = m.q0s[i+j*m.ncatcg]
-					m.qs[i+j*m.ncatcg+3*scat*m.ncatcg][node.Id] = m.q1s[i+j*m.ncatcg]
+					m.qs[i+j*m.ncatcg+2*scat*m.ncatcg][node.ID] = m.q0s[i+j*m.ncatcg]
+					m.qs[i+j*m.ncatcg+3*scat*m.ncatcg][node.ID] = m.q1s[i+j*m.ncatcg]
 				}
 			}
 		}
@@ -297,15 +297,15 @@ func (m *BranchSiteGamma) updateProportions() {
 		m.prop[0][i+bothcat*3] = (1 - p0 - p1) * p1 / (p0 + p1) / float64(bothcat)
 	}
 
-	for _, node := range m.tree.NodeIdArray() {
+	for _, node := range m.tree.NodeIDArray() {
 		if node == nil {
 			continue
 		}
 		scale := 0.0
 		for i := 0; i < bothcat*4; i++ {
-			scale += m.prop[0][i] * m.qs[i][node.Id].Scale
+			scale += m.prop[0][i] * m.qs[i][node.ID].Scale
 		}
-		m.scale[node.Id] = scale
+		m.scale[node.ID] = scale
 	}
 	m.propdone = true
 	m.expAllBr = false
@@ -389,7 +389,7 @@ func (m *BranchSiteGamma) siteLMatrix(w0, w2 []float64) (res [][][][]float64) {
 	res = make([][][][]float64, len(w0))
 	nClass := m.GetNClass()
 	nPos := m.cali.Length()
-	nni := m.tree.MaxNodeId() + 1
+	nni := m.tree.MaxNodeID() + 1
 
 	scat := m.ncatsg * m.ncatsg * m.ncatsg
 	bothcat := m.ncatcg * scat
@@ -410,7 +410,7 @@ func (m *BranchSiteGamma) siteLMatrix(w0, w2 []float64) (res [][][][]float64) {
 	tasks := make(chan bebtask, nPos)
 
 	go func() {
-		nni := m.tree.MaxNodeId() + 1
+		nni := m.tree.MaxNodeID() + 1
 		plh := make([][]float64, nni)
 		for i := 0; i < nni; i++ {
 			plh[i] = make([]float64, m.cf.GCode.NCodon+1)

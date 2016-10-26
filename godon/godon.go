@@ -300,11 +300,11 @@ func main() {
 	log.Debug(cf)
 
 	if *fgBranch >= 0 {
-		for _, node := range t.NodeIdArray() {
+		for _, node := range t.NodeIDArray() {
 			if node == nil {
 				continue
 			}
-			if node.Id == *fgBranch {
+			if node.ID == *fgBranch {
 				node.Class = 1
 			} else {
 				node.Class = 0
@@ -312,7 +312,7 @@ func main() {
 		}
 	} else {
 		class1 := 0
-		for _ = range t.ClassNodes(1) {
+		for range t.ClassNodes(1) {
 			class1++
 		}
 		if class1 == 0 &&

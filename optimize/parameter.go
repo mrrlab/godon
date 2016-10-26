@@ -119,7 +119,7 @@ func (p *FloatParameters) SetValues(v []float64) error {
 }
 
 // ReadLine sets values from a string.
-func (par *FloatParameters) ReadLine(l string) error {
+func (p *FloatParameters) ReadLine(l string) error {
 	v, err := ReadFloats(l)
 	if err != nil {
 		return err
@@ -127,11 +127,8 @@ func (par *FloatParameters) ReadLine(l string) error {
 	if len(v) < 2 {
 		return errors.New("Parameter line has not enough elements")
 	}
-	err = par.SetValues(v[2:])
-	if err != nil {
-		return err
-	}
-	return nil
+	err = p.SetValues(v[2:])
+	return err
 }
 
 // Update updates values from another FloatParameters object.
@@ -349,7 +346,7 @@ type DiscreteParameter struct {
 	NStates int
 }
 
-// Creates a new DiscreteParameter.
+// NewDiscreteParameter creates a new DiscreteParameter.
 func NewDiscreteParameter(par *float64, name string, nstates int) (dpar *DiscreteParameter) {
 	if nstates <= 1 {
 		panic("incorrect number of states for a discrete parameter")

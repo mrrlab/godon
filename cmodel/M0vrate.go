@@ -11,10 +11,10 @@ type M0vrate struct {
 	*BaseModel
 	q0, q1       *codon.EMatrix
 	omega, kappa float64
-	p            float64 // proportion of non-scaled
-	s            float64 // scale-factor
-	qdone        bool
-	propdone     bool
+	// scale-factor
+	s        float64
+	qdone    bool
+	propdone bool
 }
 
 // NewM0vrate creates a new M0vrate model.
@@ -115,13 +115,13 @@ func (m *M0vrate) updateProportions() {
 	m.prop[0][0] = 1 / m.s
 	m.prop[0][1] = 1 - m.prop[0][0]
 
-	for _, node := range m.tree.NodeIdArray() {
+	for _, node := range m.tree.NodeIDArray() {
 		if node == nil {
 			continue
 		}
-		m.scale[node.Id] = m.prop[0][0]*m.q0.Scale + m.prop[0][1]*m.q1.Scale
-		m.qs[0][node.Id] = m.q0
-		m.qs[1][node.Id] = m.q1
+		m.scale[node.ID] = m.prop[0][0]*m.q0.Scale + m.prop[0][1]*m.q1.Scale
+		m.qs[0][node.ID] = m.q0
+		m.qs[1][node.ID] = m.q1
 	}
 	m.propdone = true
 	m.expAllBr = false

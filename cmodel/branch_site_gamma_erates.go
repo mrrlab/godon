@@ -306,20 +306,20 @@ func (m *BranchSiteGammaERates) SetDefaults() {
 // setBranchMatrices set matrices for all the branches.
 func (m *BranchSiteGammaERates) setBranchMatrices() {
 	scat := m.ncatsg * m.ncatsg * m.ncatsg
-	for _, node := range m.tree.NodeIdArray() {
+	for _, node := range m.tree.NodeIDArray() {
 		if node == nil {
 			continue
 		}
 		for i := 0; i < m.ncatcg; i++ {
 			for j := 0; j < scat; j++ {
-				m.qs[i+j*m.ncatcg+0*scat*m.ncatcg][node.Id] = m.q0s[i+j*m.ncatcg]
-				m.qs[i+j*m.ncatcg+1*scat*m.ncatcg][node.Id] = m.q1s[i+j*m.ncatcg]
+				m.qs[i+j*m.ncatcg+0*scat*m.ncatcg][node.ID] = m.q0s[i+j*m.ncatcg]
+				m.qs[i+j*m.ncatcg+1*scat*m.ncatcg][node.ID] = m.q1s[i+j*m.ncatcg]
 				if node.Class == 1 {
-					m.qs[i+j*m.ncatcg+2*scat*m.ncatcg][node.Id] = m.q2s[i+j*m.ncatcg]
-					m.qs[i+j*m.ncatcg+3*scat*m.ncatcg][node.Id] = m.q2s[i+j*m.ncatcg]
+					m.qs[i+j*m.ncatcg+2*scat*m.ncatcg][node.ID] = m.q2s[i+j*m.ncatcg]
+					m.qs[i+j*m.ncatcg+3*scat*m.ncatcg][node.ID] = m.q2s[i+j*m.ncatcg]
 				} else {
-					m.qs[i+j*m.ncatcg+2*scat*m.ncatcg][node.Id] = m.q0s[i+j*m.ncatcg]
-					m.qs[i+j*m.ncatcg+3*scat*m.ncatcg][node.Id] = m.q1s[i+j*m.ncatcg]
+					m.qs[i+j*m.ncatcg+2*scat*m.ncatcg][node.ID] = m.q0s[i+j*m.ncatcg]
+					m.qs[i+j*m.ncatcg+3*scat*m.ncatcg][node.ID] = m.q1s[i+j*m.ncatcg]
 				}
 			}
 		}
@@ -355,17 +355,17 @@ func (m *BranchSiteGammaERates) updateProportions() {
 		}
 	}
 
-	for _, node := range m.tree.NodeIdArray() {
+	for _, node := range m.tree.NodeIDArray() {
 		if node == nil {
 			continue
 		}
 		scale := 0.0
 		for i := 0; i < m.cali.Length(); i++ {
 			for j := 0; j < m.GetNClass(); j++ {
-				scale += m.prop[i][j] * m.qs[j][node.Id].Scale
+				scale += m.prop[i][j] * m.qs[j][node.ID].Scale
 			}
 		}
-		m.scale[node.Id] = scale / float64(m.cali.Length())
+		m.scale[node.ID] = scale / float64(m.cali.Length())
 	}
 	if !m.allpropdone {
 		m.prunAllPos = false

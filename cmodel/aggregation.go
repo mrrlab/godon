@@ -51,18 +51,18 @@ func (m *BaseModel) observedSubL(class, pos int, plh [][]float64, lettersF, lett
 	NCodon := m.cf.GCode.NCodon
 
 	for node := range m.tree.Terminals() {
-		cod := m.cali[node.LeafId].Sequence[pos]
+		cod := m.cali[node.LeafID].Sequence[pos]
 		nfound := 0
 		for _, l := range lettersF {
-			if l == int(m.cali[node.LeafId].Sequence[pos]) || cod == codon.NOCODON {
-				plh[node.Id][l] = 1
+			if l == int(m.cali[node.LeafID].Sequence[pos]) || cod == codon.NOCODON {
+				plh[node.ID][l] = 1
 				nfound++
 			} else {
-				plh[node.Id][l] = 0
+				plh[node.ID][l] = 0
 			}
 		}
 		if cod == codon.NOCODON || nfound == 0 {
-			plh[node.Id][NCodon] = 1
+			plh[node.ID][NCodon] = 1
 		}
 	}
 
@@ -71,11 +71,11 @@ func (m *BaseModel) observedSubL(class, pos int, plh [][]float64, lettersF, lett
 			l := 1.0
 			for _, child := range node.ChildNodes() {
 				// get child partial likelhiood
-				cplh := plh[child.Id]
+				cplh := plh[child.ID]
 				s := 0.0
 				if l1 != NCodon {
 					// get the row
-					q := m.eQts[class][child.Id][l1*NCodon:]
+					q := m.eQts[class][child.ID][l1*NCodon:]
 
 					for _, l2 := range lettersF {
 						//s += q.Get(l1, l2) * plh[child.Id][l2]
@@ -96,7 +96,7 @@ func (m *BaseModel) observedSubL(class, pos int, plh [][]float64, lettersF, lett
 						pai := 0.0
 						if l2 != NCodon {
 							for _, l1 := range lettersA {
-								pai += m.cf.Freq[l1] * m.eQts[class][child.Id][l1*NCodon+l2]
+								pai += m.cf.Freq[l1] * m.eQts[class][child.ID][l1*NCodon+l2]
 							}
 							pai /= fabs
 
@@ -109,16 +109,16 @@ func (m *BaseModel) observedSubL(class, pos int, plh [][]float64, lettersF, lett
 				}
 				l *= s
 			}
-			plh[node.Id][l1] = l
+			plh[node.ID][l1] = l
 		}
 
 		if node.IsRoot() {
 			for _, l := range lettersF {
 				if l != NCodon {
 
-					res += m.cf.Freq[l] * plh[node.Id][l]
+					res += m.cf.Freq[l] * plh[node.ID][l]
 				} else {
-					res += fabs * plh[node.Id][l]
+					res += fabs * plh[node.ID][l]
 				}
 			}
 			break
@@ -162,13 +162,13 @@ func (m *BaseModel) aggSubL(class, pos int, plh [][]float64, schema *aggSchema) 
 	NCodon := m.cf.GCode.NCodon
 
 	for node := range m.tree.Terminals() {
-		cod := m.cali[node.LeafId].Sequence[pos]
+		cod := m.cali[node.LeafID].Sequence[pos]
 		st := schema.codon2state[cod]
 		for i := range schema.state2codons {
 			if cod == codon.NOCODON || i == st {
-				plh[node.Id][i] = 1
+				plh[node.ID][i] = 1
 			} else {
-				plh[node.Id][i] = 0
+				plh[node.ID][i] = 0
 			}
 		}
 	}
@@ -178,7 +178,7 @@ func (m *BaseModel) aggSubL(class, pos int, plh [][]float64, schema *aggSchema) 
 			l := 1.0
 			for _, child := range node.ChildNodes() {
 				// get child partial likelhiood
-				cplh := plh[child.Id]
+				cplh := plh[child.ID]
 				s := 0.0
 				rowSum := 0.0
 				for s2 := 0; s2 < NStates; s2++ {
@@ -187,7 +187,7 @@ func (m *BaseModel) aggSubL(class, pos int, plh [][]float64, schema *aggSchema) 
 					if s2 != NStates-1 {
 						for _, l1 := range schema.state2codons[s1] {
 							// get the row
-							q := m.eQts[class][child.Id][l1*NCodon:]
+							q := m.eQts[class][child.ID][l1*NCodon:]
 							pl12 := 0.0
 							for _, l2 := range schema.state2codons[s2] {
 								pl12 += q[l2]
@@ -209,12 +209,12 @@ func (m *BaseModel) aggSubL(class, pos int, plh [][]float64, schema *aggSchema) 
 				}
 				l *= s
 			}
-			plh[node.Id][s1] = l
+			plh[node.ID][s1] = l
 		}
 
 		if node.IsRoot() {
 			for s := 0; s < NStates; s++ {
-				res += schema.stateFreq[s] * plh[node.Id][s]
+				res += schema.stateFreq[s] * plh[node.ID][s]
 			}
 			break
 		}
@@ -229,39 +229,39 @@ func (m *BaseModel) aggSubL(class, pos int, plh [][]float64, schema *aggSchema) 
 func (m *BaseModel) fixedSubL(class, pos int, plh [][]float64) (res float64) {
 	NCodon := m.cf.GCode.NCodon
 
-	for i := 0; i < m.tree.MaxNodeId()+1; i++ {
+	for i := 0; i < m.tree.MaxNodeID()+1; i++ {
 		plh[i][0] = math.NaN()
 	}
 
 	l := m.lettersF[pos][0]
 
 	for node := range m.tree.Terminals() {
-		plh[node.Id][0] = 1
-		plh[node.Id][1] = 0
+		plh[node.ID][0] = 1
+		plh[node.ID][1] = 0
 	}
 
 	for _, node := range m.tree.NodeOrder() {
-		plh[node.Id][0] = 1
-		plh[node.Id][1] = 1
+		plh[node.ID][0] = 1
+		plh[node.ID][1] = 1
 		for _, child := range node.ChildNodes() {
-			p00 := m.eQts[class][child.Id][l*NCodon+l]
+			p00 := m.eQts[class][child.ID][l*NCodon+l]
 			p01 := 1 - p00
 			p10 := 0.0
 			for l1 := 0; l1 < NCodon; l1++ {
 				if l != l1 {
-					p10 += m.cf.Freq[l1] * m.eQts[class][child.Id][l1*NCodon+l]
+					p10 += m.cf.Freq[l1] * m.eQts[class][child.ID][l1*NCodon+l]
 				}
 			}
 			p10 /= (1 - m.cf.Freq[l])
 			p11 := 1 - p10
 
-			cplh := plh[child.Id]
-			plh[node.Id][0] *= p00*cplh[0] + p01*cplh[1]
-			plh[node.Id][1] *= p10*cplh[0] + p11*cplh[1]
+			cplh := plh[child.ID]
+			plh[node.ID][0] *= p00*cplh[0] + p01*cplh[1]
+			plh[node.ID][1] *= p10*cplh[0] + p11*cplh[1]
 		}
 
 		if node.IsRoot() {
-			res = m.cf.Freq[l]*plh[node.Id][0] + (1-m.cf.Freq[l])*plh[node.Id][1]
+			res = m.cf.Freq[l]*plh[node.ID][0] + (1-m.cf.Freq[l])*plh[node.ID][1]
 			break
 		}
 

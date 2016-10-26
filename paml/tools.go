@@ -1,4 +1,4 @@
-// Paml implements some functions from PAML source code.
+// Package paml implements some functions from PAML source code.
 package paml
 
 /* this code comes from PAML 4.8a */
@@ -151,9 +151,8 @@ func QuantileNormal(prob float64) float64 {
 	}
 	if p < 0.5 {
 		return -z
-	} else {
-		return z
 	}
+	return z
 }
 
 /*
@@ -174,10 +173,10 @@ RATNEST FORTRAN by Bhattacharjee GP (1970) The incomplete gamma
 integral.  Applied Statistics, 19: 285-287 (AS32)
 
 */
-func IncompleteGamma(x, alpha, ln_gamma_alpha float64) (gin float64) {
+func IncompleteGamma(x, alpha, lnGammaAlpha float64) (gin float64) {
 	i := 0
 	p := alpha
-	g := ln_gamma_alpha
+	g := lnGammaAlpha
 	accurate := 1e-10
 	overflow := 1e60
 	rn := 0.0
@@ -462,7 +461,6 @@ extreme values of p and q as well, although it seems better than my
 previous version.  Ziheng Yang, May 2001
 
 */
-
 func QuantileBeta(prob, p, q, lnbeta float64) float64 {
 	fpu := 3e-308
 	acu_min := 1e-300

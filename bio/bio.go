@@ -118,10 +118,7 @@ func (gcode *GeneticCode) Translate(nseq string) (string, error) {
 // IsStopCodon tests if the string is a stop-codon (DNA alphabet,
 // capital letters).
 func (gcode *GeneticCode) IsStopCodon(codon string) bool {
-	if gcode.Map[codon] == '*' {
-		return true
-	}
-	return false
+	return gcode.Map[codon] == '*'
 }
 
 // Sequence is a type which is intended for storing nucleotide or

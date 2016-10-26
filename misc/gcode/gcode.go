@@ -17,55 +17,54 @@ import (
 	"unicode"
 )
 
-type Mode int
+type mode int
 
 const (
-	// Default parsing mode.
-	NORMAL Mode = iota
-	TABLE
-	ASSIGN
-	LIST
-	ELEMENT
-	ELEMENTPAR
-	ELEMENTPRECOMMA
-	PRECOMMA
-	END
+	normal mode = iota
+	table
+	assign
+	list
+	element
+	elementPar
+	elementPreComma
+	preComma
+	end
 )
 
-type GeneticCode struct {
+type geneticCode struct {
 	Name      string
 	ShortName string
-	Id        int
+	ID        int
 	Ncbieaa   string
 	Sncbieaa  string
 }
 
-func (gc GeneticCode) String() string {
+func (gc geneticCode) String() string {
 	return fmt.Sprintf("<GC: Name=\"%s\", ShortName=\"%s\", Id=%d, A=\"%s\", S=\"%s\">",
-		gc.Name, gc.ShortName, gc.Id, gc.Ncbieaa, gc.Sncbieaa)
+		gc.Name, gc.ShortName, gc.ID, gc.Ncbieaa, gc.Sncbieaa)
 }
 
-func (gc GeneticCode) GoString() string {
+func (gc geneticCode) GoString() string {
 	return fmt.Sprintf("newGeneticCode(%d,\n\"%s\",\n\"%s\",\n\"%s\",\n\"%s\")",
-		gc.Id, gc.Name, gc.ShortName, gc.Ncbieaa, gc.Sncbieaa)
+		gc.ID, gc.Name, gc.ShortName, gc.Ncbieaa, gc.Sncbieaa)
 }
 
-func Unqoute(s string) (string, error) {
+func unqoute(s string) (string, error) {
 	if (!strings.HasPrefix(s, "\"")) || (!strings.HasSuffix(s, "\"")) {
 		return "", errors.New("String is not quoted")
 	}
 	return strings.Trim(s, "\""), nil
 }
 
-func ANumMinus(b byte) bool {
+func aNumMinus(b byte) bool {
 	r := rune(b)
-	return r == '-' || unicode.IsLetter(r) || unicode.IsDigit(r) 
+	return r == '-' || unicode.IsLetter(r) || unicode.IsDigit(r)
 }
 
-func Asn1Split(data []byte, atEOF bool) (int, []byte, error) {
+func asn1Split(data []byte, atEOF bool) (int, []byte, error) {
 	i := 0
-	
-	for ; i < len(data) ; i ++ {
+
+	for ; i < len(data); i++ {
 		if !unicode.IsSpace(rune(data[i])) {
 			break
 		}
@@ -88,9 +87,8 @@ func Asn1Split(data []byte, atEOF bool) (int, []byte, error) {
 		if data[1] == '-' {
 			a, t, e := bufio.ScanLines(data, atEOF)
 			return a + advance, t, e
-		} else {
-			return 0, nil, errors.New("unexpected character after '-'")
 		}
+		return 0, nil, errors.New("unexpected character after '-'")
 	case ':':
 		if len(data) < 3 {
 			if atEOF {
@@ -100,9 +98,8 @@ func Asn1Split(data []byte, atEOF bool) (int, []byte, error) {
 		}
 		if data[1] == ':' && data[2] == '=' {
 			return advance + 3, data[:3], nil
-		} else {
-			return 0, nil, errors.New("unxepected character after ':'")
 		}
+		return 0, nil, errors.New("unxepected character after ':'")
 	case '"':
 		for i := 1; i < len(data); i++ {
 			if data[i] == '"' {
@@ -111,16 +108,15 @@ func Asn1Split(data []byte, atEOF bool) (int, []byte, error) {
 		}
 		if !atEOF {
 			return advance, nil, nil
-		} else {
-			return 0, nil, errors.New("unfinished string literal")
 		}
+		return 0, nil, errors.New("unfinished string literal")
 	case '{', '}', ',':
 		return advance + 1, data[:1], nil
 	}
-	if ANumMinus(data[0]) {
+	if aNumMinus(data[0]) {
 		i := 1
 		for ; i < len(data); i++ {
-			if !ANumMinus(data[i]) {
+			if !aNumMinus(data[i]) {
 				break
 			}
 		}
@@ -135,14 +131,14 @@ func Asn1Split(data []byte, atEOF bool) (int, []byte, error) {
 	return 0, nil, errors.New("Unknown token")
 }
 
-func ParseAsn1(rd io.Reader) (res []GeneticCode, err error) {
+func parseAsn1(rd io.Reader) (res []geneticCode, err error) {
 	scanner := bufio.NewScanner(rd)
 
-	scanner.Split(Asn1Split)
-	
-	mode := NORMAL
+	scanner.Split(asn1Split)
 
-	var gc GeneticCode
+	mode := normal
+
+	var gc geneticCode
 	var parName string
 
 	for scanner.Scan() {
@@ -150,40 +146,40 @@ func ParseAsn1(rd io.Reader) (res []GeneticCode, err error) {
 		if strings.HasPrefix(text, "--") {
 			continue
 		}
-		
+
 		switch mode {
-		case NORMAL:
+		case normal:
 			if text != "Genetic-code-table" {
 				return nil, errors.New("Expecting 'Genetic-code-table'")
 			}
-			mode = TABLE
-		case TABLE:
+			mode = table
+		case table:
 			if text != "::=" {
 				return nil, errors.New("Expecting '::='")
 			}
-			mode = ASSIGN
-		case ASSIGN:
+			mode = assign
+		case assign:
 			if text != "{" {
 				return nil, errors.New("Expecting '{'")
 			}
-			mode = LIST
-		case LIST:
+			mode = list
+		case list:
 			switch text {
 			case "{":
-				gc = GeneticCode{}
-				mode = ELEMENT
+				gc = geneticCode{}
+				mode = element
 			case "}":
-				mode = END
+				mode = end
 			default:
 				return nil, errors.New("Expecting '{' or '}'")
 			}
-		case ELEMENT:
+		case element:
 			parName = text
-			mode = ELEMENTPAR
-		case ELEMENTPAR:
+			mode = elementPar
+		case elementPar:
 			switch parName {
 			case "name":
-				uq, err := Unqoute(text)
+				uq, err := unqoute(text)
 				if err != nil {
 					return nil, err
 				}
@@ -198,41 +194,41 @@ func ParseAsn1(rd io.Reader) (res []GeneticCode, err error) {
 				if err != nil {
 					return nil, err
 				}
-				gc.Id = id
+				gc.ID = id
 			case "ncbieaa":
-				code, err := Unqoute(text)
+				code, err := unqoute(text)
 				if err != nil {
 					return nil, err
 				}
 				gc.Ncbieaa = code
 			case "sncbieaa":
-				code, err := Unqoute(text)
+				code, err := unqoute(text)
 				if err != nil {
 					return nil, err
 				}
 				gc.Sncbieaa = code
 			}
-			mode = ELEMENTPRECOMMA
-		case ELEMENTPRECOMMA:
+			mode = elementPreComma
+		case elementPreComma:
 			switch text {
 			case ",":
-				mode = ELEMENT
+				mode = element
 			case "}":
 				res = append(res, gc)
-				mode = PRECOMMA
+				mode = preComma
 			default:
 				return nil, errors.New("Expecting ',' or '}'")
 			}
-		case PRECOMMA:
+		case preComma:
 			switch text {
 			case ",":
-				mode = LIST
+				mode = list
 			case "}":
-				mode = END
+				mode = end
 			default:
 				return nil, errors.New("Expecting ',' or '}'")
 			}
-		case END:
+		case end:
 			return nil, errors.New("Unexpected symbols at the end of file")
 		}
 	}
@@ -242,7 +238,7 @@ func ParseAsn1(rd io.Reader) (res []GeneticCode, err error) {
 		return nil, err
 	}
 
-	if mode != END {
+	if mode != end {
 		return nil, errors.New("Unexpected end of stream")
 	}
 
@@ -259,7 +255,7 @@ func main() {
 		fmt.Println(err)
 		os.Exit(2)
 	}
-	gcodes, err := ParseAsn1(f)
+	gcodes, err := parseAsn1(f)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(3)
@@ -271,7 +267,7 @@ func main() {
 	fmt.Println("// This file was generated using gcode program from NCBI genetic codes file.")
 	fmt.Println("var GeneticCodes = map[int]*GeneticCode{")
 	for _, gc := range gcodes {
-		fmt.Printf("%d: %s,\n", gc.Id, gc.GoString())
+		fmt.Printf("%d: %s,\n", gc.ID, gc.GoString())
 	}
 	fmt.Println("}")
 }

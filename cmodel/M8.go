@@ -302,11 +302,11 @@ func (m *M8) updateQ() {
 					m.q0[catid].ScaleD(rate)
 
 					class := m.ncatb*gcat*m.ncatcg + catid
-					for _, node := range m.tree.NodeIdArray() {
+					for _, node := range m.tree.NodeIDArray() {
 						if node == nil {
 							continue
 						}
-						m.qs[class][node.Id] = m.q0[catid]
+						m.qs[class][node.ID] = m.q0[catid]
 					}
 				}
 
@@ -348,11 +348,11 @@ func (m *M8) updateQb() {
 						e.Copy(m.qb[catid])
 						m.qb[catid].ScaleD(rate)
 
-						for _, node := range m.tree.NodeIdArray() {
+						for _, node := range m.tree.NodeIDArray() {
 							if node == nil {
 								continue
 							}
-							m.qs[catid][node.Id] = m.qb[catid]
+							m.qs[catid][node.ID] = m.qb[catid]
 						}
 					}
 				}
@@ -396,11 +396,11 @@ func (m *M8) updateProportions() {
 		}
 	}
 
-	for _, node := range m.tree.NodeIdArray() {
+	for _, node := range m.tree.NodeIDArray() {
 		if node == nil {
 			continue
 		}
-		m.scale[node.Id] = scale
+		m.scale[node.ID] = scale
 	}
 
 	m.propdone = true

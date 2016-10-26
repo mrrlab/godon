@@ -81,7 +81,7 @@ func F3X4(cali Sequences) (cf Frequency) {
 			if codon == NOCODON {
 				continue
 			}
-			cs := gcode.NumCodon[byte(codon)]
+			cs := gcode.NumCodon[codon]
 			poscf[0][rAlphabet[cs[0]]]++
 			poscf[1][rAlphabet[cs[1]]]++
 			poscf[2][rAlphabet[cs[2]]]++

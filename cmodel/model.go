@@ -119,8 +119,8 @@ func NewBaseModel(cali codon.Sequences, t *tree.Tree, cf codon.Frequency, model 
 		tree:     t,
 		cf:       cf,
 		qs:       make([][]*codon.EMatrix, nclass),
-		scale:    make([]float64, t.MaxNodeId()+1),
-		expBr:    make([]bool, t.MaxNodeId()+1),
+		scale:    make([]float64, t.MaxNodeID()+1),
+		expBr:    make([]bool, t.MaxNodeID()+1),
 		prop:     make([][]float64, cali.Length()),
 		nclass:   nclass,
 		l:        make([]float64, cali.Length()),
@@ -131,7 +131,7 @@ func NewBaseModel(cali codon.Sequences, t *tree.Tree, cf codon.Frequency, model 
 		bm.prop[i] = p
 	}
 	for i := 0; i < nclass; i++ {
-		bm.qs[i] = make([]*codon.EMatrix, t.MaxNodeId()+1)
+		bm.qs[i] = make([]*codon.EMatrix, t.MaxNodeID()+1)
 	}
 	t.NodeOrder()
 	bm.ReorderAlignment()
@@ -194,16 +194,16 @@ func (m *BaseModel) addBranchParameters(fpg optimize.FloatParameterGenerator) {
 	}
 	if m.optBranch {
 
-		for _, node := range m.tree.NodeIdArray() {
+		for _, node := range m.tree.NodeIDArray() {
 			if node == nil {
 				continue
 			}
-			nodeID := node.Id
+			nodeID := node.ID
 			// Root branch is not optimized
 			if node.IsRoot() {
 				continue
 			}
-			par := fpg(&node.BranchLength, "br"+strconv.Itoa(node.Id))
+			par := fpg(&node.BranchLength, "br"+strconv.Itoa(node.ID))
 			par.SetOnChange(func() {
 				m.expBr[nodeID] = false
 			})
@@ -240,7 +240,7 @@ func (m *BaseModel) ReorderAlignment() {
 		if !ok {
 			log.Fatalf("No sequence found for the leaf <%s>.", node.Name)
 		}
-		newCali[node.LeafId] = m.cali[nodeID]
+		newCali[node.LeafID] = m.cali[nodeID]
 	}
 
 	m.cali = newCali
@@ -248,22 +248,22 @@ func (m *BaseModel) ReorderAlignment() {
 
 // ExpBranch exponentiates a signle branch. This uses eigen decomposed matrices.
 func (m *BaseModel) ExpBranch(br int) {
-	node := m.tree.NodeIdArray()[br]
+	node := m.tree.NodeIDArray()[br]
 	cD := mat64.NewDense(m.cf.GCode.NCodon, m.cf.GCode.NCodon, nil)
 	for class := range m.qs {
 		var oclass int
 		for oclass = class - 1; oclass >= 0; oclass-- {
-			if m.qs[class][node.Id] == m.qs[oclass][node.Id] {
-				m.eQts[class][node.Id] = m.eQts[oclass][node.Id]
+			if m.qs[class][node.ID] == m.qs[oclass][node.ID] {
+				m.eQts[class][node.ID] = m.eQts[oclass][node.ID]
 				break
 			}
 		}
 		if oclass < 0 {
-			Q, err := m.qs[class][node.Id].Exp(cD, node.BranchLength/m.scale[node.Id])
+			Q, err := m.qs[class][node.ID].Exp(cD, node.BranchLength/m.scale[node.ID])
 			if err != nil {
 				panic("Error exponentiating")
 			}
-			m.eQts[class][node.Id] = Q.RawMatrix().Data
+			m.eQts[class][node.ID] = Q.RawMatrix().Data
 		}
 	}
 	m.expBr[br] = true
@@ -275,7 +275,7 @@ func (m *BaseModel) ExpBranches() {
 	if m.eQts == nil {
 		m.eQts = make([][][]float64, len(m.qs))
 		for class := range m.qs {
-			m.eQts[class] = make([][]float64, m.tree.MaxNodeId()+1)
+			m.eQts[class] = make([][]float64, m.tree.MaxNodeID()+1)
 		}
 	} else {
 		for class := range m.eQts {
@@ -302,34 +302,34 @@ func (m *BaseModel) ExpBranches() {
 		go func() {
 			cD := mat64.NewDense(m.cf.GCode.NCodon, m.cf.GCode.NCodon, nil)
 			for s := range tasks {
-				Q, err := m.qs[s.class][s.node.Id].Exp(cD, s.node.BranchLength/m.scale[s.node.Id])
+				Q, err := m.qs[s.class][s.node.ID].Exp(cD, s.node.BranchLength/m.scale[s.node.ID])
 				if err != nil {
 					panic("error exponentiating matrix")
 				}
-				m.eQts[s.class][s.node.Id] = Q.RawMatrix().Data
+				m.eQts[s.class][s.node.ID] = Q.RawMatrix().Data
 			}
 			wg.Done()
 		}()
 	}
 
 	for class := range m.qs {
-		for _, node := range m.tree.NodeIdArray() {
+		for _, node := range m.tree.NodeIDArray() {
 			if node == nil {
 				continue
 			}
 			var oclass int
 			for oclass = class - 1; oclass >= 0; oclass-- {
-				if m.qs[class][node.Id] == m.qs[oclass][node.Id] {
+				if m.qs[class][node.ID] == m.qs[oclass][node.ID] {
 					defer func(class, oclass, nid int) {
 						m.eQts[class][nid] = m.eQts[oclass][nid]
-					}(class, oclass, node.Id)
+					}(class, oclass, node.ID)
 					break
 				}
 			}
 			if oclass < 0 {
 				tasks <- expTask{class, node}
 			}
-			m.expBr[node.Id] = true
+			m.expBr[node.ID] = true
 		}
 	}
 	close(tasks)
@@ -344,12 +344,12 @@ func (m *BaseModel) expBranchesIfNeeded() {
 		m.ExpBranches()
 		m.prunAllPos = false
 	} else {
-		for _, node := range m.tree.NodeIdArray() {
+		for _, node := range m.tree.NodeIDArray() {
 			if node == nil {
 				continue
 			}
-			if !m.expBr[node.Id] && node != nil {
-				m.ExpBranch(node.Id)
+			if !m.expBr[node.ID] && node != nil {
+				m.ExpBranch(node.ID)
 				m.prunAllPos = false
 			}
 		}
@@ -373,7 +373,7 @@ func (m *BaseModel) Likelihood() (lnL float64) {
 
 	for i := 0; i < nWorkers; i++ {
 		go func() {
-			nni := m.tree.MaxNodeId() + 1
+			nni := m.tree.MaxNodeID() + 1
 			plh := make([][]float64, nni)
 			for i := 0; i < nni; i++ {
 				plh[i] = make([]float64, m.cf.GCode.NCodon+1)
@@ -457,7 +457,7 @@ func (m *BaseModel) classLikelihoods() (res [][]float64) {
 
 	for i := 0; i < nWorkers; i++ {
 		go func() {
-			nni := m.tree.MaxNodeId() + 1
+			nni := m.tree.MaxNodeID() + 1
 			plh := make([][]float64, nni)
 			for i := 0; i < nni; i++ {
 				plh[i] = make([]float64, m.cf.GCode.NCodon+1)
@@ -549,17 +549,17 @@ func (m *BaseModel) PrintPosterior(posterior []float64) {
 func (m *BaseModel) fullSubL(class, pos int, plh [][]float64) (res float64) {
 	NCodon := m.cf.GCode.NCodon
 
-	for i := 0; i < m.tree.MaxNodeId()+1; i++ {
+	for i := 0; i < m.tree.MaxNodeID()+1; i++ {
 		plh[i][0] = math.NaN()
 	}
 
 	for node := range m.tree.Terminals() {
-		cod := m.cali[node.LeafId].Sequence[pos]
+		cod := m.cali[node.LeafID].Sequence[pos]
 		for l := byte(0); l < byte(NCodon); l++ {
 			if cod == codon.NOCODON || l == cod {
-				plh[node.Id][l] = 1
+				plh[node.ID][l] = 1
 			} else {
-				plh[node.Id][l] = 0
+				plh[node.ID][l] = 0
 			}
 		}
 	}
@@ -569,18 +569,18 @@ func (m *BaseModel) fullSubL(class, pos int, plh [][]float64) (res float64) {
 			l := 1.0
 			for _, child := range node.ChildNodes() {
 				// get the row
-				q := m.eQts[class][child.Id][l1*NCodon:]
+				q := m.eQts[class][child.ID][l1*NCodon:]
 				// get child partial likelhiood
-				cplh := plh[child.Id]
+				cplh := plh[child.ID]
 				s := impl.Ddot(NCodon, q, 1, cplh, 1)
 				l *= s
 			}
-			plh[node.Id][l1] = l
+			plh[node.ID][l1] = l
 		}
 
 		if node.IsRoot() {
 			for l := 0; l < NCodon; l++ {
-				res += m.cf.Freq[l] * plh[node.Id][l]
+				res += m.cf.Freq[l] * plh[node.ID][l]
 			}
 			break
 		}

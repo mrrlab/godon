@@ -203,6 +203,7 @@ func (o *BaseOptimizer) GetMaxLParametersMap() (m map[string]float64) {
 	return m
 }
 
+// Summary returns optimization summary.
 func (o *BaseOptimizer) Summary() interface{} {
 	return baseOptimizerSummary{
 		MaxLnL:         o.maxL,

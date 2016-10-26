@@ -260,16 +260,16 @@ func (m *M2) SetDefaults() {
 // setBranchMatrices set matrices for all the branches.
 func (m *M2) setBranchMatrices() {
 	scat := m.ncatsg * m.ncatsg * m.ncatsg
-	for _, node := range m.tree.NodeIdArray() {
+	for _, node := range m.tree.NodeIDArray() {
 		if node == nil {
 			continue
 		}
 		for i := 0; i < m.ncatcg; i++ {
 			for j := 0; j < scat; j++ {
-				m.qs[i+j*m.ncatcg+0*scat*m.ncatcg][node.Id] = m.q0[i+j*m.ncatcg]
-				m.qs[i+j*m.ncatcg+1*scat*m.ncatcg][node.Id] = m.q1[i+j*m.ncatcg]
+				m.qs[i+j*m.ncatcg+0*scat*m.ncatcg][node.ID] = m.q0[i+j*m.ncatcg]
+				m.qs[i+j*m.ncatcg+1*scat*m.ncatcg][node.ID] = m.q1[i+j*m.ncatcg]
 				if m.addw {
-					m.qs[i+j*m.ncatcg+2*scat*m.ncatcg][node.Id] = m.q2[i+j*m.ncatcg]
+					m.qs[i+j*m.ncatcg+2*scat*m.ncatcg][node.ID] = m.q2[i+j*m.ncatcg]
 				}
 			}
 		}
@@ -372,15 +372,15 @@ func (m *M2) updateProportions() {
 		}
 	}
 
-	for _, node := range m.tree.NodeIdArray() {
+	for _, node := range m.tree.NodeIDArray() {
 		if node == nil {
 			continue
 		}
 		scale := 0.0
 		for i := range m.prop[0] {
-			scale += m.prop[0][i] * m.qs[i][node.Id].Scale
+			scale += m.prop[0][i] * m.qs[i][node.ID].Scale
 		}
-		m.scale[node.Id] = scale
+		m.scale[node.ID] = scale
 	}
 	m.propdone = true
 	m.expAllBr = false
