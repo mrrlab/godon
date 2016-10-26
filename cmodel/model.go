@@ -392,14 +392,14 @@ func (m *BaseModel) Likelihood() (lnL float64) {
 						// no letters in the current position
 						// probability = 1, res += 0
 						res += 1 * p
-					case m.aggMode == AGG_FIXED && len(m.lettersF[pos]) == 2:
+					case m.aggMode == AggFixed && len(m.lettersF[pos]) == 2:
 						res += m.fixedSubL(class, pos, plh) * p
-					case m.aggMode == AGG_OBSERVED:
+					case m.aggMode == AggObserved:
 						res += m.observedSubL(class, pos, plh, m.lettersF[pos], m.lettersA[pos]) * p
-					case m.aggMode == AGG_RANDOM:
+					case m.aggMode == AggRandom:
 						spos := m.rshuffle[pos]
 						res += m.observedSubL(class, pos, plh, m.lettersF[spos], m.lettersA[spos]) * p
-					case m.aggMode == AGG_OBSERVED_NEW:
+					case m.aggMode == AggObservedNew:
 						schema := m.schemas[pos]
 						if schema == nil {
 							schema = m.observedStates(m.lettersF[pos], m.lettersA[pos])

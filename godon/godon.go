@@ -387,15 +387,15 @@ func main() {
 	var aggMode cmodel.AggMode
 	switch *aggregate {
 	case "none":
-		aggMode = cmodel.AGG_NONE
+		aggMode = cmodel.AggNone
 	case "observed":
-		aggMode = cmodel.AGG_OBSERVED
+		aggMode = cmodel.AggObserved
 	case "observed_new":
-		aggMode = cmodel.AGG_OBSERVED_NEW
+		aggMode = cmodel.AggObservedNew
 	case "fixed":
-		aggMode = cmodel.AGG_FIXED
+		aggMode = cmodel.AggFixed
 	case "random":
-		aggMode = cmodel.AGG_RANDOM
+		aggMode = cmodel.AggRandom
 	default:
 		log.Fatalf("Unknown aggregation mode: %s", *aggregate)
 	}
@@ -535,8 +535,8 @@ MethodLoop:
 		}
 	}
 
-	if *printFull && (aggMode != cmodel.AGG_NONE) {
-		m.SetAggregationMode(cmodel.AGG_NONE)
+	if *printFull && (aggMode != cmodel.AggNone) {
+		m.SetAggregationMode(cmodel.AggNone)
 		L := m.Likelihood()
 		log.Notice("Full likelihood: ", L)
 		summary.FullLnL = L

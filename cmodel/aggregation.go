@@ -12,20 +12,20 @@ type AggMode int
 // Aggregation modes.
 const (
 	// No aggregation.
-	AGG_NONE AggMode = iota
+	AggNone AggMode = iota
 	// Aggregation on all the positions. All non-observed states
 	// are aggregated.
-	AGG_OBSERVED
+	AggObserved
 	// Aggregation on absolutely conserved positions. All
 	// non-observed states are aggregated.
-	AGG_FIXED
+	AggFixed
 	// Aggregation on all the positions. All non-observed states
 	// are aggregated. More general implementation.
-	AGG_OBSERVED_NEW
+	AggObservedNew
 	// Aggregation on all the positions. Similar to observed, but
 	// a set of non-aggregated states is shuffled between the
 	// alignment positions.
-	AGG_RANDOM
+	AggRandom
 )
 
 // aggSchema defines an aggregation schema.
