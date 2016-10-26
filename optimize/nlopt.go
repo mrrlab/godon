@@ -63,20 +63,20 @@ var returnStatus = map[C.nlopt_result]string{
 // NLOPT is nlopt optimizer.
 type NLOPT struct {
 	BaseOptimizer
-	gopt          C.nlopt_opt
-	lopt          C.nlopt_opt
-	dH            float64
-	stop          bool
-	finishLBFGS   bool
-	seed          int64
-	ftol_rel      float64
-	ftol_abs      float64
-	xtol_rel      float64
-	algorithm     C.nlopt_algorithm
-	loc_ftol_rel  float64
-	loc_ftol_abs  float64
-	loc_xtol_rel  float64
-	loc_algorithm C.nlopt_algorithm
+	gopt         C.nlopt_opt
+	lopt         C.nlopt_opt
+	dH           float64
+	stop         bool
+	finishLBFGS  bool
+	seed         int64
+	ftolRel      float64
+	ftolAbs      float64
+	xtolRel      float64
+	algorithm    C.nlopt_algorithm
+	locFtolRel   float64
+	locFtolAbs   float64
+	locXtolRel   float64
+	locAlgorithm C.nlopt_algorithm
 }
 
 // NewNLOPT creates a new NLOPT optimizer.
@@ -85,15 +85,15 @@ func NewNLOPT(algorithm int, seed int64) (nlopt *NLOPT) {
 		BaseOptimizer: BaseOptimizer{
 			repPeriod: 10,
 		},
-		dH:           1e-6,
-		finishLBFGS:  true,
-		seed:         seed,
-		ftol_rel:     1e-9,
-		ftol_abs:     1e-4,
-		xtol_rel:     1e-5,
-		loc_ftol_rel: 1e-8,
-		loc_ftol_abs: 1e-4,
-		loc_xtol_rel: 1e-2,
+		dH:          1e-6,
+		finishLBFGS: true,
+		seed:        seed,
+		ftolRel:     1e-9,
+		ftolAbs:     1e-4,
+		xtolRel:     1e-5,
+		locFtolRel:  1e-8,
+		locFtolAbs:  1e-4,
+		locXtolRel:  1e-2,
 	}
 	switch algorithm {
 	case NLOPT_COBYLA:
@@ -108,23 +108,23 @@ func NewNLOPT(algorithm int, seed int64) (nlopt *NLOPT) {
 		nlopt.algorithm = C.NLOPT_LD_SLSQP
 	case NLOPT_DIRECT:
 		nlopt.algorithm = C.NLOPT_GN_DIRECT_L_RAND
-		nlopt.ftol_rel = 1e-11
-		nlopt.ftol_abs = 1e-7
-		nlopt.xtol_rel = 1e-4
+		nlopt.ftolRel = 1e-11
+		nlopt.ftolAbs = 1e-7
+		nlopt.xtolRel = 1e-4
 	case NLOPT_CRS:
 		nlopt.algorithm = C.NLOPT_GN_CRS2_LM
-		nlopt.ftol_rel = 1e-7
-		nlopt.ftol_abs = 1e-3
-		nlopt.xtol_rel = 1e-4
+		nlopt.ftolRel = 1e-7
+		nlopt.ftolAbs = 1e-3
+		nlopt.xtolRel = 1e-4
 	case NLOPT_MLSL:
 		nlopt.algorithm = C.NLOPT_GN_MLSL_LDS
-		nlopt.ftol_rel = 1e-1
-		nlopt.ftol_abs = 1e-1
-		nlopt.xtol_rel = 1e-1
-		nlopt.loc_algorithm = C.NLOPT_LN_BOBYQA
-		nlopt.loc_ftol_rel = 1e-4
-		nlopt.loc_ftol_abs = 1
-		nlopt.loc_xtol_rel = 1e-2
+		nlopt.ftolRel = 1e-1
+		nlopt.ftolAbs = 1e-1
+		nlopt.xtolRel = 1e-1
+		nlopt.locAlgorithm = C.NLOPT_LN_BOBYQA
+		nlopt.locFtolRel = 1e-4
+		nlopt.locFtolAbs = 1
+		nlopt.locXtolRel = 1e-2
 	default:
 		log.Fatalf("Unknown algorithm specified (%d).", algorithm)
 	}
@@ -136,14 +136,14 @@ func (n *NLOPT) Run(iterations int) {
 	log.Infof("NLopt algorithm: %v.", C.GoString(C.nlopt_algorithm_name(n.algorithm)))
 	n.gopt = C.nlopt_create(n.algorithm, (C.uint)(len(n.parameters)))
 	defer C.nlopt_destroy(n.gopt)
-	if n.loc_algorithm != 0 {
-		log.Infof("local algorithm: %v.", C.GoString(C.nlopt_algorithm_name(n.loc_algorithm)))
-		n.lopt = C.nlopt_create(n.loc_algorithm, (C.uint)(len(n.parameters)))
+	if n.locAlgorithm != 0 {
+		log.Infof("local algorithm: %v.", C.GoString(C.nlopt_algorithm_name(n.locAlgorithm)))
+		n.lopt = C.nlopt_create(n.locAlgorithm, (C.uint)(len(n.parameters)))
 		defer C.nlopt_destroy(n.lopt)
 		C.nlopt_set_population(n.gopt, 1)
-		C.nlopt_set_ftol_rel(n.lopt, (C.double)(n.loc_ftol_rel))
-		C.nlopt_set_ftol_abs(n.lopt, (C.double)(n.loc_ftol_abs))
-		C.nlopt_set_xtol_rel(n.lopt, (C.double)(n.loc_xtol_rel))
+		C.nlopt_set_ftol_rel(n.lopt, (C.double)(n.locFtolRel))
+		C.nlopt_set_ftol_abs(n.lopt, (C.double)(n.locFtolAbs))
+		C.nlopt_set_xtol_rel(n.lopt, (C.double)(n.locXtolRel))
 		C.nlopt_set_local_optimizer(n.gopt, n.lopt)
 	}
 
@@ -173,10 +173,10 @@ func (n *NLOPT) Run(iterations int) {
 	C.nlopt_set_upper_bounds(n.gopt, &ub[0])
 
 	log.Infof("Stopping criteria: ftol_rel=%g, ftol_abs=%g, xtol_rel=%g, maxeval=%d",
-		n.ftol_rel, n.ftol_abs, n.xtol_rel, iterations)
-	C.nlopt_set_ftol_rel(n.gopt, (C.double)(n.ftol_rel))
-	C.nlopt_set_ftol_abs(n.gopt, (C.double)(n.ftol_abs))
-	C.nlopt_set_xtol_rel(n.gopt, (C.double)(n.xtol_rel))
+		n.ftolRel, n.ftolAbs, n.xtolRel, iterations)
+	C.nlopt_set_ftol_rel(n.gopt, (C.double)(n.ftolRel))
+	C.nlopt_set_ftol_abs(n.gopt, (C.double)(n.ftolAbs))
+	C.nlopt_set_xtol_rel(n.gopt, (C.double)(n.xtolRel))
 	C.nlopt_set_maxeval(n.gopt, (C.int)(iterations))
 
 	var maxf C.double
