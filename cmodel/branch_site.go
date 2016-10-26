@@ -310,7 +310,7 @@ func (m *BranchSite) siteLMatrix(w0, w2 []float64) (res [][][][]float64) {
 				default:
 					res[iW0][iW2][class] = make([]float64, nPos)
 
-					counter += 1
+					counter++
 					for pos := 0; pos < nPos; pos++ {
 						//res[i_w0][i_w2][class][pos] = m.fullSubL(class, pos, plh)
 						tasks <- bebtask{iW0, iW2, class, pos}
