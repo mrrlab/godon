@@ -68,6 +68,24 @@ func lastLine(fn string) (line string, err error) {
 	return line, err
 }
 
+func getAggModeFromString(aggModeString string) cmodel.AggMode {
+	switch aggModeString {
+	case "none":
+		return cmodel.AggNone
+	case "observed":
+		return cmodel.AggObserved
+	case "observed_new":
+		return cmodel.AggObservedNew
+	case "fixed":
+		return cmodel.AggFixed
+	case "random":
+		return cmodel.AggRandom
+	}
+	log.Fatalf("Unknown aggregation mode: %s", aggModeString)
+	// this won't be executed
+	return cmodel.AggNone
+}
+
 func main() {
 	startTime := time.Now()
 
@@ -359,22 +377,8 @@ func main() {
 		log.Info("Will not optimize branch lengths")
 	}
 
-	var aggMode cmodel.AggMode
-	switch *aggregate {
-	case "none":
-		aggMode = cmodel.AggNone
-	case "observed":
-		aggMode = cmodel.AggObserved
-	case "observed_new":
-		aggMode = cmodel.AggObservedNew
-	case "fixed":
-		aggMode = cmodel.AggFixed
-	case "random":
-		aggMode = cmodel.AggRandom
-	default:
-		log.Fatalf("Unknown aggregation mode: %s", *aggregate)
-	}
-	if *aggregate != "none" {
+	aggMode := getAggModeFromString(*aggregate)
+	if aggMode != cmodel.AggNone {
 		log.Infof("Aggregation mode: %s", *aggregate)
 	}
 	m.SetAggregationMode(aggMode)
