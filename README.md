@@ -29,13 +29,13 @@ Branch-Site model without ooptimizing the branch lengths (use only a
 single CPU).
 ```
 #!bash
-$ godon -nt 1 -nobrlen -method lbfgsb -model BS ali.fst tree.nwk
+$ godon -nt 1 -nobrlen -model BS ali.fst tree.nwk
 ```
 
-Run MCMC using M0 model.
+Run MCMC using M0 model with the downhill simplex optimization.
 ```
 #!bash
-$ godon -method mh -model M0 ali.fst tree.nwk
+$ godon -method mh -model M0 -method simplex ali.fst tree.nwk
 ```
 
 

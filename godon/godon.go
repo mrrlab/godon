@@ -119,7 +119,7 @@ func main() {
 	// optimizer parameters
 	iterations := flag.Int("iter", 10000, "number of iterations")
 	report := flag.Int("report", 10, "report every N iterations")
-	method := flag.String("method", "simplex", "optimization method to use "+
+	method := flag.String("method", "lbfgsb", "optimization method to use "+
 		"(lbfgsb: limited-memory Broyden–Fletcher–Goldfarb–Shanno with bounding constraints, "+
 		"simplex: downhill simplex, "+
 		"annealing: simullated annealing, "+
