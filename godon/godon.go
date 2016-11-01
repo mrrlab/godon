@@ -26,6 +26,7 @@ package main
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"math/rand"
@@ -68,68 +69,63 @@ func lastLine(fn string) (line string, err error) {
 	return line, err
 }
 
-func getAggModeFromString(aggModeString string) cmodel.AggMode {
+func getAggModeFromString(aggModeString string) (cmodel.AggMode, error) {
 	switch aggModeString {
 	case "none":
-		return cmodel.AggNone
+		return cmodel.AggNone, nil
 	case "observed":
-		return cmodel.AggObserved
+		return cmodel.AggObserved, nil
 	case "observed_new":
-		return cmodel.AggObservedNew
+		return cmodel.AggObservedNew, nil
 	case "fixed":
-		return cmodel.AggFixed
+		return cmodel.AggFixed, nil
 	case "random":
-		return cmodel.AggRandom
+		return cmodel.AggRandom, nil
 	}
-	log.Fatalf("Unknown aggregation mode: %s", aggModeString)
-	// this won't be executed
-	return cmodel.AggNone
+	return cmodel.AggNone, fmt.Errorf("Unknown aggregation mode: %s", aggModeString)
 }
 
 func getModelFromString(model string, cali codon.Sequences, t *tree.Tree, cf codon.Frequency,
-	fixw bool, ncatb, ncatsg, ncatcg int) cmodel.TreeOptimizableSiteClass {
+	fixw bool, ncatb, ncatsg, ncatcg int) (cmodel.TreeOptimizableSiteClass, error) {
 	switch model {
 	case "M0":
 		log.Info("Using M0 model")
-		return cmodel.NewM0(cali, t, cf)
+		return cmodel.NewM0(cali, t, cf), nil
 	case "M0vrate":
 		log.Info("Using M0vrate model")
-		return cmodel.NewM0vrate(cali, t, cf)
+		return cmodel.NewM0vrate(cali, t, cf), nil
 	case "M1a":
 		log.Info("Using M1a model")
 		log.Infof("%d site gamma categories, %d codon gama categories", ncatsg, ncatcg)
-		return cmodel.NewM2(cali, t, cf, false, ncatsg, ncatcg)
+		return cmodel.NewM2(cali, t, cf, false, ncatsg, ncatcg), nil
 	case "M2a":
 		log.Info("Using M2a model")
 		log.Infof("%d site gamma categories, %d codon gama categories", ncatsg, ncatcg)
-		return cmodel.NewM2(cali, t, cf, true, ncatsg, ncatcg)
+		return cmodel.NewM2(cali, t, cf, true, ncatsg, ncatcg), nil
 	case "M7":
 		log.Info("Using M7 model")
 		log.Infof("%d beta categories, %d site gamma categories, %d codon gama categories", ncatb, ncatsg, ncatcg)
-		return cmodel.NewM8(cali, t, cf, false, false, ncatb, ncatsg, ncatcg)
+		return cmodel.NewM8(cali, t, cf, false, false, ncatb, ncatsg, ncatcg), nil
 	case "M8":
 		log.Info("Using M8 model")
 		log.Infof("%d beta categories, %d site gamma categories, %d codon gama categories", ncatb, ncatsg, ncatcg)
-		return cmodel.NewM8(cali, t, cf, true, fixw, ncatb, ncatsg, ncatcg)
+		return cmodel.NewM8(cali, t, cf, true, fixw, ncatb, ncatsg, ncatcg), nil
 	case "BSC":
 		log.Info("Using branch site C model")
-		return cmodel.NewBranchSiteC(cali, t, cf)
+		return cmodel.NewBranchSiteC(cali, t, cf), nil
 	case "BSG":
 		log.Info("Using branch site gamma model")
 		log.Infof("%d site gamma categories, %d codon gama categories", ncatsg, ncatcg)
-		return cmodel.NewBranchSiteGamma(cali, t, cf, fixw, ncatsg, ncatcg)
+		return cmodel.NewBranchSiteGamma(cali, t, cf, fixw, ncatsg, ncatcg), nil
 	case "BSGE":
 		log.Info("Using branch site gamma model with explicit rates")
 		log.Infof("%d site gamma categories, %d codon gama categories", ncatsg, ncatcg)
-		return cmodel.NewBranchSiteGammaERates(cali, t, cf, fixw, ncatsg, ncatcg)
+		return cmodel.NewBranchSiteGammaERates(cali, t, cf, fixw, ncatsg, ncatcg), nil
 	case "BS":
 		log.Info("Using branch site model")
-		return cmodel.NewBranchSite(cali, t, cf, fixw)
-	default:
-		log.Fatal("Unknown model specification")
+		return cmodel.NewBranchSite(cali, t, cf, fixw), nil
 	}
-	// this will be never executed
-	return nil
+	return nil, errors.New("Unknown model specification")
 }
 
 func main() {
@@ -369,7 +365,10 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
-	m := getModelFromString(*model, cali, t, cf, *fixw, *ncatb, *ncatsg, *ncatcg)
+	m, err := getModelFromString(*model, cali, t, cf, *fixw, *ncatb, *ncatsg, *ncatcg)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	log.Infof("Model has %d site class(es)", m.GetNClass())
 
@@ -382,7 +381,10 @@ func main() {
 		log.Info("Will not optimize branch lengths")
 	}
 
-	aggMode := getAggModeFromString(*aggregate)
+	aggMode, err := getAggModeFromString(*aggregate)
+	if err != nil {
+		log.Fatal(err)
+	}
 	if aggMode != cmodel.AggNone {
 		log.Infof("Aggregation mode: %s", *aggregate)
 	}
