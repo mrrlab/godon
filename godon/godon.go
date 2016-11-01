@@ -8,13 +8,13 @@ The basic usage of godon looks like this:
 
 	godon alignment.fst tree.nwk
 
-, this will run M0 model with a default optimizer (downhill simplex).
+, this will run M0 model with a default optimizer (LBFGS-B).
 
 You can change a model and an optimizer:
 
-	godon -model BS -method lbfgsb alignment.fst tree.nwk
+	godon -model BS -method simplex alignment.fst tree.nwk
 
-The above will use the branch-site model and LBFGS-B optimizer.
+The above will use the branch-site model and downhill simplex optimizer.
 
 To see all the options run:
 
