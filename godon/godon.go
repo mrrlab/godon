@@ -128,6 +128,42 @@ func getModelFromString(model string, cali codon.Sequences, t *tree.Tree, cf cod
 	return nil, errors.New("Unknown model specification")
 }
 
+func getOptimizerFromString(method string, accept, annealingSkip int, seed int64) (optimize.Optimizer, error) {
+	switch method {
+	case "lbfgsb":
+		return optimize.NewLBFGSB(), nil
+	case "simplex":
+		return optimize.NewDS(), nil
+	case "mh":
+		chain := optimize.NewMH(false, 0)
+		chain.AccPeriod = accept
+		return chain, nil
+	case "annealing":
+		chain := optimize.NewMH(true, annealingSkip)
+		chain.AccPeriod = accept
+		return chain, nil
+	case "n_lbfgs":
+		return optimize.NewNLOPT(optimize.NLOPT_LBFGS, seed), nil
+	case "n_simplex":
+		return optimize.NewNLOPT(optimize.NLOPT_SIMPLEX, seed), nil
+	case "n_cobyla":
+		return optimize.NewNLOPT(optimize.NLOPT_COBYLA, seed), nil
+	case "n_bobyqa":
+		return optimize.NewNLOPT(optimize.NLOPT_BOBYQA, seed), nil
+	case "n_sqp":
+		return optimize.NewNLOPT(optimize.NLOPT_SQP, seed), nil
+	case "n_direct":
+		return optimize.NewNLOPT(optimize.NLOPT_DIRECT, seed), nil
+	case "n_crs":
+		return optimize.NewNLOPT(optimize.NLOPT_CRS, seed), nil
+	case "n_mlsl":
+		return optimize.NewNLOPT(optimize.NLOPT_MLSL, seed), nil
+	case "none":
+		return optimize.NewNone(), nil
+	}
+	return nil, fmt.Errorf("Unknown optimization method: %s", method)
+}
+
 func main() {
 	startTime := time.Now()
 
@@ -443,56 +479,14 @@ func main() {
 
 MethodLoop:
 	for _, method := range strings.Split(*method, "+") {
-		switch method {
-		case "lbfgsb":
-			lbfgsb := optimize.NewLBFGSB()
-			opt = lbfgsb
-		case "simplex":
-			ds := optimize.NewDS()
-			opt = ds
-		case "mh":
-			chain := optimize.NewMH(false, 0)
-			chain.AccPeriod = *accept
-			opt = chain
-		case "annealing":
-			chain := optimize.NewMH(true, annealingSkip)
-			chain.AccPeriod = *accept
-			opt = chain
-		case "n_lbfgs":
-			nlopt := optimize.NewNLOPT(optimize.NLOPT_LBFGS, *seed)
-			opt = nlopt
-		case "n_simplex":
-			nlopt := optimize.NewNLOPT(optimize.NLOPT_SIMPLEX, *seed)
-			opt = nlopt
-		case "n_cobyla":
-			nlopt := optimize.NewNLOPT(optimize.NLOPT_COBYLA, *seed)
-			opt = nlopt
-		case "n_bobyqa":
-			nlopt := optimize.NewNLOPT(optimize.NLOPT_BOBYQA, *seed)
-			opt = nlopt
-		case "n_sqp":
-			nlopt := optimize.NewNLOPT(optimize.NLOPT_SQP, *seed)
-			opt = nlopt
-		case "n_direct":
-			nlopt := optimize.NewNLOPT(optimize.NLOPT_DIRECT, *seed)
-			opt = nlopt
-		case "n_crs":
-			nlopt := optimize.NewNLOPT(optimize.NLOPT_CRS, *seed)
-			opt = nlopt
-		case "n_mlsl":
-			nlopt := optimize.NewNLOPT(optimize.NLOPT_MLSL, *seed)
-			opt = nlopt
-		case "none":
-			nopt := optimize.NewNone()
-			opt = nopt
-		default:
-			log.Errorf("Unknown optimization method: %s", method)
+		opt, err = getOptimizerFromString(method, *accept, annealingSkip, *seed)
+		if err != nil {
+			log.Error(err)
 			if oldOpt == nil {
 				os.Exit(1)
 			} else {
 				continue MethodLoop
 			}
-
 		}
 
 		log.Infof("Using %s optimization.", method)
