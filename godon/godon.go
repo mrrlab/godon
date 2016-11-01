@@ -187,6 +187,7 @@ func main() {
 	ncatsg := flag.Int("ncatsg", 1, "number of categories for the site gamma rate variation (no variation by default)")
 	ncatcg := flag.Int("ncatcg", 1, "number of categories for the codon gamma rate variation (no variation by default)")
 	ncatb := flag.Int("ncatb", 4, "number of the categories for the beta distribution (models M7&M8)")
+	noFinal := flag.Bool("nofinal", false, "don't perform final extra computations, i.e. NEB and BEB site posterior")
 
 	// optimizer parameters
 	iterations := flag.Int("iter", 10000, "number of iterations")
@@ -504,7 +505,9 @@ MethodLoop:
 		oldOpt = opt
 	}
 	opt.PrintFinal()
-	m.Final()
+	if !*noFinal {
+		m.Final()
+	}
 	summary.Model = m.Summary()
 
 	if !*noOptBrLen {
