@@ -418,6 +418,9 @@ func main() {
 				log.Fatal("Error reading start position from trajectory file:", err)
 			}
 		}
+		if !par.InRange() {
+			log.Fatal("Initial parameters are not in the range")
+		}
 	}
 
 	// iteration to skip before annealing, for adaptive mcmc
