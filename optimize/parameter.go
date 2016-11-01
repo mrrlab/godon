@@ -1,7 +1,10 @@
 package optimize
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
+	"io/ioutil"
 	"math"
 	"math/rand"
 	"strconv"
@@ -116,6 +119,59 @@ func (p *FloatParameters) SetValues(v []float64) error {
 		par.Set(v[i])
 	}
 	return nil
+}
+
+// SetByName sets parameter value by its' name.
+func (p *FloatParameters) SetByName(name string, v float64) error {
+	for _, par := range *p {
+		if par.Name() == name {
+			par.Set(v)
+			return nil
+		}
+	}
+	return fmt.Errorf("Parameter with name %s not found", name)
+}
+
+// SetFromMap sets parameters from a map. This map is produced by JSON
+// parser usuall. This has algorithmic complexity of O(n^2), since we have to
+// check every parameter name every iteration. This usually doesn't matter
+// since the number of parameters is usually small, and this is done only
+// once in the begining of run.
+func (p *FloatParameters) SetFromMap(m map[string]interface{}) error {
+	// number of parameters set from the map
+	if len(m) != len(*p) {
+		return fmt.Errorf("Incorrect number of initial values (%d instead of %d)",
+			len(m), len(*p))
+	}
+	cnt := 0
+	for pname, pval := range m {
+		switch v := pval.(type) {
+		case float64:
+			err := p.SetByName(pname, v)
+			if err != nil {
+				return err
+			}
+			cnt++
+		default:
+			return fmt.Errorf("Incorrect value type for %s (%v)", pname, v)
+		}
+	}
+	return nil
+}
+
+// ReadFromJSON sets parameter values from JSON map.
+func (p *FloatParameters) ReadFromJSON(filename string) error {
+	file, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return err
+	}
+	var m map[string]interface{}
+	err = json.Unmarshal(file, &m)
+	if err != nil {
+		return err
+	}
+	err = p.SetFromMap(m)
+	return err
 }
 
 // ReadLine sets values from a string.

@@ -79,19 +79,17 @@ var log = logging.MustGetLogger("godon")
 var formatter = logging.MustStringFormatter(`%{message}`)
 
 // lastLine returns the last line of a file content.
-func lastLine(fn string) (line string) {
+func lastLine(fn string) (line string, err error) {
 	f, err := os.Open(fn)
 	if err != nil {
-		log.Fatal("Error opening file:", err)
+		return line, err
 	}
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
 		line = scanner.Text()
 	}
-	if err := scanner.Err(); err != nil {
-		log.Fatal("Error scanning last line:", err)
-	}
-	return
+	err = scanner.Err()
+	return line, err
 }
 
 func main() {
@@ -158,7 +156,7 @@ func main() {
 	outLogF := flag.String("log", "", "write log to a file")
 	outF := flag.String("out", "", "write optimization trajectory to a file")
 	outTreeF := flag.String("tree", "", "write tree to a file")
-	startF := flag.String("start", "", "read start position from the trajectory file")
+	startF := flag.String("start", "", "read start position from the trajectory or JSON file")
 	logLevel := flag.String("loglevel", "notice", "loglevel ('critical', 'error', 'warning', 'notice', 'info', 'debug')")
 	jsonF := flag.String("json", "", "write json output to a file")
 
@@ -405,11 +403,19 @@ func main() {
 	m.SetAggregationMode(aggMode)
 
 	if *startF != "" {
-		l := lastLine(*startF)
+		l, err := lastLine(*startF)
 		par := m.GetFloatParameters()
-		err := par.ReadLine(l)
+		if err == nil {
+			err = par.ReadLine(l)
+		}
 		if err != nil {
-			log.Fatal("Error reading start position:", err)
+			log.Debug("Reading start file as JSON")
+			err2 := par.ReadFromJSON(*startF)
+			// startF is neither trajectory nor correct JSON
+			if err2 != nil {
+				log.Error("Error reading start position from JSON:", err2)
+				log.Fatal("Error reading start position from trajectory file:", err)
+			}
 		}
 	}
 
