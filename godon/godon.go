@@ -86,6 +86,52 @@ func getAggModeFromString(aggModeString string) cmodel.AggMode {
 	return cmodel.AggNone
 }
 
+func getModelFromString(model string, cali codon.Sequences, t *tree.Tree, cf codon.Frequency,
+	fixw bool, ncatb, ncatsg, ncatcg int) cmodel.TreeOptimizableSiteClass {
+	switch model {
+	case "M0":
+		log.Info("Using M0 model")
+		return cmodel.NewM0(cali, t, cf)
+	case "M0vrate":
+		log.Info("Using M0vrate model")
+		return cmodel.NewM0vrate(cali, t, cf)
+	case "M1a":
+		log.Info("Using M1a model")
+		log.Infof("%d site gamma categories, %d codon gama categories", ncatsg, ncatcg)
+		return cmodel.NewM2(cali, t, cf, false, ncatsg, ncatcg)
+	case "M2a":
+		log.Info("Using M2a model")
+		log.Infof("%d site gamma categories, %d codon gama categories", ncatsg, ncatcg)
+		return cmodel.NewM2(cali, t, cf, true, ncatsg, ncatcg)
+	case "M7":
+		log.Info("Using M7 model")
+		log.Infof("%d beta categories, %d site gamma categories, %d codon gama categories", ncatb, ncatsg, ncatcg)
+		return cmodel.NewM8(cali, t, cf, false, false, ncatb, ncatsg, ncatcg)
+	case "M8":
+		log.Info("Using M8 model")
+		log.Infof("%d beta categories, %d site gamma categories, %d codon gama categories", ncatb, ncatsg, ncatcg)
+		return cmodel.NewM8(cali, t, cf, true, fixw, ncatb, ncatsg, ncatcg)
+	case "BSC":
+		log.Info("Using branch site C model")
+		return cmodel.NewBranchSiteC(cali, t, cf)
+	case "BSG":
+		log.Info("Using branch site gamma model")
+		log.Infof("%d site gamma categories, %d codon gama categories", ncatsg, ncatcg)
+		return cmodel.NewBranchSiteGamma(cali, t, cf, fixw, ncatsg, ncatcg)
+	case "BSGE":
+		log.Info("Using branch site gamma model with explicit rates")
+		log.Infof("%d site gamma categories, %d codon gama categories", ncatsg, ncatcg)
+		return cmodel.NewBranchSiteGammaERates(cali, t, cf, fixw, ncatsg, ncatcg)
+	case "BS":
+		log.Info("Using branch site model")
+		return cmodel.NewBranchSite(cali, t, cf, fixw)
+	default:
+		log.Fatal("Unknown model specification")
+	}
+	// this will be never executed
+	return nil
+}
+
 func main() {
 	startTime := time.Now()
 
@@ -323,48 +369,7 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
-	var m cmodel.TreeOptimizableSiteClass
-
-	switch *model {
-	case "M0":
-		log.Info("Using M0 model")
-		m = cmodel.NewM0(cali, t, cf)
-	case "M0vrate":
-		log.Info("Using M0vrate model")
-		m = cmodel.NewM0vrate(cali, t, cf)
-	case "M1a":
-		log.Info("Using M1a model")
-		log.Infof("%d site gamma categories, %d codon gama categories", *ncatsg, *ncatcg)
-		m = cmodel.NewM2(cali, t, cf, false, *ncatsg, *ncatcg)
-	case "M2a":
-		log.Info("Using M2a model")
-		log.Infof("%d site gamma categories, %d codon gama categories", *ncatsg, *ncatcg)
-		m = cmodel.NewM2(cali, t, cf, true, *ncatsg, *ncatcg)
-	case "M7":
-		log.Info("Using M7 model")
-		log.Infof("%d beta categories, %d site gamma categories, %d codon gama categories", *ncatb, *ncatsg, *ncatcg)
-		m = cmodel.NewM8(cali, t, cf, false, false, *ncatb, *ncatsg, *ncatcg)
-	case "M8":
-		log.Info("Using M8 model")
-		log.Infof("%d beta categories, %d site gamma categories, %d codon gama categories", *ncatb, *ncatsg, *ncatcg)
-		m = cmodel.NewM8(cali, t, cf, true, *fixw, *ncatb, *ncatsg, *ncatcg)
-	case "BSC":
-		log.Info("Using branch site C model")
-		m = cmodel.NewBranchSiteC(cali, t, cf)
-	case "BSG":
-		log.Info("Using branch site gamma model")
-		log.Infof("%d site gamma categories, %d codon gama categories", *ncatsg, *ncatcg)
-		m = cmodel.NewBranchSiteGamma(cali, t, cf, *fixw, *ncatsg, *ncatcg)
-	case "BSGE":
-		log.Info("Using branch site gamma model with explicit rates")
-		log.Infof("%d site gamma categories, %d codon gama categories", *ncatsg, *ncatcg)
-		m = cmodel.NewBranchSiteGammaERates(cali, t, cf, *fixw, *ncatsg, *ncatcg)
-	case "BS":
-		log.Info("Using branch site model")
-		m = cmodel.NewBranchSite(cali, t, cf, *fixw)
-	default:
-		log.Fatal("Unknown model specification")
-	}
+	m := getModelFromString(*model, cali, t, cf, *fixw, *ncatb, *ncatsg, *ncatcg)
 
 	log.Infof("Model has %d site class(es)", m.GetNClass())
 
