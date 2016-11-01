@@ -128,9 +128,9 @@ func main() {
 		"n_simplex: downhill simplex from nlopt, "+
 		"n_cobyla: COBYLA from nlopt, "+
 		"n_bobyqa: BOBYQA from nlopt, "+
-		"n_sqp: SQP from nlopt "+
-		"n_mlsl: MLSL from nlopt (BOBYQA local optimizer) "+
-		"none: just compute likelihood, no optimization "+
+		"n_sqp: SQP from nlopt, "+
+		"n_mlsl: MLSL from nlopt (BOBYQA local optimizer), "+
+		"none: just compute likelihood, no optimization"+
 		"); you can chain optimizers with a plus sign")
 	// mcmc parameters
 	accept := flag.Int("accept", 200, "report acceptance rate every N iterations")
