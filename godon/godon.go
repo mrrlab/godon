@@ -276,9 +276,9 @@ func main() {
 	rand.Seed(*seed)
 	runtime.GOMAXPROCS(*nThreads)
 
-	effectiveNCPU := runtime.GOMAXPROCS(0)
-	log.Infof("Using CPUs: %d.\n", effectiveNCPU)
-	summary.NThreads = effectiveNCPU
+	effectiveNThreads := runtime.GOMAXPROCS(0)
+	log.Infof("Using threads: %d.\n", effectiveNThreads)
+	summary.NThreads = effectiveNThreads
 
 	if len(flag.Args()) < 2 {
 		log.Fatal("you should specify tree and alignment")
