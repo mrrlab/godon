@@ -69,6 +69,8 @@ func lastLine(fn string) (line string, err error) {
 	return line, err
 }
 
+// getAggModeFromString returns an aggregation mode constant from cmodel
+// from a string.
 func getAggModeFromString(aggModeString string) (cmodel.AggMode, error) {
 	switch aggModeString {
 	case "none":
@@ -85,6 +87,7 @@ func getAggModeFromString(aggModeString string) (cmodel.AggMode, error) {
 	return cmodel.AggNone, fmt.Errorf("Unknown aggregation mode: %s", aggModeString)
 }
 
+// getModelFromString returns a model from string and other parameters.
 func getModelFromString(model string, cali codon.Sequences, t *tree.Tree, cf codon.Frequency,
 	fixw bool, ncatb, ncatsg, ncatcg int) (cmodel.TreeOptimizableSiteClass, error) {
 	switch model {
@@ -122,6 +125,7 @@ func getModelFromString(model string, cali codon.Sequences, t *tree.Tree, cf cod
 	return nil, errors.New("Unknown model specification")
 }
 
+// getOptimizerFromString returns an optimizer from a string.
 func getOptimizerFromString(method string, accept, annealingSkip int, seed int64) (optimize.Optimizer, error) {
 	switch method {
 	case "lbfgsb":
