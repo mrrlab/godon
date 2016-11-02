@@ -91,9 +91,6 @@ func getModelFromString(model string, cali codon.Sequences, t *tree.Tree, cf cod
 	case "M0":
 		log.Info("Using M0 model")
 		return cmodel.NewM0(cali, t, cf), nil
-	case "M0vrate":
-		log.Info("Using M0vrate model")
-		return cmodel.NewM0vrate(cali, t, cf), nil
 	case "M1a":
 		log.Info("Using M1a model")
 		log.Infof("%d site gamma categories, %d codon gama categories", ncatsg, ncatcg)
@@ -110,9 +107,6 @@ func getModelFromString(model string, cali codon.Sequences, t *tree.Tree, cf cod
 		log.Info("Using M8 model")
 		log.Infof("%d beta categories, %d site gamma categories, %d codon gama categories", ncatb, ncatsg, ncatcg)
 		return cmodel.NewM8(cali, t, cf, true, fixw, ncatb, ncatsg, ncatcg), nil
-	case "BSC":
-		log.Info("Using branch site C model")
-		return cmodel.NewBranchSiteC(cali, t, cf), nil
 	case "BSG":
 		log.Info("Using branch site gamma model")
 		log.Infof("%d site gamma categories, %d codon gama categories", ncatsg, ncatcg)
