@@ -6,9 +6,9 @@ pipelines:
         script:
           - # nlopt
           - apt-get update
-          - apt-get install libnlopt-dev
+          - apt-get --yes install libnlopt-dev
           # go-lbfgsb
-          - apt-get install gfortran
+          - apt-get --yes install gfortran
           - go get -d github.com/afbarnard/go-lbfgsb
           - cd $GOPATH/src/github.com/afbarnard/go-lbfgsb
           - make
@@ -20,7 +20,7 @@ pipelines:
           - go get github.com/skelterjohn/go.matrix
           - go get github.com/op/go-logging
           - # gonum plot for some binaries
-          - apt-get install libgsl0-dev
+          - apt-get --yes install libgsl0-dev
           - go get github.com/biogo/graphics/bezier
           - go get github.com/gonum/plot
           - # now godon
