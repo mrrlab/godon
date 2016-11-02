@@ -149,7 +149,7 @@ func (m *M2) addParameters(fpg optimize.FloatParameterGenerator) {
 	})
 	omega0.SetPriorFunc(optimize.UniformPrior(0, 1, false, false))
 	omega0.SetProposalFunc(optimize.NormalProposal(0.01))
-	omega0.SetMin(0)
+	omega0.SetMin(1e-4)
 	omega0.SetMax(1)
 	m.parameters.Append(omega0)
 

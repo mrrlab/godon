@@ -117,7 +117,7 @@ func (m *BranchSite) addParameters(fpg optimize.FloatParameterGenerator) {
 		m.propdone = false
 	})
 	p01sum.SetPriorFunc(optimize.UniformPrior(0, 1, false, false))
-	p01sum.SetMin(0)
+	p01sum.SetMin(1e-15)
 	p01sum.SetMax(1)
 	p01sum.SetProposalFunc(optimize.NormalProposal(0.01))
 	m.parameters.Append(p01sum)
