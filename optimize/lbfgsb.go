@@ -6,12 +6,6 @@ import (
 	lbfgsb "github.com/afbarnard/go-lbfgsb"
 )
 
-// boundaryDelta is a distance between actual boundary and the
-// boundary passed to lbfgsb. This is needed to prevent lbfgs from
-// computing likelihood on the boundary, which is sometimes returning
-// NAN or infinity.
-const boundaryDelta = 1e-5
-
 // LBFGSB is wrapper around go-lbfgsb library. It uses L-BFGS-B
 // algorithm of hill climbing.
 type LBFGSB struct {
@@ -114,8 +108,8 @@ func (l *LBFGSB) Run(iterations int) {
 	bounds := make([][2]float64, len(l.parameters))
 
 	for i, par := range l.parameters {
-		bounds[i][0] = par.GetMin() + boundaryDelta
-		bounds[i][1] = par.GetMax() - boundaryDelta
+		bounds[i][0] = par.GetMin()
+		bounds[i][1] = par.GetMax()
 	}
 
 	opt := new(lbfgsb.Lbfgsb)

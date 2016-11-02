@@ -435,6 +435,11 @@ func (m *BaseModel) Likelihood() (lnL float64) {
 	if math.IsNaN(lnL) {
 		lnL = math.Inf(-1)
 	}
+	if math.IsInf(lnL, 0) {
+		log.Error("Invalid likelihood value, parameters:")
+		log.Error(m.parameters.NamesString())
+		log.Fatal(m.parameters.ValuesString())
+	}
 	log.Debugf("L=%v", lnL)
 	return
 }

@@ -40,11 +40,6 @@ const (
 	NLOPT_MLSL
 )
 
-const (
-	// How much to shrink [min; max] interval.
-	shrink = 1e-7
-)
-
 // returnStatus converts status to a constant name.
 var returnStatus = map[C.nlopt_result]string{
 	1:  "NLOPT_SUCCESS",
@@ -156,8 +151,8 @@ func (n *NLOPT) Run(iterations int) {
 	x := make([]C.double, len(n.parameters))
 	for i, par := range n.parameters {
 		val := par.Get()
-		nMin := par.GetMin() + shrink
-		nMax := par.GetMax() - shrink
+		nMin := par.GetMin()
+		nMax := par.GetMax()
 		if val > nMax {
 			val = nMax
 		}
