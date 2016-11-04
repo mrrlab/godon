@@ -98,6 +98,9 @@ func NewNLOPT(algorithm int, seed int64) (nlopt *NLOPT) {
 		nlopt.algorithm = C.NLOPT_LN_COBYLA
 	case NLOPT_BOBYQA:
 		nlopt.algorithm = C.NLOPT_LN_BOBYQA
+		nlopt.ftolRel = 1e-9
+		nlopt.ftolAbs = -1
+		nlopt.xtolRel = 1e-9
 	case NLOPT_SIMPLEX:
 		nlopt.algorithm = C.NLOPT_LN_NELDERMEAD
 	case NLOPT_LBFGS:
