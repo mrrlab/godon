@@ -42,6 +42,8 @@ const (
 
 // returnStatus converts status to a constant name.
 var returnStatus = map[C.nlopt_result]string{
+	// 0 is the default value, if there's no result yet
+	0:  "NO_RESULT",
 	1:  "NLOPT_SUCCESS",
 	2:  "NLOPT_STOPVAL_REACHED",
 	3:  "NLOPT_FTOL_REACHED",
@@ -71,6 +73,7 @@ type NLOPT struct {
 	locFtolRel   float64
 	locFtolAbs   float64
 	locXtolRel   float64
+	optRes       C.nlopt_result
 	locAlgorithm C.nlopt_algorithm
 }
 
@@ -181,11 +184,11 @@ func (n *NLOPT) Run(iterations int) {
 	}
 
 	n.PrintHeader()
-	res := C.nlopt_optimize(n.gopt, (*C.double)(unsafe.Pointer(&x[0])), &maxf)
-	if res < 0 {
-		log.Fatalf("nlopt failed with code: %v (%v)", res, returnStatus[res])
+	n.optRes = C.nlopt_optimize(n.gopt, (*C.double)(unsafe.Pointer(&x[0])), &maxf)
+	if n.optRes < 0 {
+		log.Fatalf("nlopt failed with code: %v (%v)", n.optRes, returnStatus[n.optRes])
 	} else {
-		log.Infof("nlopt success with code: %d (%v)", res, returnStatus[res])
+		log.Infof("nlopt success with code: %d (%v)", n.optRes, returnStatus[n.optRes])
 	}
 
 	for i, par := range n.parameters {
@@ -194,4 +197,17 @@ func (n *NLOPT) Run(iterations int) {
 
 	n.maxL = (float64)(maxf)
 	n.maxLPar = n.parameters.Values(n.maxLPar)
+}
+
+// Summary returns optimization summary (i.e. success/error, etc).
+func (n *NLOPT) Summary() interface{} {
+	s := n.BaseOptimizer.Summary().(baseOptimizerSummary)
+	s.Status = struct {
+		Code       C.nlopt_result `json:"code"`
+		CodeString string         `json:"codeString"`
+	}{
+		n.optRes,
+		returnStatus[n.optRes],
+	}
+	return s
 }
