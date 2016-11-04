@@ -11,10 +11,10 @@ import (
 )
 
 const (
-	// MIN is the minimum value for randomization.
-	MIN = -10
-	// MAX is the maximum value for randomization.
-	MAX = +10
+	// RandomizeMin is the minimum value for randomization.
+	RandomizeMin = -1e9
+	// RandomizeMax is the maximum value for randomization.
+	RandomizeMax = +1e9
 )
 
 // FloatParameter is a floating point parameter.
@@ -52,6 +52,10 @@ type FloatParameter interface {
 	Get() float64
 	// Set sets the parameter.
 	Set(float64)
+	// Randomize initializes a parameter with a random value.
+	// The random value is uniformly distributed in the range
+	// [max(RadnomizeMin, min);min(RandomizeMax, max)].
+	Randomize()
 	// InRange returns true if parameter value is between min and
 	// max.
 	InRange() bool
@@ -195,15 +199,11 @@ func (p *FloatParameters) Update(pSrc *FloatParameters) {
 }
 
 // Randomize sets random values to all the parameters. If no minimum
-// and maximum are specified, MIN and MAX constants are used.
+// and maximum are specified, RandomizeMin and RandomizeMax are used.
 func (p *FloatParameters) Randomize() {
 	for _, par := range *p {
-		min := math.Max(MIN, par.GetMin())
-		max := math.Min(MAX, par.GetMax())
-		d := max - min
-		par.Set(min + rand.Float64()*d)
+		par.Randomize()
 	}
-
 }
 
 // InRange returns true if parameter value is between min and
@@ -320,6 +320,16 @@ func (p *BasicFloatParameter) GetMin() float64 {
 // GetMax returns a maximum value.
 func (p *BasicFloatParameter) GetMax() float64 {
 	return p.max
+}
+
+// Randomize initializes parameter with a random value.
+// The random value is uniformly distributed in the range
+// [max(RMIN, min);min(RMAX, max)].
+func (p *BasicFloatParameter) Randomize() {
+	min := math.Max(RandomizeMin, p.GetMin())
+	max := math.Min(RandomizeMax, p.GetMax())
+	d := max - min
+	p.Set(min + rand.Float64()*d)
 }
 
 // ValueInRange returns true if value is between min and max.
