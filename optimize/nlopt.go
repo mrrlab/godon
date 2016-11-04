@@ -4,11 +4,11 @@ package optimize
 /*
 #include <nlopt.h>
 
-extern double nlopt_callback(unsigned int, const double *x, double *grad, void *f_data);
+extern double nloptCallback(unsigned int, const double *x, double *grad, void *fData);
 
 
 double callback_adaptor(unsigned n, const double *x, double *grad, void *f_data) {
-  return nlopt_callback(n, x, grad, f_data);
+  return nloptCallback(n, x, grad, f_data);
 }
 */
 import "C"

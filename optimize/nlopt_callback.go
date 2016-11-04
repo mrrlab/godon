@@ -68,9 +68,9 @@ func unregisterObject(i uint) {
 	delete(objects, i)
 }
 
-//export nlopt_callback
-func nlopt_callback(n uint, x *C.double, grad *C.double, f_data unsafe.Pointer) C.double {
-	nlopt := lookupObject(*(*uint)(f_data)).(*NLOPT)
+//export nloptCallback
+func nloptCallback(n uint, x *C.double, grad *C.double, fData unsafe.Pointer) C.double {
+	nlopt := lookupObject(*(*uint)(fData)).(*NLOPT)
 
 	select {
 	case s := <-nlopt.sig:
