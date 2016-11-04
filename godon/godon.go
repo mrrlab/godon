@@ -188,6 +188,8 @@ func main() {
 	noFinal := flag.Bool("nofinal", false, "don't perform final extra computations, i.e. NEB and BEB site posterior")
 
 	// optimizer parameters
+	randomize := flag.Bool("randomize", false, "use uniformly distributed random starting point; "+
+		"by default random starting point is distributed around realistic parameter values")
 	iterations := flag.Int("iter", 10000, "number of iterations")
 	report := flag.Int("report", 10, "report every N iterations")
 	method := flag.String("method", "lbfgsb", "optimization method to use "+
@@ -443,6 +445,10 @@ func main() {
 		if !par.InRange() {
 			log.Fatal("Initial parameters are not in the range")
 		}
+	} else if *randomize {
+		log.Info("Using uniform (in the boundaries) random starting point")
+		par := m.GetFloatParameters()
+		par.Randomize()
 	}
 
 	// iteration to skip before annealing, for adaptive mcmc
