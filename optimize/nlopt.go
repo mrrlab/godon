@@ -87,8 +87,8 @@ func NewNLOPT(algorithm int, seed int64) (nlopt *NLOPT) {
 		finishLBFGS: true,
 		seed:        seed,
 		ftolRel:     1e-9,
-		ftolAbs:     1e-4,
-		xtolRel:     1e-5,
+		ftolAbs:     -1,
+		xtolRel:     1e-9,
 		locFtolRel:  1e-8,
 		locFtolAbs:  1e-4,
 		locXtolRel:  1e-2,
@@ -98,9 +98,6 @@ func NewNLOPT(algorithm int, seed int64) (nlopt *NLOPT) {
 		nlopt.algorithm = C.NLOPT_LN_COBYLA
 	case NLOPT_BOBYQA:
 		nlopt.algorithm = C.NLOPT_LN_BOBYQA
-		nlopt.ftolRel = 1e-9
-		nlopt.ftolAbs = -1
-		nlopt.xtolRel = 1e-9
 	case NLOPT_SIMPLEX:
 		nlopt.algorithm = C.NLOPT_LN_NELDERMEAD
 	case NLOPT_LBFGS:
