@@ -388,7 +388,7 @@ func main() {
 			class1++
 		}
 		if class1 == 0 &&
-			(*model == "BS" || *model == "BSC" || *model == "BSG" || *model == "BSGE") {
+			(*model == "BS" || *model == "BSG" || *model == "BSGE") {
 			log.Warning("Warning: no class=1 nodes")
 		}
 	}
