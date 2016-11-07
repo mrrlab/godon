@@ -241,7 +241,7 @@ func main() {
 
 	var backend *logging.LogBackend
 	if *outLogF != "" {
-		f, err := os.Create(*outLogF)
+		f, err := os.OpenFile(*outLogF, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
 		if err != nil {
 			log.Fatal("Error creating log file:", err)
 		}
