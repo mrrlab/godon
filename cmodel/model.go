@@ -23,6 +23,8 @@ const (
 	// If the proportion of site class is less than this number no
 	// need to compute probability.
 	smallProp = 1e-20
+	// minBrLen is the minimal branch length for optimization.
+	minBrLen = 1e-9
 	// Default value for the maximum branch length.
 	defaultMaxBrLen = 100
 )
@@ -208,7 +210,7 @@ func (m *BaseModel) addBranchParameters(fpg optimize.FloatParameterGenerator) {
 				m.expBr[nodeID] = false
 			})
 			par.SetPriorFunc(optimize.GammaPrior(1, 2, false))
-			par.SetMin(0)
+			par.SetMin(minBrLen)
 			par.SetMax(m.maxBrLen)
 			par.SetProposalFunc(optimize.NormalProposal(0.01))
 			m.parameters.Append(par)
