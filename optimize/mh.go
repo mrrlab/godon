@@ -31,10 +31,7 @@ func NewMH(annealing bool, annealingSkip int) (mcmc *MH) {
 
 // Run starts sampling.
 func (m *MH) Run(iterations int) {
-	m.l = m.Likelihood()
-	m.calls++
-	m.maxL = m.l
-	m.maxLPar = m.parameters.Values(m.maxLPar)
+	m.SaveStart()
 	m.PrintHeader()
 	accepted := 0
 	lastReported := -1

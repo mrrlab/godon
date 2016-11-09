@@ -101,7 +101,7 @@ func (l *LBFGSB) EvaluateGradient(x []float64) (grad []float64) {
 
 // Run starts the optimization.
 func (l *LBFGSB) Run(iterations int) {
-	l.maxL = math.Inf(-1)
+	l.SaveStart()
 
 	l.PrintHeader()
 

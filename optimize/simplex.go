@@ -6,9 +6,9 @@ import (
 
 const (
 	// TINY is ftol for the downhill simplex.
-	TINY        = 1e-10
+	TINY = 1e-10
 	// SMALL is atol for downhill simplex.
-	SMALL       = 1e-6
+	SMALL = 1e-6
 )
 
 // DS is a downhill simplex optimizer.
@@ -109,8 +109,8 @@ func (ds *DS) Run(iterations int) {
 	// Lowest (worst), next-lowest and highest points
 	var ilo, inlo, ihi int
 	var llo, lnlo, lhi float64
+	ds.SaveStart()
 	ds.PrintHeader()
-	ds.maxL = math.Inf(-1)
 Iter:
 	for ds.i = 1; ds.i <= iterations; ds.i++ {
 		if ds.l[0] < ds.l[1] {

@@ -183,6 +183,7 @@ func (n *NLOPT) Run(iterations int) {
 		C.nlopt_srand((C.ulong)(n.seed))
 	}
 
+	n.SaveStart()
 	n.PrintHeader()
 	n.optRes = C.nlopt_optimize(n.gopt, (*C.double)(unsafe.Pointer(&x[0])), &maxf)
 	if n.optRes < 0 {

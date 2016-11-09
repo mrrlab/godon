@@ -12,10 +12,7 @@ func NewNone() *None {
 
 // Run starts sampling.
 func (i *None) Run(iterations int) {
-	i.l = i.Likelihood()
-	i.calls++
-	i.maxL = i.l
-	i.maxLPar = i.parameters.Values(i.maxLPar)
+	i.SaveStart()
 	i.PrintHeader()
 	i.PrintLine(i.parameters, i.l)
 }

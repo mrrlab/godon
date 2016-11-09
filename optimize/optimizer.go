@@ -65,6 +65,10 @@ type baseOptimizerSummary struct {
 	MaxLnL float64 `json:"maxLnL"`
 	// MaxLParameters is the maximum likelihood parameter values.
 	MaxLParameters map[string]float64 `json:"maxLParameters"`
+	// StartingLnL is the starting likelihood value.
+	StartingLnL float64 `json:"startingLnL"`
+	// StartingParameters is the starting parameter values.
+	StartingParameters map[string]float64 `json:"startingParameters"`
 	// NIterations is the number of iterations, for gradient-based methods can be less than number of funciton calls.
 	NIterations int `json:"nIterations"`
 	// NCalls is the number of function calls, cumulative for chained methods
@@ -81,6 +85,8 @@ type BaseOptimizer struct {
 	l         float64
 	maxL      float64
 	maxLPar   []float64
+	startL    float64
+	startPar  []float64
 	repPeriod int
 	sig       chan os.Signal
 	output    io.Writer
@@ -193,22 +199,33 @@ func (o *BaseOptimizer) GetMaxLParameters() (s string) {
 	return s
 }
 
-// GetMaxLParametersMap returns parameter values for the maximum
-// likelihood value as a map.
-func (o *BaseOptimizer) GetMaxLParametersMap() (m map[string]float64) {
-	m = make(map[string]float64, len(o.maxLPar))
-	for i, v := range o.maxLPar {
+// GetParametersMap returns parameter values as a map.
+func (o *BaseOptimizer) GetParametersMap(par []float64) (m map[string]float64) {
+	m = make(map[string]float64, len(par))
+	for i, v := range par {
 		m[o.parameters[i].Name()] = v
 	}
 	return m
 }
 
+// SaveStart saves starting point and likelihood before optimization.
+func (o *BaseOptimizer) SaveStart() {
+	o.l = o.Likelihood()
+	o.calls++
+	o.startL = o.l
+	o.startPar = o.parameters.Values(nil)
+	o.maxL = o.l
+	o.maxLPar = o.parameters.Values(nil)
+}
+
 // Summary returns optimization summary.
 func (o *BaseOptimizer) Summary() interface{} {
 	return baseOptimizerSummary{
-		MaxLnL:         o.maxL,
-		MaxLParameters: o.GetMaxLParametersMap(),
-		NIterations:    o.GetNIter(),
-		NCalls:         o.GetNCalls(),
+		MaxLnL:             o.maxL,
+		MaxLParameters:     o.GetParametersMap(o.maxLPar),
+		StartingLnL:        o.startL,
+		StartingParameters: o.GetParametersMap(o.startPar),
+		NIterations:        o.GetNIter(),
+		NCalls:             o.GetNCalls(),
 	}
 }

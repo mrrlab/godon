@@ -21,5 +21,5 @@ type Summary struct {
 	// Model is the model summary, including BEB and NEB if available.
 	Model interface{} `json:"model,omitempty"`
 	// Optimizers is an array of summary of all optimizers used.
-	Optimizers []interface{} `json:"optimizers"`
+	Optimizer interface{} `json:"optimizer"`
 }

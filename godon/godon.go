@@ -33,7 +33,6 @@ import (
 	"os"
 	"runtime"
 	"runtime/pprof"
-	"strings"
 	"time"
 
 	"github.com/op/go-logging"
@@ -204,7 +203,7 @@ func main() {
 		"n_sqp: SQP from nlopt, "+
 		"n_mlsl: MLSL from nlopt (BOBYQA local optimizer), "+
 		"none: just compute likelihood, no optimization"+
-		"); you can chain optimizers with a plus sign")
+		")")
 	// mcmc parameters
 	accept := flag.Int("accept", 200, "report acceptance rate every N iterations")
 
@@ -480,34 +479,23 @@ func main() {
 		defer f.Close()
 	}
 
-	var opt, oldOpt optimize.Optimizer
+	var opt optimize.Optimizer
 
-MethodLoop:
-	for _, method := range strings.Split(*method, "+") {
-		opt, err = getOptimizerFromString(method, *accept, annealingSkip, *seed)
-		if err != nil {
-			log.Error(err)
-			if oldOpt == nil {
-				os.Exit(1)
-			} else {
-				continue MethodLoop
-			}
-		}
-
-		log.Infof("Using %s optimization.", method)
-
-		opt.SetOutput(f)
-		if oldOpt != nil {
-			opt.LoadFromOptimizer(oldOpt)
-		} else {
-			opt.SetOptimizable(m)
-		}
-		opt.SetReportPeriod(*report)
-
-		opt.Run(*iterations)
-		summary.Optimizers = append(summary.Optimizers, opt.Summary())
-		oldOpt = opt
+	opt, err = getOptimizerFromString(*method, *accept, annealingSkip, *seed)
+	if err != nil {
+		log.Fatal(err)
 	}
+
+	log.Infof("Using %s optimization.", *method)
+
+	opt.SetOutput(f)
+	opt.SetOptimizable(m)
+
+	opt.SetReportPeriod(*report)
+
+	opt.Run(*iterations)
+	summary.Optimizer = opt.Summary()
+
 	opt.PrintFinal()
 	if !*noFinal {
 		m.Final()
