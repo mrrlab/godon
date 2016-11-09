@@ -341,7 +341,7 @@ func main() {
 	}
 
 	log.Infof("intree_unroot=%s", t)
-	summary.StartingTree = t.String()
+	summary.StartingTree = t.ClassString()
 	log.Debugf("brtree_unroot=%s", t.BrString())
 	log.Debug(t.FullString())
 
@@ -511,7 +511,7 @@ func main() {
 			}
 		}
 		log.Infof("outtree=%s", t)
-		summary.FinalTree = t.String()
+		summary.FinalTree = t.ClassString()
 	}
 
 	if *outTreeF != "" {
