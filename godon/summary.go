@@ -10,10 +10,10 @@ type Summary struct {
 	Seed int64 `json:"seed"`
 	// NThreads is the number of processes used.
 	NThreads int `json:"nThreads"`
-	// StartTree is the starting tree after unrooting.
-	StartTree string `json:"startTree"`
-	// EndTree is the tree after branch length optimization (if performend).
-	EndTree string `json:"endTree,omitempty"`
+	// StartingTree is the starting tree after unrooting.
+	StartingTree string `json:"startingTree"`
+	// FinalTree is the tree after branch length optimization (if performend).
+	FinalTree string `json:"finalTree,omitempty"`
 	// FullLnL is the full (non-aggregated) likelihood, it's only computed if specified (-printfull).
 	FullLnL float64 `json:"fullLnL,omitempty"`
 	// Time is the computations time in seconds.
