@@ -549,8 +549,8 @@ func main() {
 				log.Error("Error creating json output file:", err)
 			} else {
 				f.Write(j)
+				f.Close()
 			}
-			f.Close()
 		}
 	}
 }
