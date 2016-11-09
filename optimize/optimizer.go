@@ -53,8 +53,8 @@ type Optimizer interface {
 	GetNIter() int
 	// LoadFromOptimizer can load a model from another optimizer.
 	LoadFromOptimizer(Optimizer)
-	// PrintFinal prints the final output.
-	PrintFinal()
+	// PrintResults prints the results of optimization.
+	PrintResults()
 	// Summary returns optimization summary for JSON output.
 	Summary() interface{}
 }
@@ -162,8 +162,8 @@ func (o *BaseOptimizer) GetNIter() int {
 	return o.i
 }
 
-// PrintFinal prints the final output.
-func (o *BaseOptimizer) PrintFinal() {
+// PrintResults prints the optimization results.
+func (o *BaseOptimizer) PrintResults() {
 	if !o.Quiet {
 		par := o.Optimizable.GetFloatParameters()
 		log.Noticef("Maximum likelihood: %v", o.maxL)

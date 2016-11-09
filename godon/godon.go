@@ -496,7 +496,7 @@ func main() {
 	opt.Run(*iterations)
 	summary.Optimizer = opt.Summary()
 
-	opt.PrintFinal()
+	opt.PrintResults()
 	if !*noFinal {
 		m.Final()
 	}
