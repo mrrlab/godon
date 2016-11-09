@@ -3,7 +3,7 @@ package optimize
 import (
 	"math"
 
-	lbfgsb "github.com/afbarnard/go-lbfgsb"
+	lbfgsb "github.com/idavydov/go-lbfgsb"
 )
 
 // LBFGSB is wrapper around go-lbfgsb library. It uses L-BFGS-B

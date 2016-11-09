@@ -13,10 +13,10 @@ pipelines:
           - apt-get --yes install libnlopt-dev
           # go-lbfgsb
           - apt-get --yes install gfortran
-          - go get -d github.com/afbarnard/go-lbfgsb
-          - cd $GOPATH/src/github.com/afbarnard/go-lbfgsb
+          - go get -d github.com/idavydov/go-lbfgsb
+          - cd $GOPATH/src/github.com/idavydov/go-lbfgsb
           - make
-          - go get github.com/afbarnard/go-lbfgsb
+          - go get github.com/idavydov/go-lbfgsb
           # gonum and other libs
           - go get -d github.com/gonum/blas
           - go get -d github.com/gonum/matrix
@@ -29,8 +29,7 @@ pipelines:
           - go get github.com/gonum/plot
           - # now godon
           - cd "${PACKAGE_PATH}"
-          - #GODEBUG=cgocheck=0 is needed until go-lbfgsb gets fixed
-          - GODEBUG=cgocheck=0 go test -v -short ./...
+          - go test -v -short ./...
           - go install bitbucket.org/Davydov/godon/godon
           - #benchmarks are currently disabled
           - #go test ./... -run=NONE -bench=.
