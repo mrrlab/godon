@@ -106,8 +106,8 @@ func main() {
 	res1 := mustRun(true, nil, false)
 
 	var l0, l1 float64
-	l0 = res0.MustGetLikelihood()
-	l1 = res1.MustGetLikelihood()
+	l0 = res0.GetLikelihood()
+	l1 = res1.GetLikelihood()
 
 	for updated := true; updated; {
 		// stop if nothing has been updated.
@@ -116,16 +116,16 @@ func main() {
 		// if l1 < l0, rerun H1 starting from H0.
 		if l1 < l0 {
 			updated = true
-			h0par := res0.MustGetMaxLParameters()
+			h0par := res0.GetMaxLParameters()
 			res1 = mustRun(true, h0par, false)
-			l1 = res1.MustGetLikelihood()
+			l1 = res1.GetLikelihood()
 		}
 
 		// if significant (D>thr), rerun H0 starting from H1
 		if 2*(l1-l0) > threshold {
-			h1par := res1.MustGetMaxLParameters()
+			h1par := res1.GetMaxLParameters()
 			res0Alt := mustRun(false, h1par, false)
-			l0Alt := res0Alt.MustGetLikelihood()
+			l0Alt := res0Alt.GetLikelihood()
 			if l0Alt > l0 {
 				res0 = res0Alt
 				l0 = l0Alt
@@ -136,8 +136,8 @@ func main() {
 		}
 	}
 
-	sum.H0 = res0.MustToHyp()
-	sum.H1 = res1.MustToHyp()
+	sum.H0 = res0.ToHyp()
+	sum.H1 = res1.ToHyp()
 
 	log.Infof("lnL0=%f, lnL1=%f", sum.H0.MaxLnL, sum.H1.MaxLnL)
 	endTime := time.Now()
