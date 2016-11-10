@@ -15,10 +15,10 @@ import (
 // objects is a container for the actual go objects. We cannot pass a
 // raw pointer to go object if it has pointer inside, so we can pass
 // its' index instead.
-var objects = make(map[uint]interface{})
+var objects = make(map[uintptr]interface{})
 
 // objectIndex stores an index to use for new object.
-var objectIndex uint
+var objectIndex uintptr
 
 // objectMutex is a mutex preventing simultanious access to the object
 // storage.
@@ -26,7 +26,7 @@ var objectMutex sync.Mutex
 
 // registerObject registers a new object and returns its' index
 // (>=1).
-func registerObject(obj interface{}) uint {
+func registerObject(obj interface{}) uintptr {
 	objectMutex.Lock()
 	defer objectMutex.Unlock()
 	// We always increment objectIndex to have more or less unique
@@ -53,7 +53,7 @@ func registerObject(obj interface{}) uint {
 }
 
 // lookupCallback returns an object given an index.
-func lookupObject(i uint) interface{} {
+func lookupObject(i uintptr) interface{} {
 	objectMutex.Lock()
 	defer objectMutex.Unlock()
 	return objects[i]
@@ -61,7 +61,7 @@ func lookupObject(i uint) interface{} {
 
 // unregisterObject unregisters an object  by removing it from the
 // objects map.
-func unregisterObject(i uint) {
+func unregisterObject(i uintptr) {
 	objectMutex.Lock()
 	log.Debugf("unregister: %v (%p)", i, objects[i])
 	defer objectMutex.Unlock()
@@ -70,7 +70,7 @@ func unregisterObject(i uint) {
 
 //export nloptCallback
 func nloptCallback(n uint, x *C.double, grad *C.double, fData unsafe.Pointer) C.double {
-	nlopt := lookupObject(*(*uint)(fData)).(*NLOPT)
+	nlopt := lookupObject(uintptr(fData)).(*NLOPT)
 
 	select {
 	case s := <-nlopt.sig:

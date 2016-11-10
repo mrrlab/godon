@@ -147,7 +147,7 @@ func (n *NLOPT) Run(iterations int) {
 
 	nID := registerObject(n)
 	defer unregisterObject(nID)
-	C.nlopt_set_max_objective(n.gopt, (C.nlopt_func)(unsafe.Pointer(C.callback_adaptor)), unsafe.Pointer(&nID))
+	C.nlopt_set_max_objective(n.gopt, (C.nlopt_func)(unsafe.Pointer(C.callback_adaptor)), unsafe.Pointer(nID))
 
 	lb := make([]C.double, len(n.parameters))
 	ub := make([]C.double, len(n.parameters))
