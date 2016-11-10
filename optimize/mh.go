@@ -35,7 +35,7 @@ func (m *MH) Run(iterations int) {
 	m.PrintHeader()
 	accepted := 0
 	lastReported := -1
-	l := 0.0
+	l := m.startL
 Iter:
 	for m.i = 0; m.i < iterations; m.i++ {
 		var T float64
