@@ -35,6 +35,7 @@ func (m *MH) Run(iterations int) {
 	m.PrintHeader()
 	accepted := 0
 	lastReported := -1
+	l := 0.0
 Iter:
 	for m.i = 0; m.i < iterations; m.i++ {
 		var T float64
@@ -50,11 +51,11 @@ Iter:
 
 		if m.i%m.repPeriod == 0 {
 			if m.annealing {
-				log.Debugf("%d: L=%f, T=%f", m.i, m.l, T)
+				log.Debugf("%d: L=%f, T=%f", m.i, l, T)
 			} else {
-				log.Debugf("%d: L=%f", m.i, m.l)
+				log.Debugf("%d: L=%f", m.i, l)
 			}
-			m.PrintLine(m.parameters, m.l)
+			m.PrintLine(m.parameters, l)
 			lastReported = m.i
 		}
 		p := rand.Intn(len(m.parameters))
@@ -65,17 +66,17 @@ Iter:
 
 		var a float64
 		if m.annealing {
-			a = math.Exp((newL - m.l) / T)
+			a = math.Exp((newL - l) / T)
 		} else {
-			a = math.Exp((par.Prior() - par.OldPrior() + newL - m.l))
+			a = math.Exp((par.Prior() - par.OldPrior() + newL - l))
 		}
 
 		if a > 1 || rand.Float64() < a {
-			m.l = newL
+			l = newL
 			par.Accept(m.i)
 			accepted++
-			if m.l > m.maxL {
-				m.maxL = m.l
+			if l > m.maxL {
+				m.maxL = l
 				m.maxLPar = m.parameters.Values(m.maxLPar)
 			}
 		} else {
@@ -91,6 +92,6 @@ Iter:
 	}
 
 	if m.i != lastReported {
-		m.PrintLine(m.parameters, m.l)
+		m.PrintLine(m.parameters, l)
 	}
 }

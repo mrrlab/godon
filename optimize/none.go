@@ -14,5 +14,5 @@ func NewNone() *None {
 func (i *None) Run(iterations int) {
 	i.SaveStart()
 	i.PrintHeader()
-	i.PrintLine(i.parameters, i.l)
+	i.PrintLine(i.parameters, i.startL)
 }

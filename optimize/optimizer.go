@@ -39,8 +39,6 @@ type Optimizer interface {
 	SetOutput(io.Writer)
 	// Starts the optimization or sampling.
 	Run(iterations int)
-	// GetL return the current likelihood.
-	GetL() float64
 	// GetMaxL returns the maximum likelihood value.
 	GetMaxL() float64
 	// GetMaxLParameters returns parameter values for the maximum
@@ -82,7 +80,6 @@ type BaseOptimizer struct {
 	Optimizable
 	i         int
 	calls     int
-	l         float64
 	maxL      float64
 	maxLPar   []float64
 	startL    float64
@@ -176,11 +173,6 @@ func (o *BaseOptimizer) PrintResults() {
 	}
 }
 
-// GetL return the current likelihood.
-func (o *BaseOptimizer) GetL() float64 {
-	return o.l
-}
-
 // GetMaxL returns the maximum likelihood value. Can me larger than
 // current likelihood for MCMC, simulated annealing, etc.
 func (o *BaseOptimizer) GetMaxL() float64 {
@@ -210,11 +202,11 @@ func (o *BaseOptimizer) GetParametersMap(par []float64) (m map[string]float64) {
 
 // SaveStart saves starting point and likelihood before optimization.
 func (o *BaseOptimizer) SaveStart() {
-	o.l = o.Likelihood()
+	l := o.Likelihood()
 	o.calls++
-	o.startL = o.l
+	o.startL = l
 	o.startPar = o.parameters.Values(nil)
-	o.maxL = o.l
+	o.maxL = l
 	o.maxLPar = o.parameters.Values(nil)
 }
 

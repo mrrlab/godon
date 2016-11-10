@@ -144,8 +144,6 @@ Iter:
 			ds.maxL = lhi
 			ds.maxLPar = ds.parameters[ihi].Values(ds.maxLPar)
 		}
-		ds.maxL = math.Max(ds.maxL, lhi)
-		ds.BaseOptimizer.l = lhi
 		_ = inlo
 		if ds.i%ds.repPeriod == 0 {
 			log.Debugf("%d: L=%f (%f)", ds.i, lhi, lhi-llo)
