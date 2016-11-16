@@ -14,7 +14,7 @@ import (
 var counter = 1
 
 // constructArgs constructs arguments for running godon.
-func constructArgs(h1 bool, jsonF string, start string, final bool) (args []string) {
+func constructArgs(h1 bool, jsonF string, start string, final bool, optimize bool) (args []string) {
 	log.Debugf("output json to: %v", jsonF)
 	args = make([]string, 0, len(flag.Args())+10)
 
@@ -29,7 +29,8 @@ func constructArgs(h1 bool, jsonF string, start string, final bool) (args []stri
 	// this should be after args, we are overriding method
 	if !final {
 		args = append(args, "-nofinal")
-	} else {
+	}
+	if !optimize {
 		args = append(args, "-method", "none")
 	}
 	args = append(args, flag.Args()[:2]...)
@@ -38,8 +39,8 @@ func constructArgs(h1 bool, jsonF string, start string, final bool) (args []stri
 }
 
 // mustRun runs optimization and exits with if an error is encountered.
-func mustRun(h1 bool, start map[string]float64, final bool) *result {
-	res, err := run(h1, start, final)
+func mustRun(h1 bool, start map[string]float64, final bool, optimize bool) *result {
+	res, err := run(h1, start, final, optimize)
 	if err != nil {
 		log.Fatal("Error running godon:", err)
 	}
@@ -47,7 +48,7 @@ func mustRun(h1 bool, start map[string]float64, final bool) *result {
 }
 
 // run runs optimization for specific parameters.
-func run(h1 bool, start map[string]float64, final bool) (*result, error) {
+func run(h1 bool, start map[string]float64, final bool, optimize bool) (*result, error) {
 	hyp := 0
 	if h1 {
 		hyp = 1
@@ -82,7 +83,7 @@ func run(h1 bool, start map[string]float64, final bool) (*result, error) {
 		f.Close()
 	}
 
-	args := constructArgs(h1, jFullName, startFileName, final)
+	args := constructArgs(h1, jFullName, startFileName, final, optimize)
 	cmd := exec.Command(*binary, args...)
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()

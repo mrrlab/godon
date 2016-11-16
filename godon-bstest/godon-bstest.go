@@ -74,6 +74,7 @@ var sum summary
 var binary = flag.String("binary", "godon", "binary name or full path to godon")
 var debug = flag.Bool("debug", false, "enable debug mode")
 var jsonF = flag.String("json", "", "write json output to a file")
+var quick = flag.Bool("quick", false, "only prevent negative LRT statistics")
 
 func main() {
 	startTime := time.Now()
@@ -102,8 +103,8 @@ func main() {
 	}
 	defer os.RemoveAll(dir)
 
-	res0 := mustRun(false, nil, false)
-	res1 := mustRun(true, nil, false)
+	res0 := mustRun(false, nil, false, true)
+	res1 := mustRun(true, nil, false, true)
 
 	var l0, l1 float64
 	l0 = res0.GetLikelihood()
@@ -115,25 +116,29 @@ func main() {
 		updated = false
 		// if l1 < l0, rerun H1 starting from H0.
 		if l1 < l0 {
-			updated = true
 			h0par := res0.GetMaxLParameters()
-			res1 = mustRun(true, h0par, false)
+			res1 = mustRun(true, h0par, false, !*quick)
 			l1 = res1.GetLikelihood()
+			updated = true
 		}
 
 		// if significant (D>thr), rerun H0 starting from H1
-		if 2*(l1-l0) > threshold {
+		if 2*(l1-l0) > threshold && !*quick {
 			h1par := res1.GetMaxLParameters()
-			res0Alt := mustRun(false, h1par, false)
+			res0Alt := mustRun(false, h1par, false, true)
 			l0Alt := res0Alt.GetLikelihood()
 			if l0Alt > l0 {
 				res0 = res0Alt
 				l0 = l0Alt
 				updated = true
-			} else { //compute BEB
-				res1 = mustRun(true, h1par, true)
 			}
 		}
+	}
+
+	// final BEB & NEB computation
+	if 2*(l1-l0) > threshold {
+		h1par := res1.GetMaxLParameters()
+		res1 = mustRun(true, h1par, true, false)
 	}
 
 	sum.H0 = res0.ToHyp()
