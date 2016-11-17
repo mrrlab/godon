@@ -238,65 +238,15 @@ var (
 	jsonF = app.Flag("json", "write json output to a file").String()
 )
 
-func main() {
+func run(startFileName string, h0 bool) (summary *RunSummary) {
 	startTime := time.Now()
-
-	summary := Summary{}
-
-	kingpin.MustParse(app.Parse(os.Args[1:]))
-
-	// logging
-	logging.SetFormatter(formatter)
-
-	var backend *logging.LogBackend
-	if *outLogF != "" {
-		f, err := os.OpenFile(*outLogF, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
-		if err != nil {
-			log.Fatal("Error creating log file:", err)
-		}
-		defer f.Close()
-		backend = logging.NewLogBackend(f, "", 0)
-	} else {
-		backend = logging.NewLogBackend(os.Stderr, "", 0)
-	}
-	logging.SetBackend(backend)
-
-	level, err := logging.LogLevel(*logLevel)
-	if err != nil {
-		log.Fatal(err)
-	}
-	logging.SetLevel(level, "godon")
-	logging.SetLevel(level, "optimize")
-	logging.SetLevel(level, "cmodel")
-
-	// print revision
-	log.Info(version)
-	summary.Version = version
-
-	// print commandline
-	log.Info("Command line:", os.Args)
-	summary.CommandLine = os.Args
-
-	if *seed == -1 {
-		*seed = time.Now().UnixNano()
-		log.Debug("Random seed from time")
-	}
-	log.Infof("Random seed=%v", *seed)
-	summary.Seed = *seed
-
-	rand.Seed(*seed)
-	runtime.GOMAXPROCS(*nThreads)
-
-	effectiveNThreads := runtime.GOMAXPROCS(0)
-	log.Infof("Using threads: %d.\n", effectiveNThreads)
-	summary.NThreads = effectiveNThreads
+	summary = &RunSummary{}
 
 	gcode, ok := bio.GeneticCodes[*gcodeID]
 	if !ok {
 		log.Fatalf("couldn't load genetic code with id=%d", gcodeID)
 	}
 	log.Infof("Genetic code: %d, \"%s\"", gcode.ID, gcode.Name)
-
 	fastaFile, err := os.Open(*alignmentFileName)
 	if err != nil {
 		log.Fatal(err)
@@ -397,16 +347,7 @@ func main() {
 		}
 	}
 
-	if *cpuProfile != "" {
-		f, err := os.Create(*cpuProfile)
-		if err != nil {
-			log.Fatal(err)
-		}
-		pprof.StartCPUProfile(f)
-		defer pprof.StopCPUProfile()
-	}
-
-	m, err := getModelFromString(*model, cali, t, cf, *fixw, *ncatb, *ncatsg, *ncatcg)
+	m, err := getModelFromString(*model, cali, t, cf, h0, *ncatb, *ncatsg, *ncatcg)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -431,16 +372,16 @@ func main() {
 	}
 	m.SetAggregationMode(aggMode)
 
-	if *startF != "" {
-		l, err := lastLine(*startF)
+	if startFileName != "" {
+		l, err := lastLine(startFileName)
 		par := m.GetFloatParameters()
 		if err == nil {
 			err = par.ReadLine(l)
 		}
 		if err != nil {
 			log.Debug("Reading start file as JSON")
-			err2 := par.ReadFromJSON(*startF)
-			// startF is neither trajectory nor correct JSON
+			err2 := par.ReadFromJSON(startFileName)
+			// startFileName is neither trajectory nor correct JSON
 			if err2 != nil {
 				log.Error("Error reading start position from JSON:", err2)
 				log.Fatal("Error reading start position from trajectory file:", err)
@@ -541,6 +482,69 @@ func main() {
 	deltaT := endTime.Sub(startTime)
 	log.Noticef("Running time: %v", deltaT)
 	summary.Time = deltaT.Seconds()
+
+	return
+}
+
+func main() {
+	kingpin.MustParse(app.Parse(os.Args[1:]))
+
+	// logging
+	logging.SetFormatter(formatter)
+
+	var backend *logging.LogBackend
+	if *outLogF != "" {
+		f, err := os.OpenFile(*outLogF, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
+		if err != nil {
+			log.Fatal("Error creating log file:", err)
+		}
+		defer f.Close()
+		backend = logging.NewLogBackend(f, "", 0)
+	} else {
+		backend = logging.NewLogBackend(os.Stderr, "", 0)
+	}
+	logging.SetBackend(backend)
+
+	level, err := logging.LogLevel(*logLevel)
+	if err != nil {
+		log.Fatal(err)
+	}
+	logging.SetLevel(level, "godon")
+	logging.SetLevel(level, "optimize")
+	logging.SetLevel(level, "cmodel")
+
+	// print revision
+	log.Info(version)
+
+	// print commandline
+	log.Info("Command line:", os.Args)
+
+	if *seed == -1 {
+		*seed = time.Now().UnixNano()
+		log.Debug("Random seed from time")
+	}
+	log.Infof("Random seed=%v", *seed)
+
+	rand.Seed(*seed)
+	runtime.GOMAXPROCS(*nThreads)
+
+	effectiveNThreads := runtime.GOMAXPROCS(0)
+	log.Infof("Using threads: %d.\n", effectiveNThreads)
+
+	if *cpuProfile != "" {
+		f, err := os.Create(*cpuProfile)
+		if err != nil {
+			log.Fatal(err)
+		}
+		pprof.StartCPUProfile(f)
+		defer pprof.StopCPUProfile()
+	}
+
+	summary := run(*startF, *fixw)
+	summary.NThreads = effectiveNThreads
+	summary.Version = version
+	summary.CommandLine = os.Args
+	summary.Seed = *seed
 
 	// output summary in json format
 	if *jsonF != "" {
