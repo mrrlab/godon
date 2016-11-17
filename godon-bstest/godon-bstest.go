@@ -17,7 +17,7 @@ import (
 	"github.com/op/go-logging"
 )
 
-// defaultThreshold is the minimal D-statistics value, for which
+// defaultSignificanceThreshold is the minimal D-statistics value, for which
 // beb should be computed (qchisq(0.9, df=1)).
 const defaultSignificanceThreshold = 2.705543
 
