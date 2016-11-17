@@ -27,13 +27,14 @@ import (
 	"bufio"
 	"encoding/json"
 	"errors"
-	"flag"
 	"fmt"
 	"math/rand"
 	"os"
 	"runtime"
 	"runtime/pprof"
 	"time"
+
+	"gopkg.in/alecthomas/kingpin.v2"
 
 	"github.com/op/go-logging"
 
@@ -161,37 +162,36 @@ func getOptimizerFromString(method string, accept, annealingSkip int, seed int64
 	return nil, fmt.Errorf("Unknown optimization method: %s", method)
 }
 
-func main() {
-	startTime := time.Now()
-
-	summary := Summary{}
-
-	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "Godon %s\n", version)
-		fmt.Fprintf(os.Stderr, "Usage:\n")
-		flag.PrintDefaults()
-	}
+// command-line options
+var (
+	// application
+	app = kingpin.New("godon", "codon models optmizer and sampler").Version(version)
 
 	// model
-	model := flag.String("model", "M0", "todel type (M0 or BS for branch site)")
-	gcodeID := flag.Int("gcode", 1, "NCBI genetic code id, standard by default")
-	fgBranch := flag.Int("fg", -1, "fg branch number")
-	maxBrLen := flag.Float64("maxbrlen", 100, "maximum branch length")
-	noOptBrLen := flag.Bool("nobrlen", false, "don't optimize branch lengths")
-	cFreq := flag.String("cfreq", "F3X4", "codon frequecny (F0 or F3X4)")
-	cFreqFileName := flag.String("cfreqfn", "", "codon frequencies file (overrides -cfreq)")
-	fixw := flag.Bool("fixw", false, "fix omega=1 (for the branch-site and M8 models)")
-	ncatsg := flag.Int("ncatsg", 1, "number of categories for the site gamma rate variation (no variation by default)")
-	ncatcg := flag.Int("ncatcg", 1, "number of categories for the codon gamma rate variation (no variation by default)")
-	ncatb := flag.Int("ncatb", 4, "number of the categories for the beta distribution (models M7&M8)")
-	noFinal := flag.Bool("nofinal", false, "don't perform final extra computations, i.e. NEB and BEB site posterior")
+	model = app.Arg("model", "model type (M0 or BS for branch site)").Required().String()
+	// input tree and alignment
+	alignmentFileName = app.Arg("alignment", "sequence alignment").Required().String()
+	treeFileName      = app.Arg("tree", "starting phylogenetic tree").Required().String()
+
+	//model parameters
+	gcodeID       = app.Flag("gcode", "NCBI genetic code id, standard by default").Default("1").Int()
+	fgBranch      = app.Flag("fg", "fg branch number").Default("-1").Int()
+	maxBrLen      = app.Flag("maxbrlen", "maximum branch length").Default("100").Float64()
+	noOptBrLen    = app.Flag("nobrlen", "don't optimize branch lengths").Bool()
+	cFreq         = app.Flag("cfreq", "codon frequecny (F0 or F3X4)").Default("F3X4").String()
+	cFreqFileName = app.Flag("cfreqfn", "codon frequencies file (overrides -cfreq)").String()
+	fixw          = app.Flag("fixw", "fix omega=1 (for the branch-site and M8 models)").Bool()
+	ncatsg        = app.Flag("ncatsg", "number of categories for the site gamma rate variation (no variation by default)").Default("1").Int()
+	ncatcg        = app.Flag("ncatcg", "number of categories for the codon gamma rate variation (no variation by default)").Default("1").Int()
+	ncatb         = app.Flag("ncatb", "number of the categories for the beta distribution (models M7&M8)").Default("4").Int()
+	noFinal       = app.Flag("nofinal", "don't perform final extra computations, i.e. NEB and BEB site posterior").Bool()
 
 	// optimizer parameters
-	randomize := flag.Bool("randomize", false, "use uniformly distributed random starting point; "+
-		"by default random starting point is distributed around realistic parameter values")
-	iterations := flag.Int("iter", 10000, "number of iterations")
-	report := flag.Int("report", 10, "report every N iterations")
-	method := flag.String("method", "lbfgsb", "optimization method to use "+
+	randomize = app.Flag("randomize", "use uniformly distributed random starting point; "+
+		"by default random starting point is distributed around realistic parameter values").Bool()
+	iterations = app.Flag("iter", "number of iterations").Default("10000").Int()
+	report     = app.Flag("report", "report every N iterations").Default("10").Int()
+	method     = app.Flag("method", "optimization method to use "+
 		"(lbfgsb: limited-memory Broyden–Fletcher–Goldfarb–Shanno with bounding constraints, "+
 		"simplex: downhill simplex, "+
 		"annealing: simullated annealing, "+
@@ -203,37 +203,44 @@ func main() {
 		"n_sqp: SQP from nlopt, "+
 		"n_mlsl: MLSL from nlopt (BOBYQA local optimizer), "+
 		"none: just compute likelihood, no optimization"+
-		")")
+		")").Default("lbfgsb").String()
+
 	// mcmc parameters
-	accept := flag.Int("accept", 200, "report acceptance rate every N iterations")
+	accept = app.Flag("accept", "report acceptance rate every N iterations").Default("200").Int()
 
 	// adaptive mcmc parameters
-	adaptive := flag.Bool("adaptive", false, "use adaptive MCMC")
-	skip := flag.Int("skip", -1, "number of iterations to skip for adaptive mcmc (5% by default)")
-	maxAdapt := flag.Int("maxadapt", -1, "stop adapting after iteration (20% by default)")
+	adaptive = app.Flag("adaptive", "use adaptive MCMC").Bool()
+	skip     = app.Flag("skip", "number of iterations to skip for adaptive mcmc (5% by default)").Default("-1").Int()
+	maxAdapt = app.Flag("maxadapt", "stop adapting after iteration (20% by default)").Default("-1").Int()
 
 	// optimizations
-	aggregate := flag.String("aggregate", "none", "state aggregation mode: "+
+	aggregate = app.Flag("aggregate", "state aggregation mode: "+
 		"observed (all positions, keep observed states), "+
 		"observed_new (new implementation of observed), "+
 		"fixed (absolutely conserved positions, keep observed), "+
-		"random (like observed, but non-aggregated states are shuffled between the positions)")
-	printFull := flag.Bool("printfull", false, "print full (non-aggregated) likelihood in the end of optimization")
+		"random (like observed, but non-aggregated states are shuffled between the positions)").Default("none").String()
+	printFull = app.Flag("printfull", "print full (non-aggregated) likelihood in the end of optimization").Bool()
 
 	// technical
-	nThreads := flag.Int("nt", 0, "number of threads to use")
-	seed := flag.Int64("seed", -1, "random generator seed, default time based")
-	cpuProfile := flag.String("cpuprofile", "", "write cpu profile to file")
+	nThreads   = app.Flag("nt", "number of threads to use").Int()
+	seed       = app.Flag("seed", "random generator seed, default time based").Default("-1").Int64()
+	cpuProfile = app.Flag("cpuprofile", "write cpu profile to file").String()
 
 	// input/output
-	outLogF := flag.String("log", "", "write log to a file")
-	outF := flag.String("out", "", "write optimization trajectory to a file")
-	outTreeF := flag.String("tree", "", "write tree to a file")
-	startF := flag.String("start", "", "read start position from the trajectory or JSON file")
-	logLevel := flag.String("loglevel", "notice", "loglevel ('critical', 'error', 'warning', 'notice', 'info', 'debug')")
-	jsonF := flag.String("json", "", "write json output to a file")
+	outLogF  = app.Flag("log", "write log to a file").String()
+	outF     = app.Flag("out", "write optimization trajectory to a file").String()
+	outTreeF = app.Flag("tree", "write tree to a file").String()
+	startF   = app.Flag("start", "read start position from the trajectory or JSON file").String()
+	logLevel = app.Flag("loglevel", "loglevel ('critical', 'error', 'warning', 'notice', 'info', 'debug')").Default("notice").String()
+	jsonF    = app.Flag("json", "write json output to a file").String()
+)
 
-	flag.Parse()
+func main() {
+	startTime := time.Now()
+
+	summary := Summary{}
+
+	kingpin.MustParse(app.Parse(os.Args[1:]))
 
 	// logging
 	logging.SetFormatter(formatter)
@@ -281,18 +288,13 @@ func main() {
 	log.Infof("Using threads: %d.\n", effectiveNThreads)
 	summary.NThreads = effectiveNThreads
 
-	if len(flag.Args()) < 2 {
-		log.Fatal("you should specify tree and alignment")
-		return
-	}
-
 	gcode, ok := bio.GeneticCodes[*gcodeID]
 	if !ok {
 		log.Fatalf("couldn't load genetic code with id=%d", gcodeID)
 	}
 	log.Infof("Genetic code: %d, \"%s\"", gcode.ID, gcode.Name)
 
-	fastaFile, err := os.Open(flag.Args()[0])
+	fastaFile, err := os.Open(*alignmentFileName)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -313,7 +315,7 @@ func main() {
 	}
 	log.Infof("Read alignment of %d codons, %d fixed positions, %d ambiguous positions", cali.Length(), cali.NFixed(), cali.NAmbiguous())
 
-	treeFile, err := os.Open(flag.Args()[1])
+	treeFile, err := os.Open(*treeFileName)
 	if err != nil {
 		log.Fatal(err)
 	}
