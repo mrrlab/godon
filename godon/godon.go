@@ -170,8 +170,8 @@ var (
 	// model
 	model = app.Arg("model", "model type (M0 or BS for branch site)").Required().String()
 	// input tree and alignment
-	alignmentFileName = app.Arg("alignment", "sequence alignment").Required().String()
-	treeFileName      = app.Arg("tree", "starting phylogenetic tree").Required().String()
+	alignmentFileName = app.Arg("alignment", "sequence alignment").Required().ExistingFile()
+	treeFileName      = app.Arg("tree", "starting phylogenetic tree").Required().ExistingFile()
 
 	//model parameters
 	gcodeID       = app.Flag("gcode", "NCBI genetic code id, standard by default").Default("1").Int()
@@ -230,9 +230,12 @@ var (
 	outLogF  = app.Flag("log", "write log to a file").String()
 	outF     = app.Flag("out", "write optimization trajectory to a file").String()
 	outTreeF = app.Flag("tree", "write tree to a file").String()
-	startF   = app.Flag("start", "read start position from the trajectory or JSON file").String()
-	logLevel = app.Flag("loglevel", "loglevel ('critical', 'error', 'warning', 'notice', 'info', 'debug')").Default("notice").String()
-	jsonF    = app.Flag("json", "write json output to a file").String()
+	startF   = app.Flag("start", "read start position from the trajectory or JSON file").ExistingFile()
+	logLevel = app.Flag("loglevel", "set loglevel "+
+		"('critical', 'error', 'warning', 'notice', 'info', 'debug')").
+		Default("notice").
+		Enum("critical", "error", "warning", "notice", "info", "debug")
+	jsonF = app.Flag("json", "write json output to a file").String()
 )
 
 func main() {
