@@ -21,6 +21,10 @@ import (
 // beb should be computed (qchisq(0.9, df=1)).
 const defaultSignificanceThreshold = 2.705543
 
+// defaultThreshold is the minimal likelihood improvement to
+// consider an improvement for subsequent rerunning
+const defaultUpdateThreshold = 1e-3
+
 // setting up logging
 var formatter = logging.MustStringFormatter(`%{message}`)
 var log = logging.MustGetLogger("godon-bstest")
@@ -76,6 +80,7 @@ var debug = flag.Bool("debug", false, "enable debug mode")
 var jsonF = flag.String("json", "", "write json output to a file")
 var sthr = flag.Float64("sthr", defaultSignificanceThreshold,
 	"LRT siginficance threshold, for H0 rerun and posterior computations")
+var uthr = flag.Float64("uthr", defaultUpdateThreshold, "likelihood improvement threshold for rerunning H0")
 var quick = flag.Bool("quick", false, "only prevent negative LRT statistics")
 
 func main() {
@@ -118,10 +123,10 @@ func main() {
 		updated = false
 		// if l1 < l0, rerun H1 starting from H0.
 		if l1 < l0 {
+			updated = true
 			h0par := res0.GetMaxLParameters()
 			res1 = mustRun(true, h0par, false, !*quick)
 			l1 = res1.GetLikelihood()
-			updated = true
 		}
 
 		// if significant (D>thr), rerun H0 starting from H1
@@ -130,9 +135,11 @@ func main() {
 			res0Alt := mustRun(false, h1par, false, true)
 			l0Alt := res0Alt.GetLikelihood()
 			if l0Alt > l0 {
+				if l0Alt-l0 > *uthr {
+					updated = true
+				}
 				res0 = res0Alt
 				l0 = l0Alt
-				updated = true
 			}
 		}
 	}
