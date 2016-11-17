@@ -19,7 +19,7 @@ import (
 
 // defaultThreshold is the minimal D-statistics value, for which
 // beb should be computed (qchisq(0.9, df=1)).
-const defaultThreshold = 2.705543
+const defaultSignificanceThreshold = 2.705543
 
 // setting up logging
 var formatter = logging.MustStringFormatter(`%{message}`)
@@ -74,7 +74,7 @@ var sum summary
 var binary = flag.String("binary", "godon", "binary name or full path to godon")
 var debug = flag.Bool("debug", false, "enable debug mode")
 var jsonF = flag.String("json", "", "write json output to a file")
-var threshold = flag.Float64("threshold", defaultThreshold,
+var sthr = flag.Float64("sthr", defaultSignificanceThreshold,
 	"LRT siginficance threshold, for H0 rerun and posterior computations")
 var quick = flag.Bool("quick", false, "only prevent negative LRT statistics")
 
@@ -125,7 +125,7 @@ func main() {
 		}
 
 		// if significant (D>thr), rerun H0 starting from H1
-		if 2*(l1-l0) > *threshold && !*quick {
+		if 2*(l1-l0) > *sthr && !*quick {
 			h1par := res1.GetMaxLParameters()
 			res0Alt := mustRun(false, h1par, false, true)
 			l0Alt := res0Alt.GetLikelihood()
@@ -138,7 +138,7 @@ func main() {
 	}
 
 	// final BEB & NEB computation
-	if 2*(l1-l0) > *threshold {
+	if 2*(l1-l0) > *sthr {
 		h1par := res1.GetMaxLParameters()
 		res1 = mustRun(true, h1par, true, false)
 	}
