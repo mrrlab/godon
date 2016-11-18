@@ -17,6 +17,7 @@ pipelines:
           - cd $GOPATH/src/github.com/idavydov/go-lbfgsb
           - make
           - go get github.com/idavydov/go-lbfgsb
+          - go get gopkg.in/alecthomas/kingpin.v2
           # gonum and other libs
           - go get -d github.com/gonum/blas
           - go get -d github.com/gonum/matrix
