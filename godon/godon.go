@@ -6,13 +6,13 @@ Metropolis-Hastings sampler.
 
 The basic usage of godon looks like this:
 
-	godon alignment.fst tree.nwk
+	godon M0 alignment.fst tree.nwk
 
 , this will run M0 model with a default optimizer (LBFGS-B).
 
 You can change a model and an optimizer:
 
-	godon -model BS -method simplex alignment.fst tree.nwk
+	godon -m simplex BS alignment.fst tree.nwk
 
 The above will use the branch-site model and downhill simplex optimizer.
 

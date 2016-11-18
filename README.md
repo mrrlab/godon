@@ -20,22 +20,22 @@ Godon supports state aggregation (option `-aggregate`). See
 the details. For the paper we used v0.5 (39bf774). Since then
 likelihood computations code were substantially changed.
 
-**Warning**: Godon is currently in an early beta stage.
+**Warning**: Godon is currently in a beta stage.
 
 ## Examples
 
 Perform likelihood maximization using L-BFGS-B optimizer for the
-Branch-Site model without ooptimizing the branch lengths (use only a
+Branch-Site model without optimizing the branch lengths (use only a
 single CPU).
 ```
 #!bash
-$ godon -nt 1 -nobrlen -model BS ali.fst tree.nwk
+$ godon -p 1 -n BS ali.fst tree.nwk
 ```
 
 Run MCMC using M0 model with the downhill simplex optimization.
 ```
 #!bash
-$ godon -method mh -model M0 -method simplex ali.fst tree.nwk
+$ godon -m mh M0 ali.fst tree.nwk
 ```
 
 
