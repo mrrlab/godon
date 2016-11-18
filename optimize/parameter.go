@@ -141,7 +141,7 @@ func (p *FloatParameters) SetByName(name string, v float64) error {
 // check every parameter name every iteration. This usually doesn't matter
 // since the number of parameters is usually small, and this is done only
 // once in the begining of run.
-func (p *FloatParameters) SetFromMap(m map[string]interface{}) error {
+func (p *FloatParameters) SetFromMap(m map[string]float64) error {
 	// number of parameters set from the map
 	if len(m) != len(*p) {
 		return fmt.Errorf("Incorrect number of initial values (%d instead of %d)",
@@ -149,16 +149,11 @@ func (p *FloatParameters) SetFromMap(m map[string]interface{}) error {
 	}
 	cnt := 0
 	for pname, pval := range m {
-		switch v := pval.(type) {
-		case float64:
-			err := p.SetByName(pname, v)
-			if err != nil {
-				return err
-			}
-			cnt++
-		default:
-			return fmt.Errorf("Incorrect value type for %s (%v)", pname, v)
+		err := p.SetByName(pname, pval)
+		if err != nil {
+			return err
 		}
+		cnt++
 	}
 	return nil
 }
@@ -169,7 +164,7 @@ func (p *FloatParameters) ReadFromJSON(filename string) error {
 	if err != nil {
 		return err
 	}
-	var m map[string]interface{}
+	var m map[string]float64
 	err = json.Unmarshal(file, &m)
 	if err != nil {
 		return err

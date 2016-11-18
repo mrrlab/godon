@@ -106,9 +106,8 @@ func getOptimizerFromString(method string, accept, annealingSkip int, seed int64
 	return nil, fmt.Errorf("Unknown optimization method: %s", method)
 }
 
-func runOptimization(h0 bool) (summary *OptimizationSummary) {
+func runOptimization(h0 bool, start map[string]float64) (summary OptimizationSummary) {
 	startTime := time.Now()
-	summary = &OptimizationSummary{}
 
 	gcode, ok := bio.GeneticCodes[*gcodeID]
 	if !ok {
@@ -240,7 +239,13 @@ func runOptimization(h0 bool) (summary *OptimizationSummary) {
 	}
 	m.SetAggregationMode(aggMode)
 
-	if *startF != "" {
+	if len(start) > 0 {
+		par := m.GetFloatParameters()
+		err := par.SetFromMap(start)
+		if err != nil {
+			log.Fatal(err)
+		}
+	} else if *startF != "" {
 		l, err := lastLine(*startF)
 		par := m.GetFloatParameters()
 		if err == nil {
@@ -348,7 +353,6 @@ func runOptimization(h0 bool) (summary *OptimizationSummary) {
 	endTime := time.Now()
 
 	deltaT := endTime.Sub(startTime)
-	log.Noticef("Running time: %v", deltaT)
 	summary.Time = deltaT.Seconds()
 
 	return

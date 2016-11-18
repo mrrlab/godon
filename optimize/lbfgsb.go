@@ -135,8 +135,8 @@ func (l *LBFGSB) Run(iterations int) {
 }
 
 // Summary returns optimization summary (i.e. success/error, etc).
-func (l *LBFGSB) Summary() interface{} {
-	s := l.BaseOptimizer.Summary().(baseOptimizerSummary)
+func (l *LBFGSB) Summary() Summary {
+	s := l.BaseOptimizer.Summary().(*baseSummary)
 	s.Status = struct {
 		Code       lbfgsb.ExitStatusCode `json:"code"`
 		CodeString string                `json:"codeString"`

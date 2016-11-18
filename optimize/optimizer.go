@@ -54,11 +54,11 @@ type Optimizer interface {
 	// PrintResults prints the results of optimization.
 	PrintResults()
 	// Summary returns optimization summary for JSON output.
-	Summary() interface{}
+	Summary() Summary
 }
 
-// baseOptimizerSummary stores summary information.
-type baseOptimizerSummary struct {
+// baseSummary stores summary information.
+type baseSummary struct {
 	// MaxLnL is the maximum likelihood value.
 	MaxLnL float64 `json:"maxLnL"`
 	// MaxLParameters is the maximum likelihood parameter values.
@@ -73,6 +73,24 @@ type baseOptimizerSummary struct {
 	NCalls int `json:"nLikelihoodComputations"`
 	// Status is the optimization status.
 	Status interface{} `json:"status,omitempty"`
+}
+
+// OptimizerSummary allows quering of maximum likelihood estimates.
+type Summary interface {
+	GetMaxLikelihood() float64
+	GetMaxLikelihoodParameters() map[string]float64
+}
+
+func (b *baseSummary) GetMaxLikelihood() float64 {
+	return b.MaxLnL
+}
+
+func (b *baseSummary) GetMaxLikelihoodParameters() map[string]float64 {
+	r := make(map[string]float64, len(b.MaxLParameters))
+	for k, v := range b.MaxLParameters {
+		r[k] = v
+	}
+	return r
 }
 
 // BaseOptimizer contains basic data for an optimizer.
@@ -211,8 +229,8 @@ func (o *BaseOptimizer) SaveStart() {
 }
 
 // Summary returns optimization summary.
-func (o *BaseOptimizer) Summary() interface{} {
-	return baseOptimizerSummary{
+func (o *BaseOptimizer) Summary() Summary {
+	return &baseSummary{
 		MaxLnL:             o.maxL,
 		MaxLParameters:     o.GetParametersMap(o.maxLPar),
 		StartingLnL:        o.startL,

@@ -201,8 +201,8 @@ func (n *NLOPT) Run(iterations int) {
 }
 
 // Summary returns optimization summary (i.e. success/error, etc).
-func (n *NLOPT) Summary() interface{} {
-	s := n.BaseOptimizer.Summary().(baseOptimizerSummary)
+func (n *NLOPT) Summary() Summary {
+	s := n.BaseOptimizer.Summary().(*baseSummary)
 	s.Status = struct {
 		Code       C.nlopt_result `json:"code"`
 		CodeString string         `json:"codeString"`

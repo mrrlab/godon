@@ -81,25 +81,20 @@ var (
 	treeFileName      = opt.Arg("tree", "starting phylogenetic tree").Required().ExistingFile()
 	fixw              = opt.Flag("fix-w", "fix omega=1 (for the branch-site and M8 models)").Short('f').Bool()
 	startF            = opt.Flag("start", "read start position from the trajectory or JSON file").Short('s').ExistingFile()
-	noFinal           = opt.Flag("no-final", "don't perform final extra computations, i.e. NEB and BEB site posterior").Bool()
 
-	// test flags
-	test      = app.Command("test", "Run test for positive selecton")
-	testModel = test.Arg("model",
+	// hypTest flags
+	hTest      = app.Command("test", "Run test for positive selecton")
+	hTestModel = hTest.Arg("model",
 		"model type (BS for branch site, BSG for branch-site + gamma, or M8)").
 		Required().
 		Enum("BS", "BSG", "M8")
-	testAlignmentFileName = test.Arg("alignment", "sequence alignment").Required().ExistingFile()
-	testTreeFileName      = test.Arg("tree", "starting phylogenetic tree").Required().ExistingFile()
-	sThr                  = test.Flag("significance-threshold",
+	hTestAlignmentFileName = hTest.Arg("alignment", "sequence alignment").Required().ExistingFile()
+	hTestTreeFileName      = hTest.Arg("tree", "starting phylogenetic tree").Required().ExistingFile()
+	sThr                   = hTest.Flag("significance-threshold",
 		"LRT siginficance threshold, for H0 rerun and posterior computations").
 		Default(defaultSThr).
 		Float64()
-	uThr = test.Flag("update-threshold",
-		"likelihood improvement threshold for rerunning H0").
-		Default(defaultUThr).
-		Float64()
-	quick = test.Flag("quick",
+	quick = hTest.Flag("quick",
 		"only prevent negative LRT statistics").
 		Bool()
 
@@ -132,6 +127,7 @@ var (
 		"n_mlsl: MLSL from nlopt (BOBYQA local optimizer), "+
 		"none: just compute likelihood, no optimization"+
 		")").Short('m').Default("lbfgsb").String()
+	noFinal = app.Flag("no-final", "don't perform final extra computations, i.e. NEB and BEB site posterior").Bool()
 
 	// mcmc parameters
 	accept = app.Flag("report-acceptance", "report acceptance rate every N iterations").Default("200").Int()
@@ -167,6 +163,7 @@ var (
 )
 
 func main() {
+	startTime := time.Now()
 	// support -h flag
 	app.HelpFlag.Short('h')
 	app.VersionFlag.Short('v')
@@ -223,22 +220,39 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
-	var res interface{}
+	callSummary := CallSummary{
+		Version:     version,
+		CommandLine: os.Args,
+		Seed:        *seed,
+		NThreads:    effectiveNThreads,
+	}
+
+	var summary interface{}
 	switch cmd {
 	case opt.FullCommand():
-		summary := runOptimization(*fixw)
-		summary.NThreads = effectiveNThreads
-		summary.Version = version
-		summary.CommandLine = os.Args
-		summary.Seed = *seed
-		res = summary
+		runSummary := runOptimization(*fixw, nil)
+		summary = struct {
+			*CallSummary
+			OptimizationSummary
+		}{&callSummary, runSummary}
+	case hTest.FullCommand():
+		hTestSummary := hypTest()
+		summary = struct {
+			*CallSummary
+			HypTestSummary
+		}{&callSummary, hTestSummary}
 	default:
-		log.Errorf("command %v not implemented", cmd)
+		log.Fatalf("command %v not implemented", cmd)
 	}
+	endTime := time.Now()
+	deltaT := endTime.Sub(startTime)
+	log.Noticef("Running time: %v", deltaT)
+
+	callSummary.TotalTime = deltaT.Seconds()
 
 	// output summary in json format
 	if *jsonF != "" {
-		j, err := json.Marshal(res)
+		j, err := json.Marshal(summary)
 		if err != nil {
 			log.Error(err)
 		} else {
