@@ -152,8 +152,8 @@ var (
 	cpuProfile = app.Flag("cpu-profile", "write cpu profile to file").String()
 
 	// input/output
-	outLogF  = app.Flag("out", "write log to a file").Short('o').String()
-	outF     = app.Flag("trajectory", "write optimization trajectory to a file").Short('t').String()
+	logF     = app.Flag("out", "write log to a file").Short('o').String()
+	trajF    = app.Flag("trajectory", "write optimization trajectory to a file").Short('t').String()
 	outTreeF = app.Flag("out-tree", "write tree to a file").String()
 	logLevel = app.Flag("log-level", "set loglevel "+
 		"("+strings.Join(logLevels, ", ")+")").
@@ -173,8 +173,8 @@ func main() {
 	logging.SetFormatter(formatter)
 
 	var backend *logging.LogBackend
-	if *outLogF != "" {
-		f, err := os.OpenFile(*outLogF, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
+	if *logF != "" {
+		f, err := os.OpenFile(*logF, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
 		if err != nil {
 			log.Fatal("Error creating log file:", err)
 		}

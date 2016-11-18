@@ -35,8 +35,8 @@ type Optimizer interface {
 	WatchSignals(...os.Signal)
 	// SetReportPeriod specifies how often report line should be printed.
 	SetReportPeriod(period int)
-	// SetOutput specifies an output writer for the report.
-	SetOutput(io.Writer)
+	// SetTrajectoryOutput specifies an output writer for the trajectory.
+	SetTrajectoryOutput(io.Writer)
 	// Starts the optimization or sampling.
 	Run(iterations int)
 	// GetMaxL returns the maximum likelihood value.
@@ -139,8 +139,8 @@ func (o *BaseOptimizer) SetReportPeriod(period int) {
 	o.repPeriod = period
 }
 
-// SetOutput specifies an output writer for the report.
-func (o *BaseOptimizer) SetOutput(output io.Writer) {
+// SetTrajectoryOutput specifies an output writer for the trajectory.
+func (o *BaseOptimizer) SetTrajectoryOutput(output io.Writer) {
 	o.output = output
 }
 
