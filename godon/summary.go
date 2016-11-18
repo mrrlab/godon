@@ -1,7 +1,7 @@
 package main
 
-// RunSummary is storing godon run summary information.
-type RunSummary struct {
+// OptimizationSummary is storing godon run summary information.
+type OptimizationSummary struct {
 	// Version stores godon version.
 	Version string `json:"version"`
 	// CommandLine is an array storing binary name and all command-line parameters.

@@ -70,27 +70,36 @@ var (
 	app = kingpin.New("godon", "codon models optmizer and sampler").
 		Version(version)
 
+	opt = app.Command("optimize", "Run model optimization or sampling").Default()
 	// model
-	model = app.Arg("model",
+	model = opt.Arg("model",
 		"model type (M0 or BS for branch site)").
 		Required().String()
+	// optimize flags
+	alignmentFileName = opt.Arg("alignment", "sequence alignment").Required().ExistingFile()
+	treeFileName      = opt.Arg("tree", "starting phylogenetic tree").Required().ExistingFile()
+	fixw              = opt.Flag("fix-w", "fix omega=1 (for the branch-site and M8 models)").Short('f').Bool()
+	noFinal           = opt.Flag("no-final", "don't perform final extra computations, i.e. NEB and BEB site posterior").Bool()
 
-	// input tree and alignment
-	alignmentFileName = app.Arg("alignment", "sequence alignment").Required().ExistingFile()
-	treeFileName      = app.Arg("tree", "starting phylogenetic tree").Required().ExistingFile()
+	test      = app.Command("test", "Run test for positive selecton")
+	testModel = test.Arg("model",
+		"model type (BS for branch site, BSG for branch-site + gamma, or M8)").
+		Required().
+		Enum("BS", "BSG", "M8")
+	// optimize flags
+	testAlignmentFileName = test.Arg("alignment", "sequence alignment").Required().ExistingFile()
+	testTreeFileName      = test.Arg("tree", "starting phylogenetic tree").Required().ExistingFile()
 
 	//model parameters
 	gcodeID       = app.Flag("gcode", "NCBI genetic code id, standard by default").Default("1").Int()
-	fgBranch      = app.Flag("fg-branch", "fg branch number").Default("-1").Int()
+	fgBranch      = app.Flag("fg-branch", "foreground branch number").Default("-1").Int()
 	maxBrLen      = app.Flag("max-branch-length", "maximum branch length").Default("100").Float64()
 	noOptBrLen    = app.Flag("no-branch-length", "don't optimize branch lengths").Short('n').Bool()
 	cFreq         = app.Flag("codon-frequency", "codon frequecny (F0 or F3X4)").Default("F3X4").String()
 	cFreqFileName = app.Flag("codon-frequency-file", "codon frequencies file (overrides --codon-frequency)").ExistingFile()
-	fixw          = app.Flag("fix-w", "fix omega=1 (for the branch-site and M8 models)").Short('f').Bool()
 	ncatsg        = app.Flag("ncat-site-gamma", "number of categories for the site gamma rate variation (no variation by default)").Default("1").Int()
 	ncatcg        = app.Flag("ncat-codon-gamma", "number of categories for the codon gamma rate variation (no variation by default)").Default("1").Int()
 	ncatb         = app.Flag("ncat-beta", "number of the categories for the beta distribution (models M7&M8)").Default("4").Int()
-	noFinal       = app.Flag("no-final", "don't perform final extra computations, i.e. NEB and BEB site posterior").Bool()
 
 	// optimizer parameters
 	randomize = app.Flag("randomize-start", "use uniformly distributed random starting point; "+
@@ -149,7 +158,7 @@ func main() {
 	// support -h flag
 	app.HelpFlag.Short('h')
 	app.VersionFlag.Short('v')
-	kingpin.MustParse(app.Parse(os.Args[1:]))
+	cmd := kingpin.MustParse(app.Parse(os.Args[1:]))
 
 	// logging
 	logging.SetFormatter(formatter)
@@ -202,15 +211,22 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
-	summary := runOptimization(*startF, *fixw)
-	summary.NThreads = effectiveNThreads
-	summary.Version = version
-	summary.CommandLine = os.Args
-	summary.Seed = *seed
+	var res interface{}
+	switch cmd {
+	case opt.FullCommand():
+		summary := runOptimization(*startF, *fixw)
+		summary.NThreads = effectiveNThreads
+		summary.Version = version
+		summary.CommandLine = os.Args
+		summary.Seed = *seed
+		res = summary
+	default:
+		log.Errorf("command %v not implemented", cmd)
+	}
 
 	// output summary in json format
 	if *jsonF != "" {
-		j, err := json.Marshal(summary)
+		j, err := json.Marshal(res)
 		if err != nil {
 			log.Error(err)
 		} else {

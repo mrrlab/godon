@@ -106,9 +106,9 @@ func getOptimizerFromString(method string, accept, annealingSkip int, seed int64
 	return nil, fmt.Errorf("Unknown optimization method: %s", method)
 }
 
-func runOptimization(startFileName string, h0 bool) (summary *RunSummary) {
+func runOptimization(startFileName string, h0 bool) (summary *OptimizationSummary) {
 	startTime := time.Now()
-	summary = &RunSummary{}
+	summary = &OptimizationSummary{}
 
 	gcode, ok := bio.GeneticCodes[*gcodeID]
 	if !ok {
