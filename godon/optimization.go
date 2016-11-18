@@ -106,7 +106,7 @@ func getOptimizerFromString(method string, accept, annealingSkip int, seed int64
 	return nil, fmt.Errorf("Unknown optimization method: %s", method)
 }
 
-func runOptimization(startFileName string, h0 bool) (summary *OptimizationSummary) {
+func runOptimization(h0 bool) (summary *OptimizationSummary) {
 	startTime := time.Now()
 	summary = &OptimizationSummary{}
 
@@ -240,16 +240,16 @@ func runOptimization(startFileName string, h0 bool) (summary *OptimizationSummar
 	}
 	m.SetAggregationMode(aggMode)
 
-	if startFileName != "" {
-		l, err := lastLine(startFileName)
+	if *startF != "" {
+		l, err := lastLine(*startF)
 		par := m.GetFloatParameters()
 		if err == nil {
 			err = par.ReadLine(l)
 		}
 		if err != nil {
 			log.Debug("Reading start file as JSON")
-			err2 := par.ReadFromJSON(startFileName)
-			// startFileName is neither trajectory nor correct JSON
+			err2 := par.ReadFromJSON(*startF)
+			// startF is neither trajectory nor correct JSON
 			if err2 != nil {
 				log.Error("Error reading start position from JSON:", err2)
 				log.Fatal("Error reading start position from trajectory file:", err)

@@ -75,20 +75,33 @@ var (
 	model = opt.Arg("model",
 		"model type (M0 or BS for branch site)").
 		Required().String()
+
 	// optimize flags
 	alignmentFileName = opt.Arg("alignment", "sequence alignment").Required().ExistingFile()
 	treeFileName      = opt.Arg("tree", "starting phylogenetic tree").Required().ExistingFile()
 	fixw              = opt.Flag("fix-w", "fix omega=1 (for the branch-site and M8 models)").Short('f').Bool()
+	startF            = opt.Flag("start", "read start position from the trajectory or JSON file").Short('s').ExistingFile()
 	noFinal           = opt.Flag("no-final", "don't perform final extra computations, i.e. NEB and BEB site posterior").Bool()
 
+	// test flags
 	test      = app.Command("test", "Run test for positive selecton")
 	testModel = test.Arg("model",
 		"model type (BS for branch site, BSG for branch-site + gamma, or M8)").
 		Required().
 		Enum("BS", "BSG", "M8")
-	// optimize flags
 	testAlignmentFileName = test.Arg("alignment", "sequence alignment").Required().ExistingFile()
 	testTreeFileName      = test.Arg("tree", "starting phylogenetic tree").Required().ExistingFile()
+	sThr                  = test.Flag("significance-threshold",
+		"LRT siginficance threshold, for H0 rerun and posterior computations").
+		Default(defaultSThr).
+		Float64()
+	uThr = test.Flag("update-threshold",
+		"likelihood improvement threshold for rerunning H0").
+		Default(defaultUThr).
+		Float64()
+	quick = test.Flag("quick",
+		"only prevent negative LRT statistics").
+		Bool()
 
 	//model parameters
 	gcodeID       = app.Flag("gcode", "NCBI genetic code id, standard by default").Default("1").Int()
@@ -146,7 +159,6 @@ var (
 	outLogF  = app.Flag("out", "write log to a file").Short('o').String()
 	outF     = app.Flag("trajectory", "write optimization trajectory to a file").Short('t').String()
 	outTreeF = app.Flag("out-tree", "write tree to a file").String()
-	startF   = app.Flag("start", "read start position from the trajectory or JSON file").Short('s').ExistingFile()
 	logLevel = app.Flag("log-level", "set loglevel "+
 		"("+strings.Join(logLevels, ", ")+")").
 		Short('l').Default("notice").
@@ -214,7 +226,7 @@ func main() {
 	var res interface{}
 	switch cmd {
 	case opt.FullCommand():
-		summary := runOptimization(*startF, *fixw)
+		summary := runOptimization(*fixw)
 		summary.NThreads = effectiveNThreads
 		summary.Version = version
 		summary.CommandLine = os.Args
