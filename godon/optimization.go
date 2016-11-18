@@ -291,7 +291,7 @@ func runOptimization(h0 bool, start map[string]float64) (summary OptimizationSum
 	f := os.Stdout
 
 	if *trajF != "" {
-		f, err := os.OpenFile(*trajF, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
+		f, err = os.OpenFile(*trajF, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
 		if err != nil {
 			log.Fatal("Error creating trajectory file:", err)
 		}
