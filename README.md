@@ -15,7 +15,7 @@ Godon supports likelihood optimization
 as well as MCMC
 ([Metropolis-Hastings algorithm](https://en.wikipedia.org/wiki/Metropolis%E2%80%93Hastings_algorithm)).
 
-Godon supports state aggregation (option `-aggregate`). See
+Godon supports state aggregation (option `--aggregate`). See
 [the paper](http://biorxiv.org/content/early/2015/12/24/035063) for
 the details. For the paper we used v0.5 (39bf774). Since then
 likelihood computations code were substantially changed.
