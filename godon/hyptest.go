@@ -4,10 +4,6 @@ const (
 	// defaultSThr  is the minimal D-statistics value, for which
 	// beb should be computed (qchisq(0.9, df=1)).
 	defaultSThr = "2.705543"
-
-	// defaultUThr is the minimal likelihood improvement to
-	// consider an improvement for subsequent rerunning
-	defaultUThr = "1e-3"
 )
 
 // hypTest performs the hypthesis testing
