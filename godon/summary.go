@@ -2,6 +2,7 @@ package main
 
 import "bitbucket.org/Davydov/godon/optimize"
 
+// CallSummary stores summary of program call.
 type CallSummary struct {
 	// Version stores godon version.
 	Version string `json:"version"`
@@ -43,7 +44,7 @@ type HypTestSummary struct {
 	Runs []OptimizationSummary `json:"runs"`
 }
 
-// Hyp summary stores information on one hypothesis
+// HypSummary summary stores information on one hypothesis
 type HypSummary struct {
 	// MaxLnL is the maximum log likelihood.
 	MaxLnL float64 `json:"maxLnL"`

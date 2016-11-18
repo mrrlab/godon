@@ -75,7 +75,7 @@ type baseSummary struct {
 	Status interface{} `json:"status,omitempty"`
 }
 
-// OptimizerSummary allows quering of maximum likelihood estimates.
+// Summary allows quering of maximum likelihood estimates.
 type Summary interface {
 	GetMaxLikelihood() float64
 	GetMaxLikelihoodParameters() map[string]float64
