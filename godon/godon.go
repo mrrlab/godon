@@ -32,6 +32,7 @@ import (
 	"os"
 	"runtime"
 	"runtime/pprof"
+	"strings"
 	"time"
 
 	"gopkg.in/alecthomas/kingpin.v2"
@@ -54,6 +55,7 @@ var version = fmt.Sprintf("branch: %s, revision: %s, build time: %s", gitbranch,
 // Logger settings.
 var log = logging.MustGetLogger("godon")
 var formatter = logging.MustStringFormatter(`%{message}`)
+var logLevels = []string{"critical", "error", "warning", "notice", "info", "debug"}
 
 // lastLine returns the last line of a file content.
 func lastLine(fn string) (line string, err error) {
@@ -165,33 +167,37 @@ func getOptimizerFromString(method string, accept, annealingSkip int, seed int64
 // command-line options
 var (
 	// application
-	app = kingpin.New("godon", "codon models optmizer and sampler").Version(version)
+	app = kingpin.New("godon", "codon models optmizer and sampler").
+		Version(version)
 
 	// model
-	model = app.Arg("model", "model type (M0 or BS for branch site)").Required().String()
+	model = app.Arg("model",
+		"model type (M0 or BS for branch site)").
+		Required().String()
+
 	// input tree and alignment
 	alignmentFileName = app.Arg("alignment", "sequence alignment").Required().ExistingFile()
 	treeFileName      = app.Arg("tree", "starting phylogenetic tree").Required().ExistingFile()
 
 	//model parameters
 	gcodeID       = app.Flag("gcode", "NCBI genetic code id, standard by default").Default("1").Int()
-	fgBranch      = app.Flag("fg", "fg branch number").Default("-1").Int()
-	maxBrLen      = app.Flag("maxbrlen", "maximum branch length").Default("100").Float64()
-	noOptBrLen    = app.Flag("nobrlen", "don't optimize branch lengths").Bool()
-	cFreq         = app.Flag("cfreq", "codon frequecny (F0 or F3X4)").Default("F3X4").String()
-	cFreqFileName = app.Flag("cfreqfn", "codon frequencies file (overrides -cfreq)").String()
-	fixw          = app.Flag("fixw", "fix omega=1 (for the branch-site and M8 models)").Bool()
-	ncatsg        = app.Flag("ncatsg", "number of categories for the site gamma rate variation (no variation by default)").Default("1").Int()
-	ncatcg        = app.Flag("ncatcg", "number of categories for the codon gamma rate variation (no variation by default)").Default("1").Int()
-	ncatb         = app.Flag("ncatb", "number of the categories for the beta distribution (models M7&M8)").Default("4").Int()
-	noFinal       = app.Flag("nofinal", "don't perform final extra computations, i.e. NEB and BEB site posterior").Bool()
+	fgBranch      = app.Flag("fg-branch", "fg branch number").Default("-1").Int()
+	maxBrLen      = app.Flag("max-branch-length", "maximum branch length").Default("100").Float64()
+	noOptBrLen    = app.Flag("no-branch-length", "don't optimize branch lengths").Short('n').Bool()
+	cFreq         = app.Flag("codon-frequency", "codon frequecny (F0 or F3X4)").Default("F3X4").String()
+	cFreqFileName = app.Flag("codon-frequency-file", "codon frequencies file (overrides --codon-frequency)").ExistingFile()
+	fixw          = app.Flag("fix-w", "fix omega=1 (for the branch-site and M8 models)").Short('f').Bool()
+	ncatsg        = app.Flag("ncat-site-gamma", "number of categories for the site gamma rate variation (no variation by default)").Default("1").Int()
+	ncatcg        = app.Flag("ncat-codon-gamma", "number of categories for the codon gamma rate variation (no variation by default)").Default("1").Int()
+	ncatb         = app.Flag("ncat-beta", "number of the categories for the beta distribution (models M7&M8)").Default("4").Int()
+	noFinal       = app.Flag("no-final", "don't perform final extra computations, i.e. NEB and BEB site posterior").Bool()
 
 	// optimizer parameters
-	randomize = app.Flag("randomize", "use uniformly distributed random starting point; "+
+	randomize = app.Flag("randomize-start", "use uniformly distributed random starting point; "+
 		"by default random starting point is distributed around realistic parameter values").Bool()
 	iterations = app.Flag("iter", "number of iterations").Default("10000").Int()
 	report     = app.Flag("report", "report every N iterations").Default("10").Int()
-	method     = app.Flag("method", "optimization method to use "+
+	method     = app.Flag("optimization-method", "optimization method to use "+
 		"(lbfgsb: limited-memory Broyden–Fletcher–Goldfarb–Shanno with bounding constraints, "+
 		"simplex: downhill simplex, "+
 		"annealing: simullated annealing, "+
@@ -203,39 +209,40 @@ var (
 		"n_sqp: SQP from nlopt, "+
 		"n_mlsl: MLSL from nlopt (BOBYQA local optimizer), "+
 		"none: just compute likelihood, no optimization"+
-		")").Default("lbfgsb").String()
+		")").Short('m').Default("lbfgsb").String()
 
 	// mcmc parameters
-	accept = app.Flag("accept", "report acceptance rate every N iterations").Default("200").Int()
+	accept = app.Flag("report-acceptance", "report acceptance rate every N iterations").Default("200").Int()
 
 	// adaptive mcmc parameters
-	adaptive = app.Flag("adaptive", "use adaptive MCMC").Bool()
-	skip     = app.Flag("skip", "number of iterations to skip for adaptive mcmc (5% by default)").Default("-1").Int()
-	maxAdapt = app.Flag("maxadapt", "stop adapting after iteration (20% by default)").Default("-1").Int()
+	adaptive = app.Flag("adaptive", "use adaptive MCMC or sumulated annealing").Bool()
+	skip     = app.Flag("skip-adaptive", "number of iterations to skip for adaptive mcmc (5% by default)").Default("-1").Int()
+	maxAdapt = app.Flag("maximum-adaptive", "stop adapting after iteration (20% by default)").Default("-1").Int()
 
 	// optimizations
 	aggregate = app.Flag("aggregate", "state aggregation mode: "+
 		"observed (all positions, keep observed states), "+
 		"observed_new (new implementation of observed), "+
 		"fixed (absolutely conserved positions, keep observed), "+
-		"random (like observed, but non-aggregated states are shuffled between the positions)").Default("none").String()
-	printFull = app.Flag("printfull", "print full (non-aggregated) likelihood in the end of optimization").Bool()
+		"random (like observed, but non-aggregated states are shuffled between the positions)").
+		Default("none").Enum("none", "observed", "observed_new", "fixed", "random")
+	printFull = app.Flag("full-likelihood", "print full (non-aggregated) likelihood in the end of optimization").Bool()
 
 	// technical
-	nThreads   = app.Flag("nt", "number of threads to use").Int()
-	seed       = app.Flag("seed", "random generator seed, default time based").Default("-1").Int64()
-	cpuProfile = app.Flag("cpuprofile", "write cpu profile to file").String()
+	nThreads   = app.Flag("procs", "number of threads to use").Short('p').Int()
+	seed       = app.Flag("seed", "random generator seed, default time based").Short('S').Default("-1").Int64()
+	cpuProfile = app.Flag("cpu-profile", "write cpu profile to file").String()
 
 	// input/output
-	outLogF  = app.Flag("log", "write log to a file").String()
-	outF     = app.Flag("out", "write optimization trajectory to a file").String()
-	outTreeF = app.Flag("tree", "write tree to a file").String()
-	startF   = app.Flag("start", "read start position from the trajectory or JSON file").ExistingFile()
-	logLevel = app.Flag("loglevel", "set loglevel "+
-		"('critical', 'error', 'warning', 'notice', 'info', 'debug')").
-		Default("notice").
-		Enum("critical", "error", "warning", "notice", "info", "debug")
-	jsonF = app.Flag("json", "write json output to a file").String()
+	outLogF  = app.Flag("out", "write log to a file").Short('o').String()
+	outF     = app.Flag("trajectory", "write optimization trajectory to a file").Short('t').String()
+	outTreeF = app.Flag("out-tree", "write tree to a file").String()
+	startF   = app.Flag("start", "read start position from the trajectory or JSON file").Short('s').ExistingFile()
+	logLevel = app.Flag("log-level", "set loglevel "+
+		"("+strings.Join(logLevels, ", ")+")").
+		Short('l').Default("notice").
+		Enum(logLevels...)
+	jsonF = app.Flag("json", "write json output to a file").Short('j').String()
 )
 
 func run(startFileName string, h0 bool) (summary *RunSummary) {
@@ -487,6 +494,9 @@ func run(startFileName string, h0 bool) (summary *RunSummary) {
 }
 
 func main() {
+	// support -h flag
+	app.HelpFlag.Short('h')
+	app.VersionFlag.Short('v')
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 
 	// logging
