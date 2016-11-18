@@ -29,7 +29,10 @@ func NewLBFGSB() (lbfgsb *LBFGSB) {
 // Logger is a function which is called back on every iteration.
 func (l *LBFGSB) Logger(info *lbfgsb.OptimizationIterationInformation) {
 	l.i++
-	l.parameters.SetValues(info.X)
+	err := l.parameters.SetValues(info.X)
+	if err != nil {
+		panic(err)
+	}
 	l.PrintLine(l.parameters, -info.F)
 	select {
 	case s := <-l.sig:
@@ -44,7 +47,10 @@ func (l *LBFGSB) EvaluateFunction(x []float64) float64 {
 		return math.Inf(+1)
 	}
 
-	l.parameters.SetValues(x)
+	err := l.parameters.SetValues(x)
+	if err != nil {
+		panic(err)
+	}
 
 	L := l.Likelihood()
 	l.calls++
@@ -62,7 +68,10 @@ func (l *LBFGSB) EvaluateGradient(x []float64) (grad []float64) {
 	}
 	grad = l.grad
 	// we assume that values are in range
-	l.parameters.SetValues(x)
+	err := l.parameters.SetValues(x)
+	if err != nil {
+		panic(err)
+	}
 
 	l1 := -l.Likelihood()
 	l.calls++
