@@ -6,11 +6,8 @@ import (
 	"os"
 	"time"
 
-	"bitbucket.org/Davydov/godon/bio"
 	"bitbucket.org/Davydov/godon/cmodel"
-	"bitbucket.org/Davydov/godon/codon"
 	"bitbucket.org/Davydov/godon/optimize"
-	"bitbucket.org/Davydov/godon/tree"
 )
 
 // getAggModeFromString returns an aggregation mode constant from cmodel
@@ -32,39 +29,39 @@ func getAggModeFromString(aggModeString string) (cmodel.AggMode, error) {
 }
 
 // getModelFromString returns a model from string and other parameters.
-func getModelFromString(model string, cali codon.Sequences, t *tree.Tree, cf codon.Frequency,
-	fixw bool, ncatb, ncatsg, ncatcg int) (cmodel.TreeOptimizableSiteClass, error) {
+func getModelFromString(model string, data *cmodel.Data, fixw bool,
+	ncatb, ncatsg, ncatcg int) (cmodel.TreeOptimizableSiteClass, error) {
 	switch model {
 	case "M0":
 		log.Info("Using M0 model")
-		return cmodel.NewM0(cali, t, cf), nil
+		return cmodel.NewM0(data), nil
 	case "M1a":
 		log.Info("Using M1a model")
 		log.Infof("%d site gamma categories, %d codon gama categories", ncatsg, ncatcg)
-		return cmodel.NewM2(cali, t, cf, false, ncatsg, ncatcg), nil
+		return cmodel.NewM2(data, false, ncatsg, ncatcg), nil
 	case "M2a":
 		log.Info("Using M2a model")
 		log.Infof("%d site gamma categories, %d codon gama categories", ncatsg, ncatcg)
-		return cmodel.NewM2(cali, t, cf, true, ncatsg, ncatcg), nil
+		return cmodel.NewM2(data, true, ncatsg, ncatcg), nil
 	case "M7":
 		log.Info("Using M7 model")
 		log.Infof("%d beta categories, %d site gamma categories, %d codon gama categories", ncatb, ncatsg, ncatcg)
-		return cmodel.NewM8(cali, t, cf, false, false, ncatb, ncatsg, ncatcg), nil
+		return cmodel.NewM8(data, false, false, ncatb, ncatsg, ncatcg), nil
 	case "M8":
 		log.Info("Using M8 model")
 		log.Infof("%d beta categories, %d site gamma categories, %d codon gama categories", ncatb, ncatsg, ncatcg)
-		return cmodel.NewM8(cali, t, cf, true, fixw, ncatb, ncatsg, ncatcg), nil
+		return cmodel.NewM8(data, true, fixw, ncatb, ncatsg, ncatcg), nil
 	case "BSG":
 		log.Info("Using branch site gamma model")
 		log.Infof("%d site gamma categories, %d codon gama categories", ncatsg, ncatcg)
-		return cmodel.NewBranchSiteGamma(cali, t, cf, fixw, ncatsg, ncatcg), nil
+		return cmodel.NewBranchSiteGamma(data, fixw, ncatsg, ncatcg), nil
 	case "BSGE":
 		log.Info("Using branch site gamma model with explicit rates")
 		log.Infof("%d site gamma categories, %d codon gama categories", ncatsg, ncatcg)
-		return cmodel.NewBranchSiteGammaERates(cali, t, cf, fixw, ncatsg, ncatcg), nil
+		return cmodel.NewBranchSiteGammaERates(data, fixw, ncatsg, ncatcg), nil
 	case "BS":
 		log.Info("Using branch site model")
-		return cmodel.NewBranchSite(cali, t, cf, fixw), nil
+		return cmodel.NewBranchSite(data, fixw), nil
 	}
 	return nil, errors.New("Unknown model specification")
 }
@@ -109,112 +106,28 @@ func getOptimizerFromString(method string, accept, annealingSkip int, seed int64
 func runOptimization(h0 bool, start map[string]float64) (summary OptimizationSummary) {
 	startTime := time.Now()
 
-	gcode, ok := bio.GeneticCodes[*gcodeID]
-	if !ok {
-		log.Fatalf("couldn't load genetic code with id=%d", gcodeID)
+	data, err := cmodel.NewData(*gcodeID, *alignmentFileName, *treeFileName, *cFreq)
+
+	if len(*cFreqFileName) > 0 {
+		data.SetCodonFreqFromFile(*cFreqFileName)
 	}
-	log.Infof("Genetic code: %d, \"%s\"", gcode.ID, gcode.Name)
-	fastaFile, err := os.Open(*alignmentFileName)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer fastaFile.Close()
-
-	ali, err := bio.ParseFasta(fastaFile)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	cali, err := codon.ToCodonSequences(ali, gcode)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if cali.Length() == 0 {
-		log.Fatal("Zero length alignment")
-	}
-	log.Infof("Read alignment of %d codons, %d fixed positions, %d ambiguous positions", cali.Length(), cali.NFixed(), cali.NAmbiguous())
-
-	treeFile, err := os.Open(*treeFileName)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer treeFile.Close()
-
-	t, err := tree.ParseNewick(treeFile)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	log.Debugf("intree=%s", t)
-	log.Debugf("brtree=%s", t.BrString())
-
-	// Root the tree in the end
-	var root = false
-	var rootID = 0
-
-	if t.IsRooted() {
-		log.Warning("Tree is rooted. Will unroot.")
-		root = true
-		rootID, err = t.Unroot()
-		if err != nil {
-			log.Fatal("Error unrooting tree:", err)
-		}
-	}
-
-	log.Infof("intree_unroot=%s", t)
-	summary.StartingTree = t.ClassString()
-	log.Debugf("brtree_unroot=%s", t.BrString())
-	log.Debug(t.FullString())
-
-	var cf codon.Frequency
-
-	if *cFreqFileName != "" {
-		cFreqFile, err := os.Open(*cFreqFileName)
-		if err != nil {
-			log.Fatal(err)
-		}
-		cf, err = codon.ReadFrequency(cFreqFile, gcode)
-		if err != nil {
-			log.Fatal(err)
-		}
-	} else {
-		switch *cFreq {
-		case "F0":
-			log.Info("F0 frequency")
-			cf = codon.F0(cali)
-		case "F3X4":
-			log.Info("F3X4 frequency")
-			cf = codon.F3X4(cali)
-		default:
-			log.Fatal("Unknow codon freuquency specification")
-		}
-	}
-	log.Debug(cf)
 
 	if *fgBranch >= 0 {
-		for _, node := range t.NodeIDArray() {
-			if node == nil {
-				continue
-			}
-			if node.ID == *fgBranch {
-				node.Class = 1
-			} else {
-				node.Class = 0
-			}
-		}
-	} else {
-		class1 := 0
-		for range t.ClassNodes(1) {
-			class1++
-		}
-		if class1 == 0 &&
-			(*model == "BS" || *model == "BSG" || *model == "BSGE") {
+		data.SetForegroundBranch(*fgBranch)
+	}
+
+	if *model == "BS" || *model == "BSG" || *model == "BSGE" {
+		if data.GetNClass1() < 1 {
 			log.Warning("Warning: no class=1 nodes")
 		}
 	}
 
-	m, err := getModelFromString(*model, cali, t, cf, h0, *ncatb, *ncatsg, *ncatcg)
+	summary.StartingTree = data.Tree.ClassString()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	m, err := getModelFromString(*model, data, h0, *ncatb, *ncatsg, *ncatcg)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -322,15 +235,9 @@ func runOptimization(h0 bool, start map[string]float64) (summary OptimizationSum
 	summary.Model = m.Summary()
 
 	if !*noOptBrLen {
-		if root {
-			log.Infof("unrooted_outtree=%s", t)
-			err = t.Root(rootID)
-			if err != nil {
-				log.Error("Error rooting tree:", err)
-			}
-		}
-		log.Infof("outtree=%s", t)
-		summary.FinalTree = t.ClassString()
+		log.Infof("outtree=%s", data.Root())
+		data.Root()
+		summary.FinalTree = data.Tree.ClassString()
 	}
 
 	if *outTreeF != "" {
@@ -338,7 +245,7 @@ func runOptimization(h0 bool, start map[string]float64) (summary OptimizationSum
 		if err != nil {
 			log.Error("Error creating tree output file:", err)
 		} else {
-			f.WriteString(t.String() + "\n")
+			f.WriteString(data.Tree.String() + "\n")
 			f.Close()
 		}
 	}

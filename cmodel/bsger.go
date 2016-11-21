@@ -8,7 +8,6 @@ import (
 	"bitbucket.org/Davydov/godon/codon"
 	"bitbucket.org/Davydov/godon/optimize"
 	"bitbucket.org/Davydov/godon/paml"
-	"bitbucket.org/Davydov/godon/tree"
 )
 
 // BranchSiteGammaERates is an implementation of the branch-site model with
@@ -44,7 +43,7 @@ type BranchSiteGammaERates struct {
 }
 
 // NewBranchSiteGammaERates creates a new BranchSiteGammaERates model.
-func NewBranchSiteGammaERates(cali codon.Sequences, t *tree.Tree, cf codon.Frequency, fixw2 bool, ncatsg, ncatcg int) (m *BranchSiteGammaERates) {
+func NewBranchSiteGammaERates(data *Data, fixw2 bool, ncatsg, ncatcg int) (m *BranchSiteGammaERates) {
 	scat := ncatsg * ncatsg * ncatsg
 
 	m = &BranchSiteGammaERates{
@@ -56,21 +55,21 @@ func NewBranchSiteGammaERates(cali codon.Sequences, t *tree.Tree, cf codon.Frequ
 		q2s:      make([]*codon.EMatrix, scat*ncatcg),
 		gammas:   make([]float64, ncatsg),
 		gammac:   make([]float64, ncatcg),
-		csRates:  make([]float64, cali.Length()),
-		propdone: make([]bool, cali.Length()),
+		csRates:  make([]float64, data.cSeqs.Length()),
+		propdone: make([]bool, data.cSeqs.Length()),
 		tmp:      make([]float64, maxInt(ncatcg, ncatsg, 3)),
 	}
-	m.BaseModel = NewBaseModel(cali, t, cf, m)
+	m.BaseModel = NewBaseModel(data, m)
 
 	// We need to create category for every site and every codon
-	for i := 0; i < cali.Length(); i++ {
+	for i := 0; i < data.cSeqs.Length(); i++ {
 		m.prop[i] = make([]float64, m.GetNClass())
 	}
 
 	for i := 0; i < scat*ncatcg; i++ {
-		m.q0s[i] = &codon.EMatrix{CF: cf}
-		m.q1s[i] = &codon.EMatrix{CF: cf}
-		m.q2s[i] = &codon.EMatrix{CF: cf}
+		m.q0s[i] = &codon.EMatrix{CF: data.cFreq}
+		m.q1s[i] = &codon.EMatrix{CF: data.cFreq}
+		m.q2s[i] = &codon.EMatrix{CF: data.cFreq}
 	}
 
 	m.setupParameters()
@@ -120,15 +119,15 @@ func (m *BranchSiteGammaERates) Copy() optimize.Optimizable {
 
 	// basemodel assumes that all props are identical,
 	// we need to copy them explicitly
-	for i := 0; i < m.cali.Length(); i++ {
+	for i := 0; i < m.data.cSeqs.Length(); i++ {
 		newM.prop[i] = make([]float64, m.GetNClass())
 		copy(newM.prop[i], m.prop[i])
 	}
 
 	for i := 0; i < scat*m.ncatcg; i++ {
-		newM.q0s[i] = &codon.EMatrix{CF: m.cf}
-		newM.q1s[i] = &codon.EMatrix{CF: m.cf}
-		newM.q2s[i] = &codon.EMatrix{CF: m.cf}
+		newM.q0s[i] = &codon.EMatrix{CF: m.data.cFreq}
+		newM.q1s[i] = &codon.EMatrix{CF: m.data.cFreq}
+		newM.q2s[i] = &codon.EMatrix{CF: m.data.cFreq}
 	}
 
 	newM.setupParameters()
@@ -220,7 +219,7 @@ func (m *BranchSiteGammaERates) addParameters(fpg optimize.FloatParameterGenerat
 
 	if m.ncatcg > 1 || m.ncatsg > 1 {
 		// every codon has a rate parameter
-		for i := 0; i < m.cali.Length(); i++ {
+		for i := 0; i < m.data.cSeqs.Length(); i++ {
 			nm := fmt.Sprintf("rate_%04d", i+1)
 			rate := optimize.NewDiscreteParameter(&m.csRates[i], nm, m.GetNClass()/4)
 			// make a copy of i for the closure
@@ -276,7 +275,7 @@ func (m *BranchSiteGammaERates) SetDefaults() {
 	alphas := 0.5 + rand.Float64()*3
 	alphac := 0.5 + rand.Float64()*3
 
-	csRates := make([]float64, m.cali.Length())
+	csRates := make([]float64, m.data.cSeqs.Length())
 	for i := range csRates {
 		csRates[i] = float64(rand.Intn(m.GetNClass() / 4))
 	}
@@ -306,7 +305,7 @@ func (m *BranchSiteGammaERates) SetDefaults() {
 // setBranchMatrices set matrices for all the branches.
 func (m *BranchSiteGammaERates) setBranchMatrices() {
 	scat := m.ncatsg * m.ncatsg * m.ncatsg
-	for _, node := range m.tree.NodeIDArray() {
+	for _, node := range m.data.Tree.NodeIDArray() {
 		if node == nil {
 			continue
 		}
@@ -334,7 +333,7 @@ func (m *BranchSiteGammaERates) updateProportions() {
 	p1 := m.p01sum - p0
 	bothcat := m.ncatcg * scat
 
-	for pos := 0; pos < m.cali.Length(); pos++ {
+	for pos := 0; pos < m.data.cSeqs.Length(); pos++ {
 		if !m.allpropdone || !m.propdone[pos] {
 			class := int(m.csRates[pos])
 			for i := 0; i < m.GetNClass()/4; i++ {
@@ -355,17 +354,17 @@ func (m *BranchSiteGammaERates) updateProportions() {
 		}
 	}
 
-	for _, node := range m.tree.NodeIDArray() {
+	for _, node := range m.data.Tree.NodeIDArray() {
 		if node == nil {
 			continue
 		}
 		scale := 0.0
-		for i := 0; i < m.cali.Length(); i++ {
+		for i := 0; i < m.data.cSeqs.Length(); i++ {
 			for j := 0; j < m.GetNClass(); j++ {
 				scale += m.prop[i][j] * m.qs[j][node.ID].Scale
 			}
 		}
-		m.scale[node.ID] = scale / float64(m.cali.Length())
+		m.scale[node.ID] = scale / float64(m.data.cSeqs.Length())
 	}
 	if !m.allpropdone {
 		m.prunAllPos = false
@@ -383,8 +382,8 @@ func (m *BranchSiteGammaERates) fillMatrices(omega float64, dest []*codon.EMatri
 			for c3 := 0; c3 < m.ncatsg; c3++ {
 				m.tmp[2] = m.gammas[c3]
 
-				e := &codon.EMatrix{CF: m.cf}
-				Q, s := codon.CreateRateTransitionMatrix(m.cf, m.kappa, omega, m.tmp, e.Q)
+				e := &codon.EMatrix{CF: m.data.cFreq}
+				Q, s := codon.CreateRateTransitionMatrix(m.data.cFreq, m.kappa, omega, m.tmp, e.Q)
 				e.Set(Q, s)
 				err := e.Eigen()
 				if err != nil {

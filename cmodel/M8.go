@@ -6,7 +6,6 @@ import (
 	"bitbucket.org/Davydov/godon/codon"
 	"bitbucket.org/Davydov/godon/optimize"
 	"bitbucket.org/Davydov/godon/paml"
-	"bitbucket.org/Davydov/godon/tree"
 )
 
 // M8 is an implementation of M8 model.
@@ -42,7 +41,7 @@ type M8 struct {
 }
 
 // NewM8 creates a new M8 model.
-func NewM8(cali codon.Sequences, t *tree.Tree, cf codon.Frequency, addw, fixw bool, ncatb, ncatsg, ncatcg int) (m *M8) {
+func NewM8(data *Data, addw, fixw bool, ncatb, ncatsg, ncatcg int) (m *M8) {
 	// n site gamma categories, ncatb * n^3 matrices
 	gcat := ncatsg * ncatsg * ncatsg
 	if ncatb < 2 {
@@ -62,13 +61,13 @@ func NewM8(cali codon.Sequences, t *tree.Tree, cf codon.Frequency, addw, fixw bo
 	}
 
 	for i := 0; i < gcat*ncatcg; i++ {
-		m.q0[i] = &codon.EMatrix{CF: cf}
+		m.q0[i] = &codon.EMatrix{CF: data.cFreq}
 	}
 	for i := 0; i < gcat*ncatcg*ncatb; i++ {
-		m.qb[i] = &codon.EMatrix{CF: cf}
+		m.qb[i] = &codon.EMatrix{CF: data.cFreq}
 	}
 
-	m.BaseModel = NewBaseModel(cali, t, cf, m)
+	m.BaseModel = NewBaseModel(data, m)
 
 	m.setupParameters()
 	m.SetDefaults()
@@ -111,10 +110,10 @@ func (m *M8) Copy() optimize.Optimizable {
 	}
 
 	for i := 0; i < gcat*m.ncatcg; i++ {
-		newM.q0[i] = &codon.EMatrix{CF: m.cf}
+		newM.q0[i] = &codon.EMatrix{CF: m.data.cFreq}
 	}
 	for i := 0; i < gcat*m.ncatb*m.ncatcg; i++ {
-		newM.qb[i] = &codon.EMatrix{CF: m.cf}
+		newM.qb[i] = &codon.EMatrix{CF: m.data.cFreq}
 	}
 
 	newM.BaseModel.Model = newM
@@ -286,9 +285,9 @@ func (m *M8) updateQ() {
 			for c3 := 0; c3 < m.ncatsg; c3++ {
 				m.tmp[2] = m.gammas[c3]
 
-				e := &codon.EMatrix{CF: m.cf}
+				e := &codon.EMatrix{CF: m.data.cFreq}
 
-				Q, s := codon.CreateRateTransitionMatrix(m.cf, m.kappa, m.omega, m.tmp, e.Q)
+				Q, s := codon.CreateRateTransitionMatrix(m.data.cFreq, m.kappa, m.omega, m.tmp, e.Q)
 				e.Set(Q, s)
 				err := e.Eigen()
 				if err != nil {
@@ -302,7 +301,7 @@ func (m *M8) updateQ() {
 					m.q0[catid].ScaleD(rate)
 
 					class := m.ncatb*gcat*m.ncatcg + catid
-					for _, node := range m.tree.NodeIDArray() {
+					for _, node := range m.data.Tree.NodeIDArray() {
 						if node == nil {
 							continue
 						}
@@ -334,8 +333,8 @@ func (m *M8) updateQb() {
 				m.tmp[2] = m.gammas[c3]
 
 				for icl, omega := range m.omegab {
-					e := &codon.EMatrix{CF: m.cf}
-					Q, s := codon.CreateRateTransitionMatrix(m.cf, m.kappa, omega, m.tmp, e.Q)
+					e := &codon.EMatrix{CF: m.data.cFreq}
+					Q, s := codon.CreateRateTransitionMatrix(m.data.cFreq, m.kappa, omega, m.tmp, e.Q)
 					e.Set(Q, s)
 					err := e.Eigen()
 					if err != nil {
@@ -348,7 +347,7 @@ func (m *M8) updateQb() {
 						e.Copy(m.qb[catid])
 						m.qb[catid].ScaleD(rate)
 
-						for _, node := range m.tree.NodeIDArray() {
+						for _, node := range m.data.Tree.NodeIDArray() {
 							if node == nil {
 								continue
 							}
@@ -396,7 +395,7 @@ func (m *M8) updateProportions() {
 		}
 	}
 
-	for _, node := range m.tree.NodeIDArray() {
+	for _, node := range m.data.Tree.NodeIDArray() {
 		if node == nil {
 			continue
 		}

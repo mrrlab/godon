@@ -45,16 +45,16 @@ func (m *BaseModel) observedSubL(class, pos int, plh [][]float64, lettersF, lett
 	}
 	fabs := 0.0
 	for _, l := range lettersA {
-		fabs += m.cf.Freq[l]
+		fabs += m.data.cFreq.Freq[l]
 	}
 
-	NCodon := m.cf.GCode.NCodon
+	NCodon := m.data.cFreq.GCode.NCodon
 
-	for node := range m.tree.Terminals() {
-		cod := m.cali[node.LeafID].Sequence[pos]
+	for node := range m.data.Tree.Terminals() {
+		cod := m.data.cSeqs[node.LeafID].Sequence[pos]
 		nfound := 0
 		for _, l := range lettersF {
-			if l == int(m.cali[node.LeafID].Sequence[pos]) || cod == codon.NOCODON {
+			if l == int(m.data.cSeqs[node.LeafID].Sequence[pos]) || cod == codon.NOCODON {
 				plh[node.ID][l] = 1
 				nfound++
 			} else {
@@ -66,7 +66,7 @@ func (m *BaseModel) observedSubL(class, pos int, plh [][]float64, lettersF, lett
 		}
 	}
 
-	for _, node := range m.tree.NodeOrder() {
+	for _, node := range m.data.Tree.NodeOrder() {
 		for _, l1 := range lettersF {
 			l := 1.0
 			for _, child := range node.ChildNodes() {
@@ -96,7 +96,7 @@ func (m *BaseModel) observedSubL(class, pos int, plh [][]float64, lettersF, lett
 						pai := 0.0
 						if l2 != NCodon {
 							for _, l1 := range lettersA {
-								pai += m.cf.Freq[l1] * m.eQts[class][child.ID][l1*NCodon+l2]
+								pai += m.data.cFreq.Freq[l1] * m.eQts[class][child.ID][l1*NCodon+l2]
 							}
 							pai /= fabs
 
@@ -116,7 +116,7 @@ func (m *BaseModel) observedSubL(class, pos int, plh [][]float64, lettersF, lett
 			for _, l := range lettersF {
 				if l != NCodon {
 
-					res += m.cf.Freq[l] * plh[node.ID][l]
+					res += m.data.cFreq.Freq[l] * plh[node.ID][l]
 				} else {
 					res += fabs * plh[node.ID][l]
 				}
@@ -134,23 +134,23 @@ func (m *BaseModel) observedStates(lettersF, lettersA []int) (schema *aggSchema)
 	NStates := len(lettersF)
 
 	schema = &aggSchema{
-		codon2state:  make([]int, m.cf.GCode.NCodon),
+		codon2state:  make([]int, m.data.cFreq.GCode.NCodon),
 		state2codons: make([][]int, NStates),
 		stateFreq:    make([]float64, NStates),
 	}
 
 	for i, l := range lettersF {
-		if l != m.cf.GCode.NCodon {
+		if l != m.data.cFreq.GCode.NCodon {
 			schema.state2codons[i] = append(schema.state2codons[i], l)
 			schema.codon2state[l] = i
-			schema.stateFreq[i] += m.cf.Freq[l]
+			schema.stateFreq[i] += m.data.cFreq.Freq[l]
 		}
 	}
 	aState := NStates - 1
 	for _, l := range lettersA {
 		schema.state2codons[aState] = append(schema.state2codons[aState], l)
 		schema.codon2state[l] = aState
-		schema.stateFreq[aState] += m.cf.Freq[l]
+		schema.stateFreq[aState] += m.data.cFreq.Freq[l]
 	}
 	return
 }
@@ -159,10 +159,10 @@ func (m *BaseModel) observedStates(lettersF, lettersA []int) (schema *aggSchema)
 // using provided aggregation schema.
 func (m *BaseModel) aggSubL(class, pos int, plh [][]float64, schema *aggSchema) (res float64) {
 	NStates := len(schema.state2codons)
-	NCodon := m.cf.GCode.NCodon
+	NCodon := m.data.cFreq.GCode.NCodon
 
-	for node := range m.tree.Terminals() {
-		cod := m.cali[node.LeafID].Sequence[pos]
+	for node := range m.data.Tree.Terminals() {
+		cod := m.data.cSeqs[node.LeafID].Sequence[pos]
 		st := schema.codon2state[cod]
 		for i := range schema.state2codons {
 			if cod == codon.NOCODON || i == st {
@@ -173,7 +173,7 @@ func (m *BaseModel) aggSubL(class, pos int, plh [][]float64, schema *aggSchema) 
 		}
 	}
 
-	for _, node := range m.tree.NodeOrder() {
+	for _, node := range m.data.Tree.NodeOrder() {
 		for s1 := 0; s1 < NStates; s1++ {
 			l := 1.0
 			for _, child := range node.ChildNodes() {
@@ -193,7 +193,7 @@ func (m *BaseModel) aggSubL(class, pos int, plh [][]float64, schema *aggSchema) 
 								pl12 += q[l2]
 
 							}
-							ps12 += m.cf.Freq[l1] * pl12
+							ps12 += m.data.cFreq.Freq[l1] * pl12
 						}
 						//s += q.Get(l1, l2) * plh[child.Id][l2]
 						ps12 /= schema.stateFreq[s1]
@@ -227,20 +227,20 @@ func (m *BaseModel) aggSubL(class, pos int, plh [][]float64, schema *aggSchema) 
 // fixedSubL calculates likelihood for given site class and position
 // if the site is fixed.
 func (m *BaseModel) fixedSubL(class, pos int, plh [][]float64) (res float64) {
-	NCodon := m.cf.GCode.NCodon
+	NCodon := m.data.cFreq.GCode.NCodon
 
-	for i := 0; i < m.tree.MaxNodeID()+1; i++ {
+	for i := 0; i < m.data.Tree.MaxNodeID()+1; i++ {
 		plh[i][0] = math.NaN()
 	}
 
 	l := m.lettersF[pos][0]
 
-	for node := range m.tree.Terminals() {
+	for node := range m.data.Tree.Terminals() {
 		plh[node.ID][0] = 1
 		plh[node.ID][1] = 0
 	}
 
-	for _, node := range m.tree.NodeOrder() {
+	for _, node := range m.data.Tree.NodeOrder() {
 		plh[node.ID][0] = 1
 		plh[node.ID][1] = 1
 		for _, child := range node.ChildNodes() {
@@ -249,10 +249,10 @@ func (m *BaseModel) fixedSubL(class, pos int, plh [][]float64) (res float64) {
 			p10 := 0.0
 			for l1 := 0; l1 < NCodon; l1++ {
 				if l != l1 {
-					p10 += m.cf.Freq[l1] * m.eQts[class][child.ID][l1*NCodon+l]
+					p10 += m.data.cFreq.Freq[l1] * m.eQts[class][child.ID][l1*NCodon+l]
 				}
 			}
-			p10 /= (1 - m.cf.Freq[l])
+			p10 /= (1 - m.data.cFreq.Freq[l])
 			p11 := 1 - p10
 
 			cplh := plh[child.ID]
@@ -261,7 +261,7 @@ func (m *BaseModel) fixedSubL(class, pos int, plh [][]float64) (res float64) {
 		}
 
 		if node.IsRoot() {
-			res = m.cf.Freq[l]*plh[node.ID][0] + (1-m.cf.Freq[l])*plh[node.ID][1]
+			res = m.data.cFreq.Freq[l]*plh[node.ID][0] + (1-m.data.cFreq.Freq[l])*plh[node.ID][1]
 			break
 		}
 

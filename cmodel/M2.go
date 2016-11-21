@@ -6,7 +6,6 @@ import (
 	"bitbucket.org/Davydov/godon/codon"
 	"bitbucket.org/Davydov/godon/optimize"
 	"bitbucket.org/Davydov/godon/paml"
-	"bitbucket.org/Davydov/godon/tree"
 )
 
 // M2 is an implementation of M1a & M2a models.
@@ -39,7 +38,7 @@ type M2 struct {
 }
 
 // NewM2 creates a new M2 model.
-func NewM2(cali codon.Sequences, t *tree.Tree, cf codon.Frequency, addw bool, ncatsg, ncatcg int) (m *M2) {
+func NewM2(data *Data, addw bool, ncatsg, ncatcg int) (m *M2) {
 	// n site gamma categories, ncatb * n^3 matrices
 	gcat := ncatsg * ncatsg * ncatsg
 	m = &M2{
@@ -55,14 +54,14 @@ func NewM2(cali codon.Sequences, t *tree.Tree, cf codon.Frequency, addw bool, nc
 	}
 
 	for i := 0; i < gcat*ncatcg; i++ {
-		m.q0[i] = &codon.EMatrix{CF: cf}
-		m.q1[i] = &codon.EMatrix{CF: cf}
+		m.q0[i] = &codon.EMatrix{CF: data.cFreq}
+		m.q1[i] = &codon.EMatrix{CF: data.cFreq}
 		if addw {
-			m.q2[i] = &codon.EMatrix{CF: cf}
+			m.q2[i] = &codon.EMatrix{CF: data.cFreq}
 		}
 	}
 
-	m.BaseModel = NewBaseModel(cali, t, cf, m)
+	m.BaseModel = NewBaseModel(data, m)
 
 	m.setupParameters()
 	m.setBranchMatrices()
@@ -105,10 +104,10 @@ func (m *M2) Copy() optimize.Optimizable {
 	}
 
 	for i := 0; i < gcat*m.ncatcg; i++ {
-		newM.q0[i] = &codon.EMatrix{CF: m.cf}
-		newM.q1[i] = &codon.EMatrix{CF: m.cf}
+		newM.q0[i] = &codon.EMatrix{CF: m.data.cFreq}
+		newM.q1[i] = &codon.EMatrix{CF: m.data.cFreq}
 		if m.addw {
-			newM.q2[i] = &codon.EMatrix{CF: m.cf}
+			newM.q2[i] = &codon.EMatrix{CF: m.data.cFreq}
 		}
 	}
 
@@ -260,7 +259,7 @@ func (m *M2) SetDefaults() {
 // setBranchMatrices set matrices for all the branches.
 func (m *M2) setBranchMatrices() {
 	scat := m.ncatsg * m.ncatsg * m.ncatsg
-	for _, node := range m.tree.NodeIDArray() {
+	for _, node := range m.data.Tree.NodeIDArray() {
 		if node == nil {
 			continue
 		}
@@ -285,8 +284,8 @@ func (m *M2) fillMatrices(omega float64, dest []*codon.EMatrix) {
 			for c3 := 0; c3 < m.ncatsg; c3++ {
 				m.tmp[2] = m.gammas[c3]
 
-				e := &codon.EMatrix{CF: m.cf}
-				Q, s := codon.CreateRateTransitionMatrix(m.cf, m.kappa, omega, m.tmp, e.Q)
+				e := &codon.EMatrix{CF: m.data.cFreq}
+				Q, s := codon.CreateRateTransitionMatrix(m.data.cFreq, m.kappa, omega, m.tmp, e.Q)
 				e.Set(Q, s)
 				err := e.Eigen()
 				if err != nil {
@@ -372,7 +371,7 @@ func (m *M2) updateProportions() {
 		}
 	}
 
-	for _, node := range m.tree.NodeIDArray() {
+	for _, node := range m.data.Tree.NodeIDArray() {
 		if node == nil {
 			continue
 		}

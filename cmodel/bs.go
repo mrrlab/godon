@@ -8,7 +8,6 @@ import (
 
 	"bitbucket.org/Davydov/godon/codon"
 	"bitbucket.org/Davydov/godon/optimize"
-	"bitbucket.org/Davydov/godon/tree"
 )
 
 // BranchSite is an implementation of the branch-site model.
@@ -31,15 +30,15 @@ type brachSiteSummary struct {
 }
 
 // NewBranchSite creates a new BranchSite model.
-func NewBranchSite(cali codon.Sequences, t *tree.Tree, cf codon.Frequency, fixw2 bool) (m *BranchSite) {
+func NewBranchSite(data *Data, fixw2 bool) (m *BranchSite) {
 	m = &BranchSite{
 		fixw2: fixw2,
-		q0:    &codon.EMatrix{CF: cf},
-		q1:    &codon.EMatrix{CF: cf},
-		q2:    &codon.EMatrix{CF: cf},
+		q0:    &codon.EMatrix{CF: data.cFreq},
+		q1:    &codon.EMatrix{CF: data.cFreq},
+		q2:    &codon.EMatrix{CF: data.cFreq},
 	}
 
-	m.BaseModel = NewBaseModel(cali, t, cf, m)
+	m.BaseModel = NewBaseModel(data, m)
 
 	m.setupParameters()
 	m.setBranchMatrices()
@@ -59,9 +58,9 @@ func (m *BranchSite) GetNClass() int {
 func (m *BranchSite) Copy() optimize.Optimizable {
 	newM := &BranchSite{
 		BaseModel: m.BaseModel.Copy(),
-		q0:        &codon.EMatrix{CF: m.cf},
-		q1:        &codon.EMatrix{CF: m.cf},
-		q2:        &codon.EMatrix{CF: m.cf},
+		q0:        &codon.EMatrix{CF: m.data.cFreq},
+		q1:        &codon.EMatrix{CF: m.data.cFreq},
+		q2:        &codon.EMatrix{CF: m.data.cFreq},
 		kappa:     m.kappa,
 		omega0:    m.omega0,
 		omega2:    m.omega2,
@@ -168,7 +167,7 @@ func (m *BranchSite) SetDefaults() {
 // setBranchMatrices set matrices for all the branches.
 func (m *BranchSite) setBranchMatrices() {
 	for i := 0; i < len(m.qs); i++ {
-		for _, node := range m.tree.NodeIDArray() {
+		for _, node := range m.data.Tree.NodeIDArray() {
 			if node == nil {
 				continue
 			}
@@ -204,7 +203,7 @@ func (m *BranchSite) updateProportions() {
 	m.prop[0][2] = (1 - p0 - p1) * p0 / (p0 + p1)
 	m.prop[0][3] = (1 - p0 - p1) * p1 / (p0 + p1)
 
-	for _, node := range m.tree.NodeIDArray() {
+	for _, node := range m.data.Tree.NodeIDArray() {
 		if node == nil {
 			continue
 		}
@@ -221,7 +220,7 @@ func (m *BranchSite) updateProportions() {
 // updateMatrices updates matrices if model parameters are changing.
 func (m *BranchSite) updateMatrices() {
 	if !m.q0done {
-		Q0, s0 := codon.CreateTransitionMatrix(m.cf, m.kappa, m.omega0, m.q0.Q)
+		Q0, s0 := codon.CreateTransitionMatrix(m.data.cFreq, m.kappa, m.omega0, m.q0.Q)
 		m.q0.Set(Q0, s0)
 		err := m.q0.Eigen()
 		if err != nil {
@@ -231,7 +230,7 @@ func (m *BranchSite) updateMatrices() {
 	}
 
 	if !m.q1done {
-		Q1, s1 := codon.CreateTransitionMatrix(m.cf, m.kappa, 1, m.q1.Q)
+		Q1, s1 := codon.CreateTransitionMatrix(m.data.cFreq, m.kappa, 1, m.q1.Q)
 		m.q1.Set(Q1, s1)
 		err := m.q1.Eigen()
 		if err != nil {
@@ -241,7 +240,7 @@ func (m *BranchSite) updateMatrices() {
 	}
 
 	if !m.q2done {
-		Q2, s2 := codon.CreateTransitionMatrix(m.cf, m.kappa, m.omega2, m.q2.Q)
+		Q2, s2 := codon.CreateTransitionMatrix(m.data.cFreq, m.kappa, m.omega2, m.q2.Q)
 		m.q2.Set(Q2, s2)
 		err := m.q2.Eigen()
 		if err != nil {
@@ -258,13 +257,13 @@ func (m *BranchSite) updateMatrices() {
 func (m *BranchSite) siteLMatrix(w0, w2 []float64) (res [][][][]float64) {
 	res = make([][][][]float64, len(w0))
 	nClass := m.GetNClass()
-	nPos := m.cali.Length()
-	nni := m.tree.MaxNodeID() + 1
+	nPos := m.data.cSeqs.Length()
+	nni := m.data.Tree.MaxNodeID() + 1
 
 	// temporary storage for likelihood computation
 	plh := make([][]float64, nni)
 	for i := 0; i < nni; i++ {
-		plh[i] = make([]float64, m.cf.GCode.NCodon+1)
+		plh[i] = make([]float64, m.data.cFreq.GCode.NCodon+1)
 	}
 
 	counter := 0
@@ -277,10 +276,10 @@ func (m *BranchSite) siteLMatrix(w0, w2 []float64) (res [][][][]float64) {
 	tasks := make(chan bebtask, nPos)
 
 	go func() {
-		nni := m.tree.MaxNodeID() + 1
+		nni := m.data.Tree.MaxNodeID() + 1
 		plh := make([][]float64, nni)
 		for i := 0; i < nni; i++ {
-			plh[i] = make([]float64, m.cf.GCode.NCodon+1)
+			plh[i] = make([]float64, m.data.cFreq.GCode.NCodon+1)
 		}
 		for task := range tasks {
 			res[task.iW0][task.iW2][task.class][task.pos] = m.fullSubL(task.class, task.pos, plh)
@@ -342,7 +341,7 @@ func (m *BranchSite) computePropBEB(prop []float64, i, j, d int) []float64 {
 
 // BEBPosterior returns BEB posterior values.
 func (m *BranchSite) BEBPosterior() (res []float64) {
-	nPos := m.cali.Length()
+	nPos := m.data.cSeqs.Length()
 	nClass := m.GetNClass()
 	res = make([]float64, nPos)
 

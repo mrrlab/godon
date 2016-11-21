@@ -71,15 +71,15 @@ type BaseModel struct {
 	// Model is the model implementation.
 	Model
 
-	tree      *tree.Tree
+	// data stores codon model input data (i.e. tree, alignment & gcode)
+	data *Data
+
 	optBranch bool
-	cali      codon.Sequences
 	lettersF  [][]int
 	lettersA  [][]int
 	rshuffle  []int //random shuffle of positions
 	//precomtputed aggregation schemas
 	schemas []*aggSchema
-	cf      codon.Frequency
 	qs      [][]*codon.EMatrix
 	scale   []float64
 	//prop is proportions, in theory it can be different for every site
@@ -108,41 +108,39 @@ type BaseModel struct {
 }
 
 // NewBaseModel creates a new base Model.
-func NewBaseModel(cali codon.Sequences, t *tree.Tree, cf codon.Frequency, model Model) (bm *BaseModel) {
-	f, a := cali.Letters()
+func NewBaseModel(data *Data, model Model) (bm *BaseModel) {
+	f, a := data.cSeqs.Letters()
 	nclass := model.GetNClass()
 	bm = &BaseModel{
 		Model:    model,
-		cali:     cali,
+		data:     data,
 		lettersF: f,
 		lettersA: a,
-		rshuffle: rand.Perm(cali.Length()),
-		schemas:  make([]*aggSchema, cali.Length()),
-		tree:     t,
-		cf:       cf,
+		rshuffle: rand.Perm(data.cSeqs.Length()),
+		schemas:  make([]*aggSchema, data.cSeqs.Length()),
 		qs:       make([][]*codon.EMatrix, nclass),
-		scale:    make([]float64, t.MaxNodeID()+1),
-		expBr:    make([]bool, t.MaxNodeID()+1),
-		prop:     make([][]float64, cali.Length()),
+		scale:    make([]float64, data.Tree.MaxNodeID()+1),
+		expBr:    make([]bool, data.Tree.MaxNodeID()+1),
+		prop:     make([][]float64, data.cSeqs.Length()),
 		nclass:   nclass,
-		l:        make([]float64, cali.Length()),
-		prunPos:  make([]bool, cali.Length()),
+		l:        make([]float64, data.cSeqs.Length()),
+		prunPos:  make([]bool, data.cSeqs.Length()),
 	}
 	p := make([]float64, nclass)
 	for i := range bm.prop {
 		bm.prop[i] = p
 	}
 	for i := 0; i < nclass; i++ {
-		bm.qs[i] = make([]*codon.EMatrix, t.MaxNodeID()+1)
+		bm.qs[i] = make([]*codon.EMatrix, data.Tree.MaxNodeID()+1)
 	}
-	t.NodeOrder()
+	data.Tree.NodeOrder()
 	bm.ReorderAlignment()
 	return
 }
 
 // Copy creates a copy of BaseModel.
 func (m *BaseModel) Copy() (newM *BaseModel) {
-	newM = NewBaseModel(m.cali, m.tree.Copy(), m.cf, m.Model)
+	newM = NewBaseModel(m.data.Copy(), m.Model)
 	copy(newM.prop[0], m.prop[0])
 	newM.as = m.as
 	newM.optBranch = m.optBranch
@@ -196,7 +194,7 @@ func (m *BaseModel) addBranchParameters(fpg optimize.FloatParameterGenerator) {
 	}
 	if m.optBranch {
 
-		for _, node := range m.tree.NodeIDArray() {
+		for _, node := range m.data.Tree.NodeIDArray() {
 			if node == nil {
 				continue
 			}
@@ -229,29 +227,29 @@ func (m *BaseModel) SetAggregationMode(mode AggMode) {
 // their index in the array.
 func (m *BaseModel) ReorderAlignment() {
 	nm2id := make(map[string]int)
-	for i, s := range m.cali {
+	for i, s := range m.data.cSeqs {
 		nm2id[s.Name] = i
 	}
 
-	if m.tree.NLeaves() != len(m.cali) {
+	if m.data.Tree.NLeaves() != len(m.data.cSeqs) {
 		log.Fatal("Tree doesn't match the alignment.")
 	}
-	newCali := make(codon.Sequences, m.tree.NLeaves())
-	for node := range m.tree.Terminals() {
+	newCali := make(codon.Sequences, m.data.Tree.NLeaves())
+	for node := range m.data.Tree.Terminals() {
 		nodeID, ok := nm2id[node.Name]
 		if !ok {
 			log.Fatalf("No sequence found for the leaf <%s>.", node.Name)
 		}
-		newCali[node.LeafID] = m.cali[nodeID]
+		newCali[node.LeafID] = m.data.cSeqs[nodeID]
 	}
 
-	m.cali = newCali
+	m.data.cSeqs = newCali
 }
 
 // ExpBranch exponentiates a signle branch. This uses eigen decomposed matrices.
 func (m *BaseModel) ExpBranch(br int) {
-	node := m.tree.NodeIDArray()[br]
-	cD := mat64.NewDense(m.cf.GCode.NCodon, m.cf.GCode.NCodon, nil)
+	node := m.data.Tree.NodeIDArray()[br]
+	cD := mat64.NewDense(m.data.cFreq.GCode.NCodon, m.data.cFreq.GCode.NCodon, nil)
 	for class := range m.qs {
 		var oclass int
 		for oclass = class - 1; oclass >= 0; oclass-- {
@@ -277,7 +275,7 @@ func (m *BaseModel) ExpBranches() {
 	if m.eQts == nil {
 		m.eQts = make([][][]float64, len(m.qs))
 		for class := range m.qs {
-			m.eQts[class] = make([][]float64, m.tree.MaxNodeID()+1)
+			m.eQts[class] = make([][]float64, m.data.Tree.MaxNodeID()+1)
 		}
 	} else {
 		for class := range m.eQts {
@@ -287,7 +285,7 @@ func (m *BaseModel) ExpBranches() {
 		}
 	}
 
-	nTasks := len(m.qs) * m.tree.NNodes()
+	nTasks := len(m.qs) * m.data.Tree.NNodes()
 
 	// expTask is a type storing a task of exponentiating matrices for a
 	// class & a node.
@@ -302,7 +300,7 @@ func (m *BaseModel) ExpBranches() {
 	for i := 0; i < runtime.GOMAXPROCS(0); i++ {
 		wg.Add(1)
 		go func() {
-			cD := mat64.NewDense(m.cf.GCode.NCodon, m.cf.GCode.NCodon, nil)
+			cD := mat64.NewDense(m.data.cFreq.GCode.NCodon, m.data.cFreq.GCode.NCodon, nil)
 			for s := range tasks {
 				Q, err := m.qs[s.class][s.node.ID].Exp(cD, s.node.BranchLength/m.scale[s.node.ID])
 				if err != nil {
@@ -315,7 +313,7 @@ func (m *BaseModel) ExpBranches() {
 	}
 
 	for class := range m.qs {
-		for _, node := range m.tree.NodeIDArray() {
+		for _, node := range m.data.Tree.NodeIDArray() {
 			if node == nil {
 				continue
 			}
@@ -346,7 +344,7 @@ func (m *BaseModel) expBranchesIfNeeded() {
 		m.ExpBranches()
 		m.prunAllPos = false
 	} else {
-		for _, node := range m.tree.NodeIDArray() {
+		for _, node := range m.data.Tree.NodeIDArray() {
 			if node == nil {
 				continue
 			}
@@ -364,21 +362,21 @@ func (m *BaseModel) Likelihood() (lnL float64) {
 
 	m.expBranchesIfNeeded()
 
-	if len(m.prop) != m.cali.Length() {
+	if len(m.prop) != m.data.cSeqs.Length() {
 		panic("incorrect proportion length")
 	}
 
-	nPos := m.cali.Length()
+	nPos := m.data.cSeqs.Length()
 	nWorkers := runtime.GOMAXPROCS(0)
 	done := make(chan struct{}, nWorkers)
 	tasks := make(chan int, nPos)
 
 	for i := 0; i < nWorkers; i++ {
 		go func() {
-			nni := m.tree.MaxNodeID() + 1
+			nni := m.data.Tree.MaxNodeID() + 1
 			plh := make([][]float64, nni)
 			for i := 0; i < nni; i++ {
-				plh[i] = make([]float64, m.cf.GCode.NCodon+1)
+				plh[i] = make([]float64, m.data.cFreq.GCode.NCodon+1)
 			}
 			for pos := range tasks {
 				if m.prunAllPos && m.prunPos[pos] {
@@ -451,7 +449,7 @@ func (m *BaseModel) Likelihood() (lnL float64) {
 // empirical Bayes) analysis.
 func (m *BaseModel) classLikelihoods() (res [][]float64) {
 	res = make([][]float64, m.GetNClass())
-	nPos := m.cali.Length()
+	nPos := m.data.cSeqs.Length()
 	for i := range res {
 		res[i] = make([]float64, nPos)
 	}
@@ -464,10 +462,10 @@ func (m *BaseModel) classLikelihoods() (res [][]float64) {
 
 	for i := 0; i < nWorkers; i++ {
 		go func() {
-			nni := m.tree.MaxNodeID() + 1
+			nni := m.data.Tree.MaxNodeID() + 1
 			plh := make([][]float64, nni)
 			for i := 0; i < nni; i++ {
-				plh[i] = make([]float64, m.cf.GCode.NCodon+1)
+				plh[i] = make([]float64, m.data.cFreq.GCode.NCodon+1)
 			}
 			for pos := range tasks {
 				for class, p := range m.prop[pos] {
@@ -505,7 +503,7 @@ func (m *BaseModel) classLikelihoods() (res [][]float64) {
 // NEBPosterior returns array (slice) of posterior probabilities for a
 // given classes.
 func (m *BaseModel) NEBPosterior(classes map[int]bool) (res []float64) {
-	nPos := m.cali.Length()
+	nPos := m.data.cSeqs.Length()
 	nClass := m.GetNClass()
 	res = make([]float64, nPos)
 	// compute class likelihood matrix
@@ -531,18 +529,18 @@ func (m *BaseModel) PrintPosterior(posterior []float64) {
 	for i, p := range posterior {
 		if p > 0.5 {
 			bcodon := byte(0)
-			for _, seq := range m.cali {
+			for _, seq := range m.data.cSeqs {
 				bcodon = seq.Sequence[i]
 				if bcodon != codon.NOCODON {
 					break
 				}
 			}
 
-			codon, ok := m.cf.GCode.NumCodon[bcodon]
+			codon, ok := m.data.cFreq.GCode.NumCodon[bcodon]
 			if !ok {
 				codon = "NNN"
 			}
-			aa, ok := m.cf.GCode.Map[codon]
+			aa, ok := m.data.cFreq.GCode.Map[codon]
 			if !ok {
 				aa = 'X'
 			}
@@ -554,14 +552,14 @@ func (m *BaseModel) PrintPosterior(posterior []float64) {
 
 // fullSubL calculates likelihood for given site class and position.
 func (m *BaseModel) fullSubL(class, pos int, plh [][]float64) (res float64) {
-	NCodon := m.cf.GCode.NCodon
+	NCodon := m.data.cFreq.GCode.NCodon
 
-	for i := 0; i < m.tree.MaxNodeID()+1; i++ {
+	for i := 0; i < m.data.Tree.MaxNodeID()+1; i++ {
 		plh[i][0] = math.NaN()
 	}
 
-	for node := range m.tree.Terminals() {
-		cod := m.cali[node.LeafID].Sequence[pos]
+	for node := range m.data.Tree.Terminals() {
+		cod := m.data.cSeqs[node.LeafID].Sequence[pos]
 		for l := byte(0); l < byte(NCodon); l++ {
 			if cod == codon.NOCODON || l == cod {
 				plh[node.ID][l] = 1
@@ -571,7 +569,7 @@ func (m *BaseModel) fullSubL(class, pos int, plh [][]float64) (res float64) {
 		}
 	}
 
-	for _, node := range m.tree.NodeOrder() {
+	for _, node := range m.data.Tree.NodeOrder() {
 		for l1 := 0; l1 < NCodon; l1++ {
 			l := 1.0
 			for _, child := range node.ChildNodes() {
@@ -587,7 +585,7 @@ func (m *BaseModel) fullSubL(class, pos int, plh [][]float64) (res float64) {
 
 		if node.IsRoot() {
 			for l := 0; l < NCodon; l++ {
-				res += m.cf.Freq[l] * plh[node.ID][l]
+				res += m.data.cFreq.Freq[l] * plh[node.ID][l]
 			}
 			break
 		}

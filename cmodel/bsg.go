@@ -9,7 +9,6 @@ import (
 	"bitbucket.org/Davydov/godon/codon"
 	"bitbucket.org/Davydov/godon/optimize"
 	"bitbucket.org/Davydov/godon/paml"
-	"bitbucket.org/Davydov/godon/tree"
 )
 
 // BranchSiteGamma is an implementation of the branch-site model with gamma
@@ -47,7 +46,7 @@ type brachSiteGammaSummary struct {
 }
 
 // NewBranchSiteGamma creates a new BranchSiteGamma model.
-func NewBranchSiteGamma(cali codon.Sequences, t *tree.Tree, cf codon.Frequency, fixw2 bool, ncatsg, ncatcg int) (m *BranchSiteGamma) {
+func NewBranchSiteGamma(data *Data, fixw2 bool, ncatsg, ncatcg int) (m *BranchSiteGamma) {
 	scat := ncatsg * ncatsg * ncatsg
 
 	m = &BranchSiteGamma{
@@ -61,12 +60,12 @@ func NewBranchSiteGamma(cali codon.Sequences, t *tree.Tree, cf codon.Frequency, 
 		gammac: make([]float64, ncatcg),
 		tmp:    make([]float64, maxInt(ncatcg, ncatsg, 3)),
 	}
-	m.BaseModel = NewBaseModel(cali, t, cf, m)
+	m.BaseModel = NewBaseModel(data, m)
 
 	for i := 0; i < scat*ncatcg; i++ {
-		m.q0s[i] = &codon.EMatrix{CF: cf}
-		m.q1s[i] = &codon.EMatrix{CF: cf}
-		m.q2s[i] = &codon.EMatrix{CF: cf}
+		m.q0s[i] = &codon.EMatrix{CF: data.cFreq}
+		m.q1s[i] = &codon.EMatrix{CF: data.cFreq}
+		m.q2s[i] = &codon.EMatrix{CF: data.cFreq}
 	}
 
 	m.setupParameters()
@@ -113,9 +112,9 @@ func (m *BranchSiteGamma) Copy() optimize.Optimizable {
 	newM.BaseModel.Model = newM
 
 	for i := 0; i < scat*m.ncatcg; i++ {
-		newM.q0s[i] = &codon.EMatrix{CF: m.cf}
-		newM.q1s[i] = &codon.EMatrix{CF: m.cf}
-		newM.q2s[i] = &codon.EMatrix{CF: m.cf}
+		newM.q0s[i] = &codon.EMatrix{CF: m.data.cFreq}
+		newM.q1s[i] = &codon.EMatrix{CF: m.data.cFreq}
+		newM.q2s[i] = &codon.EMatrix{CF: m.data.cFreq}
 	}
 
 	newM.setupParameters()
@@ -263,7 +262,7 @@ func (m *BranchSiteGamma) SetDefaults() {
 // setBranchMatrices set matrices for all the branches.
 func (m *BranchSiteGamma) setBranchMatrices() {
 	scat := m.ncatsg * m.ncatsg * m.ncatsg
-	for _, node := range m.tree.NodeIDArray() {
+	for _, node := range m.data.Tree.NodeIDArray() {
 		if node == nil {
 			continue
 		}
@@ -297,7 +296,7 @@ func (m *BranchSiteGamma) updateProportions() {
 		m.prop[0][i+bothcat*3] = (1 - p0 - p1) * p1 / (p0 + p1) / float64(bothcat)
 	}
 
-	for _, node := range m.tree.NodeIDArray() {
+	for _, node := range m.data.Tree.NodeIDArray() {
 		if node == nil {
 			continue
 		}
@@ -320,8 +319,8 @@ func (m *BranchSiteGamma) fillMatrices(omega float64, dest []*codon.EMatrix) {
 			for c3 := 0; c3 < m.ncatsg; c3++ {
 				m.tmp[2] = m.gammas[c3]
 
-				e := &codon.EMatrix{CF: m.cf}
-				Q, s := codon.CreateRateTransitionMatrix(m.cf, m.kappa, omega, m.tmp, e.Q)
+				e := &codon.EMatrix{CF: m.data.cFreq}
+				Q, s := codon.CreateRateTransitionMatrix(m.data.cFreq, m.kappa, omega, m.tmp, e.Q)
 				e.Set(Q, s)
 				err := e.Eigen()
 				if err != nil {
@@ -388,8 +387,8 @@ func (m *BranchSiteGamma) computePropBEB(prop []float64, i, j, d int) []float64 
 func (m *BranchSiteGamma) siteLMatrix(w0, w2 []float64) (res [][][][]float64) {
 	res = make([][][][]float64, len(w0))
 	nClass := m.GetNClass()
-	nPos := m.cali.Length()
-	nni := m.tree.MaxNodeID() + 1
+	nPos := m.data.cSeqs.Length()
+	nni := m.data.Tree.MaxNodeID() + 1
 
 	scat := m.ncatsg * m.ncatsg * m.ncatsg
 	bothcat := m.ncatcg * scat
@@ -397,7 +396,7 @@ func (m *BranchSiteGamma) siteLMatrix(w0, w2 []float64) (res [][][][]float64) {
 	// temporary storage for likelihood computation
 	plh := make([][]float64, nni)
 	for i := 0; i < nni; i++ {
-		plh[i] = make([]float64, m.cf.GCode.NCodon+1)
+		plh[i] = make([]float64, m.data.cFreq.GCode.NCodon+1)
 	}
 
 	counter := 0
@@ -410,10 +409,10 @@ func (m *BranchSiteGamma) siteLMatrix(w0, w2 []float64) (res [][][][]float64) {
 	tasks := make(chan bebtask, nPos)
 
 	go func() {
-		nni := m.tree.MaxNodeID() + 1
+		nni := m.data.Tree.MaxNodeID() + 1
 		plh := make([][]float64, nni)
 		for i := 0; i < nni; i++ {
-			plh[i] = make([]float64, m.cf.GCode.NCodon+1)
+			plh[i] = make([]float64, m.data.cFreq.GCode.NCodon+1)
 		}
 		for task := range tasks {
 			res[task.iW0][task.iW2][task.class][task.pos] = m.fullSubL(task.class, task.pos, plh)
@@ -462,7 +461,7 @@ func (m *BranchSiteGamma) siteLMatrix(w0, w2 []float64) (res [][][][]float64) {
 
 // BEBPosterior returns BEB posterior values.
 func (m *BranchSiteGamma) BEBPosterior() (res []float64) {
-	nPos := m.cali.Length()
+	nPos := m.data.cSeqs.Length()
 	nClass := m.GetNClass()
 	res = make([]float64, nPos)
 
