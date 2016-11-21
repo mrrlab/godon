@@ -33,9 +33,9 @@ type brachSiteSummary struct {
 func NewBranchSite(data *Data, fixw2 bool) (m *BranchSite) {
 	m = &BranchSite{
 		fixw2: fixw2,
-		q0:    &codon.EMatrix{CF: data.cFreq},
-		q1:    &codon.EMatrix{CF: data.cFreq},
-		q2:    &codon.EMatrix{CF: data.cFreq},
+		q0:    codon.NewEMatrix(data.cFreq),
+		q1:    codon.NewEMatrix(data.cFreq),
+		q2:    codon.NewEMatrix(data.cFreq),
 	}
 
 	m.BaseModel = NewBaseModel(data, m)
@@ -58,9 +58,9 @@ func (m *BranchSite) GetNClass() int {
 func (m *BranchSite) Copy() optimize.Optimizable {
 	newM := &BranchSite{
 		BaseModel: m.BaseModel.Copy(),
-		q0:        &codon.EMatrix{CF: m.data.cFreq},
-		q1:        &codon.EMatrix{CF: m.data.cFreq},
-		q2:        &codon.EMatrix{CF: m.data.cFreq},
+		q0:        codon.NewEMatrix(m.data.cFreq),
+		q1:        codon.NewEMatrix(m.data.cFreq),
+		q2:        codon.NewEMatrix(m.data.cFreq),
 		kappa:     m.kappa,
 		omega0:    m.omega0,
 		omega2:    m.omega2,

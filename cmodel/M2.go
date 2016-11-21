@@ -54,10 +54,10 @@ func NewM2(data *Data, addw bool, ncatsg, ncatcg int) (m *M2) {
 	}
 
 	for i := 0; i < gcat*ncatcg; i++ {
-		m.q0[i] = &codon.EMatrix{CF: data.cFreq}
-		m.q1[i] = &codon.EMatrix{CF: data.cFreq}
+		m.q0[i] = codon.NewEMatrix(data.cFreq)
+		m.q1[i] = codon.NewEMatrix(data.cFreq)
 		if addw {
-			m.q2[i] = &codon.EMatrix{CF: data.cFreq}
+			m.q2[i] = codon.NewEMatrix(data.cFreq)
 		}
 	}
 
@@ -104,10 +104,10 @@ func (m *M2) Copy() optimize.Optimizable {
 	}
 
 	for i := 0; i < gcat*m.ncatcg; i++ {
-		newM.q0[i] = &codon.EMatrix{CF: m.data.cFreq}
-		newM.q1[i] = &codon.EMatrix{CF: m.data.cFreq}
+		newM.q0[i] = codon.NewEMatrix(m.data.cFreq)
+		newM.q1[i] = codon.NewEMatrix(m.data.cFreq)
 		if m.addw {
-			newM.q2[i] = &codon.EMatrix{CF: m.data.cFreq}
+			newM.q2[i] = codon.NewEMatrix(m.data.cFreq)
 		}
 	}
 
@@ -284,7 +284,7 @@ func (m *M2) fillMatrices(omega float64, dest []*codon.EMatrix) {
 			for c3 := 0; c3 < m.ncatsg; c3++ {
 				m.tmp[2] = m.gammas[c3]
 
-				e := &codon.EMatrix{CF: m.data.cFreq}
+				e := codon.NewEMatrix(m.data.cFreq)
 				Q, s := codon.CreateRateTransitionMatrix(m.data.cFreq, m.kappa, omega, m.tmp, e.Q)
 				e.Set(Q, s)
 				err := e.Eigen()

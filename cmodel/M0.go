@@ -16,7 +16,7 @@ type M0 struct {
 // NewM0 creates a new M0 model.
 func NewM0(data *Data) (m *M0) {
 	m = &M0{
-		q: &codon.EMatrix{CF: data.cFreq},
+		q: codon.NewEMatrix(data.cFreq),
 	}
 	m.BaseModel = NewBaseModel(data, m)
 	m.prop[0][0] = 1
@@ -36,7 +36,7 @@ func (m *M0) GetNClass() int {
 func (m *M0) Copy() optimize.Optimizable {
 	newM := &M0{
 		BaseModel: m.BaseModel.Copy(),
-		q:         &codon.EMatrix{CF: m.data.cFreq},
+		q:         codon.NewEMatrix(m.data.cFreq),
 		omega:     m.omega,
 		kappa:     m.kappa,
 	}

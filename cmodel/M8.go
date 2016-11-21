@@ -61,10 +61,10 @@ func NewM8(data *Data, addw, fixw bool, ncatb, ncatsg, ncatcg int) (m *M8) {
 	}
 
 	for i := 0; i < gcat*ncatcg; i++ {
-		m.q0[i] = &codon.EMatrix{CF: data.cFreq}
+		m.q0[i] = codon.NewEMatrix(data.cFreq)
 	}
 	for i := 0; i < gcat*ncatcg*ncatb; i++ {
-		m.qb[i] = &codon.EMatrix{CF: data.cFreq}
+		m.qb[i] = codon.NewEMatrix(data.cFreq)
 	}
 
 	m.BaseModel = NewBaseModel(data, m)
@@ -110,10 +110,10 @@ func (m *M8) Copy() optimize.Optimizable {
 	}
 
 	for i := 0; i < gcat*m.ncatcg; i++ {
-		newM.q0[i] = &codon.EMatrix{CF: m.data.cFreq}
+		newM.q0[i] = codon.NewEMatrix(m.data.cFreq)
 	}
 	for i := 0; i < gcat*m.ncatb*m.ncatcg; i++ {
-		newM.qb[i] = &codon.EMatrix{CF: m.data.cFreq}
+		newM.qb[i] = codon.NewEMatrix(m.data.cFreq)
 	}
 
 	newM.BaseModel.Model = newM
@@ -285,7 +285,7 @@ func (m *M8) updateQ() {
 			for c3 := 0; c3 < m.ncatsg; c3++ {
 				m.tmp[2] = m.gammas[c3]
 
-				e := &codon.EMatrix{CF: m.data.cFreq}
+				e := codon.NewEMatrix(m.data.cFreq)
 
 				Q, s := codon.CreateRateTransitionMatrix(m.data.cFreq, m.kappa, m.omega, m.tmp, e.Q)
 				e.Set(Q, s)
@@ -333,7 +333,7 @@ func (m *M8) updateQb() {
 				m.tmp[2] = m.gammas[c3]
 
 				for icl, omega := range m.omegab {
-					e := &codon.EMatrix{CF: m.data.cFreq}
+					e := codon.NewEMatrix(m.data.cFreq)
 					Q, s := codon.CreateRateTransitionMatrix(m.data.cFreq, m.kappa, omega, m.tmp, e.Q)
 					e.Set(Q, s)
 					err := e.Eigen()

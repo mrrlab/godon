@@ -26,9 +26,9 @@ type EMatrix struct {
 }
 
 // NewEMatrix creates a new EMatrix.
-func NewEMatrix(Q *mat64.Dense, scale float64, cf Frequency) *EMatrix {
+func NewEMatrix(cf Frequency) *EMatrix {
 	//cols, rows := Q.Dims()
-	return &EMatrix{Q: Q, Scale: scale, CF: cf}
+	return &EMatrix{CF: cf}
 }
 
 // Copy creates a copy of EMatrix while saving eigendecomposition.

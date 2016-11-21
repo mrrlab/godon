@@ -67,9 +67,9 @@ func NewBranchSiteGammaERates(data *Data, fixw2 bool, ncatsg, ncatcg int) (m *Br
 	}
 
 	for i := 0; i < scat*ncatcg; i++ {
-		m.q0s[i] = &codon.EMatrix{CF: data.cFreq}
-		m.q1s[i] = &codon.EMatrix{CF: data.cFreq}
-		m.q2s[i] = &codon.EMatrix{CF: data.cFreq}
+		m.q0s[i] = codon.NewEMatrix(data.cFreq)
+		m.q1s[i] = codon.NewEMatrix(data.cFreq)
+		m.q2s[i] = codon.NewEMatrix(data.cFreq)
 	}
 
 	m.setupParameters()
@@ -125,9 +125,9 @@ func (m *BranchSiteGammaERates) Copy() optimize.Optimizable {
 	}
 
 	for i := 0; i < scat*m.ncatcg; i++ {
-		newM.q0s[i] = &codon.EMatrix{CF: m.data.cFreq}
-		newM.q1s[i] = &codon.EMatrix{CF: m.data.cFreq}
-		newM.q2s[i] = &codon.EMatrix{CF: m.data.cFreq}
+		newM.q0s[i] = codon.NewEMatrix(m.data.cFreq)
+		newM.q1s[i] = codon.NewEMatrix(m.data.cFreq)
+		newM.q2s[i] = codon.NewEMatrix(m.data.cFreq)
 	}
 
 	newM.setupParameters()
@@ -382,7 +382,7 @@ func (m *BranchSiteGammaERates) fillMatrices(omega float64, dest []*codon.EMatri
 			for c3 := 0; c3 < m.ncatsg; c3++ {
 				m.tmp[2] = m.gammas[c3]
 
-				e := &codon.EMatrix{CF: m.data.cFreq}
+				e := codon.NewEMatrix(m.data.cFreq)
 				Q, s := codon.CreateRateTransitionMatrix(m.data.cFreq, m.kappa, omega, m.tmp, e.Q)
 				e.Set(Q, s)
 				err := e.Eigen()
