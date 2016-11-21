@@ -24,8 +24,6 @@ type OptimizationSummary struct {
 	FinalTree string `json:"finalTree,omitempty"`
 	// FullLnL is the full (non-aggregated) likelihood, it's only computed if specified (-printfull).
 	FullLnL float64 `json:"fullLnL,omitempty"`
-	// Time is the computations time in seconds.
-	Time float64 `json:"optimizationTime"`
 	// Model is the model summary, including BEB and NEB if available.
 	Model interface{} `json:"model,omitempty"`
 	// Optimizers is an array of summary of all optimizers used.

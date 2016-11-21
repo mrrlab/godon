@@ -198,6 +198,8 @@ func (n *NLOPT) Run(iterations int) {
 
 	n.maxL = (float64)(maxf)
 	n.maxLPar = n.parameters.Values(n.maxLPar)
+
+	n.saveDeltaT()
 }
 
 // Summary returns optimization summary (i.e. success/error, etc).

@@ -2,7 +2,6 @@ package main
 
 import (
 	"os"
-	"time"
 
 	"bitbucket.org/Davydov/godon/cmodel"
 )
@@ -35,8 +34,6 @@ func newData() (*cmodel.Data, error) {
 }
 
 func runOptimization(h0 bool, start map[string]float64) (summary OptimizationSummary) {
-	startTime := time.Now()
-
 	data, err := newData()
 	if err != nil {
 		log.Fatal(err)
@@ -102,11 +99,6 @@ func runOptimization(h0 bool, start map[string]float64) (summary OptimizationSum
 		log.Notice("Full likelihood: ", L)
 		summary.FullLnL = L
 	}
-
-	endTime := time.Now()
-
-	deltaT := endTime.Sub(startTime)
-	summary.Time = deltaT.Seconds()
 
 	return
 }

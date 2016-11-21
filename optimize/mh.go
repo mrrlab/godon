@@ -94,4 +94,6 @@ Iter:
 	if m.i != lastReported {
 		m.PrintLine(m.parameters, l)
 	}
+
+	m.saveDeltaT()
 }

@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"os/signal"
+	"time"
 
 	"github.com/op/go-logging"
 )
@@ -73,6 +74,8 @@ type baseSummary struct {
 	NCalls int `json:"nLikelihoodComputations"`
 	// Status is the optimization status.
 	Status interface{} `json:"status,omitempty"`
+	// OptimizationTime is the optimization time in seconds.
+	OptimizationTime float64 `json:"optimizationTime,omitempty"`
 }
 
 // Summary allows quering of maximum likelihood estimates.
@@ -108,6 +111,10 @@ type BaseOptimizer struct {
 	// Quiet controls whether output should be printed.
 	Quiet      bool
 	parameters FloatParameters
+
+	otime, ftime float64
+	//startTime is a starting time for deltaT compuataions.
+	startTime time.Time
 }
 
 // SetOptimizable sets a model for the optimization.
@@ -218,8 +225,14 @@ func (o *BaseOptimizer) GetParametersMap(par []float64) (m map[string]float64) {
 	return m
 }
 
+// saveDeltaT saves computations time in seconds.
+func (o *BaseOptimizer) saveDeltaT() {
+	o.otime = deltaT(o.startTime)
+}
+
 // SaveStart saves starting point and likelihood before optimization.
 func (o *BaseOptimizer) SaveStart() {
+	o.startTime = time.Now()
 	l := o.Likelihood()
 	o.calls++
 	o.startL = l
@@ -237,5 +250,6 @@ func (o *BaseOptimizer) Summary() Summary {
 		StartingParameters: o.GetParametersMap(o.startPar),
 		NIterations:        o.GetNIter(),
 		NCalls:             o.GetNCalls(),
+		OptimizationTime:   o.otime,
 	}
 }

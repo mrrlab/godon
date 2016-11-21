@@ -2,6 +2,7 @@ package cmodel
 
 import (
 	"math/rand"
+	"time"
 
 	"bitbucket.org/Davydov/godon/codon"
 	"bitbucket.org/Davydov/godon/optimize"
@@ -38,6 +39,13 @@ type M8 struct {
 	propdone   bool
 	gammasdone bool
 	gammacdone bool
+	summary    m8Summary
+}
+
+// m8Summary stores summary information.
+type m8Summary struct {
+	SitePosteriorNEB []float64 `json:"sitePosteriorNEB,omitempty"`
+	PosteriorTime    float64   `json:"posteriorTime,omitempty"`
 }
 
 // NewM8 creates a new M8 model.
@@ -408,6 +416,8 @@ func (m *M8) updateProportions() {
 
 // Final prints NEB results (only if with positive selection).
 func (m *M8) Final() {
+	startTime := time.Now()
+
 	// if w2=1, do not perform NEB analysis.
 	if !m.addw || m.fixw {
 		log.Info("No NEB since no positive selection in the model.")
@@ -431,8 +441,11 @@ func (m *M8) Final() {
 	}
 
 	posterior := m.NEBPosterior(classes)
+	m.summary.SitePosteriorNEB = posterior
 
 	m.PrintPosterior(posterior)
+
+	m.summary.PosteriorTime = time.Now().Sub(startTime).Seconds()
 }
 
 // Likelihood computes likelihood.
@@ -469,4 +482,13 @@ func (m *M8) Likelihood() float64 {
 	l := m.BaseModel.Likelihood()
 	log.Debug("Par:", m.parameters, "L=", l)
 	return l
+}
+
+// Summary returns the run summary (site posterior for NEB and BEB).
+func (m *M8) Summary() interface{} {
+	if m.summary.SitePosteriorNEB != nil {
+		return m.summary
+	}
+	// nil prevents json from printing "{}"
+	return nil
 }

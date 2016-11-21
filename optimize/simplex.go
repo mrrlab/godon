@@ -202,4 +202,5 @@ Iter:
 	}
 
 	ds.Optimizable = ds.points[ihi]
+	ds.saveDeltaT()
 }

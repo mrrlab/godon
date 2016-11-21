@@ -15,4 +15,5 @@ func (i *None) Run(iterations int) {
 	i.SaveStart()
 	i.PrintHeader()
 	i.PrintLine(i.parameters, i.startL)
+	i.saveDeltaT()
 }

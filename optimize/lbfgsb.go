@@ -141,6 +141,8 @@ func (l *LBFGSB) Run(iterations int) {
 	default:
 		log.Error("Error during LBFGSB:", l.exitStatus)
 	}
+
+	l.saveDeltaT()
 }
 
 // Summary returns optimization summary (i.e. success/error, etc).

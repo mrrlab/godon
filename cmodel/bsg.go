@@ -5,6 +5,7 @@ import (
 	"math/big"
 	"math/rand"
 	"runtime"
+	"time"
 
 	"bitbucket.org/Davydov/godon/codon"
 	"bitbucket.org/Davydov/godon/optimize"
@@ -43,6 +44,7 @@ type BranchSiteGamma struct {
 type brachSiteGammaSummary struct {
 	SitePosteriorNEB []float64 `json:"sitePosteriorNEB,omitempty"`
 	SitePosteriorBEB []float64 `json:"sitePosteriorBEB,omitempty"`
+	PosteriorTime    float64   `json:"posteriorTime,omitempty"`
 }
 
 // NewBranchSiteGamma creates a new BranchSiteGamma model.
@@ -549,6 +551,8 @@ func (m *BranchSiteGamma) BEBPosterior() (res []float64) {
 
 // Final prints NEB results (only if with positive selection).
 func (m *BranchSiteGamma) Final() {
+	startTime := time.Now()
+
 	// if w2=1, do not perform NEB analysis.
 	if m.fixw2 {
 		log.Info("No NEB since no positive selection in the model.")
@@ -574,6 +578,8 @@ func (m *BranchSiteGamma) Final() {
 
 	log.Notice("BEB analysis")
 	m.PrintPosterior(posterior)
+
+	m.summary.PosteriorTime = time.Now().Sub(startTime).Seconds()
 }
 
 // Likelihood computes likelihood.
