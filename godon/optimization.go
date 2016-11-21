@@ -107,6 +107,9 @@ func runOptimization(h0 bool, start map[string]float64) (summary OptimizationSum
 	startTime := time.Now()
 
 	data, err := cmodel.NewData(*gcodeID, *alignmentFileName, *treeFileName, *cFreq)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	if len(*cFreqFileName) > 0 {
 		data.SetCodonFreqFromFile(*cFreqFileName)
