@@ -3,7 +3,15 @@ package cmodel
 import (
 	"math"
 	"testing"
+
+	"github.com/op/go-logging"
 )
+
+func init() {
+	// disable logging for benchmarks
+	logging.SetLevel(logging.WARNING, "optimize")
+	logging.SetLevel(logging.ERROR, "cmodel")
+}
 
 /*** Test M0 ***/
 func TestM0F0D1(tst *testing.T) {

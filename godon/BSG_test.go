@@ -3,9 +3,17 @@ package main
 import (
 	"testing"
 
+	"github.com/op/go-logging"
+
 	"bitbucket.org/Davydov/godon/cmodel"
 	"bitbucket.org/Davydov/godon/optimize"
 )
+
+func init() {
+	// disable logging for benchmarks
+	logging.SetLevel(logging.WARNING, "optimize")
+	logging.SetLevel(logging.ERROR, "cmodel")
+}
 
 func TestBSCG(tst *testing.T) {
 	data, err := cmodel.GetTreeAlignment(data1, "F3X4")

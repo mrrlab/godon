@@ -44,9 +44,6 @@ func maxInt(a int, b ...int) int {
 
 // setLogLevel sets the default log-level to WARNING.
 func setLogLevel() {
-	logging.SetLevel(logging.WARNING, "godon")
-	logging.SetLevel(logging.WARNING, "optimize")
-	logging.SetLevel(logging.WARNING, "cmodel")
 }
 
 func strFltSlice(fs []float64) string {
