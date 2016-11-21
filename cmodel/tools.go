@@ -3,14 +3,9 @@ package cmodel
 import (
 	"bytes"
 	"fmt"
-	"os"
 	"path"
 
 	"github.com/op/go-logging"
-
-	"bitbucket.org/Davydov/godon/bio"
-	"bitbucket.org/Davydov/godon/codon"
-	"bitbucket.org/Davydov/godon/tree"
 )
 
 const (
@@ -27,38 +22,14 @@ const (
 var log = logging.MustGetLogger("cmodel")
 
 // GetTreeAlignment returns a tree and alignment for testing purposes.
-func GetTreeAlignment(data string) (t *tree.Tree, cali codon.Sequences, err error) {
+func GetTreeAlignment(dataset string, cfreq string) (*Data, error) {
+	alifn := path.Join("testdata", dataset+".fst")
+	treefn := path.Join("testdata", dataset+".nwk")
+
 	// using standard genetic code
-	gcode := bio.GeneticCodes[1]
+	cmd, err := NewData(1, alifn, treefn, cfreq)
 
-	tf, err := os.Open(path.Join("testdata", data+".nwk"))
-	if err != nil {
-		return
-	}
-	defer tf.Close()
-
-	t, err = tree.ParseNewick(tf)
-	if err != nil {
-		return
-	}
-
-	af, err := os.Open(path.Join("testdata", data+".fst"))
-	if err != nil {
-		return
-	}
-	defer af.Close()
-
-	ali, err := bio.ParseFasta(af)
-	if err != nil {
-		return
-	}
-
-	cali, err = codon.ToCodonSequences(ali, gcode)
-	if err != nil {
-		return
-	}
-
-	return
+	return cmd, err
 }
 
 // maxInt returns maximum integer value.

@@ -3,20 +3,17 @@ package cmodel
 import (
 	"testing"
 
-	"bitbucket.org/Davydov/godon/codon"
 	"bitbucket.org/Davydov/godon/optimize"
 )
 
 func BenchmarkMCMCD1(b *testing.B) {
 	setLogLevel()
-	t, cali, err := GetTreeAlignment(data1)
+	data, err := GetTreeAlignment(data1, "F0")
 	if err != nil {
 		b.Error("Error: ", err)
 	}
 
-	cf := codon.F0(cali)
-
-	m0 := NewM0(cali, t, cf)
+	m0 := NewM0(data)
 
 	b.ResetTimer()
 

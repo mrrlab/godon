@@ -4,18 +4,16 @@ import (
 	"testing"
 
 	"bitbucket.org/Davydov/godon/cmodel"
-	"bitbucket.org/Davydov/godon/codon"
 	"bitbucket.org/Davydov/godon/optimize"
 )
 
 func TestBSCG(tst *testing.T) {
-	t, cali, err := cmodel.GetTreeAlignment(data1)
+	data, err := cmodel.GetTreeAlignment(data1, "F3X4")
 	if err != nil {
 		tst.Error("Error: ", err)
 	}
 
-	cf := codon.F3X4(cali)
-	bsg := cmodel.NewBranchSiteGamma(cali, t, cf, true, 1, 4)
+	bsg := cmodel.NewBranchSiteGamma(data, true, 1, 4)
 	m := optimize.Optimizable(bsg).Copy()
 	npar := len(bsg.GetFloatParameters())
 	if npar != 5 {
@@ -41,13 +39,12 @@ func TestBSCG(tst *testing.T) {
 }
 
 func TestBSSG(tst *testing.T) {
-	t, cali, err := cmodel.GetTreeAlignment(data1)
+	data, err := cmodel.GetTreeAlignment(data1, "F3X4")
 	if err != nil {
 		tst.Error("Error: ", err)
 	}
 
-	cf := codon.F3X4(cali)
-	bsg := cmodel.NewBranchSiteGamma(cali, t, cf, true, 4, 1)
+	bsg := cmodel.NewBranchSiteGamma(data, true, 4, 1)
 	m := optimize.Optimizable(bsg).Copy()
 	npar := len(bsg.GetFloatParameters())
 	if npar != 5 {

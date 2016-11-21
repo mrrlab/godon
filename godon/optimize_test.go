@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"bitbucket.org/Davydov/godon/cmodel"
-	"bitbucket.org/Davydov/godon/codon"
 	"bitbucket.org/Davydov/godon/optimize"
 )
 
@@ -15,13 +14,12 @@ const (
 )
 
 func TestSimplex(tst *testing.T) {
-	t, cali, err := cmodel.GetTreeAlignment(data1)
+	data, err := cmodel.GetTreeAlignment(data1, "F3X4")
 	if err != nil {
 		tst.Error("Error: ", err)
 	}
 
-	cf := codon.F3X4(cali)
-	m0 := cmodel.NewM0(cali, t, cf)
+	m0 := cmodel.NewM0(data)
 	m0.SetParameters(2, 0.5)
 	m := optimize.Optimizable(m0).Copy()
 	npar := len(m0.GetFloatParameters())
@@ -48,13 +46,12 @@ func TestSimplex(tst *testing.T) {
 }
 
 func TestMH(tst *testing.T) {
-	t, cali, err := cmodel.GetTreeAlignment(data1)
+	data, err := cmodel.GetTreeAlignment(data1, "F0")
 	if err != nil {
 		tst.Error("Error: ", err)
 	}
 
-	cf := codon.F0(cali)
-	bs := cmodel.NewBranchSite(cali, t, cf, false)
+	bs := cmodel.NewBranchSite(data, false)
 
 	mh := optimize.NewMH(false, 0)
 	mh.SetOptimizable(bs)
@@ -75,13 +72,12 @@ func TestMH(tst *testing.T) {
 }
 
 func TestAnnealing(tst *testing.T) {
-	t, cali, err := cmodel.GetTreeAlignment(data1)
+	data, err := cmodel.GetTreeAlignment(data1, "F3X4")
 	if err != nil {
 		tst.Error("Error: ", err)
 	}
 
-	cf := codon.F3X4(cali)
-	m0 := cmodel.NewM0(cali, t, cf)
+	m0 := cmodel.NewM0(data)
 	npar := len(m0.GetFloatParameters())
 	if npar != 2 {
 		tst.Error("Wrong number of parameters for M0:", npar)
@@ -89,7 +85,7 @@ func TestAnnealing(tst *testing.T) {
 
 	m0.SetOptimizeBranchLengths()
 	npar = len(m0.GetFloatParameters())
-	if npar != 2+t.NNodes()-1 {
+	if npar != 2+data.Tree.NNodes()-1 {
 		tst.Error("Wrong number of parameters for M0 + branch lengths:", npar)
 	}
 
@@ -114,13 +110,12 @@ func TestAnnealing(tst *testing.T) {
 }
 
 func TestLBFGSB(tst *testing.T) {
-	t, cali, err := cmodel.GetTreeAlignment(data1)
+	data, err := cmodel.GetTreeAlignment(data1, "F0")
 	if err != nil {
 		tst.Error("Error: ", err)
 	}
 
-	cf := codon.F0(cali)
-	m0 := cmodel.NewM0(cali, t, cf)
+	m0 := cmodel.NewM0(data)
 	m0.SetParameters(2, 0.5)
 
 	l := optimize.NewLBFGSB()
