@@ -81,6 +81,7 @@ var (
 	treeFileName      = opt.Arg("tree", "starting phylogenetic tree").Required().ExistingFile()
 	fixw              = opt.Flag("fix-w", "fix omega=1 (for the branch-site and M8 models)").Short('f').Bool()
 	startF            = opt.Flag("start", "read start position from the trajectory or JSON file").Short('s').ExistingFile()
+	outTreeF          = opt.Flag("out-tree", "write tree to a file").String()
 
 	// hypTest flags
 	hTest      = app.Command("test", "Run test for positive selecton")
@@ -154,7 +155,6 @@ var (
 	// input/output
 	logF     = app.Flag("out", "write log to a file").Short('o').String()
 	trajF    = app.Flag("trajectory", "write optimization trajectory to a file").Short('t').String()
-	outTreeF = app.Flag("out-tree", "write tree to a file").String()
 	logLevel = app.Flag("log-level", "set loglevel "+
 		"("+strings.Join(logLevels, ", ")+")").
 		Short('l').Default("notice").
