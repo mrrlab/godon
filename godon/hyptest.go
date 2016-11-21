@@ -42,24 +42,27 @@ func hypTest() (summary HypTestSummary) {
 	l0 = res0.Optimizer.GetMaxLikelihood()
 	l1 = res1.Optimizer.GetMaxLikelihood()
 
+	log.Noticef("Starting with D=%f", 2*(l1-l0))
+
+	if *quick {
+		*method = "none"
+	}
+
 	for updated, justUpdatedH0 := true, false; updated; {
 		// stop if nothing has been updated.
 		// this loop normally should run for a single time.
 		updated = false
 
 		// if l1 < l0, rerun H1 starting from H0.
-		if l1 < l0 {
+		if lrt := 2 * (l1 - l0); lrt < 0 {
 			updated = true
 			justUpdatedH0 = false
 
 			h0par := res0.Optimizer.GetMaxLikelihoodParameters()
 			h0par[extraPar] = 1
 
-			if *quick {
-				*method = "none"
-			}
-			log.Noticef("Rerunning H1 because of negative LRT (lnL1-lnL0=%f)",
-				l1-l0)
+			log.Noticef("Rerunning H1 because of negative LR (D=%f)",
+				lrt)
 			res1 = runOptimization(false, h0par)
 			res1.Hypothesis = "H1"
 			summary.Runs = append(summary.Runs, res1)
@@ -67,15 +70,15 @@ func hypTest() (summary HypTestSummary) {
 		}
 
 		// if significant (D>thr), rerun H0 starting from H1
-		if 2*(l1-l0) > *sThr && !*quick && !justUpdatedH0 {
+		if lrt := 2 * (l1 - l0); lrt > *sThr && !*quick && !justUpdatedH0 {
 			// prevent multiple updates of H0 starting from the same
 			// H1-like point
 			justUpdatedH0 = true
 
 			h1par := res1.Optimizer.GetMaxLikelihoodParameters()
 			delete(h1par, extraPar)
-			log.Noticef("Rerunning H0, trying to reduce LRT (lnL1-lnL0=%f)",
-				l1-l0)
+			log.Noticef("Rerunning H0, trying to reduce LR (D=%f)",
+				lrt)
 			res0Alt := runOptimization(true, h1par)
 			res0Alt.Hypothesis = "H0"
 			summary.Runs = append(summary.Runs, res0Alt)
@@ -87,6 +90,26 @@ func hypTest() (summary HypTestSummary) {
 			}
 		}
 	}
+
+	// get rid of sligtly positive LRT; this should require maximum one extra
+	// likelihood computation
+	if lrt := 2 * (l1 - l0); lrt > 0 && lrt <= *sThr {
+		h1par := res1.Optimizer.GetMaxLikelihoodParameters()
+		delete(h1par, extraPar)
+		*method = "none"
+		log.Noticef("Rerunning H0, trying to reduce small LR (D=%f)",
+			lrt)
+		res0Alt := runOptimization(true, h1par)
+		res0Alt.Hypothesis = "H0"
+		summary.Runs = append(summary.Runs, res0Alt)
+		l0Alt := res0Alt.Optimizer.GetMaxLikelihood()
+		if l0Alt > l0 {
+			res0 = res0Alt
+			l0 = l0Alt
+		}
+	}
+
+	log.Noticef("Final D=%f", 2*(l1-l0))
 
 	// final BEB & NEB computation
 	if !globalNoFinal && 2*(l1-l0) > *sThr {
