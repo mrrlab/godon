@@ -177,9 +177,12 @@ func parseAsn1(rd io.Reader) (res []geneticCode, err error) {
 			parName = text
 			mode = elementPar
 		case elementPar:
+			var code string
+			var uq string
+			var id int
 			switch parName {
 			case "name":
-				uq, err := unqoute(text)
+				uq, err = unqoute(text)
 				if err != nil {
 					return nil, err
 				}
@@ -190,19 +193,19 @@ func parseAsn1(rd io.Reader) (res []geneticCode, err error) {
 					gc.ShortName = uq
 				}
 			case "id":
-				id, err := strconv.Atoi(text)
+				id, err = strconv.Atoi(text)
 				if err != nil {
 					return nil, err
 				}
 				gc.ID = id
 			case "ncbieaa":
-				code, err := unqoute(text)
+				code, err = unqoute(text)
 				if err != nil {
 					return nil, err
 				}
 				gc.Ncbieaa = code
 			case "sncbieaa":
-				code, err := unqoute(text)
+				code, err = unqoute(text)
 				if err != nil {
 					return nil, err
 				}

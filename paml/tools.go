@@ -630,10 +630,6 @@ func DiscreteBeta(p, q float64, K int, UseMedian bool, tmp, res []float64) []flo
 			res[i] = (tmp[i] - tmp[i-1]) * mean * float64(K)
 		}
 		res[K-1] = (1 - tmp[K-2]) * mean * float64(K)
-
-		for i := 0; i < K; i++ {
-			t += res[i] / float64(K)
-		}
 	}
 
 	return res

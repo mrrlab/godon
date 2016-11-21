@@ -42,7 +42,10 @@ func (cf Frequency) String() (s string) {
 func (seq Sequence) String() (s string) {
 	var b bytes.Buffer
 	for _, c := range seq.Sequence {
-		b.WriteString(seq.GCode.NumCodon[c] + " ")
+		_, err := b.WriteString(seq.GCode.NumCodon[c] + " ")
+		if err != nil {
+			panic(err)
+		}
 	}
 	s = ">" + seq.Name + "\n" + bio.Wrap(b.String(), 80)
 	return

@@ -19,11 +19,16 @@ func BenchmarkEigen1(b *testing.B) {
 	q := mat64.NewDense(NCodon, NCodon, nil)
 	p := mat64.NewDense(NCodon, NCodon, nil)
 	for i := 0; i < b.N; i++ {
-		q, s := CreateTransitionMatrix(cf, 2.1, 0.25, q)
+		var s float64
+		q, s = CreateTransitionMatrix(cf, 2.1, 0.25, q)
 		e := NewEMatrix(cf)
 		e.Set(q, s)
-		e.Eigen()
-		e.Exp(p, 0.3)
+		if err := e.Eigen(); err != nil {
+			b.Error("Error: ", err)
+		}
+		if _, err := e.Exp(p, 0.3); err != nil {
+			b.Error("Error: ", err)
+		}
 	}
 }
 
@@ -40,8 +45,12 @@ func BenchmarkEigen2(b *testing.B) {
 	q, s := CreateTransitionMatrix(cf, 2.1, 0.25, q)
 	e := NewEMatrix(cf)
 	e.Set(q, s)
-	e.Eigen()
+	if err := e.Eigen(); err != nil {
+		b.Error("Error: ", err)
+	}
 	for i := 0; i < b.N; i++ {
-		e.Exp(p, 0.3)
+		if _, err := e.Exp(p, 0.3); err != nil {
+			b.Error("Error: ", err)
+		}
 	}
 }

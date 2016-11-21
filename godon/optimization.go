@@ -15,7 +15,10 @@ func newData() (*cmodel.Data, error) {
 	}
 
 	if len(*cFreqFileName) > 0 {
-		data.SetCodonFreqFromFile(*cFreqFileName)
+		err := data.SetCodonFreqFromFile(*cFreqFileName)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if *fgBranch >= 0 {
@@ -50,7 +53,7 @@ func runOptimization(h0 bool, start map[string]float64) (summary OptimizationSum
 
 	if len(start) > 0 {
 		par := m.GetFloatParameters()
-		err := par.SetFromMap(start)
+		err = par.SetFromMap(start)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -73,7 +76,10 @@ func runOptimization(h0 bool, start map[string]float64) (summary OptimizationSum
 
 	if !*noOptBrLen {
 		log.Infof("outtree=%s", data.Root())
-		data.Root()
+		err := data.Root()
+		if err != nil {
+			log.Error(err)
+		}
 		summary.FinalTree = data.Tree.ClassString()
 	}
 
@@ -82,7 +88,10 @@ func runOptimization(h0 bool, start map[string]float64) (summary OptimizationSum
 		if err != nil {
 			log.Error("Error creating tree output file:", err)
 		} else {
-			f.WriteString(data.Tree.String() + "\n")
+			_, err := f.WriteString(data.Tree.String() + "\n")
+			if err != nil {
+				log.Error(err)
+			}
 			f.Close()
 		}
 	}

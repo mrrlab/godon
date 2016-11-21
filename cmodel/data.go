@@ -124,10 +124,7 @@ func (data *Data) SetCodonFreqFromFile(filename string) error {
 		return err
 	}
 	data.cFreq, err = codon.ReadFrequency(cFreqFile, data.cFreq.GCode)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 // Copy creates a copy (only new tree is created).
@@ -147,7 +144,7 @@ func (data *Data) Root() error {
 		log.Infof("unrooted_outtree=%s", data.Tree)
 		err := data.Tree.Root(data.rootID)
 		if err != nil {
-			fmt.Errorf("Error rooting tree:", err)
+			return fmt.Errorf("Error rooting tree: %v", err)
 		}
 	}
 	return nil

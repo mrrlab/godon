@@ -65,9 +65,10 @@ func (o *optimizerSettings) create() (optimize.Optimizer, error) {
 	f := os.Stdout
 
 	if o.trajF != "" {
-		f, err := os.OpenFile(o.trajF, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
+		var err error
+		f, err = os.OpenFile(o.trajF, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
 		if err != nil {
-			fmt.Errorf("Error creating trajectory file: %v", err)
+			return nil, fmt.Errorf("Error creating trajectory file: %v", err)
 		}
 		defer f.Close()
 	}
@@ -120,5 +121,5 @@ func (o *optimizerSettings) getOptimizer() (optimize.Optimizer, error) {
 	case "none":
 		return optimize.NewNone(), nil
 	}
-	return nil, fmt.Errorf("Unknown optimization method: %s", method)
+	return nil, fmt.Errorf("Unknown optimization method: %s", o.method)
 }

@@ -216,7 +216,10 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		pprof.StartCPUProfile(f)
+		err = pprof.StartCPUProfile(f)
+		if err != nil {
+			log.Fatal(err)
+		}
 		defer pprof.StopCPUProfile()
 	}
 
@@ -261,7 +264,10 @@ func main() {
 			if err != nil {
 				log.Error("Error creating json output file:", err)
 			} else {
-				f.Write(j)
+				_, err := f.Write(j)
+				if err != nil {
+					log.Error(err)
+				}
 				f.Close()
 			}
 		}

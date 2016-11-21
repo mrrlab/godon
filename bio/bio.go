@@ -110,7 +110,9 @@ func (gcode *GeneticCode) Translate(nseq string) (string, error) {
 			}
 			return buffer.String(), errors.New("premature stop codon")
 		}
-		buffer.WriteByte(aa)
+		if err := buffer.WriteByte(aa); err != nil {
+			return "", err
+		}
 	}
 	return buffer.String(), nil
 }

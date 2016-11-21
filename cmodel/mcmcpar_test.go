@@ -122,6 +122,10 @@ func TestBranchSiteReprBSD1(tst *testing.T) {
 	k, w0, w2, p0, p1 := h1.GetParameters()
 
 	data, err = GetTreeAlignment(data1, "F3X4")
+	if err != nil {
+		tst.Error("Error: ", err)
+	}
+
 	h1 = NewBranchSite(data, false)
 	h1.SetParameters(k, w0, w2, p0, p1)
 	newL := h1.Likelihood()

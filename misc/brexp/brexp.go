@@ -24,9 +24,9 @@ func SelectomeBrString(t *tree.Tree) (s string) {
 	s = SelectomeNodeStringBr(t.Node)
 	n := 1
 	repfunc := func(sym string) string {
-		s := fmt.Sprintf("*%d", n)
+		res := fmt.Sprintf("*%d", n)
 		n++
-		return s
+		return res
 	}
 	es := regexp.MustCompile(`\*|!`)
 	s = es.ReplaceAllStringFunc(s, repfunc)
