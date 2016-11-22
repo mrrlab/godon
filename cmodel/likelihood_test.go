@@ -7,6 +7,16 @@ import (
 	"github.com/op/go-logging"
 )
 
+const (
+	data1 = "EMGT00050000008747.Drosophila.002"
+	data2 = "ENSGT00550000073950.Euteleostomi.07.001"
+	data3 = "EMGT00050000000025.Drosophila.001"
+
+	// smallDiff is a threshold for testing
+	// if likelihood ratio is larger error is emmited
+	smallDiff = 1e-3
+)
+
 func init() {
 	// disable logging for benchmarks
 	logging.SetLevel(logging.WARNING, "optimize")
@@ -230,7 +240,6 @@ func TestBranchSiteF3X4D3(tst *testing.T) {
 
 /*** Benchmark M0 ***/
 func BenchmarkM0F0D1(b *testing.B) {
-	setLogLevel()
 	data, err := GetTreeAlignment(data1, "F0")
 	if err != nil {
 		b.Error("Error: ", err)
@@ -247,7 +256,6 @@ func BenchmarkM0F0D1(b *testing.B) {
 }
 
 func BenchmarkM0F0D2(b *testing.B) {
-	setLogLevel()
 	data, err := GetTreeAlignment(data2, "F0")
 	if err != nil {
 		b.Error("Error: ", err)
@@ -265,7 +273,6 @@ func BenchmarkM0F0D2(b *testing.B) {
 
 /*** Benchmark BranchSite ***/
 func BenchmarkBranchSiteF0D1(b *testing.B) {
-	setLogLevel()
 	data, err := GetTreeAlignment(data1, "F0")
 	if err != nil {
 		b.Error("Error: ", err)
@@ -283,7 +290,6 @@ func BenchmarkBranchSiteF0D1(b *testing.B) {
 }
 
 func BenchmarkBranchSiteF0D2(b *testing.B) {
-	setLogLevel()
 	data, err := GetTreeAlignment(data1, "F0")
 	if err != nil {
 		b.Error("Error: ", err)

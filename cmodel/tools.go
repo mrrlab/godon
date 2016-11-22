@@ -8,16 +8,6 @@ import (
 	"github.com/op/go-logging"
 )
 
-const (
-	data1 = "EMGT00050000008747.Drosophila.002"
-	data2 = "ENSGT00550000073950.Euteleostomi.07.001"
-	data3 = "EMGT00050000000025.Drosophila.001"
-
-	// smallDiff is a threshold for testing
-	// if likelihood ratio is larger error is emmited
-	smallDiff = 1e-3
-)
-
 // log is a global logging variable.
 var log = logging.MustGetLogger("cmodel")
 
@@ -40,10 +30,6 @@ func maxInt(a int, b ...int) int {
 		}
 	}
 	return a
-}
-
-// setLogLevel sets the default log-level to WARNING.
-func setLogLevel() {
 }
 
 func strFltSlice(fs []float64) string {
