@@ -445,7 +445,7 @@ func (m *M8) Final() {
 
 	m.PrintPosterior(posterior)
 
-	m.summary.PosteriorTime = time.Now().Sub(startTime).Seconds()
+	m.summary.PosteriorTime = time.Since(startTime).Seconds()
 }
 
 // Likelihood computes likelihood.

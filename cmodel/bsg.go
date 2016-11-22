@@ -579,7 +579,7 @@ func (m *BranchSiteGamma) Final() {
 	log.Notice("BEB analysis")
 	m.PrintPosterior(posterior)
 
-	m.summary.PosteriorTime = time.Now().Sub(startTime).Seconds()
+	m.summary.PosteriorTime = time.Since(startTime).Seconds()
 }
 
 // Likelihood computes likelihood.

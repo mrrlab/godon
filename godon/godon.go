@@ -247,7 +247,7 @@ func main() {
 		log.Fatalf("command %v not implemented", cmd)
 	}
 
-	deltaT := time.Now().Sub(startTime)
+	deltaT := time.Since(startTime)
 	log.Noticef("Running time: %v", deltaT)
 
 	callSummary.TotalTime = deltaT.Seconds()
