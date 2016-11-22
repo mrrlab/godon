@@ -49,27 +49,27 @@ func (ms *modelSettings) createModel() (cmodel.TreeOptimizableSiteClass, error) 
 		return cmodel.NewM0(ms.data), nil
 	case "M1a":
 		log.Info("Using M1a model")
-		log.Infof("%d site gamma categories, %d codon gama categories", ncatsg, ncatcg)
+		log.Infof("%d site gamma categories, %d codon gama categories", ms.ncatsg, ms.ncatcg)
 		return cmodel.NewM2(ms.data, false, ms.ncatsg, ms.ncatcg), nil
 	case "M2a":
 		log.Info("Using M2a model")
-		log.Infof("%d site gamma categories, %d codon gama categories", ncatsg, ncatcg)
+		log.Infof("%d site gamma categories, %d codon gama categories", ms.ncatsg, ms.ncatcg)
 		return cmodel.NewM2(ms.data, true, ms.ncatsg, ms.ncatcg), nil
 	case "M7":
 		log.Info("Using M7 model")
-		log.Infof("%d beta categories, %d site gamma categories, %d codon gama categories", ncatb, ncatsg, ncatcg)
+		log.Infof("%d beta categories, %d site gamma categories, %d codon gama categories", ms.ncatb, ms.ncatsg, ms.ncatcg)
 		return cmodel.NewM8(ms.data, false, false, ms.ncatb, ms.ncatsg, ms.ncatcg), nil
 	case "M8":
 		log.Info("Using M8 model")
-		log.Infof("%d beta categories, %d site gamma categories, %d codon gama categories", ncatb, ncatsg, ncatcg)
+		log.Infof("%d beta categories, %d site gamma categories, %d codon gama categories", ms.ncatb, ms.ncatsg, ms.ncatcg)
 		return cmodel.NewM8(ms.data, true, ms.fixw, ms.ncatb, ms.ncatsg, ms.ncatcg), nil
 	case "BSG":
 		log.Info("Using branch site gamma model")
-		log.Infof("%d site gamma categories, %d codon gama categories", ncatsg, ncatcg)
+		log.Infof("%d site gamma categories, %d codon gama categories", ms.ncatsg, ms.ncatcg)
 		return cmodel.NewBranchSiteGamma(ms.data, ms.fixw, ms.ncatsg, ms.ncatcg), nil
 	case "BSGE":
 		log.Info("Using branch site gamma model with explicit rates")
-		log.Infof("%d site gamma categories, %d codon gama categories", ncatsg, ncatcg)
+		log.Infof("%d site gamma categories, %d codon gama categories", ms.ncatsg, ms.ncatcg)
 		return cmodel.NewBranchSiteGammaERates(ms.data, ms.fixw, ms.ncatsg, ms.ncatcg), nil
 	case "BS":
 		log.Info("Using branch site model")
