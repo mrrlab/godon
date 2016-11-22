@@ -82,6 +82,7 @@ var (
 	fixw              = opt.Flag("fix-w", "fix omega=1 (for the branch-site and M8 models)").Short('f').Bool()
 	startF            = opt.Flag("start", "read start position from the trajectory or JSON file").Short('s').ExistingFile()
 	outTreeF          = opt.Flag("out-tree", "write tree to a file").String()
+	printFull         = opt.Flag("full-likelihood", "print full (non-aggregated) likelihood in the end of optimization").Bool()
 
 	// hypTest flags
 	hTest      = app.Command("test", "Run test for positive selecton")
@@ -145,8 +146,6 @@ var (
 		"fixed (absolutely conserved positions, keep observed), "+
 		"random (like observed, but non-aggregated states are shuffled between the positions)").
 		Default("none").Enum("none", "observed", "observed_new", "fixed", "random")
-	printFull = app.Flag("full-likelihood", "print full (non-aggregated) likelihood in the end of optimization").Bool()
-
 	// technical
 	nThreads   = app.Flag("procs", "number of threads to use").Short('p').Int()
 	seed       = app.Flag("seed", "random generator seed, default time based").Short('S').Default("-1").Int64()
@@ -233,7 +232,7 @@ func main() {
 	var summary interface{}
 	switch cmd {
 	case opt.FullCommand():
-		runSummary := runOptimization(*fixw, nil)
+		runSummary := optimization()
 		summary = struct {
 			*CallSummary
 			OptimizationSummary

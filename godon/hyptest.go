@@ -13,9 +13,10 @@ func hypTest() (summary HypTestSummary) {
 	treeFileName = hTestTreeFileName
 	model = hTestModel
 
-	// don't compute BEB & NEB
-	globalNoFinal := *noFinal
-	*noFinal = true
+	data, err := newData()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// name of the H1 extra parameter
 	var extraPar string
@@ -28,13 +29,29 @@ func hypTest() (summary HypTestSummary) {
 		log.Fatalf("Unknown model '%v'", *model)
 	}
 
+	ms := newModelSettings(data)
+
+	ms.fixw = true
+	m0, err := ms.createInitalized()
+	if err != nil {
+		log.Fatal(err)
+	}
+	o0 := newOptimzerSettings(m0)
+
 	log.Notice("Running H0")
-	res0 := runOptimization(true, nil)
+	res0 := runOptimization(m0, o0, nil)
 	res0.Hypothesis = "H0"
 	summary.Runs = append(summary.Runs, res0)
 
+	ms.fixw = false
+	m1, err := ms.createInitalized()
+	if err != nil {
+		log.Fatal(err)
+	}
+	o1 := newOptimzerSettings(m1)
+
 	log.Notice("Running H1")
-	res1 := runOptimization(false, nil)
+	res1 := runOptimization(m1, o1, nil)
 	res1.Hypothesis = "H1"
 	summary.Runs = append(summary.Runs, res1)
 
@@ -45,7 +62,8 @@ func hypTest() (summary HypTestSummary) {
 	log.Noticef("Starting with D=%f", 2*(l1-l0))
 
 	if *quick {
-		*method = "none"
+		o0.method = "none"
+		o1.method = "none"
 	}
 
 	for updated, justUpdatedH0 := true, false; updated; {
@@ -63,7 +81,7 @@ func hypTest() (summary HypTestSummary) {
 
 			log.Noticef("Rerunning H1 because of negative LR (D=%f)",
 				lrt)
-			res1 = runOptimization(false, h0par)
+			res1 = runOptimization(m1, o1, h0par)
 			res1.Hypothesis = "H1"
 			summary.Runs = append(summary.Runs, res1)
 			l1 = res1.Optimizer.GetMaxLikelihood()
@@ -79,7 +97,7 @@ func hypTest() (summary HypTestSummary) {
 			delete(h1par, extraPar)
 			log.Noticef("Rerunning H0, trying to reduce LR (D=%f)",
 				lrt)
-			res0Alt := runOptimization(true, h1par)
+			res0Alt := runOptimization(m0, o0, h1par)
 			res0Alt.Hypothesis = "H0"
 			summary.Runs = append(summary.Runs, res0Alt)
 			l0Alt := res0Alt.Optimizer.GetMaxLikelihood()
@@ -96,10 +114,10 @@ func hypTest() (summary HypTestSummary) {
 	if lrt := 2 * (l1 - l0); lrt > 0 && lrt <= *sThr {
 		h1par := res1.Optimizer.GetMaxLikelihoodParameters()
 		delete(h1par, extraPar)
-		*method = "none"
+		o0.method = "none"
 		log.Noticef("Rerunning H0, trying to reduce small LR (D=%f)",
 			lrt)
-		res0Alt := runOptimization(true, h1par)
+		res0Alt := runOptimization(m0, o0, h1par)
 		res0Alt.Hypothesis = "H0"
 		summary.Runs = append(summary.Runs, res0Alt)
 		l0Alt := res0Alt.Optimizer.GetMaxLikelihood()
@@ -111,26 +129,24 @@ func hypTest() (summary HypTestSummary) {
 
 	log.Noticef("Final D=%f", 2*(l1-l0))
 
+	// final stores BEB & NEB results
+	var final interface{}
+
 	// final BEB & NEB computation
-	if !globalNoFinal && 2*(l1-l0) > *sThr {
+	if !*noFinal && 2*(l1-l0) > *sThr {
 		h1par := res1.Optimizer.GetMaxLikelihoodParameters()
-		*noFinal = false
-		*method = "none"
 		log.Notice("Computing posterior for H1")
-		res1 = runOptimization(false, h1par)
-		res1.Hypothesis = "H1"
-		summary.Runs = append(summary.Runs, res1)
+		final = computeFinal(m1, h1par)
 	}
 
 	summary.H0 = HypSummary{
 		MaxLnL:         res0.Optimizer.GetMaxLikelihood(),
 		MaxLParameters: res0.Optimizer.GetMaxLikelihoodParameters(),
-		Final:          res0.Model,
 	}
 	summary.H1 = HypSummary{
 		MaxLnL:         res1.Optimizer.GetMaxLikelihood(),
 		MaxLParameters: res1.Optimizer.GetMaxLikelihoodParameters(),
-		Final:          res1.Model,
+		Final:          final,
 	}
 
 	log.Noticef("lnL0=%f, lnL1=%f",

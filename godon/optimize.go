@@ -6,6 +6,7 @@ import (
 	"bitbucket.org/Davydov/godon/cmodel"
 )
 
+// newData reads data using command line parameters.
 func newData() (*cmodel.Data, error) {
 	data, err := cmodel.NewData(*gcodeID, *alignmentFileName, *treeFileName, *cFreq)
 
@@ -33,13 +34,56 @@ func newData() (*cmodel.Data, error) {
 	return data, nil
 }
 
-func runOptimization(h0 bool, start map[string]float64) (summary OptimizationSummary) {
-	data, err := newData()
+// runOptimization runs optimization for model with optimizers settings
+// and optional starting point.
+func runOptimization(m cmodel.TreeOptimizableSiteClass, o *optimizerSettings, start map[string]float64) (summary OptimizationSummary) {
+	if m.GetOptimizeBranchLengths() {
+		summary.StartingTree = m.GetTreeString()
+	}
+
+	opt, err := o.create()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	summary.StartingTree = data.Tree.ClassString()
+	if len(start) > 0 {
+		setStart(m, start)
+	}
+
+	opt.Run(o.iterations)
+	summary.Optimizer = opt.Summary()
+
+	opt.PrintResults()
+
+	if m.GetOptimizeBranchLengths() {
+		summary.FinalTree = m.GetTreeString()
+	}
+
+	return summary
+}
+
+// setStart sets starting point for model, or logs error message and exits.
+func setStart(m cmodel.TreeOptimizableSiteClass, start map[string]float64) {
+	par := m.GetFloatParameters()
+	err := par.SetFromMap(start)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+// computeFinal computes BEB & NEB for a given point
+func computeFinal(m cmodel.TreeOptimizableSiteClass, start map[string]float64) interface{} {
+	setStart(m, start)
+	m.Final()
+	return m.Summary()
+}
+
+// optimization is calling optimization.
+func optimization() OptimizationSummary {
+	data, err := newData()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	ms := newModelSettings(data)
 
@@ -48,24 +92,10 @@ func runOptimization(h0 bool, start map[string]float64) (summary OptimizationSum
 		log.Fatal(err)
 	}
 
-	if len(start) > 0 {
-		par := m.GetFloatParameters()
-		err = par.SetFromMap(start)
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-
 	o := newOptimzerSettings(m)
-	opt, err := o.create()
-	if err != nil {
-		log.Fatal(err)
-	}
 
-	opt.Run(*iterations)
-	summary.Optimizer = opt.Summary()
+	summary := runOptimization(m, o, nil)
 
-	opt.PrintResults()
 	if !*noFinal {
 		m.Final()
 	}
@@ -77,7 +107,6 @@ func runOptimization(h0 bool, start map[string]float64) (summary OptimizationSum
 		if err != nil {
 			log.Error(err)
 		}
-		summary.FinalTree = data.Tree.ClassString()
 	}
 
 	if *outTreeF != "" {
@@ -100,5 +129,5 @@ func runOptimization(h0 bool, start map[string]float64) (summary OptimizationSum
 		summary.FullLnL = L
 	}
 
-	return
+	return summary
 }

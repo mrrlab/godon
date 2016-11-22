@@ -19,7 +19,7 @@ type CallSummary struct {
 // OptimizationSummary is storing godon run summary information.
 type OptimizationSummary struct {
 	// StartingTree is the starting tree after unrooting.
-	StartingTree string `json:"startingTree"`
+	StartingTree string `json:"startingTree,omitempty"`
 	// FinalTree is the tree after branch length optimization (if performend).
 	FinalTree string `json:"finalTree,omitempty"`
 	// FullLnL is the full (non-aggregated) likelihood, it's only computed if specified (-printfull).

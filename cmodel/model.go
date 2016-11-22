@@ -35,6 +35,9 @@ type TreeOptimizable interface {
 	optimize.Optimizable
 	// SetOptimizeBranchLengths enables branch-length optimization.
 	SetOptimizeBranchLengths()
+	// GetOptimizeBranchLengths returns true if branch-length
+	// optimization is enabled.
+	GetOptimizeBranchLengths() bool
 	// SetAdaptive enables adaptive MCMC for the TreeOptimizable.
 	SetAdaptive(*optimize.AdaptiveSettings)
 	// SetMaxBranchLength changes the maximum branch length for
@@ -42,6 +45,8 @@ type TreeOptimizable interface {
 	SetMaxBranchLength(float64)
 	// SetAggregationMode changes the aggregation mode.
 	SetAggregationMode(AggMode)
+	// GetTreeString returns tree in a newick format.
+	GetTreeString() string
 	// Final performs analysis after optimization is complete.
 	Final()
 	// Summary returns summary of the object for JSON export.
@@ -152,6 +157,12 @@ func (m *BaseModel) Copy() (newM *BaseModel) {
 func (m *BaseModel) SetAdaptive(as *optimize.AdaptiveSettings) {
 	m.as = as
 	m.setupParameters()
+}
+
+// GetOptimizeBranchLengths returns true if branch-length
+// optimization is enabled.
+func (m *BaseModel) GetOptimizeBranchLengths() bool {
+	return m.optBranch
 }
 
 // SetOptimizeBranchLengths enables branch-length optimization.
@@ -354,6 +365,11 @@ func (m *BaseModel) expBranchesIfNeeded() {
 			}
 		}
 	}
+}
+
+// GetTreeString returns tree in a newick format.
+func (m *BaseModel) GetTreeString() string {
+	return m.data.Tree.ClassString()
 }
 
 // Likelihood calculates tree likelihood.
