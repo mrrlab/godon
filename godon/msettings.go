@@ -7,6 +7,7 @@ import (
 	"bitbucket.org/Davydov/godon/cmodel"
 )
 
+// modelSettings stores settings for creating a new model.
 type modelSettings struct {
 	name   string
 	data   *cmodel.Data
@@ -24,6 +25,8 @@ type modelSettings struct {
 	randomize bool
 }
 
+// newModelSettings initializes modelSettings from global
+// variables (command-line arguments).
 func newModelSettings(data *cmodel.Data) *modelSettings {
 	return &modelSettings{
 		name:   *model,
@@ -42,6 +45,7 @@ func newModelSettings(data *cmodel.Data) *modelSettings {
 	}
 }
 
+// createModel creates a new model from modelSettings.
 func (ms *modelSettings) createModel() (cmodel.TreeOptimizableSiteClass, error) {
 	switch ms.name {
 	case "M0":
@@ -96,6 +100,8 @@ func (ms *modelSettings) getAggMode() (cmodel.AggMode, error) {
 	return cmodel.AggNone, fmt.Errorf("Unknown aggregation mode: %s", ms.aggModeName)
 }
 
+// createInitalized creates and initializes a model from
+// modelSettings.
 func (ms *modelSettings) createInitalized() (cmodel.TreeOptimizableSiteClass, error) {
 	m, err := ms.createModel()
 

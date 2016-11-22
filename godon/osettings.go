@@ -8,6 +8,7 @@ import (
 	"bitbucket.org/Davydov/godon/optimize"
 )
 
+// optimizerSettings stores settings for creation of a new optimizer.
 type optimizerSettings struct {
 	method string
 	model  cmodel.TreeOptimizableSiteClass
@@ -26,6 +27,8 @@ type optimizerSettings struct {
 	seed int64
 }
 
+// newOptimzerSettings creates a new optimizerSettings from
+// the command line parameters (global variables).
 func newOptimzerSettings(model cmodel.TreeOptimizableSiteClass) *optimizerSettings {
 	return &optimizerSettings{
 		method: *method,
@@ -46,6 +49,7 @@ func newOptimzerSettings(model cmodel.TreeOptimizableSiteClass) *optimizerSettin
 	}
 }
 
+// create creates and initializes a new optimizer from optimizerSettings.
 func (o *optimizerSettings) create() (optimize.Optimizer, error) {
 	// iteration to skip before annealing, for adaptive mcmc
 	if o.adaptive {
