@@ -600,7 +600,7 @@ func (m *BaseModel) fullSubL(class, pos int, plh [][]float64) (res float64) {
 		}
 
 		if node.IsRoot() {
-			res += impl.Ddot(NCodon, m.data.cFreq.Freq, 1, plh[node.ID], 1)
+			res = impl.Ddot(NCodon, m.data.cFreq.Freq, 1, plh[node.ID], 1)
 			break
 		}
 
