@@ -9,7 +9,7 @@ import (
 	"sync"
 
 	"github.com/gonum/blas"
-	"github.com/gonum/blas/native"
+	"github.com/gonum/blas/cgo"
 	"github.com/gonum/matrix/mat64"
 
 	"bitbucket.org/Davydov/godon/codon"
@@ -18,7 +18,7 @@ import (
 )
 
 // impl provides a type of blas implementation.
-var impl native.Implementation
+var impl cgo.Implementation
 
 const (
 	// If the proportion of site class is less than this number no
