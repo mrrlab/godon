@@ -23,7 +23,7 @@ pipelines:
           - go get -d github.com/gonum/matrix
           - go get -d github.com/gonum/floats
           - apt-get --yes install libopenblas-dev
-          - CGO_LDFLAGS="-lopenblas" go install github.com/gonum/blas/cgo
+          - CGO_LDFLAGS="-lopenblas" go get github.com/gonum/blas/cgo
           # other libs
           - go get github.com/skelterjohn/go.matrix
           - go get github.com/op/go-logging
