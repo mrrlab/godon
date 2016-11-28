@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/gonum/blas"
 	"github.com/gonum/blas/native"
 	"github.com/gonum/matrix/mat64"
 
@@ -585,18 +586,17 @@ func (m *BaseModel) fullSubL(class, pos int, plh [][]float64) (res float64) {
 		}
 	}
 
+	mul := make([]float64, NCodon)
+
 	for _, node := range m.data.Tree.NodeOrder() {
 		for l1 := 0; l1 < NCodon; l1++ {
-			l := 1.0
-			for _, child := range node.ChildNodes() {
-				// get the row
-				q := m.eQts[class][child.ID][l1*NCodon:]
-				// get child partial likelhiood
-				cplh := plh[child.ID]
-				s := impl.Ddot(NCodon, q, 1, cplh, 1)
-				l *= s
+			plh[node.ID][l1] = 1
+		}
+		for _, child := range node.ChildNodes() {
+			impl.Dgemv(blas.NoTrans, NCodon, NCodon, 1, m.eQts[class][child.ID], NCodon, plh[child.ID], 1, 0, mul, 1)
+			for l1 := 0; l1 < NCodon; l1++ {
+				plh[node.ID][l1] *= mul[l1]
 			}
-			plh[node.ID][l1] = l
 		}
 
 		if node.IsRoot() {
