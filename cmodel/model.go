@@ -28,6 +28,10 @@ const (
 	minBrLen = 1e-9
 	// Default value for the maximum branch length.
 	defaultMaxBrLen = 100
+	// fatness is the number of positions to process at once.
+	// large values are generally faster for one thread, but
+	// this makes parallelization less efficient.
+	fatness = 32
 )
 
 // TreeOptimizable is an extension of optimize.Optimizable which
@@ -373,6 +377,98 @@ func (m *BaseModel) GetTreeString() string {
 	return m.data.Tree.ClassString()
 }
 
+// singlePosLikelihood computes likelihood for tasks send trhough channel
+// and puts results into slice m.l.
+func (m *BaseModel) singlePosLikelihood(tasks chan int, done chan struct{}) {
+	nni := m.data.Tree.MaxNodeID() + 1
+	plh := make([][]float64, nni)
+	for i := 0; i < nni; i++ {
+		plh[i] = make([]float64, m.data.cFreq.GCode.NCodon+1)
+	}
+	for pos := range tasks {
+		if m.prunAllPos && m.prunPos[pos] {
+			continue
+		}
+		if pos < 0 {
+			break
+		}
+		res := 0.0
+		for class, p := range m.prop[pos] {
+			switch {
+			case p <= smallProp:
+				// if proportion is to small
+				continue
+			case len(m.lettersF[pos]) == 1:
+				// no letters in the current position
+				// probability = 1, res += 0
+				res += 1 * p
+			case m.aggMode == AggFixed && len(m.lettersF[pos]) == 2:
+				res += m.fixedSubL(class, pos, plh) * p
+			case m.aggMode == AggObserved:
+				res += m.observedSubL(class, pos, plh, m.lettersF[pos], m.lettersA[pos]) * p
+			case m.aggMode == AggRandom:
+				spos := m.rshuffle[pos]
+				res += m.observedSubL(class, pos, plh, m.lettersF[spos], m.lettersA[spos]) * p
+			case m.aggMode == AggObservedNew:
+				schema := m.schemas[pos]
+				if schema == nil {
+					schema = m.observedStates(m.lettersF[pos], m.lettersA[pos])
+					m.schemas[pos] = schema
+				}
+				res += m.aggSubL(class, pos, plh, schema) * p
+			default:
+				res += m.fullSubL(class, pos, plh) * p
+			}
+		}
+		m.l[pos] = math.Log(res)
+		m.prunPos[pos] = true
+	}
+	done <- struct{}{}
+}
+
+// fatPosLikelihood reads several positions from tasks and computes
+// likelihood for them using fatSubL.
+func (m *BaseModel) fatPosLikelihood(tasks chan int, done chan struct{}) {
+	nni := m.data.Tree.MaxNodeID() + 1
+	plh := make([][]float64, nni)
+	for i := 0; i < nni; i++ {
+		plh[i] = make([]float64, m.data.cFreq.GCode.NCodon*fatness)
+	}
+	positions := make([]int, 0, fatness)
+
+	for pos := range tasks {
+		if pos >= 0 {
+			if m.prunAllPos && m.prunPos[pos] {
+				continue
+			}
+			positions = append(positions, pos)
+			if len(positions) < fatness {
+				continue
+			}
+		}
+
+		if len(positions) == 0 {
+			continue
+		}
+		res := make([]float64, len(positions))
+		for class, p := range m.prop[positions[0]] {
+			m.fatSubL(class, positions, plh, res, p)
+		}
+		for i := range res {
+			m.l[positions[i]] = math.Log(res[i])
+			m.prunPos[positions[i]] = true
+		}
+
+		positions = positions[:0]
+
+		if pos < 0 {
+			break
+		}
+
+	}
+	done <- struct{}{}
+}
+
 // Likelihood calculates tree likelihood.
 func (m *BaseModel) Likelihood() (lnL float64) {
 	log.Debugf("x=%v", m.parameters.Values(nil))
@@ -389,53 +485,18 @@ func (m *BaseModel) Likelihood() (lnL float64) {
 	tasks := make(chan int, nPos)
 
 	for i := 0; i < nWorkers; i++ {
-		go func() {
-			nni := m.data.Tree.MaxNodeID() + 1
-			plh := make([][]float64, nni)
-			for i := 0; i < nni; i++ {
-				plh[i] = make([]float64, m.data.cFreq.GCode.NCodon+1)
-			}
-			for pos := range tasks {
-				if m.prunAllPos && m.prunPos[pos] {
-					continue
-				}
-				res := 0.0
-				for class, p := range m.prop[pos] {
-					switch {
-					case p <= smallProp:
-						// if proportion is to small
-						continue
-					case len(m.lettersF[pos]) == 1:
-						// no letters in the current position
-						// probability = 1, res += 0
-						res += 1 * p
-					case m.aggMode == AggFixed && len(m.lettersF[pos]) == 2:
-						res += m.fixedSubL(class, pos, plh) * p
-					case m.aggMode == AggObserved:
-						res += m.observedSubL(class, pos, plh, m.lettersF[pos], m.lettersA[pos]) * p
-					case m.aggMode == AggRandom:
-						spos := m.rshuffle[pos]
-						res += m.observedSubL(class, pos, plh, m.lettersF[spos], m.lettersA[spos]) * p
-					case m.aggMode == AggObservedNew:
-						schema := m.schemas[pos]
-						if schema == nil {
-							schema = m.observedStates(m.lettersF[pos], m.lettersA[pos])
-							m.schemas[pos] = schema
-						}
-						res += m.aggSubL(class, pos, plh, schema) * p
-					default:
-						res += m.fullSubL(class, pos, plh) * p
-					}
-				}
-				m.l[pos] = math.Log(res)
-				m.prunPos[pos] = true
-			}
-			done <- struct{}{}
-		}()
+		if fatness > 1 {
+			go m.fatPosLikelihood(tasks, done)
+		} else {
+			go m.singlePosLikelihood(tasks, done)
+		}
 	}
 
 	for pos := 0; pos < nPos; pos++ {
 		tasks <- pos
+	}
+	for i := 0; i < nWorkers; i++ {
+		tasks <- -1
 	}
 	close(tasks)
 
@@ -564,6 +625,57 @@ func (m *BaseModel) PrintPosterior(posterior []float64) {
 
 			log.Noticef("%v\t%v\t%c\t%0.3f", i+1, codon, aa, p)
 		}
+	}
+}
+
+// fatSubL computes likelihood for set of positions. It uses larger plh vector.
+// res should be zeroed before the call. p is the proportion of site class.
+func (m *BaseModel) fatSubL(class int, positions []int, plh [][]float64, res []float64, p float64) {
+	NCodon := m.data.cFreq.GCode.NCodon
+
+	nPos := len(positions)
+
+	if len(positions) != len(res) {
+		panic("length of positions doesn't match length of results")
+	}
+
+	for i, pos := range positions {
+		for node := range m.data.Tree.Terminals() {
+			cod := m.data.cSeqs[node.LeafID].Sequence[pos]
+			for l := byte(0); l < byte(NCodon); l++ {
+				if cod == codon.NOCODON || l == cod {
+					plh[node.ID][NCodon*i+int(l)] = 1
+				} else {
+					plh[node.ID][NCodon*i+int(l)] = 0
+				}
+			}
+		}
+	}
+
+	mul := make([]float64, NCodon*nPos)
+
+	for _, node := range m.data.Tree.NodeOrder() {
+		for i := 0; i < NCodon*nPos; i++ {
+			plh[node.ID][i] = 1
+		}
+		for _, child := range node.ChildNodes() {
+			impl.Dgemm(blas.NoTrans, blas.Trans,
+				nPos, NCodon, NCodon,
+				1,
+				plh[child.ID], NCodon,
+				m.eQts[class][child.ID], NCodon,
+				0,
+				mul, NCodon)
+			for i := 0; i < NCodon*nPos; i++ {
+				plh[node.ID][i] *= mul[i]
+			}
+		}
+
+		if node.IsRoot() {
+			impl.Dgemv(blas.NoTrans, nPos, NCodon, p, plh[node.ID], NCodon, m.data.cFreq.Freq, 1, 1, res, 1)
+			break
+		}
+
 	}
 }
 
