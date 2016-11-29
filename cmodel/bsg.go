@@ -567,7 +567,7 @@ func (m *BranchSiteGamma) Final() {
 		}
 	}
 
-	posterior := m.NEBPosterior(classes)
+	posterior := m.NEBPosterior(classes)[0]
 	m.summary.SitePosteriorNEB = posterior
 
 	log.Notice("NEB analysis")

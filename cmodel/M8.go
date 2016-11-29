@@ -440,7 +440,7 @@ func (m *M8) Final() {
 		}
 	}
 
-	posterior := m.NEBPosterior(classes)
+	posterior := m.NEBPosterior(classes)[0]
 	m.summary.SitePosteriorNEB = posterior
 
 	m.PrintPosterior(posterior)
