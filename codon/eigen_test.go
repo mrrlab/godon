@@ -26,7 +26,9 @@ func BenchmarkEigen1(b *testing.B) {
 		if err := e.Eigen(); err != nil {
 			b.Error("Error: ", err)
 		}
-		if _, err := e.Exp(p, 0.3); err != nil {
+		tmp := make([]float64, NCodon*NCodon)
+		res := make([]float64, NCodon*NCodon)
+		if _, err := e.Exp(p, 0.3, res, tmp); err != nil {
 			b.Error("Error: ", err)
 		}
 	}
@@ -49,7 +51,9 @@ func BenchmarkEigen2(b *testing.B) {
 		b.Error("Error: ", err)
 	}
 	for i := 0; i < b.N; i++ {
-		if _, err := e.Exp(p, 0.3); err != nil {
+		tmp := make([]float64, NCodon*NCodon)
+		res := make([]float64, NCodon*NCodon)
+		if _, err := e.Exp(p, 0.3, res, tmp); err != nil {
 			b.Error("Error: ", err)
 		}
 	}
