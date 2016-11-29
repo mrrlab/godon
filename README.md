@@ -1,5 +1,3 @@
-[![Build Status](https://drone.io/bitbucket.org/Davydov/godon/status.png)](https://drone.io/bitbucket.org/Davydov/godon/latest?branch=master)
-
 Godon is codon models software written in go.
 
 Godon currently supports
