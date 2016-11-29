@@ -4,8 +4,13 @@ import (
 	"errors"
 	"math"
 
+	"github.com/gonum/blas"
+	"github.com/gonum/blas/cgo"
 	"github.com/gonum/matrix/mat64"
 )
+
+// impl provides a type of blas implementation.
+var impl cgo.Implementation
 
 // smallFreq is a small frequency which is used instead of zeros in
 // the codon frequency.
@@ -147,10 +152,31 @@ func (m *EMatrix) Exp(cD *mat64.Dense, t float64) (*mat64.Dense, error) {
 		cD.Set(i, i, math.Exp(m.d.At(i, i)*t))
 	}
 	res := mat64.NewDense(cols, rows, nil)
-	res.Mul(m.v, cD)
-	res.Mul(res, m.iv)
-	// Remove sligtly negative values
 	rawRes := res.RawMatrix().Data
+
+	//tmp is needed since we're using raw blas functions
+	tmp := mat64.NewDense(cols, rows, nil)
+	rawTmp := tmp.RawMatrix().Data
+
+	//equivalent if tmp.Mul(m.v, cD)
+	impl.Dgemm(blas.NoTrans, blas.NoTrans,
+		rows, cols, cols,
+		1,
+		m.v.RawMatrix().Data, cols,
+		cD.RawMatrix().Data, cols,
+		0,
+		rawTmp, cols)
+
+	//equivalent of res.Mul(tmp, m.iv)
+	impl.Dgemm(blas.NoTrans, blas.NoTrans,
+		rows, cols, cols,
+		1,
+		rawTmp, cols,
+		m.iv.RawMatrix().Data, cols,
+		0,
+		rawRes, cols)
+
+	// Remove sligtly negative values
 	for i := range rawRes {
 		if rawRes[i] < 0 {
 			rawRes[i] = 0
