@@ -135,13 +135,13 @@ func (m *EMatrix) Eigen() (err error) {
 }
 
 // Exp computes P=e^Qt and writes it to cD matrix.
-func (m *EMatrix) Exp(cD *mat64.Dense, t float64) (*mat64.Dense, error) {
+func (m *EMatrix) Exp(cD *mat64.Dense, t float64, res []float64, tmp []float64) ([]float64, error) {
 	rows, cols := m.Q.Dims()
 	if cols != rows {
 		return nil, errors.New("D isn't a square matrix")
 	}
 	if m.Scale*t < smallScale {
-		return createIdentityMatrix(cols), nil
+		return createIdentityMatrix(cols).RawMatrix().Data, nil
 	}
 	// This is a dirty hack to allow 0-scale matricies
 	if math.IsInf(t, 1) {
@@ -151,12 +151,14 @@ func (m *EMatrix) Exp(cD *mat64.Dense, t float64) (*mat64.Dense, error) {
 	for i := 0; i < rows; i++ {
 		cD.Set(i, i, math.Exp(m.d.At(i, i)*t))
 	}
-	res := mat64.NewDense(cols, rows, nil)
-	rawRes := res.RawMatrix().Data
 
-	//tmp is needed since we're using raw blas functions
-	tmp := mat64.NewDense(cols, rows, nil)
-	rawTmp := tmp.RawMatrix().Data
+	if res == nil {
+		res = make([]float64, cols*rows)
+	}
+
+	if tmp == nil {
+		tmp = make([]float64, cols*rows)
+	}
 
 	//equivalent if tmp.Mul(m.v, cD)
 	impl.Dgemm(blas.NoTrans, blas.NoTrans,
@@ -165,21 +167,21 @@ func (m *EMatrix) Exp(cD *mat64.Dense, t float64) (*mat64.Dense, error) {
 		m.v.RawMatrix().Data, cols,
 		cD.RawMatrix().Data, cols,
 		0,
-		rawTmp, cols)
+		tmp, cols)
 
 	//equivalent of res.Mul(tmp, m.iv)
 	impl.Dgemm(blas.NoTrans, blas.NoTrans,
 		rows, cols, cols,
 		1,
-		rawTmp, cols,
+		tmp, cols,
 		m.iv.RawMatrix().Data, cols,
 		0,
-		rawRes, cols)
+		res, cols)
 
 	// Remove sligtly negative values
-	for i := range rawRes {
-		if rawRes[i] < 0 {
-			rawRes[i] = 0
+	for i := range res {
+		if res[i] < 0 {
+			res[i] = 0
 		}
 	}
 	return res, nil

@@ -271,6 +271,7 @@ func (m *BaseModel) ReorderAlignment() {
 func (m *BaseModel) ExpBranch(br int) {
 	node := m.data.Tree.NodeIDArray()[br]
 	cD := mat64.NewDense(m.data.cFreq.GCode.NCodon, m.data.cFreq.GCode.NCodon, nil)
+	tmp := make([]float64, m.data.cFreq.GCode.NCodon*m.data.cFreq.GCode.NCodon)
 	for class := range m.qs {
 		var oclass int
 		for oclass = class - 1; oclass >= 0; oclass-- {
@@ -280,11 +281,12 @@ func (m *BaseModel) ExpBranch(br int) {
 			}
 		}
 		if oclass < 0 {
-			Q, err := m.qs[class][node.ID].Exp(cD, node.BranchLength/m.scale[node.ID])
+			Q, err := m.qs[class][node.ID].Exp(cD, node.BranchLength/m.scale[node.ID],
+				m.eQts[class][node.ID], tmp)
 			if err != nil {
 				panic("Error exponentiating")
 			}
-			m.eQts[class][node.ID] = Q.RawMatrix().Data
+			m.eQts[class][node.ID] = Q
 		}
 	}
 	m.expBr[br] = true
@@ -298,14 +300,7 @@ func (m *BaseModel) ExpBranches() {
 		for class := range m.qs {
 			m.eQts[class] = make([][]float64, m.data.Tree.MaxNodeID()+1)
 		}
-	} else {
-		for class := range m.eQts {
-			for nd := range m.eQts[class] {
-				m.eQts[class][nd] = nil
-			}
-		}
 	}
-
 	nTasks := len(m.qs) * m.data.Tree.NNodes()
 
 	// expTask is a type storing a task of exponentiating matrices for a
@@ -321,13 +316,15 @@ func (m *BaseModel) ExpBranches() {
 	for i := 0; i < runtime.GOMAXPROCS(0); i++ {
 		wg.Add(1)
 		go func() {
+			tmp := make([]float64, m.data.cFreq.GCode.NCodon*m.data.cFreq.GCode.NCodon)
 			cD := mat64.NewDense(m.data.cFreq.GCode.NCodon, m.data.cFreq.GCode.NCodon, nil)
 			for s := range tasks {
-				Q, err := m.qs[s.class][s.node.ID].Exp(cD, s.node.BranchLength/m.scale[s.node.ID])
+				Q, err := m.qs[s.class][s.node.ID].Exp(cD, s.node.BranchLength/m.scale[s.node.ID],
+					m.eQts[s.class][s.node.ID], tmp)
 				if err != nil {
 					panic("error exponentiating matrix")
 				}
-				m.eQts[s.class][s.node.ID] = Q.RawMatrix().Data
+				m.eQts[s.class][s.node.ID] = Q
 			}
 			wg.Done()
 		}()
