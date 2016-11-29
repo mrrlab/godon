@@ -658,9 +658,9 @@ func (m *BaseModel) fatSubL(class int, positions []int, plh [][]float64, res []f
 			cod := m.data.cSeqs[node.LeafID].Sequence[pos]
 			for l := byte(0); l < byte(NCodon); l++ {
 				if cod == codon.NOCODON || l == cod {
-					plh[node.ID][NCodon*i+int(l)] = 1
+					plh[node.ID][nPos*int(l)+i] = 1
 				} else {
-					plh[node.ID][NCodon*i+int(l)] = 0
+					plh[node.ID][nPos*int(l)+i] = 0
 				}
 			}
 		}
@@ -673,20 +673,20 @@ func (m *BaseModel) fatSubL(class int, positions []int, plh [][]float64, res []f
 			plh[node.ID][i] = 1
 		}
 		for _, child := range node.ChildNodes() {
-			impl.Dgemm(blas.NoTrans, blas.Trans,
-				nPos, NCodon, NCodon,
+			impl.Dgemm(blas.NoTrans, blas.NoTrans,
+				NCodon, nPos, NCodon,
 				1,
-				plh[child.ID], NCodon,
 				m.eQts[class][child.ID], NCodon,
+				plh[child.ID], nPos,
 				0,
-				mul, NCodon)
+				mul, nPos)
 			for i := 0; i < NCodon*nPos; i++ {
 				plh[node.ID][i] *= mul[i]
 			}
 		}
 
 		if node.IsRoot() {
-			impl.Dgemv(blas.NoTrans, nPos, NCodon, p, plh[node.ID], NCodon, m.data.cFreq.Freq, 1, 1, res, 1)
+			impl.Dgemv(blas.Trans, NCodon, nPos, p, plh[node.ID], nPos, m.data.cFreq.Freq, 1, 1, res, 1)
 			break
 		}
 
