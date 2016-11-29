@@ -391,11 +391,11 @@ func (m *BaseModel) singlePosLikelihood(tasks chan int, done chan struct{}) {
 		plh[i] = make([]float64, m.data.cFreq.GCode.NCodon+1)
 	}
 	for pos := range tasks {
-		if m.prunAllPos && m.prunPos[pos] {
-			continue
-		}
 		if pos < 0 {
 			break
+		}
+		if m.prunAllPos && m.prunPos[pos] {
+			continue
 		}
 		res := 0.0
 		for class, p := range m.prop[pos] {
