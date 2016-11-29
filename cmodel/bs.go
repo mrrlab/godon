@@ -434,7 +434,7 @@ func (m *BranchSite) Final() {
 	classes[2] = true
 	classes[3] = true
 
-	posterior := m.NEBPosterior(classes)[0]
+	posterior := m.NEBPosterior(classes)
 	m.summary.SitePosteriorNEB = posterior
 
 	log.Notice("NEB analysis")

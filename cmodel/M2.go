@@ -348,7 +348,7 @@ func (m *M2) Final() {
 		}
 	}
 
-	posterior := m.NEBPosterior(classes)[0]
+	posterior := m.NEBPosterior(classes)
 
 	m.PrintPosterior(posterior)
 }
