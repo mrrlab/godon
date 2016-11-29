@@ -677,8 +677,8 @@ func (m *BaseModel) fatSubL(class int, positions []int, plh [][]float64, res []f
 				plh[child.ID], nPos,
 				0,
 				mul, nPos)
-			for i := 0; i < NCodon*nPos; i++ {
-				plh[node.ID][i] *= mul[i]
+			for i, v := range mul {
+				plh[node.ID][i] *= v
 			}
 		}
 
