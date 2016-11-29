@@ -60,6 +60,9 @@ func NewBranchSiteGammaERates(data *Data, fixw2 bool, ncatsg, ncatcg int) (m *Br
 		tmp:      make([]float64, maxInt(ncatcg, ncatsg, 3)),
 	}
 	m.BaseModel = NewBaseModel(data, m)
+	// fatSubL assumes that proportions are the same for
+	// all the positions; hence we disable fat vectors
+	m.fatness = 1
 
 	// We need to create category for every site and every codon
 	for i := 0; i < data.cSeqs.Length(); i++ {

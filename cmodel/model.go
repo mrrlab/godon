@@ -115,6 +115,10 @@ type BaseModel struct {
 	prunAllPos bool
 	prunPos    []bool
 	l          []float64
+
+	// fatness is the number of positions to process
+	// at a time
+	fatness int
 }
 
 // NewBaseModel creates a new base Model.
@@ -135,6 +139,7 @@ func NewBaseModel(data *Data, model Model) (bm *BaseModel) {
 		nclass:   nclass,
 		l:        make([]float64, data.cSeqs.Length()),
 		prunPos:  make([]bool, data.cSeqs.Length()),
+		fatness:  fatness,
 	}
 	p := make([]float64, nclass)
 	for i := range bm.prop {
@@ -432,9 +437,9 @@ func (m *BaseModel) fatPosLikelihood(tasks chan int, done chan struct{}) {
 	nni := m.data.Tree.MaxNodeID() + 1
 	plh := make([][]float64, nni)
 	for i := 0; i < nni; i++ {
-		plh[i] = make([]float64, m.data.cFreq.GCode.NCodon*fatness)
+		plh[i] = make([]float64, m.data.cFreq.GCode.NCodon*m.fatness)
 	}
-	positions := make([]int, 0, fatness)
+	positions := make([]int, 0, m.fatness)
 
 	for pos := range tasks {
 		if pos >= 0 {
@@ -442,7 +447,7 @@ func (m *BaseModel) fatPosLikelihood(tasks chan int, done chan struct{}) {
 				continue
 			}
 			positions = append(positions, pos)
-			if len(positions) < fatness {
+			if len(positions) < m.fatness {
 				continue
 			}
 		}
@@ -451,7 +456,16 @@ func (m *BaseModel) fatPosLikelihood(tasks chan int, done chan struct{}) {
 			continue
 		}
 		res := make([]float64, len(positions))
+		// here we assume that all proportions
+		// are identical; if it's not the case,
+		// special care should be taken in
+		// constructor (i.e. m.fatness should
+		// be set to 1)
 		for class, p := range m.prop[positions[0]] {
+			if p <= smallProp {
+				// if proportion is to small
+				continue
+			}
 			m.fatSubL(class, positions, plh, res, p)
 		}
 		for i := range res {
@@ -485,7 +499,7 @@ func (m *BaseModel) Likelihood() (lnL float64) {
 	tasks := make(chan int, nPos)
 
 	for i := 0; i < nWorkers; i++ {
-		if fatness > 1 {
+		if m.fatness > 1 && m.aggMode == AggNone {
 			go m.fatPosLikelihood(tasks, done)
 		} else {
 			go m.singlePosLikelihood(tasks, done)
