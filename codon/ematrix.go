@@ -150,8 +150,11 @@ func (m *EMatrix) Exp(cD *mat64.Dense, t float64) (*mat64.Dense, error) {
 	res.Mul(m.v, cD)
 	res.Mul(res, m.iv)
 	// Remove sligtly negative values
-	res.Apply(func(r, c int, v float64) float64 {
-		return math.Max(0, v)
-	}, res)
+	rawRes := res.RawMatrix().Data
+	for i := range rawRes {
+		if rawRes[i] < 0 {
+			rawRes[i] = 0
+		}
+	}
 	return res, nil
 }
