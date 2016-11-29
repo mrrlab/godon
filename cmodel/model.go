@@ -591,9 +591,12 @@ func (m *BaseModel) classLikelihoods() (res [][]float64) {
 
 // NEBPosterior returns array (slice) of posterior probabilities for a
 // given classes.
-func (m *BaseModel) NEBPosterior(classes map[int]bool) (res []float64) {
+func (m *BaseModel) NEBPosterior(classes []float64) (res []float64) {
 	nPos := m.data.cSeqs.Length()
 	nClass := m.GetNClass()
+	if len(classes) != nClass {
+		panic("incorrect size of class values slice for posterior computations")
+	}
 	res = make([]float64, nPos)
 	// compute class likelihood matrix
 	l := m.classLikelihoods()
@@ -601,9 +604,7 @@ func (m *BaseModel) NEBPosterior(classes map[int]bool) (res []float64) {
 		numerator := 0.0
 		denominator := 0.0
 		for cl := 0; cl < nClass; cl++ {
-			if classes[cl] {
-				numerator += l[cl][pos]
-			}
+			numerator += classes[cl] * l[cl][pos]
 			denominator += l[cl][pos]
 		}
 		res[pos] = numerator / denominator

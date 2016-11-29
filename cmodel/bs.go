@@ -430,9 +430,9 @@ func (m *BranchSite) Final() {
 		log.Info("No NEB since no positive selection in the model.")
 		return
 	}
-	classes := make(map[int]bool, m.GetNClass())
-	classes[2] = true
-	classes[3] = true
+	classes := make([]float64, m.GetNClass())
+	classes[2] = 1
+	classes[3] = 1
 
 	posterior := m.NEBPosterior(classes)
 	m.summary.SitePosteriorNEB = posterior

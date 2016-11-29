@@ -423,7 +423,7 @@ func (m *M8) Final() {
 		log.Info("No NEB since no positive selection in the model.")
 		return
 	}
-	classes := make(map[int]bool, m.GetNClass())
+	classes := make([]float64, m.GetNClass())
 
 	gcat := m.ncatsg * m.ncatsg * m.ncatsg
 
@@ -434,7 +434,7 @@ func (m *M8) Final() {
 					catid := (((c1*m.ncatsg)+c2)*m.ncatsg+c3)*m.ncatcg + ecl
 
 					class := m.ncatb*gcat*m.ncatcg + catid
-					classes[class] = true
+					classes[class] = 1
 				}
 			}
 		}

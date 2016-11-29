@@ -44,6 +44,7 @@ type BranchSiteGamma struct {
 type brachSiteGammaSummary struct {
 	SitePosteriorNEB []float64 `json:"sitePosteriorNEB,omitempty"`
 	SitePosteriorBEB []float64 `json:"sitePosteriorBEB,omitempty"`
+	CodonGammaRates  []float64 `json:"codonGammaRates,omitempty"`
 	PosteriorTime    float64   `json:"posteriorTime,omitempty"`
 }
 
@@ -549,21 +550,42 @@ func (m *BranchSiteGamma) BEBPosterior() (res []float64) {
 	return
 }
 
+func (m *BranchSiteGamma) cGammaRates() []float64 {
+	clRates := make([]float64, m.GetNClass())
+	scat := m.ncatsg * m.ncatsg * m.ncatsg
+
+	for i := 0; i < m.ncatcg; i++ {
+		for j := 0; j < scat; j++ {
+			for k := 0; k < 4; k++ {
+				clRates[m.ncatcg*scat*k+j*m.ncatcg+i] = m.gammac[i]
+			}
+		}
+	}
+
+	return m.NEBPosterior(clRates)
+}
+
 // Final prints NEB results (only if with positive selection).
 func (m *BranchSiteGamma) Final() {
 	startTime := time.Now()
+	defer func() { m.summary.PosteriorTime = time.Since(startTime).Seconds() }()
+
+	if m.ncatcg > 1 {
+		m.summary.CodonGammaRates = m.cGammaRates()
+		log.Notice("Codon gamma rates posterior:", m.summary.CodonGammaRates)
+	}
 
 	// if w2=1, do not perform NEB analysis.
 	if m.fixw2 {
 		log.Info("No NEB since no positive selection in the model.")
 		return
 	}
-	classes := make(map[int]bool, m.GetNClass())
+	classes := make([]float64, m.GetNClass())
 	scat := m.ncatsg * m.ncatsg * m.ncatsg
 	for i := 0; i < m.ncatcg; i++ {
 		for j := 0; j < scat; j++ {
-			classes[m.ncatcg*scat*2+i+j*m.ncatcg] = true
-			classes[m.ncatcg*scat*3+i+j*m.ncatcg] = true
+			classes[m.ncatcg*scat*2+i+j*m.ncatcg] = 1
+			classes[m.ncatcg*scat*3+i+j*m.ncatcg] = 1
 		}
 	}
 
@@ -578,8 +600,6 @@ func (m *BranchSiteGamma) Final() {
 
 	log.Notice("BEB analysis")
 	m.PrintPosterior(posterior)
-
-	m.summary.PosteriorTime = time.Since(startTime).Seconds()
 }
 
 // Likelihood computes likelihood.
