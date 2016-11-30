@@ -637,7 +637,7 @@ func (m *BranchSiteGamma) Likelihood() float64 {
 
 // Summary returns the run summary (site posterior for NEB and BEB).
 func (m *BranchSiteGamma) Summary() interface{} {
-	if m.summary.SitePosteriorBEB != nil || m.summary.SitePosteriorNEB != nil {
+	if m.summary.SitePosteriorBEB != nil || m.summary.SitePosteriorNEB != nil || m.summary.CodonGammaRates != nil {
 		return m.summary
 	}
 	// nil prevents json from printing "{}"
