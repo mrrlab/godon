@@ -143,17 +143,24 @@ func (p *FloatParameters) SetByName(name string, v float64) error {
 // once in the begining of run.
 func (p *FloatParameters) SetFromMap(m map[string]float64) error {
 	// number of parameters set from the map
-	if len(m) != len(*p) {
-		return fmt.Errorf("Incorrect number of initial values (%d instead of %d)",
+	if len(m) != len(*p) && len(m) != len(*p)+1 {
+		log.Warningf("Incorrect number of initial values (%d instead of %d)",
 			len(m), len(*p))
 	}
 	cnt := 0
 	for pname, pval := range m {
 		err := p.SetByName(pname, pval)
+		// error means that name is not found
 		if err != nil {
-			return err
+			cnt++
 		}
-		cnt++
+	}
+	if cnt == 0 {
+		return errors.New("Zero parameters were initialized")
+	}
+	if cnt < len(*p) {
+		log.Warningf("Only %d of %d parameters were initialized",
+			cnt, len(*p))
 	}
 	return nil
 }

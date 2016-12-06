@@ -80,7 +80,6 @@ var (
 	alignmentFileName = opt.Arg("alignment", "sequence alignment").Required().ExistingFile()
 	treeFileName      = opt.Arg("tree", "starting phylogenetic tree").Required().ExistingFile()
 	fixw              = opt.Flag("fix-w", "fix omega=1 (for the branch-site and M8 models)").Short('f').Bool()
-	startF            = opt.Flag("start", "read start position from the trajectory or JSON file").Short('s').ExistingFile()
 	outTreeF          = opt.Flag("out-tree", "write tree to a file").String()
 	printFull         = opt.Flag("full-likelihood", "print full (non-aggregated) likelihood in the end of optimization").Bool()
 
@@ -112,6 +111,7 @@ var (
 	ncatb         = app.Flag("ncat-beta", "number of the categories for the beta distribution (models M7&M8)").Default("4").Int()
 
 	// optimizer parameters
+	startF    = app.Flag("start", "read start position from the trajectory or JSON file").Short('s').ExistingFile()
 	randomize = app.Flag("randomize-start", "use uniformly distributed random starting point; "+
 		"by default random starting point is distributed around realistic parameter values").Bool()
 	iterations = app.Flag("iter", "number of iterations").Default("10000").Int()
