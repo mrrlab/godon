@@ -151,7 +151,7 @@ func (p *FloatParameters) SetFromMap(m map[string]float64) error {
 	for pname, pval := range m {
 		err := p.SetByName(pname, pval)
 		// error means that name is not found
-		if err != nil {
+		if err == nil {
 			cnt++
 		}
 	}
