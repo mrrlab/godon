@@ -130,9 +130,9 @@ var (
 		"none: just compute likelihood, no optimization"+
 		")").Short('m').Default("lbfgsb").String()
 
-	final = app.Flag("final", "perform final extra computations, i.e. NEB and BEB site posterior (default on, use --no-final to disable)").Default("true").Bool()
-	neb = app.Flag("neb", "perform naive empirical bayes of positive selection (default on, use --no-neb to disable)").Default("true").Bool()
-	beb = app.Flag("beb", "perform bayes empirical bayes of positive selection (default on, use --no-beb to disable)").Default("true").Bool()
+	final      = app.Flag("final", "perform final extra computations, i.e. NEB and BEB site posterior (default on, use --no-final to disable)").Default("true").Bool()
+	neb        = app.Flag("neb", "perform naive empirical bayes of positive selection (default on, use --no-neb to disable)").Default("true").Bool()
+	beb        = app.Flag("beb", "perform bayes empirical bayes of positive selection (default on, use --no-beb to disable)").Default("true").Bool()
 	codonRates = app.Flag("codon-rates", "perform NEB analysis of codon rates").Default("false").Bool()
 	codonOmega = app.Flag("codon-omega", "perform NEB analysis of codon omega").Default("false").Bool()
 
