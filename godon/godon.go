@@ -158,7 +158,8 @@ var (
 
 	// input/output
 	logF     = app.Flag("out", "write log to a file").Short('o').String()
-	trajF    = app.Flag("trajectory", "write optimization trajectory to a file").Short('t').String()
+	trajFn   = app.Flag("trajectory", "write optimization trajectory to a file").Short('t').String()
+	trajF    = os.Stdout
 	logLevel = app.Flag("log-level", "set loglevel "+
 		"("+strings.Join(logLevels, ", ")+")").
 		Short('l').Default("notice").
@@ -232,6 +233,14 @@ func main() {
 		CommandLine: os.Args,
 		Seed:        *seed,
 		NThreads:    effectiveNThreads,
+	}
+
+	if *trajFn != "" {
+		trajF, err = os.OpenFile(*trajFn, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
+		if err != nil {
+			log.Fatalf("Error creating trajectory file: %v", err)
+		}
+		defer trajF.Close()
 	}
 
 	var summary interface{}

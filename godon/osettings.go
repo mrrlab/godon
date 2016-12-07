@@ -22,7 +22,7 @@ type optimizerSettings struct {
 	skip     int
 	maxAdapt int
 
-	trajF string
+	trajF *os.File
 
 	seed int64
 }
@@ -43,7 +43,7 @@ func newOptimzerSettings(model cmodel.TreeOptimizableSiteClass) *optimizerSettin
 		skip:     *skip,
 		maxAdapt: *maxAdapt,
 
-		trajF: *trajF,
+		trajF: trajF,
 
 		seed: *seed,
 	}
@@ -66,24 +66,13 @@ func (o *optimizerSettings) create() (optimize.Optimizer, error) {
 		o.model.SetAdaptive(as)
 	}
 
-	f := os.Stdout
-
-	if o.trajF != "" {
-		var err error
-		f, err = os.OpenFile(o.trajF, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
-		if err != nil {
-			return nil, fmt.Errorf("Error creating trajectory file: %v", err)
-		}
-		defer f.Close()
-	}
-
 	opt, err := o.getOptimizer()
 	if err != nil {
 		return nil, err
 	}
 	log.Infof("Using %s optimization.", o.method)
 
-	opt.SetTrajectoryOutput(f)
+	opt.SetTrajectoryOutput(o.trajF)
 	opt.SetOptimizable(o.model)
 
 	opt.SetReportPeriod(o.report)
