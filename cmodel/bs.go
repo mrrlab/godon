@@ -422,31 +422,30 @@ func (m *BranchSite) BEBPosterior() (res []float64) {
 }
 
 // Final prints NEB results (only if with positive selection).
-func (m *BranchSite) Final() {
+func (m *BranchSite) Final(neb, beb, codonRates, codonOmega bool) {
 	startTime := time.Now()
+	defer func() { m.summary.PosteriorTime = time.Since(startTime).Seconds() }()
 
-	// if w2=1, do not perform NEB analysis.
-	if m.fixw2 {
-		log.Info("No NEB since no positive selection in the model.")
-		return
+	if (neb || beb) && !m.fixw2 {
+		classes := make([]float64, m.GetNClass())
+		classes[2] = 1
+		classes[3] = 1
+
+		if neb {
+			m.summary.SitePosteriorNEB = m.NEBPosterior(classes)
+
+			log.Notice("NEB analysis")
+			m.PrintPosterior(m.summary.SitePosteriorNEB)
+		}
+
+		if beb {
+			m.summary.SitePosteriorBEB = m.BEBPosterior()
+
+			log.Notice("BEB analysis")
+			m.PrintPosterior(m.summary.SitePosteriorBEB)
+		}
 	}
-	classes := make([]float64, m.GetNClass())
-	classes[2] = 1
-	classes[3] = 1
 
-	posterior := m.NEBPosterior(classes)
-	m.summary.SitePosteriorNEB = posterior
-
-	log.Notice("NEB analysis")
-	m.PrintPosterior(posterior)
-
-	posterior = m.BEBPosterior()
-	m.summary.SitePosteriorBEB = posterior
-
-	log.Notice("BEB analysis")
-	m.PrintPosterior(posterior)
-
-	m.summary.PosteriorTime = time.Since(startTime).Seconds()
 }
 
 // Likelihood computes likelihood.

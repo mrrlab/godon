@@ -566,40 +566,39 @@ func (m *BranchSiteGamma) cGammaRates() []float64 {
 }
 
 // Final prints NEB results (only if with positive selection).
-func (m *BranchSiteGamma) Final() {
+func (m *BranchSiteGamma) Final(neb, beb, codonRates, codonOmega bool) {
 	startTime := time.Now()
 	defer func() { m.summary.PosteriorTime = time.Since(startTime).Seconds() }()
 
-	if m.ncatcg > 1 {
+	if m.ncatcg > 1 && codonRates {
 		m.summary.CodonGammaRates = m.cGammaRates()
 		log.Notice("Codon gamma rates posterior:", m.summary.CodonGammaRates)
 	}
 
-	// if w2=1, do not perform NEB analysis.
-	if m.fixw2 {
-		log.Info("No NEB since no positive selection in the model.")
-		return
-	}
-	classes := make([]float64, m.GetNClass())
-	scat := m.ncatsg * m.ncatsg * m.ncatsg
-	for i := 0; i < m.ncatcg; i++ {
-		for j := 0; j < scat; j++ {
-			classes[m.ncatcg*scat*2+i+j*m.ncatcg] = 1
-			classes[m.ncatcg*scat*3+i+j*m.ncatcg] = 1
+	if (neb || beb) && !m.fixw2 {
+		classes := make([]float64, m.GetNClass())
+		scat := m.ncatsg * m.ncatsg * m.ncatsg
+		for i := 0; i < m.ncatcg; i++ {
+			for j := 0; j < scat; j++ {
+				classes[m.ncatcg*scat*2+i+j*m.ncatcg] = 1
+				classes[m.ncatcg*scat*3+i+j*m.ncatcg] = 1
+			}
+		}
+
+		if neb {
+			m.summary.SitePosteriorNEB = m.NEBPosterior(classes)
+
+			log.Notice("NEB analysis")
+			m.PrintPosterior(m.summary.SitePosteriorNEB)
+		}
+
+		if beb {
+			m.summary.SitePosteriorBEB = m.BEBPosterior()
+
+			log.Notice("BEB analysis")
+			m.PrintPosterior(m.summary.SitePosteriorBEB)
 		}
 	}
-
-	posterior := m.NEBPosterior(classes)
-	m.summary.SitePosteriorNEB = posterior
-
-	log.Notice("NEB analysis")
-	m.PrintPosterior(posterior)
-
-	posterior = m.BEBPosterior()
-	m.summary.SitePosteriorBEB = posterior
-
-	log.Notice("BEB analysis")
-	m.PrintPosterior(posterior)
 }
 
 // Likelihood computes likelihood.

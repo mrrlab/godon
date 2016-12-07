@@ -325,12 +325,12 @@ func (m *M2) updateMatrices() {
 }
 
 // Final prints NEB results (only if with positive selection).
-func (m *M2) Final() {
+func (m *M2) Final(neb, beb, codonRates, codonOmega bool) {
 	// if w2=1, do not perform NEB analysis.
-	if !m.addw {
-		log.Info("No NEB since no positive selection in the model.")
+	if !neb && !m.addw {
 		return
 	}
+
 	classes := make([]float64, m.GetNClass())
 
 	gcat := m.ncatsg * m.ncatsg * m.ncatsg

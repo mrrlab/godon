@@ -53,7 +53,7 @@ type TreeOptimizable interface {
 	// GetTreeString returns tree in a newick format.
 	GetTreeString() string
 	// Final performs analysis after optimization is complete.
-	Final()
+	Final(neb, beb, codonRates, codonOmega bool)
 	// Summary returns summary of the object for JSON export.
 	Summary() interface{}
 }
@@ -734,7 +734,7 @@ func (m *BaseModel) fullSubL(class, pos int, plh [][]float64) (res float64) {
 
 // Final performs analysis after optimization is complete. This
 // implementation does nothing. This method should be implemented.
-func (m *BaseModel) Final() {
+func (m *BaseModel) Final(neb, beb, codonRates, codonOmega bool) {
 }
 
 // Summary returns the run summary.
