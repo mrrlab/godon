@@ -96,7 +96,7 @@ func optimization() OptimizationSummary {
 
 	summary := runOptimization(m, o, nil)
 
-	if !*noFinal {
+	if *final {
 		m.Final()
 	}
 	summary.Model = m.Summary()

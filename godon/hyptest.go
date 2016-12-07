@@ -130,13 +130,13 @@ func hypTest() (summary HypTestSummary) {
 	log.Noticef("Final D=%f", 2*(l1-l0))
 
 	// final stores BEB & NEB results
-	var final interface{}
+	var finalSummary interface{}
 
 	// final BEB & NEB computation
-	if !*noFinal && 2*(l1-l0) > *sThr {
+	if *final && 2*(l1-l0) > *sThr {
 		h1par := res1.Optimizer.GetMaxLikelihoodParameters()
 		log.Notice("Computing posterior for H1")
-		final = computeFinal(m1, h1par)
+		finalSummary = computeFinal(m1, h1par)
 	}
 
 	summary.H0 = HypSummary{
@@ -146,7 +146,7 @@ func hypTest() (summary HypTestSummary) {
 	summary.H1 = HypSummary{
 		MaxLnL:         res1.Optimizer.GetMaxLikelihood(),
 		MaxLParameters: res1.Optimizer.GetMaxLikelihoodParameters(),
-		Final:          final,
+		Final:          finalSummary,
 	}
 
 	log.Noticef("lnL0=%f, lnL1=%f",
