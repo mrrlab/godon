@@ -550,6 +550,7 @@ func (m *BranchSiteGamma) BEBPosterior() (res []float64) {
 	return
 }
 
+// cGammaRates returns array with codon gamma rates using NEB approach.
 func (m *BranchSiteGamma) cGammaRates() []float64 {
 	clRates := make([]float64, m.GetNClass())
 	scat := m.ncatsg * m.ncatsg * m.ncatsg

@@ -45,6 +45,8 @@ type M8 struct {
 // m8Summary stores summary information.
 type m8Summary struct {
 	SitePosteriorNEB []float64 `json:"sitePosteriorNEB,omitempty"`
+	CodonGammaRates  []float64 `json:"codonGammaRates,omitempty"`
+	CodonOmega       []float64 `json:"codonOmega,omitempty"`
 	PosteriorTime    float64   `json:"posteriorTime,omitempty"`
 }
 
@@ -414,12 +416,60 @@ func (m *M8) updateProportions() {
 	m.expAllBr = false
 }
 
+// cGammaRates returns array with codon gamma rates using NEB approach.
+func (m *M8) cGammaRates() []float64 {
+	clRates := make([]float64, m.GetNClass())
+	scat := m.ncatsg * m.ncatsg * m.ncatsg
+
+	for i := 0; i < m.ncatcg; i++ {
+		for j := 0; j < scat; j++ {
+			for k := 0; k < m.ncatb; k++ {
+				clRates[k*m.ncatcg*scat+j*m.ncatcg+i] = m.gammac[i]
+			}
+			if m.addw {
+				clRates[m.ncatb*m.ncatcg*scat+j*m.ncatcg+i] = m.gammac[i]
+			}
+		}
+	}
+
+	return m.NEBPosterior(clRates)
+}
+
+// omegaPosterior returns array with omega posterior using NEB approach.
+func (m *M8) omegaPosterior() []float64 {
+	clOmega := make([]float64, m.GetNClass())
+	scat := m.ncatsg * m.ncatsg * m.ncatsg
+
+	for i := 0; i < m.ncatcg; i++ {
+		for j := 0; j < scat; j++ {
+			for k := 0; k < m.ncatb; k++ {
+				clOmega[k*m.ncatcg*scat+j*m.ncatcg+i] = m.omegab[k]
+			}
+			if m.addw {
+				clOmega[m.ncatb*m.ncatcg*scat+j*m.ncatcg+i] = m.omega
+			}
+		}
+	}
+
+	return m.NEBPosterior(clOmega)
+}
+
 // Final prints NEB results (only if with positive selection).
 func (m *M8) Final(neb, beb, codonRates, codonOmega bool) {
 	startTime := time.Now()
 	defer func() { m.summary.PosteriorTime = time.Since(startTime).Seconds() }()
 
-	if neb  && m.addw && !m.fixw {
+	if m.ncatcg > 1 && codonRates {
+		m.summary.CodonGammaRates = m.cGammaRates()
+		log.Notice("Codon gamma rates posterior:", m.summary.CodonGammaRates)
+	}
+
+	if m.ncatb > 1 && codonOmega {
+		m.summary.CodonOmega = m.omegaPosterior()
+		log.Notice("Codon omega posterior:", m.summary.CodonOmega)
+	}
+
+	if neb && m.addw && !m.fixw {
 		classes := make([]float64, m.GetNClass())
 
 		gcat := m.ncatsg * m.ncatsg * m.ncatsg
@@ -442,8 +492,6 @@ func (m *M8) Final(neb, beb, codonRates, codonOmega bool) {
 
 		m.PrintPosterior(posterior)
 	}
-
-	m.summary.PosteriorTime = time.Since(startTime).Seconds()
 }
 
 // Likelihood computes likelihood.
@@ -484,7 +532,7 @@ func (m *M8) Likelihood() float64 {
 
 // Summary returns the run summary (site posterior for NEB and BEB).
 func (m *M8) Summary() interface{} {
-	if m.summary.SitePosteriorNEB != nil {
+	if m.summary.SitePosteriorNEB != nil || m.summary.CodonGammaRates != nil || m.summary.CodonOmega != nil {
 		return m.summary
 	}
 	// nil prevents json from printing "{}"
