@@ -16,7 +16,6 @@ func comparePosterior(posterior []float64, reference map[int]float64, tst *testi
 			}
 		} else {
 			diff := r - 0.5
-			tst.Log("i=", i, "p=", p, "r<0.5 diff=", diff)
 			if diff > smallDiff {
 				tst.Error("Expected <0.5, got", p)
 			}
