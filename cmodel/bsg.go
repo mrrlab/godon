@@ -37,15 +37,23 @@ type BranchSiteGamma struct {
 	propdone               bool
 	gammacdone             bool
 	gammasdone             bool
-	summary                brachSiteGammaSummary
+	summary                branchSiteGammaSummary
 }
 
-// brachSiteGammaSummary stores summary information.
-type brachSiteGammaSummary struct {
+// branchSiteGammaSummary stores summary information.
+type branchSiteGammaSummary struct {
 	SitePosteriorNEB []float64 `json:"sitePosteriorNEB,omitempty"`
 	SitePosteriorBEB []float64 `json:"sitePosteriorBEB,omitempty"`
 	CodonGammaRates  []float64 `json:"codonGammaRates,omitempty"`
 	PosteriorTime    float64   `json:"posteriorTime,omitempty"`
+}
+
+// Empty returns true if there's no data in the structure.
+func (s branchSiteGammaSummary) Empty() bool {
+	if s.SitePosteriorNEB == nil && s.SitePosteriorBEB == nil && s.CodonGammaRates == nil {
+		return true
+	}
+	return false
 }
 
 // NewBranchSiteGamma creates a new BranchSiteGamma model.
@@ -637,7 +645,7 @@ func (m *BranchSiteGamma) Likelihood() float64 {
 
 // Summary returns the run summary (site posterior for NEB and BEB).
 func (m *BranchSiteGamma) Summary() interface{} {
-	if m.summary.SitePosteriorBEB != nil || m.summary.SitePosteriorNEB != nil || m.summary.CodonGammaRates != nil {
+	if !m.summary.Empty() {
 		return m.summary
 	}
 	// nil prevents json from printing "{}"

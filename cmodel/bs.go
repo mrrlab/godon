@@ -21,14 +21,22 @@ type BranchSite struct {
 	fixw2                  bool
 	q0done, q1done, q2done bool
 	propdone               bool
-	summary                brachSiteSummary
+	summary                branchSiteSummary
 }
 
-// brachSiteSummary stores summary information.
-type brachSiteSummary struct {
+// branchSiteSummary stores summary information.
+type branchSiteSummary struct {
 	SitePosteriorNEB []float64 `json:"sitePosteriorNEB,omitempty"`
 	SitePosteriorBEB []float64 `json:"sitePosteriorBEB,omitempty"`
 	PosteriorTime    float64   `json:"posteriorTime,omitempty"`
+}
+
+// Empty returns true if there's no data in the structure.
+func (s branchSiteSummary) Empty() bool {
+	if s.SitePosteriorNEB == nil && s.SitePosteriorBEB == nil {
+		return true
+	}
+	return false
 }
 
 // NewBranchSite creates a new BranchSite model.
@@ -461,7 +469,7 @@ func (m *BranchSite) Likelihood() float64 {
 
 // Summary returns the run summary (site posterior for NEB and BEB).
 func (m *BranchSite) Summary() interface{} {
-	if m.summary.SitePosteriorBEB != nil || m.summary.SitePosteriorNEB != nil {
+	if !m.summary.Empty() {
 		return m.summary
 	}
 	// nil prevents json from printing "{}"

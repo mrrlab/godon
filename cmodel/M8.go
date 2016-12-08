@@ -50,6 +50,14 @@ type m8Summary struct {
 	PosteriorTime    float64   `json:"posteriorTime,omitempty"`
 }
 
+// Empty returns true if there's no data in the structure.
+func (s m8Summary) Empty() bool {
+	if s.SitePosteriorNEB == nil && s.CodonGammaRates == nil && s.CodonOmega == nil {
+		return true
+	}
+	return false
+}
+
 // NewM8 creates a new M8 model.
 func NewM8(data *Data, addw, fixw bool, ncatb, ncatsg, ncatcg int) (m *M8) {
 	// n site gamma categories, ncatb * n^3 matrices
@@ -532,7 +540,7 @@ func (m *M8) Likelihood() float64 {
 
 // Summary returns the run summary (site posterior for NEB and BEB).
 func (m *M8) Summary() interface{} {
-	if m.summary.SitePosteriorNEB != nil || m.summary.CodonGammaRates != nil || m.summary.CodonOmega != nil {
+	if !m.summary.Empty() {
 		return m.summary
 	}
 	// nil prevents json from printing "{}"
