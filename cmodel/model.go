@@ -520,7 +520,6 @@ func (m *BaseModel) Likelihood() (lnL float64) {
 
 	for i := 0; i < nPos; i++ {
 		lnL += m.l[i]
-		m.prunPos[i] = true
 	}
 	m.prunAllPos = true
 	if math.IsNaN(lnL) {
