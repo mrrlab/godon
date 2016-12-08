@@ -450,8 +450,10 @@ func (m *BaseModel) fatPosLikelihood(tasks chan int, done chan struct{}) {
 		}
 
 		if len(positions) == 0 {
-			continue
+			// we can only get here if pos < 0
+			break
 		}
+
 		res := make([]float64, len(positions))
 		// here we assume that all proportions
 		// are identical; if it's not the case,
