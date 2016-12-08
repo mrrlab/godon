@@ -116,7 +116,7 @@ var (
 		"by default random starting point is distributed around realistic parameter values").Bool()
 	iterations = app.Flag("iter", "number of iterations").Default("10000").Int()
 	report     = app.Flag("report", "report every N iterations").Default("10").Int()
-	method     = app.Flag("optimization-method", "optimization method to use "+
+	method     = app.Flag("method", "optimization method to use "+
 		"(lbfgsb: limited-memory Broyden–Fletcher–Goldfarb–Shanno with bounding constraints, "+
 		"simplex: downhill simplex, "+
 		"annealing: simullated annealing, "+
