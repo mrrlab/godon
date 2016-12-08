@@ -285,17 +285,19 @@ func (m *BranchSite) siteLMatrix(w0, w2 []float64) (res [][][][]float64) {
 	}
 	tasks := make(chan bebtask, nPos)
 
-	go func() {
-		nni := m.data.Tree.MaxNodeID() + 1
-		plh := make([][]float64, nni)
-		for i := 0; i < nni; i++ {
-			plh[i] = make([]float64, m.data.cFreq.GCode.NCodon+1)
-		}
-		for task := range tasks {
-			res[task.iW0][task.iW2][task.class][task.pos] = m.fullSubL(task.class, task.pos, plh)
-			done <- struct{}{}
-		}
-	}()
+	for i := 0; i < nWorkers; i++ {
+		go func() {
+			nni := m.data.Tree.MaxNodeID() + 1
+			plh := make([][]float64, nni)
+			for i := 0; i < nni; i++ {
+				plh[i] = make([]float64, m.data.cFreq.GCode.NCodon+1)
+			}
+			for task := range tasks {
+				res[task.iW0][task.iW2][task.class][task.pos] = m.fullSubL(task.class, task.pos, plh)
+				done <- struct{}{}
+			}
+		}()
+	}
 
 	for iW0, w0 := range w0 {
 		m.omega0 = w0
