@@ -78,7 +78,7 @@ func (m *BranchSite) Copy() optimize.Optimizable {
 		p0prop:    m.p0prop,
 		fixw2:     m.fixw2,
 	}
-	newM.BaseModel.Model = newM
+	newM.BaseModel.model = newM
 	newM.setupParameters()
 	newM.setBranchMatrices()
 	return newM
@@ -364,6 +364,9 @@ func (m *BranchSite) BEBPosterior() (res []float64) {
 	w2s := floatRange(1.5, 1, 10)
 	log.Infof("w2: %v", strFltSlice(w2s))
 
+	// we need to compute all the scaling
+	// factors first
+	m.expBranchesIfNeeded()
 	matr := m.siteLMatrix(w0s, w2s)
 
 	// normalization
@@ -456,15 +459,14 @@ func (m *BranchSite) Final(neb, beb, codonRates, codonOmega bool) {
 
 }
 
-// Likelihood computes likelihood.
-func (m *BranchSite) Likelihood() float64 {
+// update updates matrices and proportions.
+func (m *BranchSite) update() {
 	if !m.q0done || !m.q1done || !m.q2done {
 		m.updateMatrices()
 	}
 	if !m.propdone {
 		m.updateProportions()
 	}
-	return m.BaseModel.Likelihood()
 }
 
 // Summary returns the run summary (site posterior for NEB and BEB).

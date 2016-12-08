@@ -116,7 +116,7 @@ func (m *BranchSiteGammaERates) Copy() optimize.Optimizable {
 
 		tmp: make([]float64, maxInt(m.ncatcg, m.ncatsg, 3)),
 	}
-	newM.BaseModel.Model = newM
+	newM.BaseModel.model = newM
 
 	copy(newM.csRates, m.csRates)
 
@@ -426,8 +426,8 @@ func (m *BranchSiteGammaERates) updateMatrices() {
 	m.expAllBr = false
 }
 
-// Likelihood computes likelihood.
-func (m *BranchSiteGammaERates) Likelihood() float64 {
+// update updates matrices and proportions.
+func (m *BranchSiteGammaERates) update() {
 	if !m.gammasdone {
 		if m.ncatsg > 1 {
 			m.gammas = paml.DiscreteGamma(m.alphas, m.alphas, m.ncatsg, false, m.tmp, m.gammas)
@@ -456,5 +456,4 @@ func (m *BranchSiteGammaERates) Likelihood() float64 {
 	if !m.allpropdone || !m.csrdone {
 		m.updateProportions()
 	}
-	return m.BaseModel.Likelihood()
 }

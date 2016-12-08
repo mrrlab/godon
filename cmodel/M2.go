@@ -111,7 +111,7 @@ func (m *M2) Copy() optimize.Optimizable {
 		}
 	}
 
-	newM.BaseModel.Model = newM
+	newM.BaseModel.model = newM
 	newM.setupParameters()
 	newM.setBranchMatrices()
 	return newM
@@ -385,8 +385,8 @@ func (m *M2) updateProportions() {
 	m.expAllBr = false
 }
 
-// Likelihood computes likelihood.
-func (m *M2) Likelihood() float64 {
+// update updates matrices and proportions.
+func (m *M2) update() {
 	if !m.gammasdone {
 		if m.ncatsg > 1 {
 			m.gammas = paml.DiscreteGamma(m.alphas, m.alphas, m.ncatsg, false, m.tmp, m.gammas)
@@ -415,5 +415,4 @@ func (m *M2) Likelihood() float64 {
 	if !m.propdone {
 		m.updateProportions()
 	}
-	return m.BaseModel.Likelihood()
 }

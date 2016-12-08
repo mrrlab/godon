@@ -120,7 +120,7 @@ func (m *BranchSiteGamma) Copy() optimize.Optimizable {
 
 		tmp: make([]float64, maxInt(m.ncatcg, m.ncatsg, 3)),
 	}
-	newM.BaseModel.Model = newM
+	newM.BaseModel.model = newM
 
 	for i := 0; i < scat*m.ncatcg; i++ {
 		newM.q0s[i] = codon.NewEMatrix(m.data.cFreq)
@@ -610,8 +610,8 @@ func (m *BranchSiteGamma) Final(neb, beb, codonRates, codonOmega bool) {
 	}
 }
 
-// Likelihood computes likelihood.
-func (m *BranchSiteGamma) Likelihood() float64 {
+// update updates matrices and proportions.
+func (m *BranchSiteGamma) update() {
 	if !m.gammasdone {
 		if m.ncatsg > 1 {
 			m.gammas = paml.DiscreteGamma(m.alphas, m.alphas, m.ncatsg, false, m.tmp, m.gammas)
@@ -640,7 +640,6 @@ func (m *BranchSiteGamma) Likelihood() float64 {
 	if !m.propdone {
 		m.updateProportions()
 	}
-	return m.BaseModel.Likelihood()
 }
 
 // Summary returns the run summary (site posterior for NEB and BEB).

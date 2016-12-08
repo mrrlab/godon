@@ -40,7 +40,7 @@ func (m *M0) Copy() optimize.Optimizable {
 		omega:     m.omega,
 		kappa:     m.kappa,
 	}
-	newM.BaseModel.Model = newM
+	newM.BaseModel.model = newM
 	newM.setupParameters()
 	return newM
 }
@@ -106,10 +106,9 @@ func (m *M0) UpdateMatrix() {
 	m.expAllBr = false
 }
 
-// Likelihood computes likelihood.
-func (m *M0) Likelihood() float64 {
+// update updates matrices and proportions.
+func (m *M0) update() {
 	if !m.qdone {
 		m.UpdateMatrix()
 	}
-	return m.BaseModel.Likelihood()
 }

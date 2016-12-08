@@ -73,13 +73,15 @@ type Model interface {
 	GetNClass() int
 	// addParameters all the parameters of the Model.
 	addParameters(optimize.FloatParameterGenerator)
+	// update updates matrices and proportions.
+	update()
 }
 
 // BaseModel stores tree and alignment. Matrices and site classes are
 // stored and cached as well.
 type BaseModel struct {
 	// Model is the model implementation.
-	Model
+	model Model
 
 	// data stores codon model input data (i.e. tree, alignment & gcode)
 	data *Data
@@ -126,7 +128,7 @@ func NewBaseModel(data *Data, model Model) (bm *BaseModel) {
 	f, a := data.cSeqs.Letters()
 	nclass := model.GetNClass()
 	bm = &BaseModel{
-		Model:    model,
+		model:    model,
 		data:     data,
 		lettersF: f,
 		lettersA: a,
@@ -155,7 +157,7 @@ func NewBaseModel(data *Data, model Model) (bm *BaseModel) {
 
 // Copy creates a copy of BaseModel.
 func (m *BaseModel) Copy() (newM *BaseModel) {
-	newM = NewBaseModel(m.data.Copy(), m.Model)
+	newM = NewBaseModel(m.data.Copy(), m.model)
 	copy(newM.prop[0], m.prop[0])
 	newM.as = m.as
 	newM.optBranch = m.optBranch
@@ -205,7 +207,7 @@ func (m *BaseModel) setupParameters() {
 		fpg = optimize.BasicFloatParameterGenerator
 	}
 	m.addBranchParameters(fpg)
-	m.Model.addParameters(fpg)
+	m.model.addParameters(fpg)
 }
 
 // Make branch length parameters adaptive.
@@ -358,6 +360,7 @@ func (m *BaseModel) ExpBranches() {
 // expBranchesIfNeeded performes matrix exponentiation only if it is
 // needed. It should be called before the likelihood computations.
 func (m *BaseModel) expBranchesIfNeeded() {
+	m.model.update()
 	if !m.expAllBr {
 		m.ExpBranches()
 		m.prunAllPos = false
@@ -538,7 +541,7 @@ func (m *BaseModel) Likelihood() (lnL float64) {
 // site class, this can be used to perform NEB/BEB (Naive/Bayes
 // empirical Bayes) analysis.
 func (m *BaseModel) classLikelihoods() (res [][]float64) {
-	res = make([][]float64, m.GetNClass())
+	res = make([][]float64, m.model.GetNClass())
 	nPos := m.data.cSeqs.Length()
 	for i := range res {
 		res[i] = make([]float64, nPos)
@@ -594,7 +597,7 @@ func (m *BaseModel) classLikelihoods() (res [][]float64) {
 // given classes.
 func (m *BaseModel) NEBPosterior(classes []float64) (res []float64) {
 	nPos := m.data.cSeqs.Length()
-	nClass := m.GetNClass()
+	nClass := m.model.GetNClass()
 	if len(classes) != nClass {
 		panic("incorrect size of class values slice for posterior computations")
 	}

@@ -134,7 +134,7 @@ func (m *M8) Copy() optimize.Optimizable {
 		newM.qb[i] = codon.NewEMatrix(m.data.cFreq)
 	}
 
-	newM.BaseModel.Model = newM
+	newM.BaseModel.model = newM
 	newM.setupParameters()
 	return newM
 }
@@ -502,8 +502,8 @@ func (m *M8) Final(neb, beb, codonRates, codonOmega bool) {
 	}
 }
 
-// Likelihood computes likelihood.
-func (m *M8) Likelihood() float64 {
+// update updates matrices and proportions.
+func (m *M8) update() {
 	if !m.gammasdone {
 		if m.ncatsg > 1 {
 			m.gammas = paml.DiscreteGamma(m.alphas, m.alphas, m.ncatsg, false, m.tmp, m.gammas)
@@ -533,9 +533,6 @@ func (m *M8) Likelihood() float64 {
 	if !m.propdone {
 		m.updateProportions()
 	}
-	l := m.BaseModel.Likelihood()
-	log.Debug("Par:", m.parameters, "L=", l)
-	return l
 }
 
 // Summary returns the run summary (site posterior for NEB and BEB).
