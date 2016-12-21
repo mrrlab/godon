@@ -29,6 +29,22 @@ func hypTest() (summary HypTestSummary) {
 		log.Fatalf("Unknown model '%v'", *model)
 	}
 
+	if *m0Tree && !*noOptBrLen {
+		m0ms := newModelSettings(data)
+		m0ms.name = "M0"
+		m0ms.startF = ""
+		m0model, err := m0ms.createInitalized(false)
+		if err != nil {
+			log.Fatal(err)
+		}
+		m0opt := newOptimizerSettings(m0model)
+		log.Notice("Optimizing branch lengths using M0")
+		res := runOptimization(m0model, m0opt, nil)
+		summary.Tree = data.Tree.String()
+		summary.Runs = append(summary.Runs, res)
+		*noOptBrLen = true
+	}
+
 	ms := newModelSettings(data)
 
 	ms.fixw = true

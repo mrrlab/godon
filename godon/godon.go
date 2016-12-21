@@ -98,6 +98,8 @@ var (
 	quick = hTest.Flag("quick",
 		"only prevent negative LRT statistics").
 		Bool()
+	m0Tree = hTest.Flag("m0-tree", "estimate branch lengths using the M0 model").
+		Bool()
 
 	//model parameters
 	gcodeID       = app.Flag("gcode", "NCBI genetic code id, standard by default").Default("1").Int()

@@ -34,6 +34,8 @@ type OptimizationSummary struct {
 
 // HypTestSummary is storing summary information for hypothesis test.
 type HypTestSummary struct {
+	// Tree is the estimated tree (only for M0 estimation).
+	Tree string `json:"tree,omitempty"`
 	// H0 is the result of H0 run.
 	H0 HypSummary
 	// H1 is the result of H1 run.
