@@ -24,7 +24,7 @@ func TestUnroot1(tst *testing.T) {
 	}
 	tst.Log("Unrooted:", t.ClassString())
 	tst.Log("b =", b)
-	if t.String() != "(a:1.000000,b:2.000000,c:4.000000):0.000000;" {
+	if t.String() != "(a:1,b:2,c:4):0;" {
 		tst.Error("Error unrooting tree, got:", t)
 	}
 
@@ -34,7 +34,7 @@ func TestUnroot1(tst *testing.T) {
 	}
 
 	tst.Log("Rooted:", t.ClassString())
-	if t.String() != "((a:1.000000,b:2.000000):2.000000,c:2.000000):0.000000;" {
+	if t.String() != "((a:1,b:2):2,c:2):0;" {
 		tst.Error("Error unrooting tree, got:", t)
 	}
 }
@@ -53,7 +53,7 @@ func TestUnroot2(tst *testing.T) {
 	}
 	tst.Log("Unrooted:", t.ClassString())
 	tst.Log("b =", b)
-	if t.String() != "(c:4.000000,a:1.000000,b:2.000000):0.000000;" {
+	if t.String() != "(c:4,a:1,b:2):0;" {
 		tst.Error("Error unrooting tree, got:", t)
 	}
 
@@ -63,7 +63,7 @@ func TestUnroot2(tst *testing.T) {
 	}
 
 	tst.Log("Rooted:", t.ClassString())
-	if t.String() != "(c:2.000000,(a:1.000000,b:2.000000):2.000000):0.000000;" {
+	if t.String() != "(c:2,(a:1,b:2):2):0;" {
 		tst.Error("Error unrooting tree, got:", t)
 	}
 }
