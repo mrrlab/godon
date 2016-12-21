@@ -399,23 +399,35 @@ func (node *Node) ClassString() (s string) {
 	return s
 }
 
-// String returns a newick string for a node and its' subnodes.
-func (node *Node) String() (s string) {
+// StringFormat returns a newick string for a node and its' subnodes.
+// Float representation is controlled using format string (e.g. "%0.6f").
+func (node *Node) StringFormat(format string) (s string) {
 	if node.IsTerminal() {
-		return fmt.Sprintf("%s:%0.6f", node.Name, node.BranchLength)
+		return fmt.Sprintf("%s:"+format, node.Name, node.BranchLength)
 	}
 	s += "("
 	for i, child := range node.childNodes {
-		s += child.String()
+		s += child.StringFormat(format)
 		if i != len(node.childNodes)-1 {
 			s += ","
 		}
 	}
-	s += fmt.Sprintf("):%0.6f", node.BranchLength)
+	s += fmt.Sprintf("):"+format, node.BranchLength)
 	if node.IsRoot() {
 		s += ";"
 	}
 	return s
+}
+
+// String returns a newick string for a node and its' subnodes.
+func (node *Node) String() string {
+	return node.StringFormat("%0.6f")
+}
+
+// StringPrecise returns a newick string for a node and its' subnodes.
+// Exact branch lengths are kept.
+func (node *Node) StringPrecise() string {
+	return node.StringFormat("%g")
 }
 
 // LongString returns an extended string with all the ids, classes,
