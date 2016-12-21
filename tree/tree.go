@@ -377,9 +377,9 @@ func (node *Node) BrString() (s string) {
 func (node *Node) ClassString() (s string) {
 	if node.IsTerminal() {
 		if node.Class == 0 {
-			return fmt.Sprintf("%s:%0.6f", node.Name, node.BranchLength)
+			return fmt.Sprintf("%s:%g", node.Name, node.BranchLength)
 		}
-		return fmt.Sprintf("%s#%d:%0.6f", node.Name, node.Class, node.BranchLength)
+		return fmt.Sprintf("%s#%d:%g", node.Name, node.Class, node.BranchLength)
 	}
 	s += "("
 	for i, child := range node.childNodes {
@@ -392,7 +392,7 @@ func (node *Node) ClassString() (s string) {
 	if node.Class != 0 {
 		s += fmt.Sprintf("#%d", node.Class)
 	}
-	s += fmt.Sprintf(":%0.6f", node.BranchLength)
+	s += fmt.Sprintf(":%g", node.BranchLength)
 	if node.IsRoot() {
 		s += ";"
 	}
