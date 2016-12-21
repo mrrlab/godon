@@ -114,7 +114,7 @@ func optimization() OptimizationSummary {
 		if err != nil {
 			log.Error("Error creating tree output file:", err)
 		} else {
-			_, err := f.WriteString(data.Tree.StringPrecise() + "\n")
+			_, err := f.WriteString(data.Tree.ClassString() + "\n")
 			if err != nil {
 				log.Error(err)
 			}
