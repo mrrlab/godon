@@ -27,9 +27,9 @@ type optimizerSettings struct {
 	seed int64
 }
 
-// newOptimzerSettings creates a new optimizerSettings from
+// newOptimizerSettings creates a new optimizerSettings from
 // the command line parameters (global variables).
-func newOptimzerSettings(model cmodel.TreeOptimizableSiteClass) *optimizerSettings {
+func newOptimizerSettings(model cmodel.TreeOptimizableSiteClass) *optimizerSettings {
 	return &optimizerSettings{
 		method: *method,
 		model:  model,

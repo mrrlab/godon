@@ -36,7 +36,7 @@ func hypTest() (summary HypTestSummary) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	o0 := newOptimzerSettings(m0)
+	o0 := newOptimizerSettings(m0)
 
 	log.Notice("Running H0")
 	res0 := runOptimization(m0, o0, nil)
@@ -48,7 +48,7 @@ func hypTest() (summary HypTestSummary) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	o1 := newOptimzerSettings(m1)
+	o1 := newOptimizerSettings(m1)
 
 	log.Notice("Running H1")
 	res1 := runOptimization(m1, o1, nil)

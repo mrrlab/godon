@@ -92,7 +92,7 @@ func optimization() OptimizationSummary {
 		log.Fatal(err)
 	}
 
-	o := newOptimzerSettings(m)
+	o := newOptimizerSettings(m)
 
 	summary := runOptimization(m, o, nil)
 
