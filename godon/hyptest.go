@@ -32,7 +32,7 @@ func hypTest() (summary HypTestSummary) {
 	ms := newModelSettings(data)
 
 	ms.fixw = true
-	m0, err := ms.createInitalized()
+	m0, err := ms.createInitalized(true)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -44,7 +44,7 @@ func hypTest() (summary HypTestSummary) {
 	summary.Runs = append(summary.Runs, res0)
 
 	ms.fixw = false
-	m1, err := ms.createInitalized()
+	m1, err := ms.createInitalized(true)
 	if err != nil {
 		log.Fatal(err)
 	}

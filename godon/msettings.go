@@ -46,38 +46,45 @@ func newModelSettings(data *cmodel.Data) *modelSettings {
 }
 
 // createModel creates a new model from modelSettings.
-func (ms *modelSettings) createModel() (cmodel.TreeOptimizableSiteClass, error) {
+// If copy is true, copy of the tree is used.
+func (ms *modelSettings) createModel(copy bool) (cmodel.TreeOptimizableSiteClass, error) {
+	// we copy data not to change the original tree
+	// during the optimization
+	data := ms.data
+	if copy {
+		data = data.Copy()
+	}
 	switch ms.name {
 	case "M0":
 		log.Info("Using M0 model")
-		return cmodel.NewM0(ms.data), nil
+		return cmodel.NewM0(data), nil
 	case "M1a":
 		log.Info("Using M1a model")
 		log.Infof("%d site gamma categories, %d codon gama categories", ms.ncatsg, ms.ncatcg)
-		return cmodel.NewM2(ms.data, false, ms.ncatsg, ms.ncatcg), nil
+		return cmodel.NewM2(data, false, ms.ncatsg, ms.ncatcg), nil
 	case "M2a":
 		log.Info("Using M2a model")
 		log.Infof("%d site gamma categories, %d codon gama categories", ms.ncatsg, ms.ncatcg)
-		return cmodel.NewM2(ms.data, true, ms.ncatsg, ms.ncatcg), nil
+		return cmodel.NewM2(data, true, ms.ncatsg, ms.ncatcg), nil
 	case "M7":
 		log.Info("Using M7 model")
 		log.Infof("%d beta categories, %d site gamma categories, %d codon gama categories", ms.ncatb, ms.ncatsg, ms.ncatcg)
-		return cmodel.NewM8(ms.data, false, false, ms.ncatb, ms.ncatsg, ms.ncatcg), nil
+		return cmodel.NewM8(data, false, false, ms.ncatb, ms.ncatsg, ms.ncatcg), nil
 	case "M8":
 		log.Info("Using M8 model")
 		log.Infof("%d beta categories, %d site gamma categories, %d codon gama categories", ms.ncatb, ms.ncatsg, ms.ncatcg)
-		return cmodel.NewM8(ms.data, true, ms.fixw, ms.ncatb, ms.ncatsg, ms.ncatcg), nil
+		return cmodel.NewM8(data, true, ms.fixw, ms.ncatb, ms.ncatsg, ms.ncatcg), nil
 	case "BSG":
 		log.Info("Using branch site gamma model")
 		log.Infof("%d site gamma categories, %d codon gama categories", ms.ncatsg, ms.ncatcg)
-		return cmodel.NewBranchSiteGamma(ms.data, ms.fixw, ms.ncatsg, ms.ncatcg), nil
+		return cmodel.NewBranchSiteGamma(data, ms.fixw, ms.ncatsg, ms.ncatcg), nil
 	case "BSGE":
 		log.Info("Using branch site gamma model with explicit rates")
 		log.Infof("%d site gamma categories, %d codon gama categories", ms.ncatsg, ms.ncatcg)
-		return cmodel.NewBranchSiteGammaERates(ms.data, ms.fixw, ms.ncatsg, ms.ncatcg), nil
+		return cmodel.NewBranchSiteGammaERates(data, ms.fixw, ms.ncatsg, ms.ncatcg), nil
 	case "BS":
 		log.Info("Using branch site model")
-		return cmodel.NewBranchSite(ms.data, ms.fixw), nil
+		return cmodel.NewBranchSite(data, ms.fixw), nil
 	}
 	return nil, errors.New("Unknown model specification")
 }
@@ -101,9 +108,10 @@ func (ms *modelSettings) getAggMode() (cmodel.AggMode, error) {
 }
 
 // createInitalized creates and initializes a model from
-// modelSettings.
-func (ms *modelSettings) createInitalized() (cmodel.TreeOptimizableSiteClass, error) {
-	m, err := ms.createModel()
+// modelSettings. If copy is true, a copy of tree is
+// used for the optimization.
+func (ms *modelSettings) createInitalized(copy bool) (cmodel.TreeOptimizableSiteClass, error) {
+	m, err := ms.createModel(copy)
 
 	log.Infof("Model has %d parameters.", len(m.GetFloatParameters()))
 

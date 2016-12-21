@@ -87,7 +87,7 @@ func optimization() OptimizationSummary {
 
 	ms := newModelSettings(data)
 
-	m, err := ms.createInitalized()
+	m, err := ms.createInitalized(false)
 	if err != nil {
 		log.Fatal(err)
 	}
