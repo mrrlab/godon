@@ -113,11 +113,11 @@ func (ms *modelSettings) getAggMode() (cmodel.AggMode, error) {
 func (ms *modelSettings) createInitalized(copy bool) (cmodel.TreeOptimizableSiteClass, error) {
 	m, err := ms.createModel(copy)
 
-	log.Infof("Model has %d parameters.", len(m.GetFloatParameters()))
-
 	if err != nil {
 		return nil, err
 	}
+
+	log.Infof("Model has %d parameters.", len(m.GetFloatParameters()))
 
 	if !ms.noOptBrLen {
 		log.Info("Will optimize branch lengths")
