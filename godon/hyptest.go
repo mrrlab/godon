@@ -31,7 +31,11 @@ func hypTest() (summary HypTestSummary) {
 
 	if *m0Tree && !*noOptBrLen {
 		m0ms := newModelSettings(data)
-		m0ms.name = "M0"
+		if *m0TreeGamma {
+			m0ms.name = "M0G"
+		} else {
+			m0ms.name = "M0"
+		}
 		m0ms.startF = ""
 		m0model, err := m0ms.createInitalized(false)
 		if err != nil {
