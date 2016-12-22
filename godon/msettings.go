@@ -57,7 +57,10 @@ func (ms *modelSettings) createModel(copy bool) (cmodel.TreeOptimizableSiteClass
 	switch ms.name {
 	case "M0":
 		log.Info("Using M0 model")
-		return cmodel.NewM0(data, ms.ncatsg, ms.ncatcg), nil
+		return cmodel.NewM0(data), nil
+	case "M0G":
+		log.Info("Using M0G model")
+		return cmodel.NewM0G(data, ms.ncatsg, ms.ncatcg), nil
 	case "M1a":
 		log.Info("Using M1a model")
 		log.Infof("%d site gamma categories, %d codon gama categories", ms.ncatsg, ms.ncatcg)
