@@ -27,7 +27,7 @@ func newData() (*cmodel.Data, error) {
 
 	if *model == "BS" || *model == "BSG" || *model == "BSGE" {
 		if data.GetNClass1() < 1 {
-			log.Warning("Warning: no class=1 nodes")
+			log.Warning("Warning: no class=1 nodes; testing every branch")
 		}
 	}
 

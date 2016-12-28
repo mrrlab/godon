@@ -102,6 +102,10 @@ var (
 		Bool()
 	m0TreeGamma = hTest.Flag("m0-tree-gamma", "use M0G model for the branch length estimation").
 			Bool()
+	testAllBranches = hTest.Flag("all-branches", "test all branches (for BS & BSG)").
+			Bool()
+	noLeavesTest = hTest.Flag("no-leaves", "don't test leaves (for BS & BSG)").
+			Bool()
 
 	//model parameters
 	gcodeID       = app.Flag("gcode", "NCBI genetic code id, standard by default").Default("1").Int()
@@ -258,10 +262,15 @@ func main() {
 	case hTest.FullCommand():
 		hTestSummary, optimizations := hypTest()
 		callSummary.Optimizations = optimizations
-		summary = struct {
-			*CallSummary
-			HypTestSummary
-		}{&callSummary, hTestSummary}
+		if len(hTestSummary) == 1 {
+			summary = struct {
+				*CallSummary
+				HypTestSummary
+			}{&callSummary, hTestSummary[0]}
+		} else {
+			callSummary.Tests = hTestSummary
+			summary = callSummary
+		}
 	default:
 		log.Fatalf("command %v not implemented", cmd)
 	}

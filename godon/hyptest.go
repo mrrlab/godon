@@ -11,7 +11,7 @@ const (
 )
 
 // hypTest performs the hypthesis testing
-func hypTest() (_ HypTestSummary, optimizations []OptimizationSummary) {
+func hypTest() (tests []HypTestSummary, optimizations []OptimizationSummary) {
 	//transfer options from hypTest command
 	alignmentFileName = hTestAlignmentFileName
 	treeFileName = hTestTreeFileName
@@ -40,10 +40,44 @@ func hypTest() (_ HypTestSummary, optimizations []OptimizationSummary) {
 		optimizations = append(optimizations, res)
 		*noOptBrLen = true
 	}
+	if (data.GetNClass1() < 1 || *testAllBranches) && (*model == "BS" || *model == "BSG") {
+		toTest := make([]int, 0, data.Tree.NNodes())
 
-	return performSingleTest(data), optimizations
+		// first compute branches to test
+		for node := range data.Tree.Walker(nil) {
+			if node.IsRoot() {
+				continue
+			}
+			if *noLeavesTest && node.IsTerminal() {
+				continue
+			}
+			toTest = append(toTest, node.ID)
+		}
+
+		nodes := data.Tree.NodeIDArray()
+
+		for i, nid := range toTest {
+			log.Noticef("Testing branch %d/%d", i+1, len(toTest))
+			if *noOptBrLen {
+				nodes[nid].Class = 1
+				tests = append(tests, performSingleTest(data))
+				nodes[nid].Class = 0
+			} else {
+				// in case we are optimizing branch length,
+				// we need to always start from the same
+				// starting tree, hence we need to copy data
+				dataCopy := data.Copy()
+				dataCopy.Tree.NodeIDArray()[nid].Class = 1
+				tests = append(tests, performSingleTest(dataCopy))
+			}
+		}
+	} else {
+		tests = append(tests, performSingleTest(data))
+	}
+	return tests, optimizations
 }
 
+// performSingleTest preforms a test for given data
 func performSingleTest(data *cmodel.Data) (summary HypTestSummary) {
 	summary.Tree = data.Tree.ClassString()
 
