@@ -197,7 +197,22 @@ func performSingleTest(data *cmodel.Data) (summary HypTestSummary) {
 		}
 	}
 
-	log.Noticef("Final D=%f", 2*(l1-l0))
+	// one last round of getting rid of negative lrt, maximum one extra
+	// likelihood computation
+	if lrt := 2 * (l1 - l0); lrt < 0 {
+		h0par := res0.Optimizer.GetMaxLikelihoodParameters()
+		h0par[extraPar] = 1
+		o1.method = "none"
+
+		log.Noticef("Rerunning H1 because of negative LR (D=%g)",
+			lrt)
+		res1 = runOptimization(m1, o1, h0par, true)
+		res1.Hypothesis = "H1"
+		summary.Optimizations = append(summary.Optimizations, res1)
+		l1 = res1.Optimizer.GetMaxLikelihood()
+	}
+
+	log.Noticef("Final D=%g", 2*(l1-l0))
 
 	// final stores BEB & NEB results
 	var final0Summary, final1Summary interface{}
