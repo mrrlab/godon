@@ -42,6 +42,7 @@ func hypTest() (tests []HypTestSummary, optimizations []OptimizationSummary) {
 	}
 
 	if (*model == "BS" || *model == "BSG") && (data.GetNClass1() < 1 || *testAllBranches) {
+		log.Notice("Testing multiple branches")
 		toTest := make([]int, 0, data.Tree.NNodes())
 
 		// first compute branches to test; and set all branches to class 0
