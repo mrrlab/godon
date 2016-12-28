@@ -1,5 +1,9 @@
 package main
 
+import (
+	"bitbucket.org/Davydov/godon/cmodel"
+)
+
 const (
 	// defaultSThr  is the minimal D-statistics value, for which
 	// beb should be computed (qchisq(0.9, df=1)).
@@ -16,17 +20,6 @@ func hypTest() (summary HypTestSummary) {
 	data, err := newData()
 	if err != nil {
 		log.Fatal(err)
-	}
-
-	// name of the H1 extra parameter
-	var extraPar string
-	switch {
-	case *model == "BS" || *model == "BSG":
-		extraPar = "omega2"
-	case *model == "M8":
-		extraPar = "omega"
-	default:
-		log.Fatalf("Unknown model '%v'", *model)
 	}
 
 	if *m0Tree && !*noOptBrLen {
@@ -49,6 +42,21 @@ func hypTest() (summary HypTestSummary) {
 		*noOptBrLen = true
 	}
 
+	return performSingleTest(data)
+}
+
+func performSingleTest(data *cmodel.Data) (summary HypTestSummary) {
+	// name of the H1 extra parameter
+	var extraPar string
+	switch {
+	case *model == "BS" || *model == "BSG":
+		extraPar = "omega2"
+	case *model == "M8":
+		extraPar = "omega"
+	default:
+		log.Fatalf("Unknown model '%v'", *model)
+	}
+
 	ms := newModelSettings(data)
 
 	ms.fixw = true
@@ -56,6 +64,7 @@ func hypTest() (summary HypTestSummary) {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	o0 := newOptimizerSettings(m0)
 
 	log.Notice("Running H0")
