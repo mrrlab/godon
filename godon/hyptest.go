@@ -61,6 +61,7 @@ func hypTest() (tests []HypTestSummary, optimizations []OptimizationSummary) {
 		for i, nid := range toTest {
 			log.Noticef("Testing branch %d/%d", i+1, len(toTest))
 			nodes[nid].Class = 1
+			log.Noticef("Foreground branch: %s", data.Tree.ShortClassString())
 			tests = append(tests, performSingleTest(data))
 			nodes[nid].Class = 0
 		}

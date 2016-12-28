@@ -399,6 +399,32 @@ func (node *Node) ClassString() (s string) {
 	return s
 }
 
+// ShortClassString returns a newick string with class labels for a node
+// and its' subnodes without branch lengths.
+func (node *Node) ShortClassString() (s string) {
+	if node.IsTerminal() {
+		if node.Class == 0 {
+			return fmt.Sprintf("%s", node.Name)
+		}
+		return fmt.Sprintf("%s#%d", node.Name, node.Class)
+	}
+	s += "("
+	for i, child := range node.childNodes {
+		s += child.ShortClassString()
+		if i != len(node.childNodes)-1 {
+			s += ","
+		}
+	}
+	s += ")"
+	if node.Class != 0 {
+		s += fmt.Sprintf("#%d", node.Class)
+	}
+	if node.IsRoot() {
+		s += ";"
+	}
+	return s
+}
+
 // String returns a newick string for a node and its' subnodes.
 func (node *Node) String() (s string) {
 	if node.IsTerminal() {
