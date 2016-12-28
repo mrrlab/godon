@@ -118,7 +118,7 @@ func performSingleTest(data *cmodel.Data) (summary HypTestSummary) {
 	l0 = res0.Optimizer.GetMaxLikelihood()
 	l1 = res1.Optimizer.GetMaxLikelihood()
 
-	log.Noticef("Starting with D=%f", 2*(l1-l0))
+	log.Noticef("Starting with D=%g", 2*(l1-l0))
 
 	if *quick {
 		o0.method = "none"
@@ -138,7 +138,7 @@ func performSingleTest(data *cmodel.Data) (summary HypTestSummary) {
 			h0par := res0.Optimizer.GetMaxLikelihoodParameters()
 			h0par[extraPar] = 1
 
-			log.Noticef("Rerunning H1 because of negative LR (D=%f)",
+			log.Noticef("Rerunning H1 because of negative LR (D=%g)",
 				lrt)
 			res1 = runOptimization(m1, o1, h0par, true)
 			res1.Hypothesis = "H1"
@@ -165,7 +165,7 @@ func performSingleTest(data *cmodel.Data) (summary HypTestSummary) {
 
 			h1par := res1.Optimizer.GetMaxLikelihoodParameters()
 			delete(h1par, extraPar)
-			log.Noticef("Rerunning H0, trying to reduce LR (D=%f)",
+			log.Noticef("Rerunning H0, trying to reduce LR (D=%g)",
 				lrt)
 			res0Alt := runOptimization(m0, o0, h1par, true)
 			res0Alt.Hypothesis = "H0"
@@ -185,7 +185,7 @@ func performSingleTest(data *cmodel.Data) (summary HypTestSummary) {
 		h1par := res1.Optimizer.GetMaxLikelihoodParameters()
 		delete(h1par, extraPar)
 		o0.method = "none"
-		log.Noticef("Rerunning H0, trying to reduce small LR (D=%f)",
+		log.Noticef("Rerunning H0, trying to reduce small LR (D=%g)",
 			lrt)
 		res0Alt := runOptimization(m0, o0, h1par, true)
 		res0Alt.Hypothesis = "H0"
