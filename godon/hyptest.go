@@ -144,6 +144,17 @@ func performSingleTest(data *cmodel.Data) (summary HypTestSummary) {
 			res1.Hypothesis = "H1"
 			summary.Optimizations = append(summary.Optimizations, res1)
 			l1 = res1.Optimizer.GetMaxLikelihood()
+			// some optimizers (e.g. n_lbfgsb) can return a maxL
+			// which is worse than starting point
+			if newLrt := 2 * (l1 - l0); newLrt < 0  {
+				if o1.method != "none" {
+					log.Warning("Warning: optimizer failed to correct negative LR, fallback to the quick mode")
+					o1.method = "none"
+				} else {
+					log.Warning("Warning: couldn't get rid of negative LR; models are not strictly nested")
+					break
+				}
+			}
 		}
 
 		// if significant (D>thr), rerun H0 starting from H1
