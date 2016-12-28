@@ -58,18 +58,9 @@ func hypTest() (tests []HypTestSummary, optimizations []OptimizationSummary) {
 
 		for i, nid := range toTest {
 			log.Noticef("Testing branch %d/%d", i+1, len(toTest))
-			if *noOptBrLen {
-				nodes[nid].Class = 1
-				tests = append(tests, performSingleTest(data))
-				nodes[nid].Class = 0
-			} else {
-				// in case we are optimizing branch length,
-				// we need to always start from the same
-				// starting tree, hence we need to copy data
-				dataCopy := data.Copy()
-				dataCopy.Tree.NodeIDArray()[nid].Class = 1
-				tests = append(tests, performSingleTest(dataCopy))
-			}
+			nodes[nid].Class = 1
+			tests = append(tests, performSingleTest(data))
+			nodes[nid].Class = 0
 		}
 	} else {
 		tests = append(tests, performSingleTest(data))
