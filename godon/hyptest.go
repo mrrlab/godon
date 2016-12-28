@@ -40,11 +40,13 @@ func hypTest() (tests []HypTestSummary, optimizations []OptimizationSummary) {
 		optimizations = append(optimizations, res)
 		*noOptBrLen = true
 	}
+
 	if (*model == "BS" || *model == "BSG") && (data.GetNClass1() < 1 || *testAllBranches) {
 		toTest := make([]int, 0, data.Tree.NNodes())
 
-		// first compute branches to test
+		// first compute branches to test; and set all branches to class 0
 		for node := range data.Tree.Walker(nil) {
+			node.Class = 0
 			if node.IsRoot() {
 				continue
 			}
