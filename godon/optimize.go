@@ -36,7 +36,7 @@ func newData() (*cmodel.Data, error) {
 
 // runOptimization runs optimization for model with optimizers settings
 // and optional starting point.
-func runOptimization(m cmodel.TreeOptimizableSiteClass, o *optimizerSettings, start map[string]float64) (summary OptimizationSummary) {
+func runOptimization(m cmodel.TreeOptimizableSiteClass, o *optimizerSettings, start map[string]float64, quiet bool) (summary OptimizationSummary) {
 	if m.GetOptimizeBranchLengths() {
 		summary.StartingTree = m.GetTreeString()
 	}
@@ -53,7 +53,7 @@ func runOptimization(m cmodel.TreeOptimizableSiteClass, o *optimizerSettings, st
 	opt.Run(o.iterations)
 	summary.Optimizer = opt.Summary()
 
-	opt.PrintResults()
+	opt.PrintResults(quiet)
 
 	if m.GetOptimizeBranchLengths() {
 		summary.FinalTree = m.GetTreeString()
@@ -94,7 +94,7 @@ func optimization() OptimizationSummary {
 
 	o := newOptimizerSettings(m)
 
-	summary := runOptimization(m, o, nil)
+	summary := runOptimization(m, o, nil, false)
 
 	if *final {
 		m.Final(*neb, *beb, *codonRates, *codonOmega)

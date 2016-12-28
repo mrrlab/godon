@@ -52,8 +52,9 @@ type Optimizer interface {
 	GetNIter() int
 	// LoadFromOptimizer can load a model from another optimizer.
 	LoadFromOptimizer(Optimizer)
-	// PrintResults prints the results of optimization.
-	PrintResults()
+	// PrintResults prints the results of optimization; quiet=true reduces
+	// log levels of estimated parameter values.
+	PrintResults(quiet bool)
 	// Summary returns optimization summary for JSON output.
 	Summary() Summary
 }
@@ -185,7 +186,7 @@ func (o *BaseOptimizer) GetNIter() int {
 }
 
 // PrintResults prints the optimization results.
-func (o *BaseOptimizer) PrintResults() {
+func (o *BaseOptimizer) PrintResults(quiet bool) {
 	if !o.Quiet {
 		par := o.Optimizable.GetFloatParameters()
 		log.Noticef("Maximum likelihood: %v", o.maxL)
@@ -193,7 +194,11 @@ func (o *BaseOptimizer) PrintResults() {
 		log.Infof("Parameter  names: %v", par.NamesString())
 		log.Infof("Parameter values: %v", o.GetMaxLParameters())
 		for _, par := range par {
-			log.Noticef("%s=%v", par.Name(), par.Get())
+			if quiet {
+				log.Infof("%s=%v", par.Name(), par.Get())
+			} else {
+				log.Noticef("%s=%v", par.Name(), par.Get())
+			}
 		}
 	}
 }
