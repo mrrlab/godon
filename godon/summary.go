@@ -12,6 +12,10 @@ type CallSummary struct {
 	Seed int64 `json:"seed"`
 	// NThreads is the number of processes used.
 	NThreads int `json:"nThreads"`
+	// Optimizations stores the optimization
+	Optimizations []OptimizationSummary `json:"globalOptimizations,omitempty"`
+	// Tests stores multiple hypothesis tests
+	Tests []HypTestSummary `json:"tests,omitempty"`
 	// Time is the computations time in seconds.
 	TotalTime float64 `json:"time"`
 }
@@ -34,14 +38,14 @@ type OptimizationSummary struct {
 
 // HypTestSummary is storing summary information for hypothesis test.
 type HypTestSummary struct {
-	// Tree is the estimated tree (only for M0 estimation).
+	// Tree is the estimated tree (for M0 estimation or multiple branches).
 	Tree string `json:"tree,omitempty"`
 	// H0 is the result of H0 run.
 	H0 HypSummary
 	// H1 is the result of H1 run.
 	H1 HypSummary
-	// Runs stores all the runs
-	Runs []OptimizationSummary `json:"runs"`
+	// Optimizations stores the optimization
+	Optimizations []OptimizationSummary `json:"testOptimizations,omitempty"`
 }
 
 // HypSummary summary stores information on one hypothesis

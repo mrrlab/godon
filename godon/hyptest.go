@@ -11,7 +11,7 @@ const (
 )
 
 // hypTest performs the hypthesis testing
-func hypTest() (summary HypTestSummary) {
+func hypTest() (_ HypTestSummary, optimizations []OptimizationSummary) {
 	//transfer options from hypTest command
 	alignmentFileName = hTestAlignmentFileName
 	treeFileName = hTestTreeFileName
@@ -37,15 +37,16 @@ func hypTest() (summary HypTestSummary) {
 		m0opt := newOptimizerSettings(m0model)
 		log.Notice("Optimizing branch lengths using M0")
 		res := runOptimization(m0model, m0opt, nil)
-		summary.Tree = data.Tree.ClassString()
-		summary.Runs = append(summary.Runs, res)
+		optimizations = append(optimizations, res)
 		*noOptBrLen = true
 	}
 
-	return performSingleTest(data)
+	return performSingleTest(data), optimizations
 }
 
 func performSingleTest(data *cmodel.Data) (summary HypTestSummary) {
+	summary.Tree = data.Tree.ClassString()
+
 	// name of the H1 extra parameter
 	var extraPar string
 	switch {
@@ -70,7 +71,7 @@ func performSingleTest(data *cmodel.Data) (summary HypTestSummary) {
 	log.Notice("Running H0")
 	res0 := runOptimization(m0, o0, nil)
 	res0.Hypothesis = "H0"
-	summary.Runs = append(summary.Runs, res0)
+	summary.Optimizations = append(summary.Optimizations, res0)
 
 	ms.fixw = false
 	m1, err := ms.createInitalized(true)
@@ -82,7 +83,7 @@ func performSingleTest(data *cmodel.Data) (summary HypTestSummary) {
 	log.Notice("Running H1")
 	res1 := runOptimization(m1, o1, nil)
 	res1.Hypothesis = "H1"
-	summary.Runs = append(summary.Runs, res1)
+	summary.Optimizations = append(summary.Optimizations, res1)
 
 	var l0, l1 float64
 	l0 = res0.Optimizer.GetMaxLikelihood()
@@ -112,7 +113,7 @@ func performSingleTest(data *cmodel.Data) (summary HypTestSummary) {
 				lrt)
 			res1 = runOptimization(m1, o1, h0par)
 			res1.Hypothesis = "H1"
-			summary.Runs = append(summary.Runs, res1)
+			summary.Optimizations = append(summary.Optimizations, res1)
 			l1 = res1.Optimizer.GetMaxLikelihood()
 		}
 
@@ -128,7 +129,7 @@ func performSingleTest(data *cmodel.Data) (summary HypTestSummary) {
 				lrt)
 			res0Alt := runOptimization(m0, o0, h1par)
 			res0Alt.Hypothesis = "H0"
-			summary.Runs = append(summary.Runs, res0Alt)
+			summary.Optimizations = append(summary.Optimizations, res0Alt)
 			l0Alt := res0Alt.Optimizer.GetMaxLikelihood()
 			if l0Alt > l0 {
 				updated = true
@@ -148,7 +149,7 @@ func performSingleTest(data *cmodel.Data) (summary HypTestSummary) {
 			lrt)
 		res0Alt := runOptimization(m0, o0, h1par)
 		res0Alt.Hypothesis = "H0"
-		summary.Runs = append(summary.Runs, res0Alt)
+		summary.Optimizations = append(summary.Optimizations, res0Alt)
 		l0Alt := res0Alt.Optimizer.GetMaxLikelihood()
 		if l0Alt > l0 {
 			res0 = res0Alt
