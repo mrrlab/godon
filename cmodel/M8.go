@@ -159,7 +159,7 @@ func (m *M8) addParameters(fpg optimize.FloatParameterGenerator) {
 		m.qbdone = false
 	})
 	p.SetPriorFunc(optimize.ExponentialPrior(1, false))
-	p.SetMin(0.1)
+	p.SetMin(0.005)
 	p.SetMax(100)
 	p.SetProposalFunc(optimize.NormalProposal(0.01))
 	m.parameters.Append(p)
@@ -169,7 +169,7 @@ func (m *M8) addParameters(fpg optimize.FloatParameterGenerator) {
 		m.qbdone = false
 	})
 	q.SetPriorFunc(optimize.ExponentialPrior(1, false))
-	q.SetMin(0.1)
+	q.SetMin(0.005)
 	q.SetMax(100)
 	q.SetProposalFunc(optimize.NormalProposal(0.01))
 	m.parameters.Append(q)
