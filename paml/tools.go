@@ -1,7 +1,7 @@
 // Package paml implements some functions from PAML source code.
 package paml
 
-/* this code comes from PAML 4.8a */
+/* this code comes from PAML, which is licensed under GNU GPL v3 */
 
 import (
 	"fmt"

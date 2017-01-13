@@ -1,0 +1,3 @@
+These are test functions in C; this part is not needed to compile godon.
+
+paml.h and tools.c come from PAML, and therefore can be used under GNU GPL v3.
