@@ -252,10 +252,13 @@ func (m *M8) SetParameters(p0, p, q, kappa, omega, alphas, alphac float64) {
 // SetDefaults sets the default initial parameter values.
 func (m *M8) SetDefaults() {
 	p0 := 0.69 + rand.Float64()*0.3
-	p := 1e-3 + rand.Float64()*10
-	q := 1e-3 + rand.Float64()*50
+	// these initialization values are coming from codeml
+	// (p, q, omega); p0 in codeml is 0.9, here I randomize
+	// it instead (see above).
+	p := 0.2 + rand.Float64()
+	q := 1 + rand.Float64()
+	omega := 2 + rand.Float64()
 	kappa := 1e-2 + rand.Float64()*10
-	omega := 1.001 + rand.Float64()*10
 	alphas := 1e-3 + rand.Float64()*10
 	alphac := 1e-3 + rand.Float64()*10
 	m.SetParameters(p0, p, q, kappa, omega, alphas, alphac)
