@@ -8,32 +8,14 @@ pipelines:
           - PACKAGE_PATH="${GOPATH}/src/bitbucket.org/${BITBUCKET_REPO_OWNER}/${BITBUCKET_REPO_SLUG}"
           - mkdir -pv "${PACKAGE_PATH}"
           - tar -cO --exclude-vcs --exclude=bitbucket-pipelines.yml . | tar -xv -C "${PACKAGE_PATH}"
-          - # nlopt
+          # install dependencies
           - apt-get update
-          - apt-get --yes install libnlopt-dev
-          # go-lbfgsb
-          - apt-get --yes install gfortran
-          - go get -d github.com/idavydov/go-lbfgsb
-          - cd $GOPATH/src/github.com/idavydov/go-lbfgsb
-          - make
-          - go get github.com/idavydov/go-lbfgsb
-          - go get gopkg.in/alecthomas/kingpin.v2
-          # gonum and other libs
-          - go get -d github.com/gonum/blas
-          - go get -d github.com/gonum/matrix
-          - go get -d github.com/gonum/floats
-          - apt-get --yes install libopenblas-dev
+          - apt-get --yes install libnlopt-dev gfortran libopenblas-dev
+          - apt-get --yes install libgsl0-dev # for plotting
           - CGO_LDFLAGS="-lopenblas" go get github.com/gonum/blas/cgo
-          # other libs
-          - go get github.com/skelterjohn/go.matrix
-          - go get github.com/op/go-logging
-          - # gonum plot for some binaries
-          - apt-get --yes install libgsl0-dev
-          - go get github.com/biogo/graphics/bezier
-          - go get github.com/gonum/plot
-          - # now godon
+          # now godon
+          - go get bitbucket.org/Davydov/godon/godon
           - cd "${PACKAGE_PATH}"
           - go test -v -short ./...
-          - go install bitbucket.org/Davydov/godon/godon
           - #benchmarks are currently disabled
           - #go test ./... -run=NONE -bench=.
