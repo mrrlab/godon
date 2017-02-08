@@ -31,6 +31,7 @@ Requirements:
 * C and Fortran compilers
 * [NLopt](http://ab-initio.mit.edu/wiki/index.php/NLopt)
 * BLAS (e.g. [OpenBLAS](http://www.openblas.net/))
+* [Gonum BLAS](https://github.com/gonum/blas/) C-bindings
 
 Once you have got all of that you can run:
 
@@ -43,15 +44,9 @@ $ bin/install.sh
 1. Install Go v1.7 or later. You can start by installing Go v1.6 and
    then updating using [godeb](https://github.com/niemeyer/godeb).
 2. Install dependencies:
-
-   ```
-   sudo apt-get install git libnlopt-dev libopenblas-dev build-essentials gfortran
-   ```
-3. Install Gonum BLAS:
-
-   ```
-   CGO_LDFLAGS="-lopenblas" go install github.com/gonum/blas/cgo
-   ```
+   `sudo apt-get install git libnlopt-dev libopenblas-dev build-essentials gfortran`
+3. Install Gonum BLAS: 
+   `CGO_LDFLAGS="-lopenblas" go install github.com/gonum/blas/cgo`
 4. (Optional) If your Go is older than v1.7 install
    [go-lbfsg](https://github.com/idavydov/go-lbfgsb).
 5. Install godon:
