@@ -39,7 +39,7 @@ Once you have got all of that you can run:
 $ bin/install.sh
 ```
 
-### Full installation in Ubuntu 16.04
+### Full installation on Ubuntu 16.04
 
 1. Install Go v1.7 or later. You can start by installing Go v1.6 and
    then updating using [godeb](https://github.com/niemeyer/godeb).
