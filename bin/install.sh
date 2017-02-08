@@ -7,7 +7,7 @@ function print_help {
 }
 
 function godepinstalled {
-	if ! go list "$1" || ! test -f $(go list -f '{{.Target}}'  "$1")
+	if ! go list "$1" &> /dev/null || ! test -f $(go list -f '{{.Target}}'  "$1")
 	then
 		echo You need to install $1 first >&2
 		exit
