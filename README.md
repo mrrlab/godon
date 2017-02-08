@@ -39,7 +39,7 @@ Once you have got all of that you can run:
 $ bin/install.sh
 ```
 
-### Full installation on Ubuntu 16.04
+### Ubuntu 16.04 installation
 
 1. Install Go v1.7 or later. You can start by installing Go v1.6 and
    then updating using [godeb](https://github.com/niemeyer/godeb).
@@ -68,20 +68,22 @@ $ bin/install.sh
     CGO_CFLAGS="-I/path/to/nlopt/include" CGO_LDFLAGS="-L/usr/local/Cellar/gcc/6.2.0/lib/gcc/6 -L/path/to/nlopt/lib" $GOPATH/src/bitbucket.org/Davydov/godon/bin/install.sh -d
 	```
 
-## Examples
+## Running
+
+You can find sample datasets in `godon/cmodel/testdata`.
 
 Perform likelihood maximization using L-BFGS-B optimizer for the
 Branch-Site model without optimizing the branch lengths (use only a
 single CPU).
 ```
 #!bash
-$ godon -p 1 -n BS ali.fst tree.nwk
+$ godon -p 1 -n BS EMGT00050000000025.Drosophila.001.fst EMGT00050000000025.Drosophila.001.nwk
 ```
 
 Run MCMC using M0 model with the downhill simplex optimization.
 ```
 #!bash
-$ godon -m mh M0 ali.fst tree.nwk
+$ godon -m mh M0 EMGT00050000000025.Drosophila.001.fst EMGT00050000000025.Drosophila.001.nwk
 ```
 
 
