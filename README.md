@@ -58,14 +58,13 @@ $ bin/install.sh
 2. Install Go (1.7 or later).
 3. Install NLopt.
 4. Get Godon source code with `go get -d bitbucket.org/Davydov/godon/godon`.
-5. Install BLAS Cgo: `CGO_LDFLAGS="-framework Accelerate" go install github.com/gonum/blas/cgo`.
-6. Install godon. You cannot really build a static binary for Mac OS
-   X, so you need to use a `-d` option. Make sure you use correct
-   paths to nlopt library and include files, as well as a correct path
-   to the fortran library (`-lgfortran`).
+5. Install godon. Depending on the installation, you may need to
+   specify paths to nlopt library and include files and to the fortran
+   library `libgfortran` (on the test system it was
+   `/usr/local/Cellar/gcc/6.2.0/lib/gcc/6`).
 
     ```
-    CGO_CFLAGS="-I/path/to/nlopt/include" CGO_LDFLAGS="-L/usr/local/Cellar/gcc/6.2.0/lib/gcc/6 -L/path/to/nlopt/lib" $GOPATH/src/bitbucket.org/Davydov/godon/bin/install.sh -d
+    CGO_CFLAGS="-I/path/to/nlopt/include" CGO_LDFLAGS="-L/path/to/libgfortran -L/path/to/nlopt/lib" $GOPATH/src/bitbucket.org/Davydov/godon/bin/install.sh
 	```
 
 ## Running
