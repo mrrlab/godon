@@ -9,7 +9,7 @@ function print_help {
 function godepinstalled {
 	if ! go list "$1" &> /dev/null || ! test -f $(go list -f '{{.Target}}'  "$1")
 	then
-		echo You need to install $1 first >&2
+		echo Package $1 is not installed >&2
 		exit
 	fi
 }
@@ -19,7 +19,29 @@ function goisold {
 	echo $ver | grep -q -E 'go1\.[0-6](\.[0-9]*)?$'
 }
 
-STATIC="--extldflags=-static"
+if [[ "$OSTYPE" == "linux-gnu" ]]
+then
+    STATIC="--extldflags=-static"
+else
+    ## Mac OS X doesn't support static binaries
+    STATIC=""
+fi
+
+if [[ "$BLAS" == "" ]]
+then
+   if [[ "$OSTYPE" == "linux-gnu" ]]
+   then
+       # OpenBLAS by default for GNU/Linux
+       BLAS="-lopenblas"
+   elif [[ "$OSTYPE" == "darwin"* ]]
+   then
+       BLAS="-framework Accelerate"
+   else
+       echo Unknown platform, using openblas >&2
+       BLAS="-lopenblas"
+   fi
+fi
+   
 
 while getopts "dhf" opt
 do
@@ -42,6 +64,7 @@ do
   esac
 done
 
+CGO_LDFLAGS="$CGO_LDFLAGS $BLAS" go get github.com/gonum/blas/cgo
 godepinstalled github.com/gonum/blas/cgo
 
 # prior to go1.7 go-lbfgsb requires a manual installation
