@@ -310,6 +310,15 @@ func (tree *Tree) Root(branchID int) error {
 	return nil
 }
 
+// setLeafIDs labels all the terminal nodes of tree.
+func (tree *Tree) setLeafIDs() {
+	leafID := 0
+	for node := range tree.Terminals() {
+		node.LeafID = leafID
+		leafID++
+	}
+}
+
 // Node is a node of a tree.
 type Node struct {
 	// Name is the node label.
@@ -565,8 +574,6 @@ func ParseNewick(rd io.Reader) (tree *Tree, err error) {
 	scanner.Split(NewickSplit)
 
 	nodeID := 0
-	leafID := 0
-
 	node := NewNode(nil, nodeID)
 	tree = &Tree{Node: node}
 	nodeID++
@@ -604,7 +611,7 @@ func ParseNewick(rd io.Reader) (tree *Tree, err error) {
 		case ":":
 			mode = LENGTH
 		case ";":
-			return
+			break
 		default:
 			switch mode {
 			case LENGTH:
@@ -622,12 +629,12 @@ func ParseNewick(rd io.Reader) (tree *Tree, err error) {
 				node.Class = int(cl)
 				mode = NORMAL
 			default:
-				node.LeafID = leafID
-				leafID++
 				node.Name = text
 			}
 		}
 	}
+
+	tree.setLeafIDs()
 
 	return
 
