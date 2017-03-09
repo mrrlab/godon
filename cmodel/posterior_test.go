@@ -30,7 +30,7 @@ func TestBranchSiteNebD3(tst *testing.T) {
 	}
 	h1 := NewBranchSite(data, false)
 	h1.SetParameters(1.86881, 0.06449, 6.97229, 0.90269, 0.07967)
-	h1.Final(true, false, false, false)
+	h1.Final(true, false, false, false, false)
 	neb := h1.summary.SitePosteriorNEB
 	referenceNeb := map[int]float64{
 		// this comes from PAML
@@ -75,7 +75,7 @@ func TestBranchSiteBebD3(tst *testing.T) {
 	}
 	h1 := NewBranchSite(data, false)
 	h1.SetParameters(1.86881, 0.06449, 6.97229, 0.90269, 0.07967)
-	h1.Final(false, true, false, false)
+	h1.Final(false, true, false, false, false)
 	beb := h1.summary.SitePosteriorBEB
 	referenceBeb := map[int]float64{
 		// this comes from PAML
