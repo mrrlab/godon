@@ -435,7 +435,7 @@ func (m *BranchSite) BEBPosterior() (res []float64) {
 }
 
 // Final prints NEB results (only if with positive selection).
-func (m *BranchSite) Final(neb, beb, codonRates, codonOmega bool) {
+func (m *BranchSite) Final(neb, beb, codonRates, siteRates, codonOmega bool) {
 	startTime := time.Now()
 	defer func() { m.summary.PosteriorTime = time.Since(startTime).Seconds() }()
 

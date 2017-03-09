@@ -580,7 +580,7 @@ func (m *BranchSiteGamma) cGammaRates() []float64 {
 }
 
 // Final prints NEB results (only if with positive selection).
-func (m *BranchSiteGamma) Final(neb, beb, codonRates, codonOmega bool) {
+func (m *BranchSiteGamma) Final(neb, beb, codonRates, siteRates, codonOmega bool) {
 	startTime := time.Now()
 	defer func() { m.summary.PosteriorTime = time.Since(startTime).Seconds() }()
 

@@ -46,6 +46,7 @@ type M8 struct {
 type m8Summary struct {
 	SitePosteriorNEB []float64 `json:"sitePosteriorNEB,omitempty"`
 	CodonGammaRates  []float64 `json:"codonGammaRates,omitempty"`
+	SiteGammaRates   []float64 `json:"siteGammaRates,omitempty"`
 	CodonOmega       []float64 `json:"codonOmega,omitempty"`
 	PosteriorTime    float64   `json:"posteriorTime,omitempty"`
 }
@@ -446,6 +447,59 @@ func (m *M8) cGammaRates() []float64 {
 	return m.NEBPosterior(clRates)
 }
 
+// sGammaRates returns array with site gamma rates using NEB approach.
+func (m *M8) sGammaRates() []float64 {
+	// these three slices store rates for first, second and third
+	// codon positions
+	clRates1 := make([]float64, m.GetNClass())
+	clRates2 := make([]float64, m.GetNClass())
+	clRates3 := make([]float64, m.GetNClass())
+
+	gcat := m.ncatsg * m.ncatsg * m.ncatsg
+
+	for c1 := 0; c1 < m.ncatsg; c1++ {
+		rate1 := m.gammas[c1]
+		for c2 := 0; c2 < m.ncatsg; c2++ {
+			rate2 := m.gammas[c2]
+			for c3 := 0; c3 < m.ncatsg; c3++ {
+				rate3 := m.gammas[c3]
+				for ecl := 0; ecl < m.ncatcg; ecl++ {
+					for k := 0; k < m.ncatb; k++ {
+						for icl := range m.omegab {
+							catid := (icl*gcat+((c1*m.ncatsg)+c2)*m.ncatsg+c3)*m.ncatcg + ecl
+							clRates1[catid] = rate1
+							clRates2[catid] = rate2
+							clRates3[catid] = rate3
+						}
+						if m.addw {
+							catid := m.ncatb*gcat*m.ncatcg + (((c1*m.ncatsg)+c2)*m.ncatsg+c3)*m.ncatcg + ecl
+							clRates1[catid] = rate1
+							clRates2[catid] = rate2
+							clRates3[catid] = rate3
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// estimate rates for positions separately
+	ratePosterior1 := m.NEBPosterior(clRates1)
+	ratePosterior2 := m.NEBPosterior(clRates2)
+	ratePosterior3 := m.NEBPosterior(clRates3)
+
+	// put rates in the array
+	allRatePosterior := make([]float64, m.data.cSeqs.Length()*3)
+
+	for i := range ratePosterior1 {
+		allRatePosterior[i*3] = ratePosterior1[i]
+		allRatePosterior[i*3+1] = ratePosterior2[i]
+		allRatePosterior[i*3+2] = ratePosterior3[i]
+	}
+
+	return allRatePosterior
+}
+
 // omegaPosterior returns array with omega posterior using NEB approach.
 func (m *M8) omegaPosterior() []float64 {
 	clOmega := make([]float64, m.GetNClass())
@@ -466,13 +520,18 @@ func (m *M8) omegaPosterior() []float64 {
 }
 
 // Final prints NEB results (only if with positive selection).
-func (m *M8) Final(neb, beb, codonRates, codonOmega bool) {
+func (m *M8) Final(neb, beb, codonRates, siteRates, codonOmega bool) {
 	startTime := time.Now()
 	defer func() { m.summary.PosteriorTime = time.Since(startTime).Seconds() }()
 
 	if m.ncatcg > 1 && codonRates {
 		m.summary.CodonGammaRates = m.cGammaRates()
 		log.Notice("Codon gamma rates posterior:", m.summary.CodonGammaRates)
+	}
+
+	if m.ncatsg > 1 && siteRates {
+		m.summary.SiteGammaRates = m.sGammaRates()
+		log.Notice("Site gamma rates posterior:", m.summary.SiteGammaRates)
 	}
 
 	if m.ncatb > 1 && codonOmega {
