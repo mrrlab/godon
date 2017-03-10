@@ -49,13 +49,13 @@ Iter:
 			accepted = 0
 		}
 
+		m.PrintLine(m.parameters, l, m.repPeriod)
 		if m.i%m.repPeriod == 0 {
 			if m.annealing {
 				log.Debugf("%d: L=%f, T=%f", m.i, l, T)
 			} else {
 				log.Debugf("%d: L=%f", m.i, l)
 			}
-			m.PrintLine(m.parameters, l)
 			lastReported = m.i
 		}
 		p := rand.Intn(len(m.parameters))
@@ -92,7 +92,7 @@ Iter:
 	}
 
 	if m.i != lastReported {
-		m.PrintLine(m.parameters, l)
+		m.PrintLine(m.parameters, l, 1)
 	}
 
 	m.saveDeltaT()

@@ -71,9 +71,7 @@ func nloptCallback(n uint, x *C.double, grad *C.double, fData unsafe.Pointer) C.
 	}
 
 	if !nlopt.stop {
-		if nlopt.i%nlopt.repPeriod == 0 {
-			nlopt.PrintLine(nlopt.parameters, l1)
-		}
+		nlopt.PrintLine(nlopt.parameters, l1, nlopt.repPeriod)
 		nlopt.i++
 	}
 

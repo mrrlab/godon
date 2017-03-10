@@ -165,12 +165,15 @@ func (o *BaseOptimizer) PrintHeader() {
 
 // PrintLine prints one line of report (iteration, parameter values,
 // likelihood).
-func (o *BaseOptimizer) PrintLine(par FloatParameters, l float64) {
+func (o *BaseOptimizer) PrintLine(par FloatParameters, l float64, repPeriod int) {
 	if !o.Quiet {
 		if o.output == nil {
 			o.output = os.Stdout
 		}
-		fmt.Fprintf(o.output, "%d\t%f\t%s\n", o.i, l, par.ValuesString())
+		if repPeriod%o.i == 0 {
+			fmt.Fprintf(o.output, "%d\t%f\t%s\n", o.i, l, par.ValuesString())
+		}
+		fmt.Printf("iter=%d\tlnL=%0.3f\r", o.i, l)
 	}
 }
 

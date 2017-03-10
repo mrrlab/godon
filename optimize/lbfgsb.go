@@ -33,9 +33,7 @@ func (l *LBFGSB) Logger(info *lbfgsb.OptimizationIterationInformation) {
 	if err != nil {
 		panic(err)
 	}
-	if l.i%l.repPeriod == 0 {
-		l.PrintLine(l.parameters, -info.F)
-	}
+	l.PrintLine(l.parameters, -info.F, l.repPeriod)
 
 	select {
 	case s := <-l.sig:

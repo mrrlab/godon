@@ -145,15 +145,8 @@ Iter:
 			ds.maxLPar = ds.parameters[ihi].Values(ds.maxLPar)
 		}
 		_ = inlo
-		if ds.i%ds.repPeriod == 0 {
-			log.Debugf("%d: L=%f (%f)", ds.i, lhi, lhi-llo)
-			ds.PrintLine(ds.parameters[ihi], lhi)
-			/*
-				for i, parameters := range ds.allparameters {
-					ds.PrintLine(parameters, ds.l[i])
-				}
-			*/
-		}
+		log.Debugf("%d: L=%f (%f)", ds.i, lhi, lhi-llo)
+		ds.PrintLine(ds.parameters[ihi], lhi, ds.repPeriod)
 		rtol := 2 * math.Abs(ds.l[ihi]-ds.l[ilo]) / (math.Abs(ds.l[ilo]) + math.Abs(ds.l[ihi]) + TINY)
 		if rtol < ds.ftol {
 			if ds.repeat && math.Abs(ds.oldL-lhi) < SMALL {
