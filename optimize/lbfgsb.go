@@ -33,7 +33,10 @@ func (l *LBFGSB) Logger(info *lbfgsb.OptimizationIterationInformation) {
 	if err != nil {
 		panic(err)
 	}
-	l.PrintLine(l.parameters, -info.F)
+	if l.i%l.repPeriod == 0 {
+		l.PrintLine(l.parameters, -info.F)
+	}
+
 	select {
 	case s := <-l.sig:
 		log.Fatal("Received signal exiting:", s)
