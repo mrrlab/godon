@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"os/signal"
+	"regexp"
 	"time"
 
 	"github.com/op/go-logging"
@@ -13,6 +14,10 @@ import (
 
 // log is the global logging variable.
 var log = logging.MustGetLogger("optimize")
+
+// brPar is regex matching "brXXX" syntax, used
+// to filter out branch length parameters in summary
+var brPar = regexp.MustCompile("^br[\\d]+$")
 
 // Optimizable is something which can be optimized using the
 // optimizer.
@@ -173,7 +178,7 @@ func (o *BaseOptimizer) PrintLine(par FloatParameters, l float64, repPeriod int)
 		if repPeriod%o.i == 0 {
 			fmt.Fprintf(o.output, "%d\t%f\t%s\n", o.i, l, par.ValuesString())
 		}
-		fmt.Printf("iter=%d\tlnL=%0.3f\r", o.i, l)
+		fmt.Printf("iter=%d lnL=%0.3f      \r", o.i, l)
 	}
 }
 
@@ -197,6 +202,10 @@ func (o *BaseOptimizer) PrintResults(quiet bool) {
 		log.Infof("Parameter  names: %v", par.NamesString())
 		log.Infof("Parameter values: %v", o.GetMaxLParameters())
 		for _, par := range par {
+			if brPar.MatchString(par.Name()) {
+				// we don't want to report all the branch lengths
+				continue
+			}
 			if quiet {
 				log.Infof("%s=%v", par.Name(), par.Get())
 			} else {
