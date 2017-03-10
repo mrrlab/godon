@@ -168,12 +168,13 @@ var (
 	// input/output
 	logF     = app.Flag("out", "write log to a file").Short('o').String()
 	trajFn   = app.Flag("trajectory", "write optimization trajectory to a file").Short('t').String()
-	trajF    = os.Stdout
 	logLevel = app.Flag("log-level", "set loglevel "+
 		"("+strings.Join(logLevels, ", ")+")").
 		Short('l').Default("notice").
 		Enum(logLevels...)
 	jsonF = app.Flag("json", "write json output to a file").Short('j').String()
+
+	trajF *os.File
 )
 
 func main() {
