@@ -402,7 +402,7 @@ func (p *BasicFloatParameter) Accept(iter int) {
 
 // String returns a string representation of a value.
 func (p *BasicFloatParameter) String() string {
-	return strconv.FormatFloat(*p.float64, 'f', 6, 64)
+	return strconv.FormatFloat(*p.float64, 'g', 6, 64)
 }
 
 // DiscreteParameter is a discrete parameter. It is internally based
