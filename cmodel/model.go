@@ -425,7 +425,7 @@ func (m *BaseModel) singlePosLikelihood(tasks chan int, done chan struct{}) {
 				res += m.fullSubL(class, pos, plh) * p
 			}
 		}
-		m.l[pos] = math.Log(res)
+		m.l[pos] = math.Log(math.Max(res, math.SmallestNonzeroFloat64))
 		m.prunPos[pos] = true
 	}
 	done <- struct{}{}
@@ -471,7 +471,7 @@ func (m *BaseModel) fatPosLikelihood(tasks chan int, done chan struct{}) {
 			m.fatSubL(class, positions, plh, res, p)
 		}
 		for i := range res {
-			m.l[positions[i]] = math.Log(res[i])
+			m.l[positions[i]] = math.Log(math.Max(res[i], math.SmallestNonzeroFloat64))
 			m.prunPos[positions[i]] = true
 		}
 
