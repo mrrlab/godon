@@ -242,6 +242,7 @@ func (o *BaseOptimizer) saveDeltaT() {
 func (o *BaseOptimizer) SaveStart() {
 	o.startTime = time.Now()
 	l := o.Likelihood()
+	log.Noticef("Starting lnL=%0.3f", l)
 	o.calls++
 	o.startL = l
 	o.startPar = o.parameters.Values(nil)
