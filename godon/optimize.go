@@ -102,11 +102,11 @@ func optimization() OptimizationSummary {
 	summary.Model = m.Summary()
 
 	if !*noOptBrLen {
-		log.Infof("outtree=%s", data.Root())
 		err := data.Root()
 		if err != nil {
 			log.Error(err)
 		}
+		log.Infof("outtree=%s", data.Tree)
 	}
 
 	if *outTreeF != "" {
