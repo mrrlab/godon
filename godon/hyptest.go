@@ -158,7 +158,7 @@ func performSingleTest(data *cmodel.Data) (summary HypTestSummary) {
 		}
 
 		// if significant (D>thr), rerun H0 starting from H1
-		if lrt := 2 * (l1 - l0); lrt > *sThr && !*quick && !justUpdatedH0 {
+		if lrt := 2 * (l1 - l0); lrt > *sThr && !justUpdatedH0 {
 			// prevent multiple updates of H0 starting from the same
 			// H1-like point
 			justUpdatedH0 = true
