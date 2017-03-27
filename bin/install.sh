@@ -4,6 +4,7 @@ function print_help {
 	echo >&2
 	echo "-d compiles a dynamic binary" >&2
 	echo "-f force recompilation by deleting the binary first" >&2
+	exit
 }
 
 function godepinstalled {
