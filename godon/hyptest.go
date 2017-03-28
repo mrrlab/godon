@@ -68,6 +68,10 @@ func hypTest() (tests []HypTestSummary, optimizations []OptimizationSummary) {
 			tests = append(tests, performSingleTest(data))
 			nodes[nid].Class = 0
 		}
+
+		if len(toTest) == 0 {
+			log.Warningf("No branches to test")
+		}
 	} else {
 		// update testAllBranches so we know that only one test was performed
 		*testAllBranches = false
