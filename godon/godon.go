@@ -264,12 +264,15 @@ func main() {
 	case hTest.FullCommand():
 		hTestSummary, optimizations := hypTest()
 		callSummary.Optimizations = optimizations
-		if len(hTestSummary) == 1 {
+		// testAllBranches is updated by hypTest in order to
+		// discriminate multiple branches vs single branch
+		// tested
+		if !*testAllBranches { // only a single branch was tested
 			summary = struct {
 				*CallSummary
 				HypTestSummary
 			}{&callSummary, hTestSummary[0]}
-		} else {
+		} else { // multiple branches were tested
 			callSummary.Tests = hTestSummary
 			summary = callSummary
 		}

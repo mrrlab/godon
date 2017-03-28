@@ -42,6 +42,8 @@ func hypTest() (tests []HypTestSummary, optimizations []OptimizationSummary) {
 	}
 
 	if (*model == "BS" || *model == "BSG") && (data.GetNClass1() < 1 || *testAllBranches) {
+		// set testAllBranches so we know multiple branches were tested
+		*testAllBranches = true
 		log.Notice("Testing multiple branches")
 		toTest := make([]int, 0, data.Tree.NNodes())
 
@@ -67,6 +69,8 @@ func hypTest() (tests []HypTestSummary, optimizations []OptimizationSummary) {
 			nodes[nid].Class = 0
 		}
 	} else {
+		// update testAllBranches so we know that only one test was performed
+		*testAllBranches = false
 		tests = append(tests, performSingleTest(data))
 	}
 	return tests, optimizations
