@@ -37,7 +37,8 @@ type M2 struct {
 	tmp []float64
 }
 
-// NewM2 creates a new M2 model.
+// NewM2 creates a new M1a or M2a model. If addw is true, M2a is
+// created, otherwise M1a.
 func NewM2(data *Data, addw bool, ncatsg, ncatcg int) (m *M2) {
 	// n site gamma categories, ncatb * n^3 matrices
 	gcat := ncatsg * ncatsg * ncatsg
