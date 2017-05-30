@@ -327,7 +327,7 @@ func (m *M2) updateMatrices() {
 // Final prints NEB results (only if with positive selection).
 func (m *M2) Final(neb, beb, codonRates, siteRates, codonOmega bool) {
 	// if w2=1, do not perform NEB analysis.
-	if !neb && !m.addw {
+	if !neb || !m.addw {
 		return
 	}
 
