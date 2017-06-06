@@ -14,9 +14,12 @@ as well as MCMC
 ([Metropolis-Hastings algorithm](https://en.wikipedia.org/wiki/Metropolis%E2%80%93Hastings_algorithm)).
 
 Godon supports state aggregation (option `--aggregate`). See
-[the paper](http://biorxiv.org/content/early/2015/12/24/035063) for
+[the paper](https://dx.doi.org/10.1093/bioinformatics/btw632) for
 the details. For the paper we used v0.5 (39bf774). Since then
 likelihood computations code were substantially changed.
+
+Godon developement was supported Swiss National Science Foundation
+(grant numbers CR32I3_143768, IZLRZ3_163872).
 
 **Warning**: Godon is currently in a beta stage.
 
