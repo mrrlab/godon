@@ -34,7 +34,7 @@ func hypTest() (tests []HypTestSummary, optimizations []OptimizationSummary) {
 		log.Fatal(err)
 	}
 
-	if *m0Tree && !*noOptBrLen {
+	if (*m0Tree || *m0TreeGamma) && !*noOptBrLen {
 		m0ms := newModelSettings(data)
 		if *m0TreeGamma {
 			m0ms.name = "M0G"
