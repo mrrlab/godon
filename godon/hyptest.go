@@ -8,6 +8,9 @@ const (
 	// defaultSThr  is the minimal D-statistics value, for which
 	// beb should be computed (qchisq(0.9, df=1)).
 	defaultSThr = "2.705543"
+
+	// minLrt is the minimal tolerated LRT value.
+	minLrt = 1e-6
 )
 
 // thoroughMin sets minimal starting value likelihood considering
@@ -168,7 +171,7 @@ func performSingleTest(data *cmodel.Data) (summary HypTestSummary) {
 			l1 = res1.Optimizer.GetMaxLikelihood()
 			// some optimizers (e.g. n_lbfgsb) can return a maxL
 			// which is worse than starting point
-			if newLrt := 2 * (l1 - l0); newLrt < 0  {
+			if newLrt := 2 * (l1 - l0); newLrt < 0 {
 				if o1.method != "none" {
 					log.Warning("Warning: optimizer failed to correct negative LR, fallback to the quick mode")
 					o1.method = "none"
@@ -180,7 +183,7 @@ func performSingleTest(data *cmodel.Data) (summary HypTestSummary) {
 		}
 
 		// if significant (D>thr), rerun H0 starting from H1
-		if lrt := 2 * (l1 - l0); lrt > *sThr && !justUpdatedH0 {
+		if lrt := 2 * (l1 - l0); (lrt > *sThr || (lrt > minLrt && !*thorough)) && !justUpdatedH0 {
 			// prevent multiple updates of H0 starting from the same
 			// H1-like point
 			justUpdatedH0 = true
@@ -206,14 +209,14 @@ func performSingleTest(data *cmodel.Data) (summary HypTestSummary) {
 
 	// get rid of sligtly positive LRT; this should require maximum one extra
 	// likelihood computation
-	if lrt := 2 * (l1 - l0); lrt > 0 && lrt <= *sThr {
+	if lrt := 2 * (l1 - l0); lrt > minLrt && (lrt <= *sThr || !*thorough) {
 		h1par := res1.Optimizer.GetMaxLikelihoodParameters()
 		for parName := range extraPar {
 			delete(h1par, parName)
 		}
 
 		o0.method = "none"
-		log.Noticef("Rerunning H0, trying to reduce small LR (D=%g)",
+		log.Noticef("Rerunning H0, trying to reduce LR (D=%g)",
 			lrt)
 		res0Alt := runOptimization(m0, o0, h1par, thoroughMin(l0), true)
 		res0Alt.Hypothesis = "H0"
