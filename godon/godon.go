@@ -98,6 +98,9 @@ var (
 	quick = hTest.Flag("quick",
 		"only prevent negative LRT statistics").
 		Bool()
+	thorough = hTest.Flag("thorough",
+		"try optimizing (e.g. reducing D-statistic) even if starting point has no improvement").
+		Bool()
 	m0Tree = hTest.Flag("m0-tree", "estimate branch lengths using the M0 model").
 		Bool()
 	m0TreeGamma = hTest.Flag("m0-tree-gamma", "use M0G model for the branch length estimation").

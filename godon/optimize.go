@@ -34,20 +34,32 @@ func newData() (*cmodel.Data, error) {
 	return data, nil
 }
 
-// runOptimization runs optimization for model with optimizers settings
-// and optional starting point.
-func runOptimization(m cmodel.TreeOptimizableSiteClass, o *optimizerSettings, start map[string]float64, quiet bool) (summary OptimizationSummary) {
+// runOptimization runs optimization for model with optimizers
+// settings and optional starting point. If minLikelihood > 0,
+// optimization is always performed. If 0 >= minLikelihood >
+// startingLikelihood, no optimization is performed.
+func runOptimization(m cmodel.TreeOptimizableSiteClass, o *optimizerSettings, start map[string]float64, minLikelihood float64, quiet bool) (summary OptimizationSummary) {
 	if m.GetOptimizeBranchLengths() {
 		summary.StartingTree = m.GetTreeString()
+	}
+
+	if len(start) > 0 {
+		setStart(m, start)
+	}
+
+	if minLikelihood <=0 && m.Likelihood() < minLikelihood {
+		// restore method before leaving the function
+		defer func(savedMethod string) {
+			o.method = savedMethod
+		}(o.method)
+
+		log.Info("Won't optimize, since starting point is no better")
+		o.method = "none"
 	}
 
 	opt, err := o.create()
 	if err != nil {
 		log.Fatal(err)
-	}
-
-	if len(start) > 0 {
-		setStart(m, start)
 	}
 
 	opt.Run(o.iterations)
@@ -94,7 +106,7 @@ func optimization() OptimizationSummary {
 
 	o := newOptimizerSettings(m)
 
-	summary := runOptimization(m, o, nil, false)
+	summary := runOptimization(m, o, nil, 1, false)
 
 	if *final {
 		m.Final(*neb, *beb, *codonRates, *siteRates, *codonOmega)
