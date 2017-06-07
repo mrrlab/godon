@@ -88,7 +88,7 @@ var (
 	hTestModel = hTest.Arg("model",
 		"model type (BS for branch site, BSG for branch-site + gamma, or M8)").
 		Required().
-		Enum("BS", "BSG", "M8")
+		Enum("BS", "BSG", "M8", "M2a")
 	hTestAlignmentFileName = hTest.Arg("alignment", "sequence alignment").Required().ExistingFile()
 	hTestTreeFileName      = hTest.Arg("tree", "starting phylogenetic tree").Required().ExistingFile()
 	sThr                   = hTest.Flag("significance-threshold",

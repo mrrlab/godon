@@ -54,7 +54,13 @@ func (ms *modelSettings) createModel(copy bool) (cmodel.TreeOptimizableSiteClass
 	if copy {
 		data = data.Copy()
 	}
-	switch ms.name {
+	mname := ms.name
+
+	if ms.name == "M2a" && ms.fixw == true {
+		mname = "M1a"
+	}
+
+	switch mname {
 	case "M0":
 		log.Info("Using M0 model")
 		return cmodel.NewM0(data), nil

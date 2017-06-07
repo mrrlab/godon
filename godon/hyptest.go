@@ -93,13 +93,16 @@ func hypTest() (tests []HypTestSummary, optimizations []OptimizationSummary) {
 func performSingleTest(data *cmodel.Data) (summary HypTestSummary) {
 	summary.Tree = data.Tree.ClassString()
 
-	// name of the H1 extra parameter
-	var extraPar string
+	// names and default values of the H1 extra parameters
+	extraPar := make(map[string]float64, 2)
 	switch {
 	case *model == "BS" || *model == "BSG":
-		extraPar = "omega2"
+		extraPar["omega2"] = 1
 	case *model == "M8":
-		extraPar = "omega"
+		extraPar["omega"] = 1
+	case *model == "M2a":
+		extraPar["omega2"] = 1
+		extraPar["p1prop"] = 1
 	default:
 		log.Fatalf("Unknown model '%v'", *model)
 	}
@@ -153,7 +156,9 @@ func performSingleTest(data *cmodel.Data) (summary HypTestSummary) {
 			justUpdatedH0 = false
 
 			h0par := res0.Optimizer.GetMaxLikelihoodParameters()
-			h0par[extraPar] = 1
+			for parName, parVal := range extraPar {
+				h0par[parName] = parVal
+			}
 
 			log.Noticef("Rerunning H1 because of negative LR (D=%g)",
 				lrt)
@@ -181,7 +186,10 @@ func performSingleTest(data *cmodel.Data) (summary HypTestSummary) {
 			justUpdatedH0 = true
 
 			h1par := res1.Optimizer.GetMaxLikelihoodParameters()
-			delete(h1par, extraPar)
+			for parName := range extraPar {
+				delete(h1par, parName)
+			}
+
 			log.Noticef("Rerunning H0, trying to reduce LR (D=%g)",
 				lrt)
 			res0Alt := runOptimization(m0, o0, h1par, thoroughMin(l0), true)
@@ -200,7 +208,10 @@ func performSingleTest(data *cmodel.Data) (summary HypTestSummary) {
 	// likelihood computation
 	if lrt := 2 * (l1 - l0); lrt > 0 && lrt <= *sThr {
 		h1par := res1.Optimizer.GetMaxLikelihoodParameters()
-		delete(h1par, extraPar)
+		for parName := range extraPar {
+			delete(h1par, parName)
+		}
+
 		o0.method = "none"
 		log.Noticef("Rerunning H0, trying to reduce small LR (D=%g)",
 			lrt)
@@ -218,7 +229,10 @@ func performSingleTest(data *cmodel.Data) (summary HypTestSummary) {
 	// likelihood computation
 	if lrt := 2 * (l1 - l0); lrt < 0 {
 		h0par := res0.Optimizer.GetMaxLikelihoodParameters()
-		h0par[extraPar] = 1
+		for parName, parVal := range extraPar {
+			h0par[parName] = parVal
+		}
+
 		o1.method = "none"
 
 		log.Noticef("Rerunning H1 because of negative LR (D=%g)",
