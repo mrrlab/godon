@@ -11,6 +11,10 @@ const (
 
 	// minLrt is the minimal tolerated LRT value.
 	minLrt = 1e-6
+
+	// maxOptimizations is the maximum number of likelihood
+	// optimizations to perform
+	maxOptimizations = 16
 )
 
 // thoroughMin sets minimal starting value likelihood considering
@@ -180,6 +184,12 @@ func performSingleTest(data *cmodel.Data) (summary HypTestSummary) {
 					break
 				}
 			}
+		}
+
+		// stop if too many updates; we prefer to have slightly positive LRT
+		if len(summary.Optimizations) >= maxOptimizations {
+			log.Warningf("Performed %s optimization, finishing")
+			break
 		}
 
 		// if significant (D>thr), rerun H0 starting from H1
