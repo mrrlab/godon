@@ -1,4 +1,6 @@
 #!/bin/bash
+GO=go
+
 function print_help {
 	echo "Usage: $0 [-d] [-f]" >&2
 	echo >&2
@@ -8,7 +10,7 @@ function print_help {
 }
 
 function godepinstalled {
-	if ! go list "$1" &> /dev/null || ! test -f $(go list -f '{{.Target}}'  "$1")
+	if ! $GO list "$1" &> /dev/null || ! test -f $($GO list -f '{{.Target}}'  "$1")
 	then
 		echo Package $1 is not installed >&2
 		exit
@@ -16,7 +18,7 @@ function godepinstalled {
 }
 
 function goisold {
-	ver=$(go version | awk '{print $3}')
+	ver=$($GO version | awk '{print $3}')
 	echo $ver | grep -q -E 'go1\.[0-6](\.[0-9]*)?$'
 }
 
@@ -65,7 +67,7 @@ do
   esac
 done
 
-CGO_LDFLAGS="$CGO_LDFLAGS $BLAS" go get github.com/gonum/blas/cgo
+CGO_LDFLAGS="$CGO_LDFLAGS $BLAS" $GO get github.com/gonum/blas/cgo
 godepinstalled github.com/gonum/blas/cgo
 
 # prior to go1.7 go-lbfgsb requires a manual installation
@@ -75,7 +77,7 @@ goisold && \
 PKG_NAME=bitbucket.org/Davydov/godon/godon
 BINARY_NAME=$(basename $PKG_NAME)
 BINARY_PATH=$GOPATH/bin/$BINARY_NAME
-go get -d $PKG_NAME
+$GO get -d $PKG_NAME
 GOPATH=${GOPATH-$HOME/go}
 DIR="$GOPATH/src/$PKG_NAME"
 buildstamp=$(date -u '+%Y-%m-%d_%H:%M:%S')
@@ -85,5 +87,5 @@ if [ -n "$FORCE" ]
 then
 	rm -f $BINARY_PATH
 fi
-go get -ldflags "$STATIC -X main.buildstamp=$buildstamp -X main.githash=$githash -X main.gitbranch=$gitbranch" $PKG_NAME && \
+$GO get -ldflags "$STATIC -X main.buildstamp=$buildstamp -X main.githash=$githash -X main.gitbranch=$gitbranch" $PKG_NAME && \
 	echo Installed $BINARY_NAME to $BINARY_PATH >&2
