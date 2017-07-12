@@ -303,7 +303,7 @@ func DiscreteGamma(alpha, beta float64, K int, UseMedian bool, tmp, res []float6
 	return res
 }
 
-// LnBeta returns log of Beta distribution.
+// LnBeta returns log of Beta function.
 func LnBeta(p, q float64) float64 {
 	lgp, _ := math.Lgamma(p)
 	lgq, _ := math.Lgamma(q)
@@ -393,11 +393,11 @@ func CDFBeta(x, pin, qin, lnbeta float64) float64 {
 			term = ans * p
 			if ps != 1 {
 				n = int(math.Max(alneps/math.Log(y), 4.0))
-			}
-			for i := 1; i <= n; i++ {
-				xi = float64(i)
-				term = term * (xi - ps) * y / xi
-				ans = ans + term/(p+xi)
+				for i := 1; i <= n; i++ {
+					xi = float64(i)
+					term = term * (xi - ps) * y / xi
+					ans = ans + term/(p+xi)
+				}
 			}
 		}
 
