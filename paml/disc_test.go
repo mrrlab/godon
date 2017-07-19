@@ -47,6 +47,16 @@ func alleq(r []float64) bool {
 	return appreq(sum, 1)
 }
 
+/*** Tests that all values are in range ***/
+func allinrange(r []float64, min, max float64) bool {
+	for _, v := range r {
+		if v < min || v > max {
+			return false
+		}
+	}
+	return true
+}
+
 /*** Test discrete beta ***/
 func TestBeta(tst *testing.T) {
 	settings := [...]Settings{
@@ -70,6 +80,31 @@ func TestBeta(tst *testing.T) {
 		r := DiscreteBeta(s.a, s.b, s.n, s.median, freq, nil)
 		if !cmp(r, results[i]) {
 			tst.Error("Results missmatch:", r, results[i])
+		}
+	}
+}
+
+// Test discrete beta are in range [0; 1].
+func TestBetaRange(tst *testing.T) {
+	if testing.Short() {
+		tst.Skip("skipping test in short mode.")
+	}
+
+	for a := math.Log(0.005); a <= math.Log(100); a += 0.5 {
+		for b := math.Log(0.005); b <= math.Log(100); b += 0.5 {
+			for n := 2; n <= 10; n++ {
+				for median := 0; median <= 1; median++ {
+					r := DiscreteBeta(math.Exp(a), math.Exp(b), n, median == 1, nil, nil)
+					if !allinrange(r, 0, 1) {
+						tst.Errorf("Values out of [0; 1] range; a=%g, b=%g, n=%d, median=%v, categories: %v", math.Exp(a), math.Exp(b), n, median == 1, r)
+						return
+					}
+					if len(r) != n {
+						tst.Errorf("Incorrect length of DiscreteBeta result %d!=n (%d)", len(r), n)
+						return
+					}
+				}
+			}
 		}
 	}
 }
