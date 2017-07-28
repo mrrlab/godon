@@ -612,6 +612,7 @@ func DiscreteBeta(p, q float64, K int, UseMedian bool, tmp, res []float64) []flo
 			res[i] = QuantileBeta((float64(i)+0.5)/float64(K), p, q, lnbeta)
 			t += res[i]
 		}
+		// normalization to keep the mean
 		for i := 0; i < K; i++ {
 			res[i] *= mean * float64(K) / t
 		}
@@ -622,14 +623,40 @@ func DiscreteBeta(p, q float64, K int, UseMedian bool, tmp, res []float64) []flo
 		tmp[K-1] = 1
 
 		lnbeta1 := lnbeta - math.Log(1+q/p)
-		for i := 0; i < K-1; i++ { /* CDF */
-			tmp[i] = CDFBeta(tmp[i], p+1, q, lnbeta1)
+
+		prevCdf := CDFBeta(tmp[0], p+1, q, lnbeta1)
+
+		res[0] = prevCdf * mean * float64(K)
+		for i := 1; i < K; i++ { /* CDF */
+			currCdf := CDFBeta(tmp[i], p+1, q, lnbeta1)
+			res[i] = (currCdf - prevCdf) * mean * float64(K)
+			prevCdf = currCdf
 		}
-		res[0] = tmp[0] * mean * float64(K)
-		for i := 1; i < K-1; i++ {
-			res[i] = (tmp[i] - tmp[i-1]) * mean * float64(K)
+
+		for i := 0; i < K; i++ { /* correct out of region */
+			lower := 0.0
+			upper := tmp[i]
+			if i > 0 {
+				lower = tmp[i-1]
+			}
+			if res[i] < lower || res[i] > upper {
+				// if upper-lower > 1e-3 {
+				// 	fmt.Println("out of bounds", res[i], lower, upper)
+				// 	fmt.Println(p, q, K, UseMedian)
+				// }
+
+				// switch to median
+				res[i] = QuantileBeta((float64(i)+0.5)/float64(K), p, q, lnbeta)
+				if res[i] < lower || res[i] > upper { //out of bounds again
+					// if upper-lower > 1e-3 {
+					// 	fmt.Println("out of bounds, again")
+					// }
+
+					// switch to average
+					res[i] = (upper + lower) / 2
+				}
+			}
 		}
-		res[K-1] = (1 - tmp[K-2]) * mean * float64(K)
 	}
 
 	return res

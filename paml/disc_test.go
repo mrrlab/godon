@@ -95,8 +95,11 @@ func TestBetaRange(tst *testing.T) {
 			for n := 2; n <= 10; n++ {
 				for median := 0; median <= 1; median++ {
 					r := DiscreteBeta(math.Exp(a), math.Exp(b), n, median == 1, nil, nil)
-					if !allinrange(r, 0, 1) {
-						tst.Errorf("Values out of [0; 1] range; a=%g, b=%g, n=%d, median=%v, categories: %v", math.Exp(a), math.Exp(b), n, median == 1, r)
+					upper := 1.0 + float64(median)*0.5
+					// in case of median we normalize the mean
+					// this can lead to values > 1
+					if !allinrange(r, 0, upper) {
+						tst.Errorf("Values out of [0; ~1] range; a=%g, b=%g, n=%d, median=%v, categories: %v", math.Exp(a), math.Exp(b), n, median == 1, r)
 						return
 					}
 					if len(r) != n {
