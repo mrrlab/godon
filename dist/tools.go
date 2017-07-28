@@ -1,5 +1,5 @@
-// Package paml implements some functions from PAML source code.
-package paml
+// Package dist implements functions for discrete distributions.
+package dist
 
 /*
 this is largely based on PAML, which is licensed under GNU GPL v3.

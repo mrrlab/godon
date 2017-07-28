@@ -5,7 +5,7 @@ import (
 	"flag"
 	"fmt"
 
-	"bitbucket.org/Davydov/godon/paml"
+	"bitbucket.org/Davydov/godon/dist"
 )
 
 func main() {
@@ -15,6 +15,6 @@ func main() {
 	useMedian := flag.Bool("median", false, "Use median instead of mean")
 	flag.Parse()
 
-	r := paml.DiscreteBeta(*p, *q, *ncat, *useMedian, nil, nil)
+	r := dist.DiscreteBeta(*p, *q, *ncat, *useMedian, nil, nil)
 	fmt.Println(r)
 }

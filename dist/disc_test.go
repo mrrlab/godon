@@ -1,4 +1,4 @@
-package paml
+package dist
 
 import (
 	"math"

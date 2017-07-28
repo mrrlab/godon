@@ -10,7 +10,7 @@ import (
 	"github.com/gonum/plot/plotutil"
 	"github.com/gonum/plot/vg"
 
-	"bitbucket.org/Davydov/godon/paml"
+	"bitbucket.org/Davydov/godon/dist"
 )
 
 func main() {
@@ -20,7 +20,7 @@ func main() {
 	useMedian := flag.Bool("median", false, "Use median instead of mean")
 	flag.Parse()
 
-	r := paml.DiscreteGamma(*alpha, *beta, *k, *useMedian, nil, nil)
+	r := dist.DiscreteGamma(*alpha, *beta, *k, *useMedian, nil, nil)
 	fmt.Println(r)
 	p, err := plot.New()
 	if err != nil {

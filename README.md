@@ -101,7 +101,7 @@ $ godon -m mh M0 EMGT00050000000025.Drosophila.001.fst EMGT00050000000025.Drosop
   model
 * ``misc`` various utilities
 * ``optimize`` is the MCMC & downhill simplex and other algorithms implementation
-* ``paml`` various functions ported from [PAML](http://abacus.gene.ucl.ac.uk/software/paml.html)
+* ``dist`` functions related to discrete distributions, initially ported from [PAML](http://abacus.gene.ucl.ac.uk/software/paml.html)
 * ``tree`` is tree manipulation library
 
 ### codon ###

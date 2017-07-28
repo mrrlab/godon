@@ -5,7 +5,7 @@ import (
 
 	"bitbucket.org/Davydov/godon/codon"
 	"bitbucket.org/Davydov/godon/optimize"
-	"bitbucket.org/Davydov/godon/paml"
+	"bitbucket.org/Davydov/godon/dist"
 )
 
 // M0G is an implementation of M0G model.
@@ -238,7 +238,7 @@ func (m *M0G) updateMatrices() {
 func (m *M0G) update() {
 	if !m.gammasdone {
 		if m.ncatsg > 1 {
-			m.gammas = paml.DiscreteGamma(m.alphas, m.alphas, m.ncatsg, false, m.tmp, m.gammas)
+			m.gammas = dist.DiscreteGamma(m.alphas, m.alphas, m.ncatsg, false, m.tmp, m.gammas)
 			m.qdone = false
 		} else {
 			m.gammas[0] = 1
@@ -247,7 +247,7 @@ func (m *M0G) update() {
 	}
 	if !m.gammacdone {
 		if m.ncatcg > 1 {
-			m.gammac = paml.DiscreteGamma(m.alphac, m.alphac, m.ncatcg, false, m.tmp, m.gammac)
+			m.gammac = dist.DiscreteGamma(m.alphac, m.alphac, m.ncatcg, false, m.tmp, m.gammac)
 			m.qdone = false
 		} else {
 			m.gammac[0] = 1

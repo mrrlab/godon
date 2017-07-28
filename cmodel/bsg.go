@@ -9,7 +9,7 @@ import (
 
 	"bitbucket.org/Davydov/godon/codon"
 	"bitbucket.org/Davydov/godon/optimize"
-	"bitbucket.org/Davydov/godon/paml"
+	"bitbucket.org/Davydov/godon/dist"
 )
 
 // BranchSiteGamma is an implementation of the branch-site model with gamma
@@ -619,7 +619,7 @@ func (m *BranchSiteGamma) Final(neb, beb, codonRates, siteRates, codonOmega bool
 func (m *BranchSiteGamma) update() {
 	if !m.gammasdone {
 		if m.ncatsg > 1 {
-			m.gammas = paml.DiscreteGamma(m.alphas, m.alphas, m.ncatsg, false, m.tmp, m.gammas)
+			m.gammas = dist.DiscreteGamma(m.alphas, m.alphas, m.ncatsg, false, m.tmp, m.gammas)
 			m.q0done = false
 			m.q1done = false
 			m.q2done = false
@@ -630,7 +630,7 @@ func (m *BranchSiteGamma) update() {
 	}
 	if !m.gammacdone {
 		if m.ncatcg > 1 {
-			m.gammac = paml.DiscreteGamma(m.alphac, m.alphac, m.ncatcg, false, m.tmp, m.gammac)
+			m.gammac = dist.DiscreteGamma(m.alphac, m.alphac, m.ncatcg, false, m.tmp, m.gammac)
 			m.q0done = false
 			m.q1done = false
 			m.q2done = false

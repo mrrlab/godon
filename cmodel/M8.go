@@ -6,7 +6,7 @@ import (
 
 	"bitbucket.org/Davydov/godon/codon"
 	"bitbucket.org/Davydov/godon/optimize"
-	"bitbucket.org/Davydov/godon/paml"
+	"bitbucket.org/Davydov/godon/dist"
 )
 
 // M8 is an implementation of M8 model.
@@ -345,7 +345,7 @@ func (m *M8) updateQb() {
 	gcat := m.ncatsg * m.ncatsg * m.ncatsg
 
 	// get omega values
-	m.omegab = paml.DiscreteBeta(m.p, m.q, m.ncatb, false, m.tmp, m.omegab)
+	m.omegab = dist.DiscreteBeta(m.p, m.q, m.ncatb, false, m.tmp, m.omegab)
 
 	for c1 := 0; c1 < m.ncatsg; c1++ {
 		m.tmp[0] = m.gammas[c1]
@@ -568,7 +568,7 @@ func (m *M8) Final(neb, beb, codonRates, siteRates, codonOmega bool) {
 func (m *M8) update() {
 	if !m.gammasdone {
 		if m.ncatsg > 1 {
-			m.gammas = paml.DiscreteGamma(m.alphas, m.alphas, m.ncatsg, false, m.tmp, m.gammas)
+			m.gammas = dist.DiscreteGamma(m.alphas, m.alphas, m.ncatsg, false, m.tmp, m.gammas)
 			m.q0done = false
 			m.qbdone = false
 		} else {
@@ -578,7 +578,7 @@ func (m *M8) update() {
 	}
 	if !m.gammacdone {
 		if m.ncatcg > 1 {
-			m.gammac = paml.DiscreteGamma(m.alphac, m.alphac, m.ncatcg, false, m.tmp, m.gammac)
+			m.gammac = dist.DiscreteGamma(m.alphac, m.alphac, m.ncatcg, false, m.tmp, m.gammac)
 			m.q0done = false
 			m.qbdone = false
 		} else {
