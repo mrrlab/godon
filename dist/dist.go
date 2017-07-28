@@ -186,14 +186,10 @@ func LnBeta(p, q float64) float64 {
 var eps, alneps, sml, alnsml float64 = 0, 0, 0, 0
 
 /*
-
 CDFBeta returns distribution function of the standard form of the beta
 distribution, that is, the incomplete beta ratio I_x(p,q).
 
 This is also known as the incomplete beta function ratio I_x(p, q)
-
-This is called from QuantileBeta() in a root-finding loop.
-
 */
 func CDFBeta(x, pin, qin float64) float64 {
 	return mathext.RegIncBeta(pin, qin, x)
