@@ -85,7 +85,7 @@ l3:
 l4:
 	q = ch
 	p1 = .5 * ch
-	t = IncompleteGamma(p1, xx, g)
+	t = IncompleteGamma(p1, xx)
 	if t < 0 {
 		panic("IncompleteGamma<0")
 	}
@@ -124,10 +124,8 @@ IncompleteGamma returns the incomplete gamma ratio I(x,alpha) where x
 is the upper limit of the integration and alpha is the shape
 parameter.
 
-ln_gamma_alpha is unused.
-
 */
-func IncompleteGamma(x, alpha, lnGammaAlpha float64) (gin float64) {
+func IncompleteGamma(x, alpha float64) (gin float64) {
 	return mathext.GammaInc(alpha, x)
 }
 
@@ -157,12 +155,11 @@ func DiscreteGamma(alpha, beta float64, K int, UseMedian bool, tmp, res []float6
 			res[i] *= mean * float64(K) / t /* rescale so that the mean is alpha/beta. */
 		}
 	} else { /* mean */
-		lnga1, _ := math.Lgamma(alpha + 1)
 		for i := 0; i < K-1; i++ { /* cutting points, Eq. 9 */
 			tmp[i] = QuantileGamma((float64(i)+1.0)/float64(K), alpha, beta)
 		}
 		for i := 0; i < K-1; i++ { /* Eq. 10 */
-			tmp[i] = IncompleteGamma(tmp[i]*beta, alpha+1, lnga1)
+			tmp[i] = IncompleteGamma(tmp[i]*beta, alpha+1)
 		}
 		res[0] = tmp[0] * mean * float64(K)
 		for i := 1; i < K-1; i++ {
@@ -191,23 +188,17 @@ distribution, that is, the incomplete beta ratio I_x(p,q).
 
 This is also known as the incomplete beta function ratio I_x(p, q)
 
-lnbeta is unused.
-
 This is called from QuantileBeta() in a root-finding loop.
 
 */
-func CDFBeta(x, pin, qin, lnbeta float64) float64 {
+func CDFBeta(x, pin, qin float64) float64 {
 	return mathext.RegIncBeta(pin, qin, x)
 }
 
 /*
-
 QuantileBeta calculates the Quantile of the beta distribution
-
-lnbeta is unused.
-
 */
-func QuantileBeta(prob, p, q, lnbeta float64) float64 {
+func QuantileBeta(prob, p, q float64) float64 {
 	return mathext.InvRegIncBeta(p, q, prob)
 }
 
@@ -226,10 +217,9 @@ func DiscreteBeta(p, q float64, K int, UseMedian bool, tmp, res []float64) []flo
 		tmp = make([]float64, K)
 	}
 
-	lnbeta := LnBeta(p, q)
 	if UseMedian { /* median */
 		for i := 0; i < K; i++ {
-			res[i] = QuantileBeta((float64(i)+0.5)/float64(K), p, q, lnbeta)
+			res[i] = QuantileBeta((float64(i)+0.5)/float64(K), p, q)
 			t += res[i]
 		}
 		// normalization to keep the mean
@@ -238,17 +228,15 @@ func DiscreteBeta(p, q float64, K int, UseMedian bool, tmp, res []float64) []flo
 		}
 	} else { /* mean */
 		for i := 0; i < K-1; i++ /* cutting points */ {
-			tmp[i] = QuantileBeta((float64(i)+1.0)/float64(K), p, q, lnbeta)
+			tmp[i] = QuantileBeta((float64(i)+1.0)/float64(K), p, q)
 		}
 		tmp[K-1] = 1
 
-		lnbeta1 := lnbeta - math.Log(1+q/p)
-
-		prevCdf := CDFBeta(tmp[0], p+1, q, lnbeta1)
+		prevCdf := CDFBeta(tmp[0], p+1, q)
 
 		res[0] = prevCdf * mean * float64(K)
 		for i := 1; i < K; i++ { /* CDF */
-			currCdf := CDFBeta(tmp[i], p+1, q, lnbeta1)
+			currCdf := CDFBeta(tmp[i], p+1, q)
 			res[i] = (currCdf - prevCdf) * mean * float64(K)
 			prevCdf = currCdf
 		}
@@ -266,7 +254,7 @@ func DiscreteBeta(p, q float64, K int, UseMedian bool, tmp, res []float64) []flo
 				// }
 
 				// switch to median
-				res[i] = QuantileBeta((float64(i)+0.5)/float64(K), p, q, lnbeta)
+				res[i] = QuantileBeta((float64(i)+0.5)/float64(K), p, q)
 				if res[i] < lower || res[i] > upper { //out of bounds again
 					// if upper-lower > 1e-3 {
 					// 	fmt.Println("out of bounds, again")
