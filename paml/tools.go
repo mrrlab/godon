@@ -1,7 +1,11 @@
 // Package paml implements some functions from PAML source code.
 package paml
 
-/* this code comes from PAML, which is licensed under GNU GPL v3 */
+/*
+this is largely based on PAML, which is licensed under GNU GPL v3.
+Many functions where replaced by math/mathext equivalents,
+DiscreteBeta now checks boundaries and behaves better.
+*/
 
 import (
 	"math"
