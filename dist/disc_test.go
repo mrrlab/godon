@@ -57,6 +57,15 @@ func allinrange(r []float64, min, max float64) bool {
 	return true
 }
 
+/*** Compute mean of float64 slice ***/
+func mean(v []float64) (res float64) {
+	for _, v := range v {
+		res += v
+	}
+	res /= float64(len(v))
+	return
+}
+
 /*** Test discrete beta ***/
 func TestBeta(tst *testing.T) {
 	settings := [...]Settings{
@@ -135,6 +144,37 @@ func TestGamma(tst *testing.T) {
 		r := DiscreteGamma(s.a, s.b, s.n, s.median, freq, nil)
 		if !cmp(r, results[i]) {
 			tst.Error("Results missmatch:", r, results[i])
+		}
+	}
+}
+
+// Test discrete gamma(a, a) has mean of 1 and range of [0; +inf].
+func TestGammaRange(tst *testing.T) {
+	if testing.Short() {
+		tst.Skip("skipping test in short mode.")
+	}
+
+	for a := math.Log(0.005); a <= math.Log(100); a += 0.5 {
+		for n := 2; n <= 10; n++ {
+			for median := 0; median <= 1; median++ {
+				r := DiscreteGamma(math.Exp(a), math.Exp(a), n, median == 1, nil, nil)
+
+				if len(r) != n {
+					tst.Errorf("Incorrect length of DiscreteGamma result %d!=n (%d)", len(r), n)
+					return
+				}
+
+				m := mean(r)
+				if m < 0.9 || m > 1.1 {
+					tst.Errorf("Mean DiscreteGamma is out of [0.9, 1.1] range (%f)", m)
+					return
+				}
+
+				if !allinrange(r, 0, math.Inf(+1)) {
+					tst.Errorf("Values out of [0; +inf] range; alpha=%g, n=%d, median=%v, categories: %v", math.Exp(a), n, median == 1, r)
+					return
+				}
+			}
 		}
 	}
 }
