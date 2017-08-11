@@ -13,6 +13,16 @@ Godon supports likelihood optimization
 as well as MCMC
 ([Metropolis-Hastings algorithm](https://en.wikipedia.org/wiki/Metropolis%E2%80%93Hastings_algorithm)).
 
+Godon supports rate variation
+(See [the manuscript](https://dx.doi.org/10.1101/174839)). There are
+three models which support rate variation: branch-site (model `BSG`),
+M8 (model `M8`) and M0 (model `M0`). You need to specify the number of
+discrete categories to use, otherwise there will be no rate variation
+in the model. Use `--ncat-site-gamma` or `--ncat-codon-gamma`
+for [site rate variation](https://dx.doi.org/10.1093/molbev/msr162)
+and [codon rate variation](https://dx.doi.org/10.1101/174839)
+respectively.
+
 Godon supports state aggregation (option `--aggregate`). See
 [the paper](https://dx.doi.org/10.1093/bioinformatics/btw632) for
 the details. For the paper we used v0.5 (39bf774). Since then
