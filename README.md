@@ -87,6 +87,19 @@ $ bin/install.sh
 
 You can find sample datasets in `godon/cmodel/testdata`.
 
+You can tell Godon to run a pair of models (M8 vs M8a or branch-site
+H1 vs H0). In this case if the foreground branch for branch-site model
+is not labeled with `#1`, Godon will test all the branches. To force
+this behavior even in the presence of `#1` labeled branch, use
+`--all-branches`. You can exclude terminal branches with
+`--no-leaves`. You can use branch lengths estimated with M0 using
+`--m0-tree`.
+
+```
+#!bash
+$ godon test BS --m0-tree --all-branches EMGT00050000008747.Drosophila.002.fst EMGT00050000008747.Drosophila.002.nwk
+```
+
 Perform likelihood maximization using L-BFGS-B optimizer for the
 Branch-Site model without optimizing the branch lengths (use only a
 single CPU).
