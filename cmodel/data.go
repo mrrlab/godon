@@ -68,19 +68,6 @@ func NewData(gCodeID int, alignmentFileName string, treeFileName string,
 		return nil, err
 	}
 
-	if data.Tree.IsRooted() {
-		log.Warning("Tree is rooted. Will unroot.")
-		data.root = true
-		data.rootID, err = data.Tree.Unroot()
-		if err != nil {
-			return nil, fmt.Errorf("Error unrooting tree: %v", err)
-		}
-	}
-
-	log.Infof("intree_unroot=%s", data.Tree)
-	log.Debugf("brtree_unroot=%s", data.Tree.BrString())
-	log.Debug(data.Tree.FullString())
-
 	switch cFreq {
 	case "F0":
 		log.Info("F0 frequency")
@@ -136,6 +123,24 @@ func (data *Data) Copy() *Data {
 		root:   data.root,
 		rootID: data.rootID,
 	}
+}
+
+// Unroots the tree if needed.
+func (data *Data) Unroot() error {
+	var err error
+	if data.Tree.IsRooted() {
+		log.Warning("Tree is rooted. Will unroot.")
+		data.root = true
+		data.rootID, err = data.Tree.Unroot()
+		if err != nil {
+			return fmt.Errorf("Error unrooting tree: %v", err)
+		}
+	}
+
+	log.Infof("intree_unroot=%s", data.Tree)
+	log.Debugf("brtree_unroot=%s", data.Tree.BrString())
+	log.Debug(data.Tree.FullString())
+	return nil
 }
 
 // Root roots the tree back in case it was unrooted.

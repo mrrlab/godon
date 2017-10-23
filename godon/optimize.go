@@ -14,6 +14,13 @@ func newData() (*cmodel.Data, error) {
 		return nil, err
 	}
 
+	if !*noOptBrLen {
+		err = data.Unroot()
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	if len(*cFreqFileName) > 0 {
 		err := data.SetCodonFreqFromFile(*cFreqFileName)
 		if err != nil {

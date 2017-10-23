@@ -19,6 +19,12 @@ func GetTreeAlignment(dataset string, cfreq string) (*Data, error) {
 	// using standard genetic code
 	cmd, err := NewData(1, alifn, treefn, cfreq)
 
+	if err != nil {
+		return cmd, err
+	}
+
+	err = cmd.Unroot()
+
 	return cmd, err
 }
 
