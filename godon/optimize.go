@@ -54,7 +54,7 @@ func runOptimization(m cmodel.TreeOptimizableSiteClass, o *optimizerSettings, st
 		setStart(m, start)
 	}
 
-	if minLikelihood <=0 && m.Likelihood() < minLikelihood {
+	if minLikelihood <= 0 && m.Likelihood() < minLikelihood {
 		// restore method before leaving the function
 		defer func(savedMethod string) {
 			o.method = savedMethod
