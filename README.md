@@ -17,7 +17,7 @@ Godon supports rate variation
 (see [the manuscript](https://dx.doi.org/10.1101/174839)). There are
 three models which support rate variation: branch-site (model `BSG`),
 M8 (model `M8`) and M0 (model `M0`). You need to specify the number of
-discrete categories, otherwise there will be no rate variation in the
+discrete categories. Otherwise, there will be no rate variation in the
 model. Use `--ncat-site-gamma` or `--ncat-codon-gamma`
 for [site rate variation](https://dx.doi.org/10.1093/molbev/msr162)
 and [codon rate variation](https://dx.doi.org/10.1101/174839)
@@ -25,13 +25,45 @@ respectively.
 
 Godon supports state aggregation (option `--aggregate`). See
 [the paper](https://dx.doi.org/10.1093/bioinformatics/btw632) for
-the details. For the paper we used v0.5 (39bf774). Since then
+the details. For the paper, we used v0.5 (39bf774). Since then
 likelihood computations code were substantially changed.
 
-Godon developement was supported Swiss National Science Foundation
+Godon development was supported Swiss National Science Foundation
 (grant numbers CR32I3_143768, IZLRZ3_163872).
 
 **Warning**: Godon is currently in a beta stage.
+
+## What is special about Godon
+
+* A heuristic to avoid LRT statistics overestimation, which often
+  causes false positives in
+  [PAML](http://abacus.gene.ucl.ac.uk/software/paml.html). Also
+  corrects for LRT underestimation. Use `godon test` to enable.
+
+* A heuristic for fast branch-length estimation via M0 (`--m0-tree`).
+
+* Multiple optimizers including
+  [LBFGS-B](http://users.iems.northwestern.edu/~nocedal/lbfgsb.html),
+  [SQP](https://en.wikipedia.org/wiki/Sequential_quadratic_programming),
+  and others via [NLopt](https://nlopt.readthedocs.io/en/latest/).
+
+* [Markov chain Monte
+  Carlo](https://en.wikipedia.org/wiki/Markov_chain_Monte_Carlo}
+  support.
+
+* Export to machine-readable
+  [JSON](https://en.wikipedia.org/wiki/JSON) format.
+
+* Multithreading support (unlike PAML).
+
+* Starting point specification (only some parameters in PAML) and
+  randomization (disabled in PAML).
+
+* Testing multiple branches in one run for the branch-site model.
+
+* Wide range of models: M0, M1a, M2a, M7, M8, and branch-site.
+
+* Support for various genetic codes.
 
 ## Installation
 
@@ -87,10 +119,10 @@ $ bin/install.sh
 
 You can find sample datasets in `godon/cmodel/testdata`.
 
-You can tell Godon to run a pair of models (M8 vs M8a or branch-site
-H1 vs H0). In this case if the foreground branch for branch-site model
-is not labeled with `#1`, Godon will test all the branches. To force
-this behavior even in the presence of `#1` labeled branch, use
+You can tell Godon to run a pair of models (M8 vs. M8a or branch-site
+H1 vs. H0). In this case, if the foreground branch for the branch-site
+model is not labeled with `#1`, Godon will test all the branches. To
+force this behavior even in the presence of `#1` labeled branch, use
 `--all-branches`. You can exclude terminal branches with
 `--no-leaves`. You can use branch lengths estimated with M0 using
 `--m0-tree`.
