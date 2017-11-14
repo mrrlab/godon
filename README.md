@@ -48,7 +48,7 @@ Godon development was supported Swiss National Science Foundation
   and others via [NLopt](https://nlopt.readthedocs.io/en/latest/).
 
 * [Markov chain Monte
-  Carlo](https://en.wikipedia.org/wiki/Markov_chain_Monte_Carlo}
+  Carlo](https://en.wikipedia.org/wiki/Markov_chain_Monte_Carlo)
   support.
 
 * Export to machine-readable
