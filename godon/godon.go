@@ -86,7 +86,7 @@ var (
 	// hypTest flags
 	hTest      = app.Command("test", "Run test for positive selecton")
 	hTestModel = hTest.Arg("model",
-		"model type (BS for branch site, BSG for branch-site + gamma, or M8)").
+		"model type (BS for branch site, BSG for branch-site + gamma, M2a vs M1a or M8)").
 		Required().
 		Enum("BS", "BSG", "M8", "M2a")
 	hTestAlignmentFileName = hTest.Arg("alignment", "sequence alignment").Required().ExistingFile()
