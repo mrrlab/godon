@@ -1,32 +1,4 @@
-Godon is codon models software written in go.
-
-Godon currently supports
-[M0](http://mbe.oxfordjournals.org/content/11/5/725.abstract) and
-[Branch-Site](http:/mbe.oxfordjournals.org/content/22/12/2472) models
-of positive selection.
-
-Godon supports likelihood optimization
-([L-BFGS-B](https://en.wikipedia.org/wiki/Limited-memory_BFGS#L-BFGS-B),
-[downhill simplex](https://en.wikipedia.org/wiki/Nelder%E2%80%93Mead_method)
-&
-[simulated annealing](https://en.wikipedia.org/wiki/Simulated_annealing))
-as well as MCMC
-([Metropolis-Hastings algorithm](https://en.wikipedia.org/wiki/Metropolis%E2%80%93Hastings_algorithm)).
-
-Godon supports rate variation
-(see [the manuscript](https://dx.doi.org/10.1101/174839)). There are
-three models which support rate variation: branch-site (model `BSG`),
-M8 (model `M8`) and M0 (model `M0`). You need to specify the number of
-discrete categories. Otherwise, there will be no rate variation in the
-model. Use `--ncat-site-gamma` or `--ncat-codon-gamma`
-for [site rate variation](https://dx.doi.org/10.1093/molbev/msr162)
-and [codon rate variation](https://dx.doi.org/10.1101/174839)
-respectively.
-
-Godon supports state aggregation (option `--aggregate`). See
-[the paper](https://dx.doi.org/10.1093/bioinformatics/btw632) for
-the details. For the paper, we used v0.5 (39bf774). Since then
-likelihood computations code were substantially changed.
+Godon is codon models software written in [Go](https://golang.org/).
 
 Godon development was supported Swiss National Science Foundation
 (grant numbers CR32I3_143768, IZLRZ3_163872).
@@ -35,6 +7,21 @@ Godon development was supported Swiss National Science Foundation
 
 ## What is special about Godon
 
+* Godon supports rate variation (see [the
+  manuscript](https://dx.doi.org/10.1101/174839)). There are three
+  models which support rate variation: branch-site (model `BSG`), M8
+  (model `M8`) and M0 (model `M0`). You need to specify the number of
+  discrete categories. Otherwise, there will be no rate variation in
+  the model. Use `--ncat-site-gamma` or `--ncat-codon-gamma` for
+  [site rate variation](https://dx.doi.org/10.1093/molbev/msr162) and
+  [codon rate variation](https://dx.doi.org/10.1101/174839)
+  respectively.
+
+* Godon supports state aggregation (option `--aggregate`). See [the
+  paper](https://dx.doi.org/10.1093/bioinformatics/btw632) for the
+  details. For the paper, we used v0.5 (39bf774). Since then
+  likelihood computations code were substantially changed.
+
 * A heuristic to avoid LRT statistics overestimation, which often
   causes false positives in
   [PAML](http://abacus.gene.ucl.ac.uk/software/paml.html). Also
@@ -42,14 +29,15 @@ Godon development was supported Swiss National Science Foundation
 
 * A heuristic for fast branch-length estimation via M0 (`--m0-tree`).
 
-* Multiple optimizers including
-  [LBFGS-B](http://users.iems.northwestern.edu/~nocedal/lbfgsb.html),
+* Multiple optimizers available:
+  [L-BFGS-B](https://en.wikipedia.org/wiki/Limited-memory_BFGS#L-BFGS-B),
+  [downhill simplex](https://en.wikipedia.org/wiki/Nelder%E2%80%93Mead_method),
+  [simulated annealing](https://en.wikipedia.org/wiki/Simulated_annealing),
   [SQP](https://en.wikipedia.org/wiki/Sequential_quadratic_programming),
   and others via [NLopt](https://nlopt.readthedocs.io/en/latest/).
 
-* [Markov chain Monte
-  Carlo](https://en.wikipedia.org/wiki/Markov_chain_Monte_Carlo)
-  support.
+* Markov chain Monte Carlo support ([Metropolis-Hastings
+  algorithm](https://en.wikipedia.org/wiki/Metropolis%E2%80%93Hastings_algorithm)).
 
 * Export to machine-readable
   [JSON](https://en.wikipedia.org/wiki/JSON) format.
@@ -61,7 +49,10 @@ Godon development was supported Swiss National Science Foundation
 
 * Testing multiple branches in one run for the branch-site model.
 
-* Wide range of models: M0, M1a, M2a, M7, M8, and branch-site.
+* Wide range of models:
+  [M0](https://doi.org/10.1093/oxfordjournals.molbev.a040153), M1a,
+  M2a, M7, M8, and
+  [branch-site](https://doi.org/10.1093/molbev/msi237).
 
 * Support for various genetic codes.
 
