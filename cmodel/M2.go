@@ -2,6 +2,7 @@ package cmodel
 
 import (
 	"math/rand"
+	"time"
 
 	"bitbucket.org/Davydov/godon/codon"
 	"bitbucket.org/Davydov/godon/optimize"
@@ -35,6 +36,14 @@ type M2 struct {
 	gammacdone bool
 	// temporary array
 	tmp []float64
+
+	summary m2Summary
+}
+
+// m2Summary stores summary information.
+type m2Summary struct {
+	SitePosteriorNEB []float64 `json:"sitePosteriorNEB,omitempty"`
+	PosteriorTime    float64   `json:"posteriorTime,omitempty"`
 }
 
 // NewM2 creates a new M1a or M2a model. If addw is true, M2a is
@@ -327,6 +336,9 @@ func (m *M2) updateMatrices() {
 
 // Final prints NEB results (only if with positive selection).
 func (m *M2) Final(neb, beb, codonRates, siteRates, codonOmega bool) {
+	startTime := time.Now()
+	defer func() { m.summary.PosteriorTime = time.Since(startTime).Seconds() }()
+
 	// if w2=1, do not perform NEB analysis.
 	if !neb || !m.addw {
 		return
@@ -350,6 +362,7 @@ func (m *M2) Final(neb, beb, codonRates, siteRates, codonOmega bool) {
 	}
 
 	posterior := m.NEBPosterior(classes)
+	m.summary.SitePosteriorNEB = posterior
 
 	m.PrintPosterior(posterior)
 }
@@ -416,4 +429,13 @@ func (m *M2) update() {
 	if !m.propdone {
 		m.updateProportions()
 	}
+}
+
+// Summary returns the run summary (site posterior for NEB).
+func (m *M2) Summary() interface{} {
+	if len(m.summary.SitePosteriorNEB) > 0 {
+		return m.summary
+	}
+	// nil prevents json from printing "{}"
+	return nil
 }
