@@ -1,3 +1,5 @@
+[![Go Report Card](https://goreportcard.com/badge/bitbucket.org/Davydov/godon)](https://goreportcard.com/report/bitbucket.org/Davydov/godon) [![GoDoc](https://godoc.org/bitbucket.org/Davydov/godon?status.svg)](https://godoc.org/bitbucket.org/Davydov/godon)
+
 Godon is codon models software written in [Go](https://golang.org/).
 
 Godon development was supported Swiss National Science Foundation
