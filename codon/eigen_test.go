@@ -12,7 +12,7 @@ func BenchmarkEigen1(b *testing.B) {
 	gcode := bio.GeneticCodes[1]
 	NCodon := gcode.NCodon
 	cs := []Sequence{
-		Sequence{GCode: gcode},
+		{GCode: gcode},
 	}
 
 	cf := F0(cs)
@@ -38,7 +38,7 @@ func BenchmarkEigen2(b *testing.B) {
 	gcode := bio.GeneticCodes[1]
 	NCodon := gcode.NCodon
 	cs := []Sequence{
-		Sequence{GCode: gcode},
+		{GCode: gcode},
 	}
 
 	cf := F0(cs)

@@ -4,8 +4,8 @@ import (
 	"math/rand"
 
 	"bitbucket.org/Davydov/godon/codon"
-	"bitbucket.org/Davydov/godon/optimize"
 	"bitbucket.org/Davydov/godon/dist"
+	"bitbucket.org/Davydov/godon/optimize"
 )
 
 // M0G is an implementation of M0G model.

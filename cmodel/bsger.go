@@ -6,8 +6,8 @@ import (
 	"math/rand"
 
 	"bitbucket.org/Davydov/godon/codon"
-	"bitbucket.org/Davydov/godon/optimize"
 	"bitbucket.org/Davydov/godon/dist"
+	"bitbucket.org/Davydov/godon/optimize"
 )
 
 // BranchSiteGammaERates is an implementation of the branch-site model with

@@ -69,12 +69,12 @@ func mean(v []float64) (res float64) {
 /*** Test discrete beta ***/
 func TestBeta(tst *testing.T) {
 	settings := [...]Settings{
-		Settings{4, 0.5, 10, false},
-		Settings{4, 0.5, 10, true},
-		Settings{8, 2, .1, false},
-		Settings{7, 15, 1, true},
-		Settings{4, 1.16, 3.54, false},
-		Settings{4, 1.16, 3.54, true},
+		{4, 0.5, 10, false},
+		{4, 0.5, 10, true},
+		{8, 2, .1, false},
+		{7, 15, 1, true},
+		{4, 1.16, 3.54, false},
+		{4, 1.16, 3.54, true},
 	}
 	results := [...]([]float64){
 		[]float64{0.001709, 0.012818, 0.041099, 0.134851},
@@ -124,12 +124,12 @@ func TestBetaRange(tst *testing.T) {
 /*** Test discrete gamma ***/
 func TestGamma(tst *testing.T) {
 	settings := [...]Settings{
-		Settings{4, 0.5, 10, false},
-		Settings{4, 0.5, 10, true},
-		Settings{8, 2, .1, false},
-		Settings{7, 15, 1, true},
-		Settings{4, 1.16, 3.54, false},
-		Settings{4, 1.16, 3.54, true},
+		{4, 0.5, 10, false},
+		{4, 0.5, 10, true},
+		{8, 2, .1, false},
+		{7, 15, 1, true},
+		{4, 1.16, 3.54, false},
+		{4, 1.16, 3.54, true},
 	}
 	results := [...]([]float64){
 		[]float64{0.001669, 0.012596, 0.041013, 0.144721},

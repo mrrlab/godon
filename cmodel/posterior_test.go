@@ -66,8 +66,8 @@ func TestBranchSiteNebD3(tst *testing.T) {
 
 func TestBranchSiteBebD3(tst *testing.T) {
 	if testing.Short() {
-                tst.Skip("skipping test in short mode.")
-        }
+		tst.Skip("skipping test in short mode.")
+	}
 
 	data, err := GetTreeAlignment(data3, "F3X4")
 	if err != nil {

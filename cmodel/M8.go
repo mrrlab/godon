@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"bitbucket.org/Davydov/godon/codon"
-	"bitbucket.org/Davydov/godon/optimize"
 	"bitbucket.org/Davydov/godon/dist"
+	"bitbucket.org/Davydov/godon/optimize"
 )
 
 // M8 is an implementation of M8 model.
