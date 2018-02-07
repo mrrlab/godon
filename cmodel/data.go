@@ -125,7 +125,7 @@ func (data *Data) Copy() *Data {
 	}
 }
 
-// Unroots the tree if needed.
+// Unroot unroots the tree if needed.
 func (data *Data) Unroot() error {
 	var err error
 	if data.Tree.IsRooted() {

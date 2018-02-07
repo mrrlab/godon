@@ -140,7 +140,7 @@ func (p *FloatParameters) SetByName(name string, v float64) error {
 // parser usuall. This has algorithmic complexity of O(n^2), since we have to
 // check every parameter name every iteration. This usually doesn't matter
 // since the number of parameters is usually small, and this is done only
-// once in the begining of run.
+// once in the beginning of run.
 func (p *FloatParameters) SetFromMap(m map[string]float64) error {
 	// number of parameters set from the map
 	if len(m) != len(*p) && len(m) != len(*p)+1 {

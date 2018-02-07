@@ -63,7 +63,7 @@ func (ds *DS) createSimplex(opt Optimizable, delta float64) {
 	}
 }
 
-// amotry extrapolates by factor fac throught the face of the simplex accros from
+// amotry extrapolates by factor fac through the face of the simplex accros from
 // the low point, tries it, and replaces the high point if the new point is better.
 func (ds *DS) amotry(ilo int, fac float64) float64 {
 	if ds.newOpt == nil {

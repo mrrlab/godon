@@ -74,7 +74,7 @@ type baseSummary struct {
 	StartingLnL float64 `json:"startingLnL"`
 	// StartingParameters is the starting parameter values.
 	StartingParameters map[string]float64 `json:"startingParameters"`
-	// NIterations is the number of iterations, for gradient-based methods can be less than number of funciton calls.
+	// NIterations is the number of iterations, for gradient-based methods can be less than number of function calls.
 	NIterations int `json:"nIterations"`
 	// NCalls is the number of function calls, cumulative for chained methods
 	NCalls int `json:"nLikelihoodComputations"`

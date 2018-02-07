@@ -10,7 +10,7 @@ var objects = make(map[uintptr]interface{})
 // objectIndex stores an index to use for new object.
 var objectIndex uintptr
 
-// objectMutex is a mutex preventing simultanious access to the object
+// objectMutex is a mutex preventing simultaneous access to the object
 // storage.
 var objectMutex sync.Mutex
 

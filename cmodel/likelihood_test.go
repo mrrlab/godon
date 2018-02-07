@@ -13,7 +13,7 @@ const (
 	data3 = "EMGT00050000000025.Drosophila.001"
 
 	// smallDiff is a threshold for testing
-	// if likelihood ratio is larger error is emmited
+	// if likelihood ratio is larger error is emitted
 	smallDiff = 1e-3
 )
 
