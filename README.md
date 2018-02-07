@@ -1,4 +1,4 @@
-[![Go Report Card](https://goreportcard.com/badge/bitbucket.org/Davydov/godon)](https://goreportcard.com/report/bitbucket.org/Davydov/godon) [![GoDoc](https://godoc.org/bitbucket.org/Davydov/godon?status.svg)](https://godoc.org/bitbucket.org/Davydov/godon)
+[![Go Report Card](https://goreportcard.com/badge/bitbucket.org/Davydov/godon)](https://goreportcard.com/report/bitbucket.org/Davydov/godon) [![GoDoc](https://godoc.org/bitbucket.org/Davydov/godon?status.svg)](https://godoc.org/bitbucket.org/Davydov/godon) [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
 Godon is codon models software written in [Go](https://golang.org/).
 
