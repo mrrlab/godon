@@ -87,5 +87,5 @@ if [ -n "$FORCE" ]
 then
 	rm -f $BINARY_PATH
 fi
-$GO get -ldflags "$STATIC -X main.buildstamp=$buildstamp -X main.githash=$githash -X main.gitbranch=$gitbranch" $PKG_NAME && \
+$GO get -ldflags "$STATIC -X main.buildstamp=$buildstamp -X main.githash=${githash:-$BITBUCKET_COMMIT} -X main.gitbranch=${gitbranch:-$BITBUCKET_BRANCH}" $PKG_NAME && \
 	echo Installed $BINARY_NAME to $BINARY_PATH >&2
