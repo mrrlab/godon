@@ -14,9 +14,9 @@ pipelines:
           - apt-get --yes install libgsl0-dev # for plotting
           - CGO_LDFLAGS="-lopenblas" go get github.com/gonum/blas/cgo
           # now godon
-          - go get bitbucket.org/Davydov/godon/godon
-          - go get bitbucket.org/Davydov/godon/misc/plotgamma # special dependencies
           - cd "${PACKAGE_PATH}"
+          - bin/install.sh
+          - go get bitbucket.org/Davydov/godon/misc/plotgamma # special dependencies
           - go test -v -short ./...
           - #benchmarks are currently disabled
           - #go test ./... -run=NONE -bench=.
