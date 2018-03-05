@@ -60,10 +60,13 @@ Godon development was supported Swiss National Science Foundation
 
 ## Installation
 
-The software was tested on GNU/Linux and Mac OS X. You can fetch the
-latest binary for GNU/Linux from the downloads section; do not forget
-to make it executable prior to running (`chmod +x
-godon-linux-gnu-x86_64`).
+The software was tested on GNU/Linux and Mac OS X.
+
+You can fetch the latest statically compiled binary for GNU/Linux from
+the downloads section; do not forget to make it executable prior to
+running (`chmod +x godon-linux-gnu-x86_64`).
+
+## Compiling from source
 
 Requirements:
 
