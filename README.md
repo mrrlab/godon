@@ -99,7 +99,20 @@ $ bin/install.sh
    bin/install.sh
    ```
 
-### Mac OS X installation
+### Mac OS X installation via Homebrew
+
+1. [Install Homebrew](https://docs.brew.sh/Installation).
+2. Install dependentices: `brew install go gcc nlopt` (may take more
+   than an hour).
+3. If you don't have git, install it as well: `brew install git`.
+4. Install godon: `curl -L
+   https://bitbucket.org/Davydov/godon/raw/master/bin/install.sh |
+   CC=gcc-7 bash`. You need to use gcc from Homebrew, in this case
+   `gcc-7`.
+5. (Optional) Add the binary directory of Go to PATH. E.g., put
+   `export PATH=$PATH:$HOME/go/bin` into your `~/.bash_profile`.
+
+### Mac OS X installation (old)
 
 1. Make sure you have C compiler, build tools and gfortran.
 2. Install Go (1.7 or later).
