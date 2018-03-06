@@ -109,8 +109,9 @@ $ bin/install.sh
    https://bitbucket.org/Davydov/godon/raw/master/bin/install.sh |
    CC=gcc-7 bash`. You need to use gcc from Homebrew, in this case
    `gcc-7`.
-5. (Optional) Add the binary directory of Go to PATH. E.g., put
-   `export PATH=$PATH:$HOME/go/bin` into your `~/.bash_profile`.
+5. (Optional) Add the binary directory of Go to the `PATH` variable.
+   E.g., put `export PATH=$PATH:$HOME/go/bin` into your
+   `~/.bash_profile`.
 
 ### Mac OS X installation (old)
 
