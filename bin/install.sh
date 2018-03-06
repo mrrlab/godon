@@ -74,11 +74,11 @@ godepinstalled github.com/gonum/blas/cgo
 goisold && \
 	godepinstalled github.com/idavydov/go-lbfgsb
 
+GOPATH=${GOPATH:-$HOME/go}
 PKG_NAME=bitbucket.org/Davydov/godon/godon
 BINARY_NAME=$(basename $PKG_NAME)
 BINARY_PATH=$GOPATH/bin/$BINARY_NAME
 $GO get -d $PKG_NAME
-GOPATH=${GOPATH-$HOME/go}
 DIR="$GOPATH/src/$PKG_NAME"
 buildstamp=$(date -u '+%Y-%m-%d_%H:%M:%S')
 githash=$(git -C "$DIR" rev-parse HEAD)
