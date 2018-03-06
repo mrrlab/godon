@@ -99,7 +99,7 @@ $ bin/install.sh
    bin/install.sh
    ```
 
-### Mac OS X installation via Homebrew
+### Mac OS X installation using Homebrew
 
 1. [Install Homebrew](https://docs.brew.sh/Installation).
 2. Install dependentices: `brew install go gcc nlopt` (may take more
