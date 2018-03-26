@@ -91,9 +91,9 @@ func setStart(m cmodel.TreeOptimizableSiteClass, start map[string]float64) {
 }
 
 // computeFinal computes BEB & NEB for a given point
-func computeFinal(m cmodel.TreeOptimizableSiteClass, start map[string]float64) interface{} {
+func computeFinal(m cmodel.TreeOptimizableSiteClass, start map[string]float64, runNEB, runBEB bool) interface{} {
 	setStart(m, start)
-	m.Final(*neb, *beb, *codonRates, *siteRates, *codonOmega)
+	m.Final(runNEB, runBEB, *codonRates, *siteRates, *codonOmega)
 	return m.Summary()
 }
 
