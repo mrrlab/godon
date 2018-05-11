@@ -119,6 +119,7 @@ var (
 	cFreqFileName = app.Flag("codon-frequency-file", "codon frequencies file (overrides --codon-frequency)").ExistingFile()
 	ncatsg        = app.Flag("ncat-site-gamma", "number of categories for the site gamma rate variation (no variation by default)").Default("1").Int()
 	ncatcg        = app.Flag("ncat-codon-gamma", "number of categories for the codon gamma rate variation (no variation by default)").Default("1").Int()
+	proportional  = app.Flag("proportional", "use three rates and three proportions instead of gamma distribution").Bool()
 	ncatb         = app.Flag("ncat-beta", "number of the categories for the beta distribution (models M7&M8)").Default("4").Int()
 
 	// optimizer parameters

@@ -9,12 +9,13 @@ import (
 
 // modelSettings stores settings for creating a new model.
 type modelSettings struct {
-	name   string
-	data   *cmodel.Data
-	fixw   bool
-	ncatb  int
-	ncatsg int
-	ncatcg int
+	name         string
+	data         *cmodel.Data
+	fixw         bool
+	ncatb        int
+	ncatsg       int
+	ncatcg       int
+	proportional bool
 
 	noOptBrLen  bool
 	maxBrLen    float64
@@ -29,12 +30,13 @@ type modelSettings struct {
 // variables (command-line arguments).
 func newModelSettings(data *cmodel.Data) *modelSettings {
 	return &modelSettings{
-		name:   *model,
-		data:   data,
-		fixw:   *fixw,
-		ncatb:  *ncatb,
-		ncatsg: *ncatsg,
-		ncatcg: *ncatcg,
+		name:         *model,
+		data:         data,
+		fixw:         *fixw,
+		ncatb:        *ncatb,
+		ncatsg:       *ncatsg,
+		ncatcg:       *ncatcg,
+		proportional: *proportional,
 
 		noOptBrLen:  *noOptBrLen,
 		maxBrLen:    *maxBrLen,
@@ -86,7 +88,10 @@ func (ms *modelSettings) createModel(copy bool) (cmodel.TreeOptimizableSiteClass
 	case "BSG":
 		log.Info("Using branch site gamma model")
 		log.Infof("%d site gamma categories, %d codon gama categories", ms.ncatsg, ms.ncatcg)
-		return cmodel.NewBranchSiteGamma(data, ms.fixw, ms.ncatsg, ms.ncatcg), nil
+		if ms.proportional {
+			log.Info("Using Scheffler 2006 rates parametrization")
+		}
+		return cmodel.NewBranchSiteGamma(data, ms.fixw, ms.ncatsg, ms.ncatcg, ms.proportional), nil
 	case "BSGE":
 		log.Info("Using branch site gamma model with explicit rates")
 		log.Infof("%d site gamma categories, %d codon gama categories", ms.ncatsg, ms.ncatcg)

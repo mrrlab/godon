@@ -25,14 +25,25 @@ type BranchSiteGamma struct {
 	// site gamma alpha parameter
 	alphas float64
 	gammas []float64
+	// parametrization inspired by Scheffler 2006
+	// proportions
+	ps1s, ps2s float64
+	// rates, rs2s is inverted
+	rs1s, rs2s float64
 	// codon gamma alpha parameter
 	alphac float64
 	gammac []float64
+	// parametrization inspired by Scheffler 2006
+	// proportions
+	ps1c, ps2c float64
+	// rates, rs2c is inverted
+	rs1c, rs2c float64
 	// temporary array
 	tmp                    []float64
 	ncatcg                 int
 	ncatsg                 int
 	fixw2                  bool
+	proportional           bool
 	q0done, q1done, q2done bool
 	propdone               bool
 	gammacdone             bool
@@ -57,19 +68,25 @@ func (s branchSiteGammaSummary) Empty() bool {
 }
 
 // NewBranchSiteGamma creates a new BranchSiteGamma model.
-func NewBranchSiteGamma(data *Data, fixw2 bool, ncatsg, ncatcg int) (m *BranchSiteGamma) {
+func NewBranchSiteGamma(data *Data, fixw2 bool, ncatsg, ncatcg int, proportional bool) (m *BranchSiteGamma) {
 	scat := ncatsg * ncatsg * ncatsg
 
+	if proportional {
+		if (ncatsg != 3 && ncatsg != 1) || (ncatcg != 3 && ncatcg != 1) {
+			log.Fatal("Scheffler's parametrization is only supported for three discrete rates")
+		}
+	}
 	m = &BranchSiteGamma{
-		fixw2:  fixw2,
-		ncatsg: ncatsg,
-		ncatcg: ncatcg,
-		q0s:    make([]*codon.EMatrix, scat*ncatcg),
-		q1s:    make([]*codon.EMatrix, scat*ncatcg),
-		q2s:    make([]*codon.EMatrix, scat*ncatcg),
-		gammas: make([]float64, ncatsg),
-		gammac: make([]float64, ncatcg),
-		tmp:    make([]float64, maxInt(ncatcg, ncatsg, 3)),
+		fixw2:        fixw2,
+		proportional: proportional,
+		ncatsg:       ncatsg,
+		ncatcg:       ncatcg,
+		q0s:          make([]*codon.EMatrix, scat*ncatcg),
+		q1s:          make([]*codon.EMatrix, scat*ncatcg),
+		q2s:          make([]*codon.EMatrix, scat*ncatcg),
+		gammas:       make([]float64, ncatsg),
+		gammac:       make([]float64, ncatcg),
+		tmp:          make([]float64, maxInt(ncatcg, ncatsg, 3)),
 	}
 	m.BaseModel = NewBaseModel(data, m)
 
@@ -110,13 +127,23 @@ func (m *BranchSiteGamma) Copy() optimize.Optimizable {
 		p0prop:    m.p0prop,
 		fixw2:     m.fixw2,
 
+		proportional: m.proportional,
+
 		ncatsg: m.ncatsg,
 		alphas: m.alphas,
 		gammas: make([]float64, m.ncatsg),
+		rs1s:   m.rs1s,
+		rs2s:   m.rs2s,
+		ps1s:   m.ps1s,
+		ps2s:   m.ps2s,
 
 		ncatcg: m.ncatcg,
 		alphac: m.alphac,
 		gammac: make([]float64, m.ncatcg),
+		rs1c:   m.rs1c,
+		rs2c:   m.rs2c,
+		ps1c:   m.ps1c,
+		ps2c:   m.ps2c,
 
 		tmp: make([]float64, maxInt(m.ncatcg, m.ncatsg, 3)),
 	}
@@ -191,32 +218,111 @@ func (m *BranchSiteGamma) addParameters(fpg optimize.FloatParameterGenerator) {
 	m.parameters.Append(p0prop)
 
 	if m.ncatsg > 1 {
-		alphas := fpg(&m.alphas, "alphas")
-		alphas.SetOnChange(func() {
-			m.gammasdone = false
-		})
-		alphas.SetPriorFunc(optimize.GammaPrior(1, 2, false))
-		alphas.SetMin(1e-2)
-		alphas.SetMax(1000)
-		alphas.SetProposalFunc(optimize.NormalProposal(0.01))
-		m.parameters.Append(alphas)
+		if !m.proportional {
+			alphas := fpg(&m.alphas, "alphas")
+			alphas.SetOnChange(func() {
+				m.gammasdone = false
+			})
+			alphas.SetPriorFunc(optimize.GammaPrior(1, 2, false))
+			alphas.SetMin(1e-2)
+			alphas.SetMax(1000)
+			alphas.SetProposalFunc(optimize.NormalProposal(0.01))
+			m.parameters.Append(alphas)
+		} else {
+			ps1s := fpg(&m.ps1s, "ps1s")
+			ps1s.SetOnChange(func() {
+				m.gammasdone = false
+			})
+			ps1s.SetPriorFunc(optimize.UniformPrior(0, 1, false, false))
+			ps1s.SetMin(1e-5)
+			ps1s.SetMax(1 - 1e-5)
+			ps1s.SetProposalFunc(optimize.NormalProposal(0.01))
+			m.parameters.Append(ps1s)
+			ps2s := fpg(&m.ps2s, "ps2s")
+			ps2s.SetOnChange(func() {
+				m.gammasdone = false
+			})
+			ps2s.SetPriorFunc(optimize.UniformPrior(0, 1, false, false))
+			ps2s.SetMin(1e-5)
+			ps2s.SetMax(1 - 1e-5)
+			ps2s.SetProposalFunc(optimize.NormalProposal(0.01))
+			m.parameters.Append(ps2s)
+			rs1s := fpg(&m.rs1s, "rs1s")
+			rs1s.SetOnChange(func() {
+				m.gammasdone = false
+			})
+			rs1s.SetPriorFunc(optimize.UniformPrior(0, 1, false, false))
+			rs1s.SetMin(1e-5)
+			rs1s.SetMax(1 - 1e-5)
+			rs1s.SetProposalFunc(optimize.NormalProposal(0.01))
+			m.parameters.Append(rs1s)
+			rs2s := fpg(&m.rs2s, "rs2s_inv")
+			rs2s.SetOnChange(func() {
+				m.gammasdone = false
+			})
+			rs2s.SetPriorFunc(optimize.UniformPrior(0, 1, false, false))
+			rs2s.SetMin(1e-5)
+			rs2s.SetMax(1 - 1e-5)
+			rs2s.SetProposalFunc(optimize.NormalProposal(0.01))
+			m.parameters.Append(rs2s)
+		}
 	}
 
 	if m.ncatcg > 1 {
-		alphac := fpg(&m.alphac, "alphac")
-		alphac.SetOnChange(func() {
-			m.gammacdone = false
-		})
-		alphac.SetPriorFunc(optimize.GammaPrior(1, 2, false))
-		alphac.SetMin(1e-2)
-		alphac.SetMax(1000)
-		alphac.SetProposalFunc(optimize.NormalProposal(0.01))
-		m.parameters.Append(alphac)
+		if !m.proportional {
+			alphac := fpg(&m.alphac, "alphac")
+			alphac.SetOnChange(func() {
+				m.gammacdone = false
+			})
+			alphac.SetPriorFunc(optimize.GammaPrior(1, 2, false))
+			alphac.SetMin(1e-2)
+			alphac.SetMax(1000)
+			alphac.SetProposalFunc(optimize.NormalProposal(0.01))
+			m.parameters.Append(alphac)
+		} else {
+			ps1c := fpg(&m.ps1c, "ps1c")
+			ps1c.SetOnChange(func() {
+				m.gammacdone = false
+			})
+			ps1c.SetPriorFunc(optimize.UniformPrior(0, 1, false, false))
+			ps1c.SetMin(1e-5)
+			ps1c.SetMax(1 - 1e-5)
+			ps1c.SetProposalFunc(optimize.NormalProposal(0.01))
+			m.parameters.Append(ps1c)
+			ps2c := fpg(&m.ps2c, "ps2c")
+			ps2c.SetOnChange(func() {
+				m.gammacdone = false
+			})
+			ps2c.SetPriorFunc(optimize.UniformPrior(0, 1, false, false))
+			ps2c.SetMin(1e-5)
+			ps2c.SetMax(1 - 1e-5)
+			ps2c.SetProposalFunc(optimize.NormalProposal(0.01))
+			m.parameters.Append(ps2c)
+			rs1c := fpg(&m.rs1c, "rs1c")
+			rs1c.SetOnChange(func() {
+				m.gammacdone = false
+			})
+			rs1c.SetPriorFunc(optimize.UniformPrior(0, 1, false, false))
+			rs1c.SetMin(1e-5)
+			rs1c.SetMax(1 - 1e-5)
+			rs1c.SetProposalFunc(optimize.NormalProposal(0.01))
+			m.parameters.Append(rs1c)
+			rs2c := fpg(&m.rs2c, "rs2c_inv")
+			rs2c.SetOnChange(func() {
+				m.gammacdone = false
+			})
+			rs2c.SetPriorFunc(optimize.UniformPrior(0, 1, false, false))
+			rs2c.SetMin(1e-5)
+			rs2c.SetMax(1 - 1e-5)
+			rs2c.SetProposalFunc(optimize.NormalProposal(0.01))
+			m.parameters.Append(rs2c)
+		}
 	}
 }
 
 // SetParameters sets the model parameter values.
-func (m *BranchSiteGamma) SetParameters(kappa float64, omega0, omega2 float64, p0, p1 float64, alphas, alphac float64) {
+func (m *BranchSiteGamma) SetParameters(kappa float64, omega0, omega2 float64, p0, p1 float64, alphas, alphac float64,
+	rs1s, rs2s, ps1s, ps2s float64, rs1c, rs2c, ps1c, ps2c float64) {
 	m.kappa = kappa
 	m.omega0 = omega0
 	if !m.fixw2 {
@@ -229,11 +335,20 @@ func (m *BranchSiteGamma) SetParameters(kappa float64, omega0, omega2 float64, p
 	m.q0done, m.q1done, m.q2done = false, false, false
 	m.alphas = alphas
 	m.alphac = alphac
+	m.rs1s = rs1s
+	m.rs2s = rs2s
+	m.ps1s = ps1s
+	m.ps2s = ps2s
+	m.rs1c = rs1c
+	m.rs2c = rs2c
+	m.ps1c = ps1c
+	m.ps2c = ps2c
 }
 
 // GetParameters returns the model parameter values.
-func (m *BranchSiteGamma) GetParameters() (kappa float64, omega0, omega2 float64, p0, p1 float64, alphas, alphac float64) {
-	return m.kappa, m.omega0, m.omega2, m.p01sum * m.p0prop, m.p01sum * (1 - m.p0prop), m.alphas, m.alphac
+func (m *BranchSiteGamma) GetParameters() (kappa float64, omega0, omega2 float64, p0, p1 float64, alphas, alphac float64,
+	rs1s, rs2s, ps1s, ps2s float64, rs1c, rs2c, ps1c, ps2c float64) {
+	return m.kappa, m.omega0, m.omega2, m.p01sum * m.p0prop, m.p01sum * (1 - m.p0prop), m.alphas, m.alphac, rs1s, rs2s, ps1s, ps2s, rs1c, rs2c, ps1c, ps2c
 }
 
 // SetDefaults sets the default initial parameter values.
@@ -248,7 +363,16 @@ func (m *BranchSiteGamma) SetDefaults() {
 	p1 := math.Exp(x1) / (1 + math.Exp(x0) + math.Exp(x1))
 	alphas := 0.5 + rand.Float64()*3
 	alphac := 0.5 + rand.Float64()*3
-	m.SetParameters(kappa, omega0, omega2, p0, p1, alphas, alphac)
+	rs1s := 1e-5 + rand.Float64()*(1-2e-5)
+	rs2s := 1e-5 + rand.Float64()*(1-2e-5)
+	ps1s := 1e-5 + rand.Float64()*(1-2e-5)
+	ps2s := 1e-5 + rand.Float64()*(1-2e-5)
+	rs1c := 1e-5 + rand.Float64()*(1-2e-5)
+	rs2c := 1e-5 + rand.Float64()*(1-2e-5)
+	ps1c := 1e-5 + rand.Float64()*(1-2e-5)
+	ps2c := 1e-5 + rand.Float64()*(1-2e-5)
+	m.SetParameters(kappa, omega0, omega2, p0, p1, alphas, alphac,
+		rs1s, rs2s, ps1s, ps2s, rs1c, rs2c, ps1c, ps2c)
 }
 
 // Organization of the class categories.
@@ -619,7 +743,14 @@ func (m *BranchSiteGamma) Final(neb, beb, codonRates, siteRates, codonOmega bool
 func (m *BranchSiteGamma) update() {
 	if !m.gammasdone {
 		if m.ncatsg > 1 {
-			m.gammas = dist.DiscreteGamma(m.alphas, m.alphas, m.ncatsg, false, m.tmp, m.gammas)
+			if !m.proportional {
+				m.gammas = dist.DiscreteGamma(m.alphas, m.alphas, m.ncatsg, false, m.tmp, m.gammas)
+			} else {
+				synScale := m.rs1s*m.ps1s + 1*(1-m.ps1s)*m.ps2s + 1/m.rs2s*(1-m.ps1s)*(1-m.ps2s)
+				m.gammas[0] = m.rs1s / synScale
+				m.gammas[1] = 1 / synScale
+				m.gammas[2] = 1 / m.rs2s / synScale
+			}
 			m.q0done = false
 			m.q1done = false
 			m.q2done = false
@@ -630,7 +761,14 @@ func (m *BranchSiteGamma) update() {
 	}
 	if !m.gammacdone {
 		if m.ncatcg > 1 {
-			m.gammac = dist.DiscreteGamma(m.alphac, m.alphac, m.ncatcg, false, m.tmp, m.gammac)
+			if !m.proportional {
+				m.gammac = dist.DiscreteGamma(m.alphac, m.alphac, m.ncatcg, false, m.tmp, m.gammac)
+			} else {
+				synScale := m.rs1c*m.ps1c + 1*(1-m.ps1c)*m.ps2c + 1/m.rs2c*(1-m.ps1c)*(1-m.ps2c)
+				m.gammac[0] = m.rs1c / synScale
+				m.gammac[1] = 1 / synScale
+				m.gammac[2] = 1 / m.rs2c / synScale
+			}
 			m.q0done = false
 			m.q1done = false
 			m.q2done = false
