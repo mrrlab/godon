@@ -117,8 +117,8 @@ var (
 	noOptBrLen    = app.Flag("no-branch-length", "don't optimize branch lengths").Short('n').Bool()
 	cFreq         = app.Flag("codon-frequency", "codon frequecny (F0 or F3X4)").Default("F3X4").String()
 	cFreqFileName = app.Flag("codon-frequency-file", "codon frequencies file (overrides --codon-frequency)").ExistingFile()
-	ncatsg        = app.Flag("ncat-site-gamma", "number of categories for the site gamma rate variation (no variation by default)").Default("1").Int()
-	ncatcg        = app.Flag("ncat-codon-gamma", "number of categories for the codon gamma rate variation (no variation by default)").Default("1").Int()
+	ncatsr        = app.Flag("ncat-site-rate", "number of categories for the site rate variation (no variation by default)").Default("1").Int()
+	ncatcr        = app.Flag("ncat-codon-rate", "number of categories for the codon rate variation (no variation by default)").Default("1").Int()
 	proportional  = app.Flag("proportional", "use three rates and three proportions instead of gamma distribution").Bool()
 	ncatb         = app.Flag("ncat-beta", "number of the categories for the beta distribution (models M7&M8)").Default("4").Int()
 
