@@ -92,10 +92,6 @@ func (ms *modelSettings) createModel(copy bool) (cmodel.TreeOptimizableSiteClass
 			log.Info("Using Scheffler 2006 rates parametrization")
 		}
 		return cmodel.NewBranchSiteGamma(data, ms.fixw, ms.ncatsr, ms.ncatcr, ms.proportional), nil
-	case "BSGE":
-		log.Info("Using branch site gamma model with explicit rates")
-		log.Infof("%d site gamma categories, %d codon gama categories", ms.ncatsr, ms.ncatcr)
-		return cmodel.NewBranchSiteGammaERates(data, ms.fixw, ms.ncatsr, ms.ncatcr), nil
 	case "BS":
 		log.Info("Using branch site model")
 		return cmodel.NewBranchSite(data, ms.fixw), nil
