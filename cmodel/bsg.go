@@ -23,16 +23,18 @@ type BranchSiteGamma struct {
 	omega0, omega2 float64
 	p01sum, p0prop float64
 	// site gamma alpha parameter
-	alphas float64
-	gammas []float64
+	alphas     float64
+	gammas     []float64
+	gammasprop []float64
 	// parametrization inspired by Scheffler 2006
 	// proportions
 	ps1s, ps2s float64
 	// rates, rs2s is inverted
 	rs1s, rs2s float64
 	// codon gamma alpha parameter
-	alphac float64
-	gammac []float64
+	alphac     float64
+	gammac     []float64
+	gammacprop []float64
 	// parametrization inspired by Scheffler 2006
 	// proportions
 	ps1c, ps2c float64
@@ -85,7 +87,9 @@ func NewBranchSiteGamma(data *Data, fixw2 bool, ncatsg, ncatcg int, proportional
 		q1s:          make([]*codon.EMatrix, scat*ncatcg),
 		q2s:          make([]*codon.EMatrix, scat*ncatcg),
 		gammas:       make([]float64, ncatsg),
+		gammasprop:   make([]float64, ncatsg),
 		gammac:       make([]float64, ncatcg),
+		gammacprop:   make([]float64, ncatcg),
 		tmp:          make([]float64, maxInt(ncatcg, ncatsg, 3)),
 	}
 	m.BaseModel = NewBaseModel(data, m)
@@ -94,6 +98,15 @@ func NewBranchSiteGamma(data *Data, fixw2 bool, ncatsg, ncatcg int, proportional
 		m.q0s[i] = codon.NewEMatrix(data.cFreq)
 		m.q1s[i] = codon.NewEMatrix(data.cFreq)
 		m.q2s[i] = codon.NewEMatrix(data.cFreq)
+	}
+
+	if !m.proportional {
+		for i := range m.gammacprop {
+			m.gammacprop[i] = 1 / float64(len(m.gammacprop))
+		}
+		for i := range m.gammasprop {
+			m.gammasprop[i] = 1 / float64(len(m.gammasprop))
+		}
 	}
 
 	m.setupParameters()
@@ -129,21 +142,23 @@ func (m *BranchSiteGamma) Copy() optimize.Optimizable {
 
 		proportional: m.proportional,
 
-		ncatsg: m.ncatsg,
-		alphas: m.alphas,
-		gammas: make([]float64, m.ncatsg),
-		rs1s:   m.rs1s,
-		rs2s:   m.rs2s,
-		ps1s:   m.ps1s,
-		ps2s:   m.ps2s,
+		ncatsg:     m.ncatsg,
+		alphas:     m.alphas,
+		gammas:     make([]float64, m.ncatsg),
+		gammasprop: make([]float64, m.ncatsg),
+		rs1s:       m.rs1s,
+		rs2s:       m.rs2s,
+		ps1s:       m.ps1s,
+		ps2s:       m.ps2s,
 
-		ncatcg: m.ncatcg,
-		alphac: m.alphac,
-		gammac: make([]float64, m.ncatcg),
-		rs1c:   m.rs1c,
-		rs2c:   m.rs2c,
-		ps1c:   m.ps1c,
-		ps2c:   m.ps2c,
+		ncatcg:     m.ncatcg,
+		alphac:     m.alphac,
+		gammac:     make([]float64, m.ncatcg),
+		gammacprop: make([]float64, m.ncatcg),
+		rs1c:       m.rs1c,
+		rs2c:       m.rs2c,
+		ps1c:       m.ps1c,
+		ps2c:       m.ps2c,
 
 		tmp: make([]float64, maxInt(m.ncatcg, m.ncatsg, 3)),
 	}
@@ -153,6 +168,15 @@ func (m *BranchSiteGamma) Copy() optimize.Optimizable {
 		newM.q0s[i] = codon.NewEMatrix(m.data.cFreq)
 		newM.q1s[i] = codon.NewEMatrix(m.data.cFreq)
 		newM.q2s[i] = codon.NewEMatrix(m.data.cFreq)
+	}
+
+	if !m.proportional {
+		for i := range m.gammacprop {
+			m.gammacprop[i] = 1 / float64(len(m.gammacprop))
+		}
+		for i := range m.gammasprop {
+			m.gammasprop[i] = 1 / float64(len(m.gammasprop))
+		}
 	}
 
 	newM.setupParameters()
@@ -247,22 +271,22 @@ func (m *BranchSiteGamma) addParameters(fpg optimize.FloatParameterGenerator) {
 			ps2s.SetMax(1 - 1e-5)
 			ps2s.SetProposalFunc(optimize.NormalProposal(0.01))
 			m.parameters.Append(ps2s)
-			rs1s := fpg(&m.rs1s, "rs1s")
+			rs1s := fpg(&m.rs1s, "log_rs1s")
 			rs1s.SetOnChange(func() {
 				m.gammasdone = false
 			})
 			rs1s.SetPriorFunc(optimize.UniformPrior(0, 1, false, false))
-			rs1s.SetMin(1e-5)
-			rs1s.SetMax(1 - 1e-5)
+			rs1s.SetMin(-10)
+			rs1s.SetMax(-1e-4)
 			rs1s.SetProposalFunc(optimize.NormalProposal(0.01))
 			m.parameters.Append(rs1s)
-			rs2s := fpg(&m.rs2s, "rs2s_inv")
+			rs2s := fpg(&m.rs2s, "log_rs2s")
 			rs2s.SetOnChange(func() {
 				m.gammasdone = false
 			})
 			rs2s.SetPriorFunc(optimize.UniformPrior(0, 1, false, false))
-			rs2s.SetMin(1e-5)
-			rs2s.SetMax(1 - 1e-5)
+			rs2s.SetMin(1e-4)
+			rs2s.SetMax(10)
 			rs2s.SetProposalFunc(optimize.NormalProposal(0.01))
 			m.parameters.Append(rs2s)
 		}
@@ -363,14 +387,15 @@ func (m *BranchSiteGamma) SetDefaults() {
 	p1 := math.Exp(x1) / (1 + math.Exp(x0) + math.Exp(x1))
 	alphas := 0.5 + rand.Float64()*3
 	alphac := 0.5 + rand.Float64()*3
-	rs1s := 1e-5 + rand.Float64()*(1-2e-5)
-	rs2s := 1e-5 + rand.Float64()*(1-2e-5)
+	rs1s := -1e-4 - rand.Float64()*(10-1e-4)
+	rs2s := 1e-4 + rand.Float64()*(10-1e-4)
 	ps1s := 1e-5 + rand.Float64()*(1-2e-5)
 	ps2s := 1e-5 + rand.Float64()*(1-2e-5)
-	rs1c := 1e-5 + rand.Float64()*(1-2e-5)
-	rs2c := 1e-5 + rand.Float64()*(1-2e-5)
+	rs1c := -1e-4 - rand.Float64()*(10-1e-4)
+	rs2c := 1e-4 + rand.Float64()*(10-1e-4)
 	ps1c := 1e-5 + rand.Float64()*(1-2e-5)
 	ps2c := 1e-5 + rand.Float64()*(1-2e-5)
+
 	m.SetParameters(kappa, omega0, omega2, p0, p1, alphas, alphac,
 		rs1s, rs2s, ps1s, ps2s, rs1c, rs2c, ps1c, ps2c)
 }
@@ -421,14 +446,22 @@ func (m *BranchSiteGamma) setBranchMatrices() {
 // changing.
 func (m *BranchSiteGamma) updateProportions() {
 	scat := m.ncatsg * m.ncatsg * m.ncatsg
+	bothcat := m.ncatcg * scat
 	p0 := m.p0prop * m.p01sum
 	p1 := m.p01sum - p0
-	bothcat := m.ncatcg * scat
-	for i := 0; i < bothcat; i++ {
-		m.prop[0][i+bothcat*0] = p0 / float64(bothcat)
-		m.prop[0][i+bothcat*1] = p1 / float64(bothcat)
-		m.prop[0][i+bothcat*2] = (1 - p0 - p1) * p0 / (p0 + p1) / float64(bothcat)
-		m.prop[0][i+bothcat*3] = (1 - p0 - p1) * p1 / (p0 + p1) / float64(bothcat)
+	for c1 := 0; c1 < m.ncatsg; c1++ {
+		for c2 := 0; c2 < m.ncatsg; c2++ {
+			for c3 := 0; c3 < m.ncatsg; c3++ {
+				for ecl := range m.gammac {
+					catid := (((c1*m.ncatsg)+c2)*m.ncatsg+c3)*m.ncatcg + ecl
+					pq := m.gammasprop[c1] * m.gammasprop[c2] * m.gammasprop[c3] * m.gammacprop[ecl]
+					m.prop[0][catid+bothcat*0] = pq * p0
+					m.prop[0][catid+bothcat*1] = pq * p1
+					m.prop[0][catid+bothcat*2] = pq * (1 - p0 - p1) * p0 / (p0 + p1)
+					m.prop[0][catid+bothcat*3] = pq * (1 - p0 - p1) * p1 / (p0 + p1)
+				}
+			}
+		}
 	}
 
 	for _, node := range m.data.Tree.NodeIDArray() {
@@ -737,6 +770,16 @@ func (m *BranchSiteGamma) Final(neb, beb, codonRates, siteRates, codonOmega bool
 			m.PrintPosterior(m.summary.SitePosteriorBEB)
 		}
 	}
+	if m.ncatcg > 1 && m.proportional {
+		m.update()
+		log.Infof("Codon rates: %v", m.gammac)
+		log.Infof("Codon props: %v", m.gammacprop)
+	}
+	if m.ncatsg > 1 && m.proportional {
+		m.update()
+		log.Infof("Site rates: %v", m.gammas)
+		log.Infof("Site props: %v", m.gammasprop)
+	}
 }
 
 // update updates matrices and proportions.
@@ -746,16 +789,23 @@ func (m *BranchSiteGamma) update() {
 			if !m.proportional {
 				m.gammas = dist.DiscreteGamma(m.alphas, m.alphas, m.ncatsg, false, m.tmp, m.gammas)
 			} else {
-				synScale := m.rs1s*m.ps1s + 1*(1-m.ps1s)*m.ps2s + 1/m.rs2s*(1-m.ps1s)*(1-m.ps2s)
-				m.gammas[0] = m.rs1s / synScale
+				rs1s := math.Exp(m.rs1s)
+				rs2s := math.Exp(m.rs2s)
+
+				synScale := rs1s*m.ps1s + 1*(1-m.ps1s)*m.ps2s + rs2s*(1-m.ps1s)*(1-m.ps2s)
+				m.gammas[0] = rs1s / synScale
 				m.gammas[1] = 1 / synScale
-				m.gammas[2] = 1 / m.rs2s / synScale
+				m.gammas[2] = rs2s / synScale
+				m.gammasprop[0] = m.ps1s
+				m.gammasprop[1] = (1 - m.ps1s) * m.ps2s
+				m.gammasprop[2] = (1 - m.ps1s) * (1 - m.ps2s)
 			}
 			m.q0done = false
 			m.q1done = false
 			m.q2done = false
 		} else {
 			m.gammas[0] = 1
+			m.gammasprop[0] = 1
 		}
 		m.gammasdone = true
 	}
@@ -764,16 +814,23 @@ func (m *BranchSiteGamma) update() {
 			if !m.proportional {
 				m.gammac = dist.DiscreteGamma(m.alphac, m.alphac, m.ncatcg, false, m.tmp, m.gammac)
 			} else {
-				synScale := m.rs1c*m.ps1c + 1*(1-m.ps1c)*m.ps2c + 1/m.rs2c*(1-m.ps1c)*(1-m.ps2c)
-				m.gammac[0] = m.rs1c / synScale
+				rs1c := math.Exp(m.rs1c)
+				rs2c := math.Exp(m.rs2c)
+
+				synScale := rs1c*m.ps1c + 1*(1-m.ps1c)*m.ps2c + rs2c*(1-m.ps1c)*(1-m.ps2c)
+				m.gammac[0] = rs1c / synScale
 				m.gammac[1] = 1 / synScale
-				m.gammac[2] = 1 / m.rs2c / synScale
+				m.gammac[2] = rs2c / synScale
+				m.gammacprop[0] = m.ps1c
+				m.gammacprop[1] = (1 - m.ps1c) * m.ps2c
+				m.gammacprop[2] = (1 - m.ps1c) * (1 - m.ps2c)
 			}
 			m.q0done = false
 			m.q1done = false
 			m.q2done = false
 		} else {
 			m.gammac[0] = 1
+			m.gammacprop[0] = 1
 		}
 		m.gammacdone = true
 	}
