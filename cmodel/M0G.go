@@ -393,7 +393,7 @@ func (m *M0G) update() {
 				rs1s := math.Exp(m.rs1s)
 				rs2s := math.Exp(m.rs2s)
 
-				synScale := rs1s*m.ps1s + 1*(1-m.ps1s)*m.ps2s + 1/rs2s*(1-m.ps1s)*(1-m.ps2s)
+				synScale := rs1s*m.ps1s + 1*(1-m.ps1s)*m.ps2s + rs2s*(1-m.ps1s)*(1-m.ps2s)
 				m.gammas[0] = rs1s / synScale
 				m.gammas[1] = 1 / synScale
 				m.gammas[2] = rs2s / synScale
