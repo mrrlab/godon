@@ -530,8 +530,8 @@ func (m *M8) updateProportions() {
 				for ecl := range m.gammac {
 					catid := (((c1*m.ncatsg)+c2)*m.ncatsg+c3)*m.ncatcg + ecl
 					pq := m.gammasprop[c1] * m.gammasprop[c2] * m.gammasprop[c3] * m.gammacprop[ecl]
-					for i := range m.qb {
-						m.prop[0][catid+bothcat*i] = pq * p0 / float64(m.ncatb)
+					for bcat := 0; bcat < m.ncatb; bcat++ {
+						m.prop[0][catid+bothcat*bcat] = pq * p0 / float64(m.ncatb)
 					}
 					if m.addw {
 						m.prop[0][catid+bothcat*m.ncatb] = pq * p1
