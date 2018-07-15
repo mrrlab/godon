@@ -770,12 +770,12 @@ func (m *BranchSiteGamma) Final(neb, beb, codonRates, siteRates, codonOmega bool
 			m.PrintPosterior(m.summary.SitePosteriorBEB)
 		}
 	}
-	if m.ncatcg > 1 && m.proportional {
+	if m.ncatcg > 1 {
 		m.update()
 		log.Infof("Codon rates: %v", m.gammac)
 		log.Infof("Codon props: %v", m.gammacprop)
 	}
-	if m.ncatsg > 1 && m.proportional {
+	if m.ncatsg > 1 {
 		m.update()
 		log.Infof("Site rates: %v", m.gammas)
 		log.Infof("Site props: %v", m.gammasprop)
