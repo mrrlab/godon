@@ -80,6 +80,11 @@ func NewM8(data *Data, addw, fixw bool, ncatb, ncatsg, ncatcg int, proportional 
 	if ncatb < 2 {
 		panic("M8 requires at least two categories")
 	}
+	if proportional {
+		if (ncatsg != 3 && ncatsg != 1) || (ncatcg != 3 && ncatcg != 1) {
+			log.Fatal("Scheffler's parametrization is only supported for three discrete rates")
+		}
+	}
 	m = &M8{
 		addw:         addw,
 		fixw:         fixw,
@@ -139,9 +144,9 @@ func (m *M8) Copy() optimize.Optimizable {
 		q0:           make([]*codon.EMatrix, gcat*m.ncatcg),
 		tmp:          make([]float64, maxInt(m.ncatb, m.ncatsg, m.ncatcg, 3)),
 		ncatb:        m.ncatb,
-		proportional: m.proportional,
 		ncatsg:       m.ncatsg,
 		ncatcg:       m.ncatcg,
+		proportional: m.proportional,
 		gammas:       make([]float64, m.ncatsg),
 		gammasprop:   make([]float64, m.ncatsg),
 		gammac:       make([]float64, m.ncatcg),
