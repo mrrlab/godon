@@ -71,29 +71,29 @@ func (ms *modelSettings) createModel(copy bool) (cmodel.TreeOptimizableSiteClass
 		return cmodel.NewM0G(data, ms.ncatsr, ms.ncatcr, ms.proportional), nil
 	case "M1a":
 		log.Info("Using M1a model")
-		log.Infof("%d site gamma categories, %d codon gama categories", ms.ncatsr, ms.ncatcr)
+		log.Infof("%d site gamma categories, %d codon rate categories", ms.ncatsr, ms.ncatcr)
 		return cmodel.NewM2(data, false, ms.ncatsr, ms.ncatcr), nil
 	case "M2a":
 		log.Info("Using M2a model")
-		log.Infof("%d site gamma categories, %d codon gama categories", ms.ncatsr, ms.ncatcr)
+		log.Infof("%d site gamma categories, %d codon rate categories", ms.ncatsr, ms.ncatcr)
 		return cmodel.NewM2(data, true, ms.ncatsr, ms.ncatcr), nil
 	case "M7":
 		log.Info("Using M7 model")
-		log.Infof("%d beta categories, %d site gamma categories, %d codon gama categories", ms.ncatb, ms.ncatsr, ms.ncatcr)
+		log.Infof("%d beta categories, %d site gamma categories, %d codon rate categories", ms.ncatb, ms.ncatsr, ms.ncatcr)
 		if ms.proportional {
 			log.Info("Using Scheffler 2006 rates parametrization")
 		}
 		return cmodel.NewM8(data, false, false, ms.ncatb, ms.ncatsr, ms.ncatcr, ms.proportional), nil
 	case "M8":
 		log.Info("Using M8 model")
-		log.Infof("%d beta categories, %d site gamma categories, %d codon gama categories", ms.ncatb, ms.ncatsr, ms.ncatcr)
+		log.Infof("%d beta categories, %d site gamma categories, %d codon rate categories", ms.ncatb, ms.ncatsr, ms.ncatcr)
 		if ms.proportional {
 			log.Info("Using Scheffler 2006 rates parametrization")
 		}
 		return cmodel.NewM8(data, true, ms.fixw, ms.ncatb, ms.ncatsr, ms.ncatcr, ms.proportional), nil
 	case "BSG":
 		log.Info("Using branch site gamma model")
-		log.Infof("%d site gamma categories, %d codon gama categories", ms.ncatsr, ms.ncatcr)
+		log.Infof("%d site gamma categories, %d codon rate categories", ms.ncatsr, ms.ncatcr)
 		if ms.proportional {
 			log.Info("Using Scheffler 2006 rates parametrization")
 		}
