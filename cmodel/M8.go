@@ -266,7 +266,7 @@ func (m *M8) addParameters(fpg optimize.FloatParameterGenerator) {
 			ps2s.SetMax(1 - 1e-5)
 			ps2s.SetProposalFunc(optimize.NormalProposal(0.01))
 			m.parameters.Append(ps2s)
-			rs1s := fpg(&m.rs1s, "log_rs1s")
+			rs1s := fpg(&m.rs1s, "ln_rs1s")
 			rs1s.SetOnChange(func() {
 				m.gammasdone = false
 			})
@@ -275,7 +275,7 @@ func (m *M8) addParameters(fpg optimize.FloatParameterGenerator) {
 			rs1s.SetMax(-1e-4)
 			rs1s.SetProposalFunc(optimize.NormalProposal(0.01))
 			m.parameters.Append(rs1s)
-			rs2s := fpg(&m.rs2s, "log_rs2s")
+			rs2s := fpg(&m.rs2s, "ln_rs2s")
 			rs2s.SetOnChange(func() {
 				m.gammasdone = false
 			})
@@ -317,7 +317,7 @@ func (m *M8) addParameters(fpg optimize.FloatParameterGenerator) {
 			ps2c.SetMax(1 - 1e-5)
 			ps2c.SetProposalFunc(optimize.NormalProposal(0.01))
 			m.parameters.Append(ps2c)
-			rs1c := fpg(&m.rs1c, "log_rs1c")
+			rs1c := fpg(&m.rs1c, "ln_rs1c")
 			rs1c.SetOnChange(func() {
 				m.gammacdone = false
 			})
@@ -326,7 +326,7 @@ func (m *M8) addParameters(fpg optimize.FloatParameterGenerator) {
 			rs1c.SetMax(-1e-4)
 			rs1c.SetProposalFunc(optimize.NormalProposal(0.01))
 			m.parameters.Append(rs1c)
-			rs2c := fpg(&m.rs2c, "log_rs2c")
+			rs2c := fpg(&m.rs2c, "ln_rs2c")
 			rs2c.SetOnChange(func() {
 				m.gammacdone = false
 			})
