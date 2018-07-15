@@ -322,22 +322,22 @@ func (m *BranchSiteGamma) addParameters(fpg optimize.FloatParameterGenerator) {
 			ps2c.SetMax(1 - 1e-5)
 			ps2c.SetProposalFunc(optimize.NormalProposal(0.01))
 			m.parameters.Append(ps2c)
-			rs1c := fpg(&m.rs1c, "rs1c")
+			rs1c := fpg(&m.rs1c, "log_rs1c")
 			rs1c.SetOnChange(func() {
 				m.gammacdone = false
 			})
-			rs1c.SetPriorFunc(optimize.UniformPrior(0, 1, false, false))
-			rs1c.SetMin(1e-5)
-			rs1c.SetMax(1 - 1e-5)
+			rs1c.SetPriorFunc(optimize.UniformPrior(-10, -1e-4, false, false))
+			rs1c.SetMin(-10)
+			rs1c.SetMax(-1e-4)
 			rs1c.SetProposalFunc(optimize.NormalProposal(0.01))
 			m.parameters.Append(rs1c)
-			rs2c := fpg(&m.rs2c, "rs2c_inv")
+			rs2c := fpg(&m.rs2c, "log_rs2c")
 			rs2c.SetOnChange(func() {
 				m.gammacdone = false
 			})
-			rs2c.SetPriorFunc(optimize.UniformPrior(0, 1, false, false))
-			rs2c.SetMin(1e-5)
-			rs2c.SetMax(1 - 1e-5)
+			rs2c.SetPriorFunc(optimize.UniformPrior(1e-4, 10, false, false))
+			rs2c.SetMin(1e-4)
+			rs2c.SetMax(10)
 			rs2c.SetProposalFunc(optimize.NormalProposal(0.01))
 			m.parameters.Append(rs2c)
 		}
