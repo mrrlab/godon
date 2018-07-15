@@ -372,7 +372,7 @@ func (m *BranchSiteGamma) SetParameters(kappa float64, omega0, omega2 float64, p
 // GetParameters returns the model parameter values.
 func (m *BranchSiteGamma) GetParameters() (kappa float64, omega0, omega2 float64, p0, p1 float64, alphas, alphac float64,
 	rs1s, rs2s, ps1s, ps2s float64, rs1c, rs2c, ps1c, ps2c float64) {
-	return m.kappa, m.omega0, m.omega2, m.p01sum * m.p0prop, m.p01sum * (1 - m.p0prop), m.alphas, m.alphac, rs1s, rs2s, ps1s, ps2s, rs1c, rs2c, ps1c, ps2c
+	return m.kappa, m.omega0, m.omega2, m.p01sum * m.p0prop, m.p01sum * (1 - m.p0prop), m.alphas, m.alphac, m.rs1s, m.rs2s, m.ps1s, m.ps2s, m.rs1c, m.rs2c, m.ps1c, m.ps2c
 }
 
 // SetDefaults sets the default initial parameter values.
