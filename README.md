@@ -64,7 +64,7 @@ The software was tested on GNU/Linux and Mac OS X.
 
 You can fetch the latest statically compiled binary for GNU/Linux from
 the downloads section; do not forget to make it executable prior to
-running (`chmod +x godon-linux-gnu-x86_64`).
+running (`chmod +x godon-master-linux-gnu-x86_64`).
 
 ## Compiling from source
 
