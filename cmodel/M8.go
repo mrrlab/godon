@@ -257,7 +257,7 @@ func (m *M8) addParameters(fpg optimize.FloatParameterGenerator) {
 			ps1s.SetOnChange(func() {
 				m.gammasdone = false
 			})
-			ps1s.SetPriorFunc(optimize.UniformPrior(0, 1, false, false))
+			ps1s.SetPriorFunc(optimize.UniformPrior(1e-5, 1 - 1e-5, false, false))
 			ps1s.SetMin(1e-5)
 			ps1s.SetMax(1 - 1e-5)
 			ps1s.SetProposalFunc(optimize.NormalProposal(0.01))
@@ -266,7 +266,7 @@ func (m *M8) addParameters(fpg optimize.FloatParameterGenerator) {
 			ps2s.SetOnChange(func() {
 				m.gammasdone = false
 			})
-			ps2s.SetPriorFunc(optimize.UniformPrior(0, 1, false, false))
+			ps2s.SetPriorFunc(optimize.UniformPrior(1e-5, 1 - 1e-5, false, false))
 			ps2s.SetMin(1e-5)
 			ps2s.SetMax(1 - 1e-5)
 			ps2s.SetProposalFunc(optimize.NormalProposal(0.01))
@@ -275,7 +275,7 @@ func (m *M8) addParameters(fpg optimize.FloatParameterGenerator) {
 			rs1s.SetOnChange(func() {
 				m.gammasdone = false
 			})
-			rs1s.SetPriorFunc(optimize.UniformPrior(0, 1, false, false))
+			rs1s.SetPriorFunc(optimize.UniformPrior(-10, -1e-4, false, false))
 			rs1s.SetMin(-10)
 			rs1s.SetMax(-1e-4)
 			rs1s.SetProposalFunc(optimize.NormalProposal(0.01))
@@ -284,7 +284,7 @@ func (m *M8) addParameters(fpg optimize.FloatParameterGenerator) {
 			rs2s.SetOnChange(func() {
 				m.gammasdone = false
 			})
-			rs2s.SetPriorFunc(optimize.UniformPrior(0, 1, false, false))
+			rs2s.SetPriorFunc(optimize.UniformPrior(1e-4, 10, false, false))
 			rs2s.SetMin(1e-4)
 			rs2s.SetMax(10)
 			rs2s.SetProposalFunc(optimize.NormalProposal(0.01))
@@ -308,7 +308,7 @@ func (m *M8) addParameters(fpg optimize.FloatParameterGenerator) {
 			ps1c.SetOnChange(func() {
 				m.gammacdone = false
 			})
-			ps1c.SetPriorFunc(optimize.UniformPrior(0, 1, false, false))
+			ps1c.SetPriorFunc(optimize.UniformPrior(1e-5, 1 - 1e-5, false, false))
 			ps1c.SetMin(1e-5)
 			ps1c.SetMax(1 - 1e-5)
 			ps1c.SetProposalFunc(optimize.NormalProposal(0.01))
@@ -317,7 +317,7 @@ func (m *M8) addParameters(fpg optimize.FloatParameterGenerator) {
 			ps2c.SetOnChange(func() {
 				m.gammacdone = false
 			})
-			ps2c.SetPriorFunc(optimize.UniformPrior(0, 1, false, false))
+			ps2c.SetPriorFunc(optimize.UniformPrior(1e-5, 1 - 1e-5, false, false))
 			ps2c.SetMin(1e-5)
 			ps2c.SetMax(1 - 1e-5)
 			ps2c.SetProposalFunc(optimize.NormalProposal(0.01))
