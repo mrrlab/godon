@@ -368,6 +368,14 @@ func (m *M8) SetParameters(p0, p, q, kappa, omega, alphas, alphac float64,
 	}
 	m.alphas = alphas
 	m.alphac = alphac
+	m.rs1s = rs1s
+	m.rs2s = rs2s
+	m.ps1s = ps1s
+	m.ps2s = ps2s
+	m.rs1c = rs1c
+	m.rs2c = rs2c
+	m.ps1c = ps1c
+	m.ps2c = ps2c
 	m.gammasdone = false
 	m.qbdone = false
 	m.q0done = false
