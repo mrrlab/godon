@@ -278,7 +278,7 @@ func main() {
 			}{&callSummary, hTestSummary[0]}
 		} else { // multiple branches were tested
 			callSummary.Tests = hTestSummary
-			summary = callSummary
+			summary = &callSummary
 		}
 	default:
 		log.Fatalf("command %v not implemented", cmd)
