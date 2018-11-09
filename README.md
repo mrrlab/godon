@@ -12,9 +12,9 @@ Godon development was supported Swiss National Science Foundation
 * Godon supports rate variation (see [the
   manuscript](https://dx.doi.org/10.1101/174839)). There are three
   models which support rate variation: branch-site (model `BSG`), M8
-  (model `M8`) and M0 (model `M0`). You need to specify the number of
+  (model `M8`) and M0 (model `M0G`). You need to specify the number of
   discrete categories. Otherwise, there will be no rate variation in
-  the model. Use `--ncat-site-gamma` or `--ncat-codon-gamma` for
+  the model. Use `--ncat-site-rate` or `--ncat-codon-rate` for
   [site rate variation](https://dx.doi.org/10.1093/molbev/msr162) and
   [codon rate variation](https://dx.doi.org/10.1101/174839)
   respectively.

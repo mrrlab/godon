@@ -9,12 +9,13 @@ import (
 
 // modelSettings stores settings for creating a new model.
 type modelSettings struct {
-	name   string
-	data   *cmodel.Data
-	fixw   bool
-	ncatb  int
-	ncatsg int
-	ncatcg int
+	name         string
+	data         *cmodel.Data
+	fixw         bool
+	ncatb        int
+	ncatsr       int
+	ncatcr       int
+	proportional bool
 
 	noOptBrLen  bool
 	maxBrLen    float64
@@ -29,12 +30,13 @@ type modelSettings struct {
 // variables (command-line arguments).
 func newModelSettings(data *cmodel.Data) *modelSettings {
 	return &modelSettings{
-		name:   *model,
-		data:   data,
-		fixw:   *fixw,
-		ncatb:  *ncatb,
-		ncatsg: *ncatsg,
-		ncatcg: *ncatcg,
+		name:         *model,
+		data:         data,
+		fixw:         *fixw,
+		ncatb:        *ncatb,
+		ncatsr:       *ncatsr,
+		ncatcr:       *ncatcr,
+		proportional: *proportional,
 
 		noOptBrLen:  *noOptBrLen,
 		maxBrLen:    *maxBrLen,
@@ -66,31 +68,36 @@ func (ms *modelSettings) createModel(copy bool) (cmodel.TreeOptimizableSiteClass
 		return cmodel.NewM0(data), nil
 	case "M0G":
 		log.Info("Using M0G model")
-		return cmodel.NewM0G(data, ms.ncatsg, ms.ncatcg), nil
+		return cmodel.NewM0G(data, ms.ncatsr, ms.ncatcr, ms.proportional), nil
 	case "M1a":
 		log.Info("Using M1a model")
-		log.Infof("%d site gamma categories, %d codon gama categories", ms.ncatsg, ms.ncatcg)
-		return cmodel.NewM2(data, false, ms.ncatsg, ms.ncatcg), nil
+		log.Infof("%d site gamma categories, %d codon rate categories", ms.ncatsr, ms.ncatcr)
+		return cmodel.NewM2(data, false, ms.ncatsr, ms.ncatcr), nil
 	case "M2a":
 		log.Info("Using M2a model")
-		log.Infof("%d site gamma categories, %d codon gama categories", ms.ncatsg, ms.ncatcg)
-		return cmodel.NewM2(data, true, ms.ncatsg, ms.ncatcg), nil
+		log.Infof("%d site gamma categories, %d codon rate categories", ms.ncatsr, ms.ncatcr)
+		return cmodel.NewM2(data, true, ms.ncatsr, ms.ncatcr), nil
 	case "M7":
 		log.Info("Using M7 model")
-		log.Infof("%d beta categories, %d site gamma categories, %d codon gama categories", ms.ncatb, ms.ncatsg, ms.ncatcg)
-		return cmodel.NewM8(data, false, false, ms.ncatb, ms.ncatsg, ms.ncatcg), nil
+		log.Infof("%d beta categories, %d site gamma categories, %d codon rate categories", ms.ncatb, ms.ncatsr, ms.ncatcr)
+		if ms.proportional {
+			log.Info("Using Scheffler 2006 rates parametrization")
+		}
+		return cmodel.NewM8(data, false, false, ms.ncatb, ms.ncatsr, ms.ncatcr, ms.proportional), nil
 	case "M8":
 		log.Info("Using M8 model")
-		log.Infof("%d beta categories, %d site gamma categories, %d codon gama categories", ms.ncatb, ms.ncatsg, ms.ncatcg)
-		return cmodel.NewM8(data, true, ms.fixw, ms.ncatb, ms.ncatsg, ms.ncatcg), nil
+		log.Infof("%d beta categories, %d site gamma categories, %d codon rate categories", ms.ncatb, ms.ncatsr, ms.ncatcr)
+		if ms.proportional {
+			log.Info("Using Scheffler 2006 rates parametrization")
+		}
+		return cmodel.NewM8(data, true, ms.fixw, ms.ncatb, ms.ncatsr, ms.ncatcr, ms.proportional), nil
 	case "BSG":
 		log.Info("Using branch site gamma model")
-		log.Infof("%d site gamma categories, %d codon gama categories", ms.ncatsg, ms.ncatcg)
-		return cmodel.NewBranchSiteGamma(data, ms.fixw, ms.ncatsg, ms.ncatcg), nil
-	case "BSGE":
-		log.Info("Using branch site gamma model with explicit rates")
-		log.Infof("%d site gamma categories, %d codon gama categories", ms.ncatsg, ms.ncatcg)
-		return cmodel.NewBranchSiteGammaERates(data, ms.fixw, ms.ncatsg, ms.ncatcg), nil
+		log.Infof("%d site gamma categories, %d codon rate categories", ms.ncatsr, ms.ncatcr)
+		if ms.proportional {
+			log.Info("Using Scheffler 2006 rates parametrization")
+		}
+		return cmodel.NewBranchSiteGamma(data, ms.fixw, ms.ncatsr, ms.ncatcr, ms.proportional), nil
 	case "BS":
 		log.Info("Using branch site model")
 		return cmodel.NewBranchSite(data, ms.fixw), nil

@@ -21,7 +21,7 @@ func TestBSCG(tst *testing.T) {
 		tst.Error("Error: ", err)
 	}
 
-	bsg := cmodel.NewBranchSiteGamma(data, true, 1, 4)
+	bsg := cmodel.NewBranchSiteGamma(data, true, 1, 4, false)
 	m := optimize.Optimizable(bsg).Copy()
 	npar := len(bsg.GetFloatParameters())
 	if npar != 5 {
@@ -52,7 +52,7 @@ func TestBSSG(tst *testing.T) {
 		tst.Error("Error: ", err)
 	}
 
-	bsg := cmodel.NewBranchSiteGamma(data, true, 4, 1)
+	bsg := cmodel.NewBranchSiteGamma(data, true, 4, 1, false)
 	m := optimize.Optimizable(bsg).Copy()
 	npar := len(bsg.GetFloatParameters())
 	if npar != 5 {

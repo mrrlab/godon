@@ -127,6 +127,11 @@ type BaseOptimizer struct {
 func (o *BaseOptimizer) SetOptimizable(opt Optimizable) {
 	o.Optimizable = opt
 	o.parameters = opt.GetFloatParameters()
+	log.Debug("Parameters:")
+	for _, par := range o.parameters {
+		// debug parameter info
+		log.Debugf("%s: [%f, %f]", par.Name(), par.GetMin(), par.GetMax())
+	}
 }
 
 // GetOptimizable get the model.
