@@ -5,8 +5,6 @@ Godon is codon models software written in [Go](https://golang.org/).
 Godon development was supported Swiss National Science Foundation
 (grant numbers CR32I3_143768, IZLRZ3_163872).
 
-**Warning**: Godon is currently in a beta stage.
-
 ## What is special about Godon
 
 * Godon supports rate variation (see [the
