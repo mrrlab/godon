@@ -84,7 +84,7 @@ var (
 	printFull         = opt.Flag("full-likelihood", "print full (non-aggregated) likelihood in the end of optimization").Bool()
 
 	// hypTest flags
-	hTest      = app.Command("test", "Run test for positive selecton")
+	hTest      = app.Command("test", "Run test for positive selection")
 	hTestModel = hTest.Arg("model",
 		"model type (BS for branch site, BSG for branch-site + gamma, M2a vs M1a or M8)").
 		Required().
