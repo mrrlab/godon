@@ -128,6 +128,8 @@ $ bin/install.sh
 
 ## Running
 
+Don't forget to check out [the tutorial](https://github.com/idavydov/godon-tutorial).
+
 You can find sample datasets in `godon/cmodel/testdata`.
 
 You can tell Godon to run a pair of models (M8 vs. M8a or branch-site
