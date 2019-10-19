@@ -183,7 +183,7 @@ func (o *BaseOptimizer) PrintLine(par FloatParameters, l float64, repPeriod int)
 		if o.i%repPeriod == 0 {
 			fmt.Fprintf(o.output, "%d\t%f\t%s\n", o.i, l, par.ValuesString())
 		}
-		fmt.Printf("iter=%d lnL=%0.3f      \r", o.i, l)
+		fmt.Fprintf(os.Stderr, "iter=%d lnL=%0.3f      \r", o.i, l)
 	}
 }
 

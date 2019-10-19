@@ -200,7 +200,7 @@ func main() {
 		defer f.Close()
 		backend = logging.NewLogBackend(f, "", 0)
 	} else {
-		backend = logging.NewLogBackend(os.Stderr, "", 0)
+		backend = logging.NewLogBackend(os.Stdout, "", 0)
 	}
 	logging.SetBackend(backend)
 
