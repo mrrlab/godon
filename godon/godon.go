@@ -276,6 +276,7 @@ func main() {
 			log.Fatalf("Error opening checkpoint file: %v", err)
 		}
 
+		// check if command line in checkpoint file matches the current command line
 		err = checkpointDB.Update(func(tx *bolt.Tx) error {
 			log.Info("Using checkpoint file")
 			bucket, err := tx.CreateBucketIfNotExists(mainBucket)
@@ -288,11 +289,13 @@ func main() {
 			cmdLine := bucket.Get(key)
 
 			if cmdLine == nil {
+				// no command line saved; perhaps newly created database
 				err = bucket.Put(key, cmdLineRef)
 				if err != nil {
 					return err
 				}
 			} else {
+				// command line saved in db
 				if !bytes.Equal(cmdLine, cmdLineRef) {
 					log.Errorf("Command string mismatch (checkpoint file)\n saved:   %v\n current: %v\n",
 						zeroToSpace(cmdLine),
