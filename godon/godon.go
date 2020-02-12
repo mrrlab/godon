@@ -25,7 +25,9 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math/rand"
 	"os"
@@ -184,7 +186,13 @@ var (
 	trajF *os.File
 
 	checkpointDB *bolt.DB
+	mainBucket   = []byte("main")
 )
+
+// zeroToSpace converts byte slice into string while replacing \0 character with space
+func zeroToSpace(s []byte) string {
+	return strings.Replace(string(s), "\000", " ", -1)
+}
 
 func main() {
 	startTime := time.Now()
@@ -266,6 +274,37 @@ func main() {
 		checkpointDB, err := bolt.Open(*checkpointFn, 0666, nil)
 		if err != nil {
 			log.Fatalf("Error opening checkpoint file: %v", err)
+		}
+
+		err = checkpointDB.Update(func(tx *bolt.Tx) error {
+			log.Info("Using checkpoint file")
+			bucket, err := tx.CreateBucketIfNotExists(mainBucket)
+			if err != nil {
+				return err
+			}
+
+			key := []byte("cmdLine")
+			cmdLineRef := []byte(strings.Join(os.Args, "\000"))
+			cmdLine := bucket.Get(key)
+
+			if cmdLine == nil {
+				err = bucket.Put(key, cmdLineRef)
+				if err != nil {
+					return err
+				}
+			} else {
+				if !bytes.Equal(cmdLine, cmdLineRef) {
+					log.Errorf("Command string mismatch (checkpoint file)\n saved:   %v\n current: %v\n",
+						zeroToSpace(cmdLine),
+						zeroToSpace(cmdLineRef))
+					return errors.New("Command line mismatch in checkpoint file")
+				}
+				log.Warning("Existing checkpoint file found; this can affect reproducibility with regards to random number generation")
+			}
+			return nil
+		})
+		if err != nil {
+			log.Fatalf("Checkpoint file was used with different parameters: %v", err)
 		}
 		defer checkpointDB.Close()
 	}
