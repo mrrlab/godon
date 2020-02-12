@@ -189,11 +189,6 @@ var (
 	mainBucket   = []byte("main")
 )
 
-// zeroToSpace converts byte slice into string while replacing \0 character with space
-func zeroToSpace(s []byte) string {
-	return strings.Replace(string(s), "\000", " ", -1)
-}
-
 func main() {
 	startTime := time.Now()
 	// support -h flag
@@ -285,7 +280,10 @@ func main() {
 			}
 
 			key := []byte("cmdLine")
-			cmdLineRef := []byte(strings.Join(os.Args, "\000"))
+			cmdLineRef, err := json.Marshal(os.Args)
+			if err != nil {
+				return err
+			}
 			cmdLine := bucket.Get(key)
 
 			if cmdLine == nil {
@@ -298,8 +296,8 @@ func main() {
 				// command line saved in db
 				if !bytes.Equal(cmdLine, cmdLineRef) {
 					log.Errorf("Command string mismatch (checkpoint file)\n saved:   %v\n current: %v\n",
-						zeroToSpace(cmdLine),
-						zeroToSpace(cmdLineRef))
+						string(cmdLine),
+						string(cmdLineRef))
 					return errors.New("Command line mismatch in checkpoint file")
 				}
 				log.Warning("Existing checkpoint file found; this can affect reproducibility with regards to random number generation")
