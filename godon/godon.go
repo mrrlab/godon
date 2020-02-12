@@ -37,6 +37,8 @@ import (
 	"gopkg.in/alecthomas/kingpin.v2"
 
 	"github.com/op/go-logging"
+
+	bolt "go.etcd.io/bbolt"
 )
 
 // These three variables are set during the compilation.
@@ -170,15 +172,18 @@ var (
 	cpuProfile = app.Flag("cpu-profile", "write cpu profile to file").String()
 
 	// input/output
-	logF     = app.Flag("out", "write log to a file").Short('o').String()
-	trajFn   = app.Flag("trajectory", "write optimization trajectory to a file").Short('t').String()
-	logLevel = app.Flag("log-level", "set loglevel "+
+	logF         = app.Flag("out", "write log to a file").Short('o').String()
+	trajFn       = app.Flag("trajectory", "write optimization trajectory to a file").Short('t').String()
+	checkpointFn = app.Flag("checkpoint", "checkpoint file (possible to continue in case of termination)").Short('c').String()
+	logLevel     = app.Flag("log-level", "set loglevel "+
 		"("+strings.Join(logLevels, ", ")+")").
 		Short('l').Default("notice").
 		Enum(logLevels...)
 	jsonF = app.Flag("json", "write json output to a file").Short('j').String()
 
 	trajF *os.File
+
+	checkpointDB *bolt.DB
 )
 
 func main() {
@@ -255,6 +260,14 @@ func main() {
 			log.Fatalf("Error creating trajectory file: %v", err)
 		}
 		defer trajF.Close()
+	}
+
+	if *checkpointFn != "" {
+		checkpointDB, err := bolt.Open(*checkpointFn, 0666, nil)
+		if err != nil {
+			log.Fatalf("Error opening checkpoint file: %v", err)
+		}
+		defer checkpointDB.Close()
 	}
 
 	var summary interface{}
