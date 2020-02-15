@@ -10,6 +10,8 @@ import (
 	"time"
 
 	"github.com/op/go-logging"
+
+	bolt "go.etcd.io/bbolt"
 )
 
 // log is the global logging variable.
@@ -43,6 +45,8 @@ type Optimizer interface {
 	SetReportPeriod(period int)
 	// SetTrajectoryOutput specifies an output writer for the trajectory.
 	SetTrajectoryOutput(io.Writer)
+	// SetCheckpointDB specifies database for checkpoint.
+	SetCheckpointDB(*bolt.DB)
 	// Starts the optimization or sampling.
 	Run(iterations int)
 	// GetMaxL returns the maximum likelihood value.
@@ -121,6 +125,8 @@ type BaseOptimizer struct {
 	otime, ftime float64
 	//startTime is a starting time for deltaT compuataions.
 	startTime time.Time
+
+	checkpointDB *bolt.DB
 }
 
 // SetOptimizable sets a model for the optimization.
@@ -262,6 +268,11 @@ func (o *BaseOptimizer) SaveStart() {
 	o.startPar = o.parameters.Values(nil)
 	o.maxL = l
 	o.maxLPar = o.parameters.Values(nil)
+}
+
+// SetCheckpointDB specifies database for checkpoint.
+func (o *BaseOptimizer) SetCheckpointDB(checkpointDB *bolt.DB) {
+	o.checkpointDB = checkpointDB
 }
 
 // Summary returns optimization summary.
