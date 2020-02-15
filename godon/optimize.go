@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 
+	"bitbucket.org/Davydov/godon/checkpoint"
 	"bitbucket.org/Davydov/godon/cmodel"
 )
 
@@ -50,6 +51,13 @@ func runOptimization(m cmodel.TreeOptimizableSiteClass, o *optimizerSettings, st
 		summary.StartingTree = m.GetTreeString()
 	}
 
+	var checkpointIO *checkpoint.CheckpointIO
+
+	if checkpointDB != nil {
+		checkpointIO = checkpoint.NewCheckpointIO(checkpointDB, bucket)
+		checkpointIO.GetParameters()
+	}
+
 	if len(start) > 0 {
 		setStart(m, start)
 	}
@@ -67,6 +75,11 @@ func runOptimization(m cmodel.TreeOptimizableSiteClass, o *optimizerSettings, st
 	opt, err := o.create()
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	if checkpointIO != nil {
+		opt.SetCheckpointIO(checkpointIO)
+
 	}
 
 	opt.Run(o.iterations)
@@ -113,7 +126,9 @@ func optimization() OptimizationSummary {
 
 	o := newOptimizerSettings(m)
 
-	summary := runOptimization(m, o, nil, 1, false)
+	bucket := []byte("single")
+
+	summary := runOptimization(m, o, nil, 1, bucket, false)
 
 	if *final {
 		m.Final(*neb, *beb, *codonRates, *siteRates, *codonOmega)

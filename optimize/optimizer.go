@@ -9,9 +9,9 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/op/go-logging"
+	"bitbucket.org/Davydov/godon/checkpoint"
 
-	bolt "go.etcd.io/bbolt"
+	"github.com/op/go-logging"
 )
 
 // log is the global logging variable.
@@ -45,8 +45,8 @@ type Optimizer interface {
 	SetReportPeriod(period int)
 	// SetTrajectoryOutput specifies an output writer for the trajectory.
 	SetTrajectoryOutput(io.Writer)
-	// SetCheckpointDB specifies database for checkpoint.
-	SetCheckpointDB(*bolt.DB)
+	// SetCheckpointIO sets CheckpointIO class.
+	SetCheckpointIO(*checkpoint.CheckpointIO)
 	// Starts the optimization or sampling.
 	Run(iterations int)
 	// GetMaxL returns the maximum likelihood value.
@@ -126,7 +126,7 @@ type BaseOptimizer struct {
 	//startTime is a starting time for deltaT compuataions.
 	startTime time.Time
 
-	checkpointDB *bolt.DB
+	checkpointIO *checkpoint.CheckpointIO
 }
 
 // SetOptimizable sets a model for the optimization.
@@ -191,6 +191,7 @@ func (o *BaseOptimizer) PrintLine(par FloatParameters, l float64, repPeriod int)
 		}
 		fmt.Fprintf(os.Stderr, "iter=%d lnL=%0.3f      \r", o.i, l)
 	}
+	o.SaveCheckpoint(false)
 }
 
 // GetNCalls return total number of likelihood function calls.
@@ -224,6 +225,7 @@ func (o *BaseOptimizer) PrintResults(quiet bool) {
 			}
 		}
 	}
+	o.SaveCheckpoint(true)
 }
 
 // GetMaxL returns the maximum likelihood value. Can me larger than
@@ -270,9 +272,29 @@ func (o *BaseOptimizer) SaveStart() {
 	o.maxLPar = o.parameters.Values(nil)
 }
 
-// SetCheckpointDB specifies database for checkpoint.
-func (o *BaseOptimizer) SetCheckpointDB(checkpointDB *bolt.DB) {
-	o.checkpointDB = checkpointDB
+// SetCheckpointIO sets object for checkpoint I/O.
+func (o *BaseOptimizer) SetCheckpointIO(cio *checkpoint.CheckpointIO) {
+	o.checkpointIO = cio
+}
+
+// SaveCheckpoint saves current optimization point.
+func (o *BaseOptimizer) SaveCheckpoint(final bool) {
+	if o.checkpointIO == nil {
+		return
+	}
+	// TODO: change to 30 sec
+	if final || o.checkpointIO.Old(0) {
+		log.Debugf("Saving new checkpoint (final=%v)", final)
+		data := &checkpoint.CheckpointData{
+			Parameters: o.parameters.GetMap(),
+			Likelihood: o.Likelihood(),
+			Iter: o.i,
+			Final: final,
+		}
+
+		go o.checkpointIO.Save(data)
+	}
+
 }
 
 // Summary returns optimization summary.
