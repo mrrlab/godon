@@ -52,7 +52,7 @@ func hypTest() (tests []HypTestSummary, optimizations []OptimizationSummary) {
 		}
 		m0opt := newOptimizerSettings(m0model)
 		log.Notice("Optimizing branch lengths using M0")
-		res := runOptimization(m0model, m0opt, nil, 1, true)
+		res := runOptimization(m0model, m0opt, nil, 1, nil, true)
 		optimizations = append(optimizations, res)
 		*noOptBrLen = true
 	}
@@ -125,7 +125,7 @@ func performSingleTest(data *cmodel.Data) (summary HypTestSummary) {
 	o0 := newOptimizerSettings(m0)
 
 	log.Notice("Running H0")
-	res0 := runOptimization(m0, o0, nil, 1, true)
+	res0 := runOptimization(m0, o0, nil, 1, nil, true)
 	res0.Hypothesis = "H0"
 	summary.Optimizations = append(summary.Optimizations, res0)
 
@@ -137,7 +137,7 @@ func performSingleTest(data *cmodel.Data) (summary HypTestSummary) {
 	o1 := newOptimizerSettings(m1)
 
 	log.Notice("Running H1")
-	res1 := runOptimization(m1, o1, nil, 1, true)
+	res1 := runOptimization(m1, o1, nil, 1, nil, true)
 	res1.Hypothesis = "H1"
 	summary.Optimizations = append(summary.Optimizations, res1)
 
@@ -169,7 +169,7 @@ func performSingleTest(data *cmodel.Data) (summary HypTestSummary) {
 
 			log.Noticef("Rerunning H1 because of negative LR (D=%g)",
 				lrt)
-			res1 = runOptimization(m1, o1, h0par, thoroughMin(l1), true)
+			res1 = runOptimization(m1, o1, h0par, thoroughMin(l1), nil, true)
 			res1.Hypothesis = "H1"
 			summary.Optimizations = append(summary.Optimizations, res1)
 			l1 = res1.Optimizer.GetMaxLikelihood()
@@ -205,7 +205,7 @@ func performSingleTest(data *cmodel.Data) (summary HypTestSummary) {
 
 			log.Noticef("Rerunning H0, trying to reduce LR (D=%g)",
 				lrt)
-			res0Alt := runOptimization(m0, o0, h1par, thoroughMin(l0), true)
+			res0Alt := runOptimization(m0, o0, h1par, thoroughMin(l0), nil, true)
 			res0Alt.Hypothesis = "H0"
 			summary.Optimizations = append(summary.Optimizations, res0Alt)
 			l0Alt := res0Alt.Optimizer.GetMaxLikelihood()
@@ -228,7 +228,7 @@ func performSingleTest(data *cmodel.Data) (summary HypTestSummary) {
 		o0.method = "none"
 		log.Noticef("Rerunning H0, trying to reduce LR (D=%g)",
 			lrt)
-		res0Alt := runOptimization(m0, o0, h1par, thoroughMin(l0), true)
+		res0Alt := runOptimization(m0, o0, h1par, thoroughMin(l0), nil, true)
 		res0Alt.Hypothesis = "H0"
 		summary.Optimizations = append(summary.Optimizations, res0Alt)
 		l0Alt := res0Alt.Optimizer.GetMaxLikelihood()
@@ -250,7 +250,7 @@ func performSingleTest(data *cmodel.Data) (summary HypTestSummary) {
 
 		log.Noticef("Rerunning H1 because of negative LR (D=%g)",
 			lrt)
-		res1 = runOptimization(m1, o1, h0par, thoroughMin(l1), true)
+		res1 = runOptimization(m1, o1, h0par, thoroughMin(l1), nil, true)
 		res1.Hypothesis = "H1"
 		summary.Optimizations = append(summary.Optimizations, res1)
 		l1 = res1.Optimizer.GetMaxLikelihood()
