@@ -163,6 +163,15 @@ func (p *FloatParameters) SetFromMap(m map[string]float64) error {
 	return nil
 }
 
+// GetMap get parameters from FloatParameters in a map.
+func (p FloatParameters) GetMap() (map[string]float64) {
+	m := make(map[string]float64, len(p))
+	for _, par := range p {
+		m[par.Name()] = par.Get()
+	}
+	return m
+}
+
 // ReadFromJSON sets parameter values from JSON map.
 func (p *FloatParameters) ReadFromJSON(filename string) error {
 	contents, err := ioutil.ReadFile(filename)
