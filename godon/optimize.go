@@ -55,7 +55,7 @@ func runOptimization(m cmodel.TreeOptimizableSiteClass, o *optimizerSettings, st
 	var checkpointData *checkpoint.CheckpointData
 	var err error
 
-	if checkpointDB != nil {
+	if checkpointDB != nil && bucket != nil {
 		checkpointIO = checkpoint.NewCheckpointIO(checkpointDB, bucket)
 		checkpointData, err = checkpointIO.GetParameters()
 		if err != nil {
