@@ -58,7 +58,6 @@ func (s *CheckpointIO) Save(data *CheckpointData) error {
 		err = bucket.Put(DATA, dataB)
 		return err
 	})
-	println("checkpoint saved", string(dataB), string(s.bucket))
 	if err != nil {
 		log.Error("Error saving checkpoint", err)
 	}
@@ -76,8 +75,6 @@ func (s *CheckpointIO) GetParameters() (*CheckpointData, error) {
 		}
 
 		b := bucket.Get(DATA)
-
-		println("checkpoint load", string(b), string(s.bucket))
 
 		err := json.Unmarshal(b, &data)
 		return err
