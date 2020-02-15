@@ -52,23 +52,41 @@ func runOptimization(m cmodel.TreeOptimizableSiteClass, o *optimizerSettings, st
 	}
 
 	var checkpointIO *checkpoint.CheckpointIO
+	var checkpointData *checkpoint.CheckpointData
+	var err error
 
 	if checkpointDB != nil {
 		checkpointIO = checkpoint.NewCheckpointIO(checkpointDB, bucket)
-		checkpointIO.GetParameters()
+		checkpointData, err = checkpointIO.GetParameters()
+		if err != nil {
+			log.Error("Error loading checkpoint data:", err)
+		}
 	}
 
 	if len(start) > 0 {
 		setStart(m, start)
 	}
 
-	if minLikelihood <= 0 && m.Likelihood() < minLikelihood {
+	final := false
+	if checkpointData != nil {
+		if !checkpointData.Final {
+			log.Noticef("Starting optimization from checkpoint (lnL=%v)", checkpointData.Likelihood)
+		} else {
+			log.Noticef("No optimization needed (checkpoint, lnL=%v)", checkpointData.Likelihood)
+			final = true
+		}
+		setStart(m, checkpointData.Parameters)
+	}
+
+	if final || (minLikelihood <= 0 && m.Likelihood() < minLikelihood) {
 		// restore method before leaving the function
 		defer func(savedMethod string) {
 			o.method = savedMethod
 		}(o.method)
 
-		log.Info("Won't optimize, since starting point is no better")
+		if (!final) {
+			log.Info("Won't optimize, since starting point is no better")
+		}
 		o.method = "none"
 	}
 
