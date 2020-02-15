@@ -266,7 +266,7 @@ func main() {
 	}
 
 	if *checkpointFn != "" {
-		checkpointDB, err := bolt.Open(*checkpointFn, 0666, nil)
+		checkpointDB, err = bolt.Open(*checkpointFn, 0666, nil)
 		if err != nil {
 			log.Fatalf("Error opening checkpoint file: %v", err)
 		}
