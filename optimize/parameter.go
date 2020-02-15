@@ -1,6 +1,7 @@
 package optimize
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -137,10 +138,7 @@ func (p *FloatParameters) SetByName(name string, v float64) error {
 }
 
 // SetFromMap sets parameters from a map. This map is produced by JSON
-// parser usuall. This has algorithmic complexity of O(n^2), since we have to
-// check every parameter name every iteration. This usually doesn't matter
-// since the number of parameters is usually small, and this is done only
-// once in the beginning of run.
+// parser usually.
 func (p *FloatParameters) SetFromMap(m map[string]float64) error {
 	// number of parameters set from the map
 	if len(m) != len(*p) && len(m) != len(*p)+1 {
@@ -148,10 +146,10 @@ func (p *FloatParameters) SetFromMap(m map[string]float64) error {
 			len(m), len(*p))
 	}
 	cnt := 0
-	for pname, pval := range m {
-		err := p.SetByName(pname, pval)
-		// error means that name is not found
-		if err == nil {
+	for _, par := range *p {
+		val, ok := m[par.Name()]
+		if ok {
+			par.Set(val)
 			cnt++
 		}
 	}
@@ -167,17 +165,46 @@ func (p *FloatParameters) SetFromMap(m map[string]float64) error {
 
 // ReadFromJSON sets parameter values from JSON map.
 func (p *FloatParameters) ReadFromJSON(filename string) error {
-	file, err := ioutil.ReadFile(filename)
+	contents, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return err
 	}
+	err = p.UnmarshalJSON(contents)
+	return nil
+}
+
+// UnmarshalJSON sets parameters using JSON bytes.
+func (p *FloatParameters) UnmarshalJSON(b []byte) error {
 	var m map[string]float64
-	err = json.Unmarshal(file, &m)
+	err := json.Unmarshal(b, &m)
 	if err != nil {
 		return err
 	}
 	err = p.SetFromMap(m)
 	return err
+}
+
+// MarshalJSON creates a JSON representation of FlatParameters.
+func (p FloatParameters) MarshalJSON() ([]byte, error) {
+	buf := bytes.NewBuffer([]byte("{"))
+	for i, par := range p {
+		if i != 0 {
+			buf.WriteRune(',')
+		}
+		name, err := json.Marshal(par.Name())
+		if err != nil {
+			return nil, err
+		}
+		value, err := json.Marshal(par.Get())
+		if err != nil {
+			return nil, err
+		}
+		buf.Write(name)
+		buf.WriteRune(':')
+		buf.Write(value)
+	}
+	buf.WriteRune('}')
+	return buf.Bytes(), nil
 }
 
 // ReadLine sets values from a string.
