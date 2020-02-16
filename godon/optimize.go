@@ -112,6 +112,30 @@ func runOptimization(m cmodel.TreeOptimizableSiteClass, o *optimizerSettings, st
 	return summary
 }
 
+// checkpointParameters checkpoints model parameters
+func checkpointParameters(m cmodel.TreeOptimizableSiteClass, o *optimizerSettings, par map[string]float64,  key []byte) {
+	if checkpointDB != nil || key != nil {
+		return
+	}
+	checkpointIO := checkpoint.NewCheckpointIO(checkpointDB, key, *checkpointSeconds)
+
+	defer func(savedMethod string) {
+		o.method = savedMethod
+	}(o.method)
+	o.method = "none"
+
+	setStart(m, par)
+
+	opt, err := o.create()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	opt.SetCheckpointIO(checkpointIO)
+
+	opt.PrintResults(true)
+}
+
 // setStart sets starting point for model, or logs error message and exits.
 func setStart(m cmodel.TreeOptimizableSiteClass, start map[string]float64) {
 	par := m.GetFloatParameters()
