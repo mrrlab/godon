@@ -144,7 +144,7 @@ func optimization() OptimizationSummary {
 
 	o := newOptimizerSettings(m)
 
-	key := []byte("single")
+	key := []byte(*model + ":" + data.Tree.ShortClassString())
 
 	summary := runOptimization(m, o, nil, 1, key, false)
 
