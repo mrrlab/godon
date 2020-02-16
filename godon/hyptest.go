@@ -116,6 +116,20 @@ func saveSummary(summary interface{}, key []byte) {
 // performSingleTest preforms a test for given data
 func performSingleTest(data *cmodel.Data) (summary HypTestSummary) {
 	summary.Tree = data.Tree.ClassString()
+	clstr := data.Tree.ShortClassString()
+
+	keyFinal0 := []byte(*model + ":" + "H0" + ":final:" + clstr)
+	keyFinal1 := []byte(*model + ":" + "H1" + ":final:" + clstr)
+	final0SummarySaved, _ := checkpoint.LoadData(checkpointDB, keyFinal0)
+	final1SummarySaved, _ := checkpoint.LoadData(checkpointDB, keyFinal1)
+	finalAvail := false
+	if final0SummarySaved == nil || final1SummarySaved == nil {
+		// loading final only in case both finals are available
+		final0SummarySaved = nil
+		final1SummarySaved = nil
+	} else {
+		finalAvail = true
+	}
 
 	// names and default values of the H1 extra parameters
 	extraPar := make(map[string]float64, 2)
@@ -171,7 +185,7 @@ func performSingleTest(data *cmodel.Data) (summary HypTestSummary) {
 		o1.method = "none"
 	}
 
-	for updated, justUpdatedH0 := true, false; updated; {
+	for updated, justUpdatedH0 := true, false; updated && !finalAvail; {
 		// stop if nothing has been updated.
 		// this loop normally should run for a single time.
 		updated = false
@@ -238,7 +252,7 @@ func performSingleTest(data *cmodel.Data) (summary HypTestSummary) {
 
 	// get rid of sligtly positive LRT; this should require maximum one extra
 	// likelihood computation
-	if lrt := 2 * (l1 - l0); lrt > minLrt && (lrt <= *sThr || !*thorough) {
+	if lrt := 2 * (l1 - l0); lrt > minLrt && (lrt <= *sThr || !*thorough) && !finalAvail {
 		h1par := res1.Optimizer.GetMaxLikelihoodParameters()
 		for parName := range extraPar {
 			delete(h1par, parName)
@@ -259,7 +273,7 @@ func performSingleTest(data *cmodel.Data) (summary HypTestSummary) {
 
 	// one last round of getting rid of negative lrt, maximum one extra
 	// likelihood computation
-	if lrt := 2 * (l1 - l0); lrt < 0 {
+	if lrt := 2 * (l1 - l0); lrt < 0 && !finalAvail {
 		h0par := res0.Optimizer.GetMaxLikelihoodParameters()
 		for parName, parVal := range extraPar {
 			h0par[parName] = parVal
@@ -274,6 +288,12 @@ func performSingleTest(data *cmodel.Data) (summary HypTestSummary) {
 		summary.Optimizations = append(summary.Optimizations, res1)
 		l1 = res1.Optimizer.GetMaxLikelihood()
 	}
+
+	// checkpoint parameters after all the optimizations
+	h0par := res0.Optimizer.GetMaxLikelihoodParameters()
+	checkpointParameters(m0, o0, h0par, []byte(key0))
+	h1par := res1.Optimizer.GetMaxLikelihoodParameters()
+	checkpointParameters(m1, o1, h1par, []byte(key1))
 
 	log.Noticef("Final D=%g", 2*(l1-l0))
 
@@ -290,13 +310,18 @@ func performSingleTest(data *cmodel.Data) (summary HypTestSummary) {
 		runBEB = false
 	}
 
+
 	// final BEB & NEB other computations
 	if *final {
-		h0par := res0.Optimizer.GetMaxLikelihoodParameters()
-		final0Summary = computeFinal(m0, h0par, runNEB, runBEB)
-
-		h1par := res1.Optimizer.GetMaxLikelihoodParameters()
-		final1Summary = computeFinal(m1, h1par, runNEB, runBEB)
+		if finalAvail {
+			final0Summary = final0SummarySaved
+			final1Summary = final1SummarySaved
+		} else {
+			final0Summary = computeFinal(m0, h0par, runNEB, runBEB)
+			saveSummary(final0Summary, keyFinal0)
+			final1Summary = computeFinal(m1, h1par, runNEB, runBEB)
+			saveSummary(final1Summary, keyFinal1)
+		}
 	}
 
 	summary.H0 = HypSummary{
