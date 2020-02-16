@@ -321,6 +321,11 @@ func performSingleTest(data *cmodel.Data) (summary HypTestSummary) {
 			final1Summary = computeFinal(m1, h1par, runNEB, runBEB)
 			saveSummary(final1Summary, keyFinal1)
 		}
+	} else {
+		// even if no finalSummary is needed, we need to indicate that
+		// all optimizations were finished
+		saveSummary(nil, keyFinal0)
+		saveSummary(nil, keyFinal1)
 	}
 
 	summary.H0 = HypSummary{
