@@ -62,12 +62,8 @@ func (s *CheckpointIO) GetParameters() (*CheckpointData, error) {
 
 	b, err := LoadData(s.db, s.key)
 
-	if err != nil {
+	if err != nil || b == nil {
 		return nil, err
-	}
-
-	if b == nil {
-		return nil, nil
 	}
 
 	err = json.Unmarshal(b, &data)
