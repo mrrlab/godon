@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	
+
 	"bitbucket.org/Davydov/godon/checkpoint"
 	"bitbucket.org/Davydov/godon/cmodel"
 )
@@ -309,7 +309,6 @@ func performSingleTest(data *cmodel.Data) (summary HypTestSummary) {
 		runNEB = false
 		runBEB = false
 	}
-
 
 	// final BEB & NEB other computations
 	if *final {
