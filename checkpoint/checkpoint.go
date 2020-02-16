@@ -66,6 +66,10 @@ func (s *CheckpointIO) GetParameters() (*CheckpointData, error) {
 		return nil, err
 	}
 
+	if b == nil {
+		return nil, nil
+	}
+
 	err = json.Unmarshal(b, &data)
 
 	if err != nil {
