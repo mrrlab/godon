@@ -117,6 +117,18 @@ func saveSummary(summary interface{}, key []byte) {
 	}
 }
 
+// loadSummary loads summary pseudoobjects
+func loadSummary(keyFinal0, keyFinal1 []byte) (*checkpoint.PseudoObject, *checkpoint.PseudoObject, bool) {
+	final0SummaryB, _ := checkpoint.LoadData(checkpointDB, keyFinal0)
+	final1SummaryB, _ := checkpoint.LoadData(checkpointDB, keyFinal1)
+	if final0SummaryB == nil || final1SummaryB == nil {
+		return nil, nil, false
+	}
+	final0Summary := checkpoint.NewPseudoObject(final0SummaryB)
+	final1Summary := checkpoint.NewPseudoObject(final1SummaryB)
+	return final0Summary, final1Summary, true
+}
+
 // performSingleTest preforms a test for given data
 func performSingleTest(data *cmodel.Data) (summary HypTestSummary) {
 	summary.Tree = data.Tree.ClassString()
@@ -124,16 +136,8 @@ func performSingleTest(data *cmodel.Data) (summary HypTestSummary) {
 
 	keyFinal0 := []byte(*model + ":" + "H0" + ":final:" + clstr)
 	keyFinal1 := []byte(*model + ":" + "H1" + ":final:" + clstr)
-	final0SummarySaved, _ := checkpoint.LoadData(checkpointDB, keyFinal0)
-	final1SummarySaved, _ := checkpoint.LoadData(checkpointDB, keyFinal1)
-	finalAvail := false
-	if final0SummarySaved == nil || final1SummarySaved == nil {
-		// loading final only in case both finals are available
-		final0SummarySaved = nil
-		final1SummarySaved = nil
-	} else {
-		finalAvail = true
-	}
+
+	final0SummarySaved, final1SummarySaved, finalAvail := loadSummary(keyFinal0, keyFinal1)
 
 	// names and default values of the H1 extra parameters
 	extraPar := make(map[string]float64, 2)
@@ -323,8 +327,8 @@ func performSingleTest(data *cmodel.Data) (summary HypTestSummary) {
 	// final BEB & NEB other computations
 	if *final {
 		if finalAvail {
-			final0Summary = final0SummarySaved
-			final1Summary = final1SummarySaved
+			final0Summary = final0SummarySaved.SelfOrNil()
+			final1Summary = final1SummarySaved.SelfOrNil()
 		} else {
 			final0Summary = computeFinal(m0, h0par, runNEB, runBEB)
 			saveSummary(final0Summary, keyFinal0)
