@@ -27,7 +27,6 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"math/rand"
 	"os"
@@ -35,6 +34,8 @@ import (
 	"runtime/pprof"
 	"strings"
 	"time"
+
+	"bitbucket.org/Davydov/godon/checkpoint"
 
 	"gopkg.in/alecthomas/kingpin.v2"
 
@@ -189,6 +190,31 @@ var (
 	mainBucket   = []byte("main")
 )
 
+func compareCmdLineOrSave() {
+	keyCmdLine := []byte("cmdLine")
+	cmdLineCp, err := checkpoint.LoadData(checkpointDB, keyCmdLine)
+	if err != nil {
+		log.Error("Cannot read command line from checkpoint file:", err)
+	}
+	cmdLineRef, err := json.Marshal(os.Args)
+	if err != nil {
+		log.Fatal("Cannot marshal cmdLine; this shouldn't happen:", err)
+	}
+	if cmdLineCp == nil {
+		// command line not present in checkpoint file
+		err = checkpoint.SaveData(checkpointDB, keyCmdLine, cmdLineRef)
+		if err != nil {
+			log.Error("Cannot save cmdLine to checkpoint file:", err)
+		}
+	} else {
+		if !bytes.Equal(cmdLineCp, cmdLineRef) {
+			log.Fatalf("Command string mismatch (checkpoint file)\n saved:   %v\n current: %v\n",
+				string(cmdLineCp),
+				string(cmdLineRef))
+		}
+	}
+}
+
 func main() {
 	startTime := time.Now()
 	// support -h flag
@@ -267,47 +293,13 @@ func main() {
 
 	if *checkpointFn != "" {
 		checkpointDB, err = bolt.Open(*checkpointFn, 0666, nil)
+		defer checkpointDB.Close()
 		if err != nil {
 			log.Fatalf("Error opening checkpoint file: %v", err)
 		}
 
-		// check if command line in checkpoint file matches the current command line
-		err = checkpointDB.Update(func(tx *bolt.Tx) error {
-			log.Info("Using checkpoint file")
-			bucket, err := tx.CreateBucketIfNotExists(mainBucket)
-			if err != nil {
-				return err
-			}
-
-			key := []byte("cmdLine")
-			cmdLineRef, err := json.Marshal(os.Args)
-			if err != nil {
-				return err
-			}
-			cmdLine := bucket.Get(key)
-
-			if cmdLine == nil {
-				// no command line saved; perhaps newly created database
-				err = bucket.Put(key, cmdLineRef)
-				if err != nil {
-					return err
-				}
-			} else {
-				// command line saved in db
-				if !bytes.Equal(cmdLine, cmdLineRef) {
-					log.Errorf("Command string mismatch (checkpoint file)\n saved:   %v\n current: %v\n",
-						string(cmdLine),
-						string(cmdLineRef))
-					return errors.New("Command line mismatch in checkpoint file")
-				}
-				log.Warning("Existing checkpoint file found; this can affect reproducibility with regards to random number generation")
-			}
-			return nil
-		})
-		if err != nil {
-			log.Fatalf("Checkpoint file was used with different parameters: %v", err)
-		}
-		defer checkpointDB.Close()
+		log.Info("Using checkpoint file")
+		compareCmdLineOrSave()
 	}
 
 	var summary interface{}
