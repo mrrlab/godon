@@ -126,8 +126,8 @@ func performSingleTest(data *cmodel.Data) (summary HypTestSummary) {
 	o0 := newOptimizerSettings(m0)
 
 	log.Notice("Running H0")
-	bucket := *model + ":" + "H0" + ":" + data.Tree.ClassString()
-	res0 := runOptimization(m0, o0, nil, 1, []byte(bucket), true)
+	bucket0 := *model + ":" + "H0" + ":" + data.Tree.ClassString()
+	res0 := runOptimization(m0, o0, nil, 1, []byte(bucket0), true)
 	res0.Hypothesis = "H0"
 	summary.Optimizations = append(summary.Optimizations, res0)
 
@@ -139,8 +139,8 @@ func performSingleTest(data *cmodel.Data) (summary HypTestSummary) {
 	o1 := newOptimizerSettings(m1)
 
 	log.Notice("Running H1")
-	bucket = *model + ":" + "H1" + ":" + data.Tree.ClassString()
-	res1 := runOptimization(m1, o1, nil, 1, []byte(bucket), true)
+	bucket1 := *model + ":" + "H1" + ":" + data.Tree.ClassString()
+	res1 := runOptimization(m1, o1, nil, 1, []byte(bucket1), true)
 	res1.Hypothesis = "H1"
 	summary.Optimizations = append(summary.Optimizations, res1)
 
