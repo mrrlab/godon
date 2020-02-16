@@ -20,8 +20,8 @@ var DATA = []byte("parameters")
 type CheckpointData struct {
 	Parameters map[string]float64
 	Likelihood float64
-	Iter int
-	Final bool
+	Iter       int
+	Final      bool
 }
 
 // CheckpointSaver saves checkpoints.
