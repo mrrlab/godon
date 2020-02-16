@@ -52,8 +52,8 @@ func hypTest() (tests []HypTestSummary, optimizations []OptimizationSummary) {
 		}
 		m0opt := newOptimizerSettings(m0model)
 		log.Notice("Optimizing branch lengths using M0")
-		bucket := m0ms.name + ":" + data.Tree.ClassString()
-		res := runOptimization(m0model, m0opt, nil, 1, []byte(bucket), true)
+		key := m0ms.name + ":" + data.Tree.ClassString()
+		res := runOptimization(m0model, m0opt, nil, 1, []byte(key), true)
 		optimizations = append(optimizations, res)
 		*noOptBrLen = true
 	}
@@ -126,8 +126,8 @@ func performSingleTest(data *cmodel.Data) (summary HypTestSummary) {
 	o0 := newOptimizerSettings(m0)
 
 	log.Notice("Running H0")
-	bucket0 := *model + ":" + "H0" + ":" + data.Tree.ClassString()
-	res0 := runOptimization(m0, o0, nil, 1, []byte(bucket0), true)
+	key0 := *model + ":" + "H0" + ":" + data.Tree.ClassString()
+	res0 := runOptimization(m0, o0, nil, 1, []byte(key0), true)
 	res0.Hypothesis = "H0"
 	summary.Optimizations = append(summary.Optimizations, res0)
 
@@ -139,8 +139,8 @@ func performSingleTest(data *cmodel.Data) (summary HypTestSummary) {
 	o1 := newOptimizerSettings(m1)
 
 	log.Notice("Running H1")
-	bucket1 := *model + ":" + "H1" + ":" + data.Tree.ClassString()
-	res1 := runOptimization(m1, o1, nil, 1, []byte(bucket1), true)
+	key1 := *model + ":" + "H1" + ":" + data.Tree.ClassString()
+	res1 := runOptimization(m1, o1, nil, 1, []byte(key1), true)
 	res1.Hypothesis = "H1"
 	summary.Optimizations = append(summary.Optimizations, res1)
 
