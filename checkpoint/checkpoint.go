@@ -131,7 +131,7 @@ func LoadData(db *bolt.DB, key []byte) ([]byte, error) {
 
 		v := b.Get(key)
 		if v != nil {
-			data = make([]byte, 0, len(v))
+			data = make([]byte, len(v))
 			copy(data, v)
 		}
 		return nil
