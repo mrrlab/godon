@@ -56,7 +56,7 @@ func runOptimization(m cmodel.TreeOptimizableSiteClass, o *optimizerSettings, st
 	var err error
 
 	if checkpointDB != nil && key != nil {
-		checkpointIO = checkpoint.NewCheckpointIO(checkpointDB, key)
+		checkpointIO = checkpoint.NewCheckpointIO(checkpointDB, key, *checkpointSeconds)
 		checkpointData, err = checkpointIO.GetParameters()
 		if err != nil {
 			log.Error("Error loading checkpoint data:", err)

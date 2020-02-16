@@ -29,13 +29,15 @@ type CheckpointIO struct {
 	db   *bolt.DB
 	key  []byte
 	last time.Time
+	seconds float64
 }
 
 // NewCheckpointIO creates a new CheckpointIO.
-func NewCheckpointIO(db *bolt.DB, key []byte) (s *CheckpointIO) {
+func NewCheckpointIO(db *bolt.DB, key []byte, seconds float64) (s *CheckpointIO) {
 	s = &CheckpointIO{
 		db:  db,
 		key: key,
+		seconds: seconds,
 	}
 	return
 }
@@ -86,8 +88,8 @@ func (s *CheckpointIO) GetParameters() (*CheckpointData, error) {
 }
 
 // Old returns true if last checkpoint save time too long ago.
-func (s *CheckpointIO) Old(seconds float64) bool {
-	if time.Since(s.last).Seconds() > seconds {
+func (s *CheckpointIO) Old() bool {
+	if time.Since(s.last).Seconds() > s.seconds {
 		return true
 	}
 	return false

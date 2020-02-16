@@ -282,8 +282,7 @@ func (o *BaseOptimizer) SaveCheckpoint(final bool) {
 	if o.checkpointIO == nil {
 		return
 	}
-	// TODO: change to 30 sec
-	if final || o.checkpointIO.Old(0) {
+	if final || o.checkpointIO.Old() {
 		log.Debugf("Saving new checkpoint (final=%v)", final)
 		data := &checkpoint.CheckpointData{
 			Parameters: o.parameters.GetMap(),
