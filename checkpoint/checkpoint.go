@@ -34,7 +34,7 @@ type CheckpointIO struct {
 // NewCheckpointIO creates a new CheckpointIO.
 func NewCheckpointIO(db *bolt.DB, key []byte) (s *CheckpointIO) {
 	s = &CheckpointIO{
-		db:     db,
+		db:  db,
 		key: key,
 	}
 	return
