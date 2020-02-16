@@ -102,7 +102,11 @@ func hypTest() (tests []HypTestSummary, optimizations []OptimizationSummary) {
 
 // saveSummary saves summary to checkpoint
 func saveSummary(summary interface{}, key []byte) {
-	b, err := json.Marshal(summary)
+	var b []byte = []byte{}
+	var err error
+	if summary != nil {
+		b, err = json.Marshal(summary)
+	}
 	if err != nil {
 		log.Error("Error marshalling final summary", err)
 	} else {
