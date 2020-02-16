@@ -49,15 +49,7 @@ func (s *CheckpointIO) Save(data *CheckpointData) error {
 		log.Error("Error serializing checkpoint", err)
 		return err
 	}
-	err = s.db.Update(func(tx *bolt.Tx) error {
-		bucket, err := tx.CreateBucketIfNotExists(s.bucket)
-		if err != nil {
-			return err
-		}
-
-		err = bucket.Put(DATA, dataB)
-		return err
-	})
+	err = SaveData(s.db, s.bucket, DATA, dataB)
 	if err != nil {
 		log.Error("Error saving checkpoint", err)
 	}
@@ -67,18 +59,14 @@ func (s *CheckpointIO) Save(data *CheckpointData) error {
 // GetParameters returns map with parameter values from checkpoint.
 func (s *CheckpointIO) GetParameters() (*CheckpointData, error) {
 	var data *CheckpointData
-	
-	err := s.db.View(func(tx *bolt.Tx) error {
-		bucket := tx.Bucket(s.bucket)
-		if bucket == nil {
-			return nil
-		}
 
-		b := bucket.Get(DATA)
+	b, err := LoadData(s.db, s.bucket, DATA)
 
-		err := json.Unmarshal(b, &data)
-		return err
-	})
+	if err != nil {
+		return nil, err
+	}
+
+	err = json.Unmarshal(b, &data)
 
 	if err != nil {
 		return nil, err
@@ -108,4 +96,45 @@ func (s *CheckpointIO) Old(seconds float64) bool {
 // SetNow sets last checkpoint time to now.
 func (s *CheckpointIO) SetNow() {
 	s.last = time.Now()
+}
+
+// SaveData saves values in bolt database.
+func SaveData(db *bolt.DB, bucket []byte, key []byte, data []byte) error {
+	if db == nil {
+		return nil
+	}
+	err := db.Update(func(tx *bolt.Tx) error {
+		b, err := tx.CreateBucketIfNotExists(bucket)
+		if err != nil {
+			return err
+		}
+
+		err = b.Put(key, data)
+		return err
+	})
+	return err
+}
+
+// LoadData loads data from bolt database.
+func LoadData(db *bolt.DB, bucket []byte, key []byte) ([]byte, error) {
+	data := make([]byte, 0)
+	if db == nil {
+		return nil, nil
+	}
+	err := db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket(bucket)
+		if b == nil {
+			return nil
+		}
+
+		v := b.Get(key)
+		if v != nil {
+			copy(data, v)
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
 }
