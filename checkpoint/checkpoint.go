@@ -106,6 +106,14 @@ type PseudoObject struct {
 	contents []byte
 }
 
+// NewPseudoObject creates a new PseudoObject from
+// byte slice.
+func NewPseudoObject(data []byte) PseudoObject {
+	return PseudoObject{
+		contents: data,
+	}
+}
+
 // UnmarshalJSON saves bytes contents internally.
 func (p PseudoObject) UnmarshalJSON(b []byte) error {
 	copy(p.contents, b)
