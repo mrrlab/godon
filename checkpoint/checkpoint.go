@@ -26,17 +26,17 @@ type CheckpointData struct {
 
 // CheckpointSaver saves checkpoints.
 type CheckpointIO struct {
-	db   *bolt.DB
-	key  []byte
-	last time.Time
+	db      *bolt.DB
+	key     []byte
+	last    time.Time
 	seconds float64
 }
 
 // NewCheckpointIO creates a new CheckpointIO.
 func NewCheckpointIO(db *bolt.DB, key []byte, seconds float64) (s *CheckpointIO) {
 	s = &CheckpointIO{
-		db:  db,
-		key: key,
+		db:      db,
+		key:     key,
 		seconds: seconds,
 	}
 	return
