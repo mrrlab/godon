@@ -1,6 +1,9 @@
 package main
 
 import (
+	"encoding/json"
+	
+	"bitbucket.org/Davydov/godon/checkpoint"
 	"bitbucket.org/Davydov/godon/cmodel"
 )
 
@@ -95,6 +98,19 @@ func hypTest() (tests []HypTestSummary, optimizations []OptimizationSummary) {
 		tests = append(tests, performSingleTest(data))
 	}
 	return tests, optimizations
+}
+
+// saveSummary saves summary to checkpoint
+func saveSummary(summary interface{}, key []byte) {
+	b, err := json.Marshal(summary)
+	if err != nil {
+		log.Error("Error marshalling final summary", err)
+	} else {
+		err = checkpoint.SaveData(checkpointDB, key, b)
+		if err != nil {
+			log.Error("Error saving final summary", err)
+		}
+	}
 }
 
 // performSingleTest preforms a test for given data
