@@ -245,6 +245,7 @@ func main() {
 	logging.SetLevel(level, "godon")
 	logging.SetLevel(level, "optimize")
 	logging.SetLevel(level, "cmodel")
+	logging.SetLevel(level, "checkpoint")
 
 	// print revision
 	log.Info(version)
