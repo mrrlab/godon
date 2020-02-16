@@ -13,8 +13,8 @@ import (
 // log is the global logging variable.
 var log = logging.MustGetLogger("checkpoint")
 
-// DATA is key name for all parameters
-var DATA = []byte("parameters")
+// MAIN is key name for all parameters
+var MAIN = []byte("main")
 
 // CheckpointData stores checkpoint data.
 type CheckpointData struct {
@@ -26,16 +26,16 @@ type CheckpointData struct {
 
 // CheckpointSaver saves checkpoints.
 type CheckpointIO struct {
-	db     *bolt.DB
-	bucket []byte
-	last   time.Time
+	db   *bolt.DB
+	key  []byte
+	last time.Time
 }
 
 // NewCheckpointIO creates a new CheckpointIO.
-func NewCheckpointIO(db *bolt.DB, bucket []byte) (s *CheckpointIO) {
+func NewCheckpointIO(db *bolt.DB, key []byte) (s *CheckpointIO) {
 	s = &CheckpointIO{
 		db:     db,
-		bucket: bucket,
+		key: key,
 	}
 	return
 }
@@ -49,7 +49,7 @@ func (s *CheckpointIO) Save(data *CheckpointData) error {
 		log.Error("Error serializing checkpoint", err)
 		return err
 	}
-	err = SaveData(s.db, s.bucket, DATA, dataB)
+	err = SaveData(s.db, s.key, dataB)
 	if err != nil {
 		log.Error("Error saving checkpoint", err)
 	}
@@ -60,7 +60,7 @@ func (s *CheckpointIO) Save(data *CheckpointData) error {
 func (s *CheckpointIO) GetParameters() (*CheckpointData, error) {
 	var data *CheckpointData
 
-	b, err := LoadData(s.db, s.bucket, DATA)
+	b, err := LoadData(s.db, s.key)
 
 	if err != nil {
 		return nil, err
@@ -99,12 +99,12 @@ func (s *CheckpointIO) SetNow() {
 }
 
 // SaveData saves values in bolt database.
-func SaveData(db *bolt.DB, bucket []byte, key []byte, data []byte) error {
+func SaveData(db *bolt.DB, key []byte, data []byte) error {
 	if db == nil {
 		return nil
 	}
 	err := db.Update(func(tx *bolt.Tx) error {
-		b, err := tx.CreateBucketIfNotExists(bucket)
+		b, err := tx.CreateBucketIfNotExists(MAIN)
 		if err != nil {
 			return err
 		}
@@ -116,19 +116,20 @@ func SaveData(db *bolt.DB, bucket []byte, key []byte, data []byte) error {
 }
 
 // LoadData loads data from bolt database.
-func LoadData(db *bolt.DB, bucket []byte, key []byte) ([]byte, error) {
-	data := make([]byte, 0)
+func LoadData(db *bolt.DB, key []byte) ([]byte, error) {
+	var data []byte
 	if db == nil {
 		return nil, nil
 	}
 	err := db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket(bucket)
+		b := tx.Bucket(MAIN)
 		if b == nil {
 			return nil
 		}
 
 		v := b.Get(key)
 		if v != nil {
+			data = make([]byte, 0, len(v))
 			copy(data, v)
 		}
 		return nil
