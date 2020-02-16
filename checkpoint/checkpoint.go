@@ -100,6 +100,24 @@ func (s *CheckpointIO) SetNow() {
 	s.last = time.Now()
 }
 
+// PseudoObject is a type which can be used to replace objects
+// with their JSON representation for future export.
+type PseudoObject struct {
+	contents []byte
+}
+
+// UnmarshalJSON saves bytes contents internally.
+func (p PseudoObject) UnmarshalJSON(b []byte) error {
+	copy(p.contents, b)
+	return nil
+}
+
+// MarshalJSON creates a JSON representation from contents.
+// This is needed for json.Marshal of parent object.
+func (p PseudoObject) MarshalJSON() ([]byte, error) {
+	return p.contents, nil
+}
+
 // SaveData saves values in bolt database.
 func SaveData(db *bolt.DB, key []byte, data []byte) error {
 	if db == nil {
