@@ -154,6 +154,9 @@ func performSingleTest(data *cmodel.Data) (summary HypTestSummary) {
 	}
 
 	o0 := newOptimizerSettings(m0)
+	if finalAvail {
+		o0.method = "none"
+	}
 
 	log.Notice("Running H0")
 	key0 := *model + ":" + "H0" + ":" + clstr
@@ -167,6 +170,9 @@ func performSingleTest(data *cmodel.Data) (summary HypTestSummary) {
 		log.Fatal(err)
 	}
 	o1 := newOptimizerSettings(m1)
+	if finalAvail {
+		o1.method = "none"
+	}
 
 	log.Notice("Running H1")
 	key1 := *model + ":" + "H1" + ":" + clstr
