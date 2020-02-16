@@ -108,22 +108,30 @@ type PseudoObject struct {
 
 // NewPseudoObject creates a new PseudoObject from
 // byte slice.
-func NewPseudoObject(data []byte) PseudoObject {
-	return PseudoObject{
+func NewPseudoObject(data []byte) *PseudoObject {
+	return &PseudoObject{
 		contents: data,
 	}
 }
 
 // UnmarshalJSON saves bytes contents internally.
-func (p PseudoObject) UnmarshalJSON(b []byte) error {
+func (p *PseudoObject) UnmarshalJSON(b []byte) error {
 	copy(p.contents, b)
 	return nil
 }
 
 // MarshalJSON creates a JSON representation from contents.
 // This is needed for json.Marshal of parent object.
-func (p PseudoObject) MarshalJSON() ([]byte, error) {
+func (p *PseudoObject) MarshalJSON() ([]byte, error) {
 	return p.contents, nil
+}
+
+// Returns nil if contents is empty, self otherwise
+func (p *PseudoObject) SelfOrNil() interface{} {
+	if len(p.contents) == 0 {
+		return nil
+	}
+	return p
 }
 
 // SaveData saves values in bolt database.
