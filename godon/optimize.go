@@ -46,7 +46,7 @@ func newData() (*cmodel.Data, error) {
 // settings and optional starting point. If minLikelihood > 0,
 // optimization is always performed. If 0 >= minLikelihood >
 // startingLikelihood, no optimization is performed.
-func runOptimization(m cmodel.TreeOptimizableSiteClass, o *optimizerSettings, start map[string]float64, minLikelihood float64, bucket []byte, quiet bool) (summary OptimizationSummary) {
+func runOptimization(m cmodel.TreeOptimizableSiteClass, o *optimizerSettings, start map[string]float64, minLikelihood float64, key []byte, quiet bool) (summary OptimizationSummary) {
 	if m.GetOptimizeBranchLengths() {
 		summary.StartingTree = m.GetTreeString()
 	}
@@ -55,8 +55,8 @@ func runOptimization(m cmodel.TreeOptimizableSiteClass, o *optimizerSettings, st
 	var checkpointData *checkpoint.CheckpointData
 	var err error
 
-	if checkpointDB != nil && bucket != nil {
-		checkpointIO = checkpoint.NewCheckpointIO(checkpointDB, bucket)
+	if checkpointDB != nil && key != nil {
+		checkpointIO = checkpoint.NewCheckpointIO(checkpointDB, key)
 		checkpointData, err = checkpointIO.GetParameters()
 		if err != nil {
 			log.Error("Error loading checkpoint data:", err)
@@ -144,9 +144,9 @@ func optimization() OptimizationSummary {
 
 	o := newOptimizerSettings(m)
 
-	bucket := []byte("single")
+	key := []byte("single")
 
-	summary := runOptimization(m, o, nil, 1, bucket, false)
+	summary := runOptimization(m, o, nil, 1, key, false)
 
 	if *final {
 		m.Final(*neb, *beb, *codonRates, *siteRates, *codonOmega)
