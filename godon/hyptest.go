@@ -167,8 +167,8 @@ func performSingleTest(data *cmodel.Data) (summary HypTestSummary) {
 	}
 
 	log.Notice("Running H0")
-	key0 := *model + ":" + "H0" + ":" + clstr
-	res0 := runOptimization(m0, o0, nil, 1, []byte(key0), true)
+	key0 := []byte(*model + ":" + "H0" + ":" + clstr)
+	res0 := runOptimization(m0, o0, nil, 1, key0, true)
 	res0.Hypothesis = "H0"
 	summary.Optimizations = append(summary.Optimizations, res0)
 
@@ -183,8 +183,8 @@ func performSingleTest(data *cmodel.Data) (summary HypTestSummary) {
 	}
 
 	log.Notice("Running H1")
-	key1 := *model + ":" + "H1" + ":" + clstr
-	res1 := runOptimization(m1, o1, nil, 1, []byte(key1), true)
+	key1 := []byte(*model + ":" + "H1" + ":" + clstr)
+	res1 := runOptimization(m1, o1, nil, 1, key1, true)
 	res1.Hypothesis = "H1"
 	summary.Optimizations = append(summary.Optimizations, res1)
 
@@ -305,9 +305,9 @@ func performSingleTest(data *cmodel.Data) (summary HypTestSummary) {
 
 	// checkpoint parameters after all the optimizations
 	h0par := res0.Optimizer.GetMaxLikelihoodParameters()
-	checkpointParameters(m0, o0, h0par, []byte(key0))
+	checkpointParameters(m0, o0, h0par, key0)
 	h1par := res1.Optimizer.GetMaxLikelihoodParameters()
-	checkpointParameters(m1, o1, h1par, []byte(key1))
+	checkpointParameters(m1, o1, h1par, key1)
 
 	log.Noticef("Final D=%g", 2*(l1-l0))
 
