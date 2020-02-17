@@ -84,7 +84,7 @@ func runOptimization(m cmodel.TreeOptimizableSiteClass, o *optimizerSettings, st
 			o.method = savedMethod
 		}(o.method)
 
-		if (!final) {
+		if !final {
 			log.Info("Won't optimize, since starting point is no better")
 		}
 		o.method = "none"
