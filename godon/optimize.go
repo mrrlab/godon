@@ -113,7 +113,7 @@ func runOptimization(m cmodel.TreeOptimizableSiteClass, o *optimizerSettings, st
 }
 
 // checkpointParameters checkpoints model parameters
-func checkpointParameters(m cmodel.TreeOptimizableSiteClass, o *optimizerSettings, par map[string]float64,  key []byte) {
+func checkpointParameters(m cmodel.TreeOptimizableSiteClass, o *optimizerSettings, par map[string]float64, key []byte) {
 	if checkpointDB != nil || key != nil {
 		return
 	}
