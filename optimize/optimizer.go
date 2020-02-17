@@ -290,7 +290,7 @@ func (o *BaseOptimizer) SaveCheckpoint(final bool) {
 			Final: final,
 		}
 
-		go o.checkpointIO.Save(data)
+		o.checkpointIO.Save(data)
 	}
 
 }
