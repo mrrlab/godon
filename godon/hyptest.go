@@ -55,8 +55,8 @@ func hypTest() (tests []HypTestSummary, optimizations []OptimizationSummary) {
 		}
 		m0opt := newOptimizerSettings(m0model)
 		log.Notice("Optimizing branch lengths using M0")
-		key := m0ms.name + ":" + data.Tree.ShortClassString()
-		res := runOptimization(m0model, m0opt, nil, 1, []byte(key), true)
+		key := []byte(m0ms.name + ":" + data.Tree.ShortClassString())
+		res := runOptimization(m0model, m0opt, nil, 1, key, true)
 		optimizations = append(optimizations, res)
 		*noOptBrLen = true
 	}
