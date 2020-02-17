@@ -225,7 +225,6 @@ func (o *BaseOptimizer) PrintResults(quiet bool) {
 			}
 		}
 	}
-	o.SaveCheckpoint(true)
 }
 
 // GetMaxL returns the maximum likelihood value. Can me larger than

@@ -199,6 +199,7 @@ func (n *NLOPT) Run(iterations int) {
 	n.maxL = (float64)(maxf)
 	n.maxLPar = n.parameters.Values(n.maxLPar)
 
+	n.SaveCheckpoint(true)
 	n.saveDeltaT()
 }
 

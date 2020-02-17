@@ -195,5 +195,6 @@ Iter:
 	}
 
 	ds.Optimizable = ds.points[ihi]
+	ds.SaveCheckpoint(true)
 	ds.saveDeltaT()
 }

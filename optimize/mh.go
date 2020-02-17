@@ -95,5 +95,6 @@ Iter:
 		m.PrintLine(m.parameters, l, 1)
 	}
 
+	m.SaveCheckpoint(true)
 	m.saveDeltaT()
 }

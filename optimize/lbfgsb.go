@@ -143,6 +143,7 @@ func (l *LBFGSB) Run(iterations int) {
 		log.Error("Error during LBFGSB:", l.exitStatus)
 	}
 
+	l.SaveCheckpoint(true)
 	l.saveDeltaT()
 }
 
