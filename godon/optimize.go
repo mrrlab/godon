@@ -132,6 +132,8 @@ func checkpointParameters(m cmodel.TreeOptimizableSiteClass, o *optimizerSetting
 
 	opt.SetCheckpointIO(checkpointIO)
 
+	opt.Run(o.iterations)
+
 	opt.PrintResults(true)
 }
 
