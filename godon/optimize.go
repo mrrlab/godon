@@ -133,8 +133,6 @@ func checkpointParameters(m cmodel.TreeOptimizableSiteClass, o *optimizerSetting
 	opt.SetCheckpointIO(checkpointIO)
 
 	opt.Run(1)
-
-	opt.PrintResults(true)
 }
 
 // setStart sets starting point for model, or logs error message and exits.
