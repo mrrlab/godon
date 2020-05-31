@@ -56,6 +56,11 @@ Godon development was supported Swiss National Science Foundation
 
 * Support for various genetic codes.
 
+* Checkpoints: in case your long computation was interrupted it
+  is possible to continue. You need to specify checkpoint file to
+  use this (`--checkpoint`). Warning: this might affect
+  reproducibility when it comes to random number generator.
+
 ## Installation
 
 The software was tested on GNU/Linux and Mac OS X.
