@@ -61,6 +61,12 @@ Godon development was supported Swiss National Science Foundation
   use this (`--checkpoint`). Warning: this might affect
   reproducibility when it comes to random number generator.
 
+## Support
+You can ask questions at the
+[bioinformatics stackexchange site](https://bioinformatics.stackexchange.com/questions/tagged/godon).
+Do not forget to use the `[godon]` tag. Use [issues](https://bitbucket.org/Davydov/godon/issues?status=new&status=open)
+to report bugs.
+
 ## Installation
 
 The software was tested on GNU/Linux and Mac OS X.
