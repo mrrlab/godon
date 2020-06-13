@@ -618,6 +618,7 @@ func (m *BaseModel) NEBPosterior(classes []float64) (res []float64) {
 
 // PrintPosterior prints results of posterior analysis.
 func (m *BaseModel) PrintPosterior(posterior []float64) {
+	log.Noticef("Reference sequence: %s", m.data.cSeqs[0].Name)
 	log.Notice("pos\tcodon\taa\tp")
 
 	for i, p := range posterior {
