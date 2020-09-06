@@ -69,6 +69,13 @@ func lastLine(fn string) (line string, err error) {
 	return line, err
 }
 
+// warnBSGNoRate warns the user in case BSG is used with rates equal to 1.
+func warnBSGNoRate() {
+	if (*model == "BSG" || *hTestModel == "BSG") && *ncatsr == 1 && *ncatcr == 1 {
+		log.Warning("WARNING: Attempting to use BSG model with number of categories for rate variation set to 1. This is equivalent of using BS. Perhaps you forgot to set --ncat-codon-rate.")
+	}
+}
+
 // command-line options
 var (
 	// application
@@ -307,12 +314,14 @@ func main() {
 	var summary interface{}
 	switch cmd {
 	case opt.FullCommand():
+		warnBSGNoRate()
 		runSummary := optimization()
 		summary = struct {
 			*CallSummary
 			OptimizationSummary
 		}{&callSummary, runSummary}
 	case hTest.FullCommand():
+		warnBSGNoRate()
 		hTestSummary, optimizations := hypTest()
 		callSummary.Optimizations = optimizations
 		// testAllBranches is updated by hypTest in order to
