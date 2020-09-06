@@ -182,11 +182,11 @@ var (
 	cpuProfile = app.Flag("cpu-profile", "write cpu profile to file").String()
 
 	// input/output
-	logF         = app.Flag("out", "write log to a file").Short('o').String()
-	trajFn       = app.Flag("trajectory", "write optimization trajectory to a file").Short('t').String()
-	checkpointFn = app.Flag("checkpoint", "checkpoint file (possible to continue in case of termination)").Short('c').String()
+	logF              = app.Flag("out", "write log to a file").Short('o').String()
+	trajFn            = app.Flag("trajectory", "write optimization trajectory to a file").Short('t').String()
+	checkpointFn      = app.Flag("checkpoint", "checkpoint file (possible to continue in case of termination)").Short('c').String()
 	checkpointSeconds = app.Flag("checkpoint-freq", "checkpoint every N seconds (default: 30)").Default("30").Float64()
-	logLevel     = app.Flag("log-level", "set loglevel "+
+	logLevel          = app.Flag("log-level", "set loglevel "+
 		"("+strings.Join(logLevels, ", ")+")").
 		Short('l').Default("notice").
 		Enum(logLevels...)
