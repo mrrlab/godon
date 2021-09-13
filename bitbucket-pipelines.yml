@@ -16,7 +16,8 @@ pipelines:
           # now godon
           - cd "${PACKAGE_PATH}"
           - bin/install.sh
-          - go get bitbucket.org/Davydov/godon/misc/plotgamma # special dependencies
+          - # do not build plotgamma
+          - # go get bitbucket.org/Davydov/godon/misc/plotgamma # special dependencies
           - go test -v -short ./...
           - #benchmarks are currently disabled
           - #go test ./... -run=NONE -bench=.
